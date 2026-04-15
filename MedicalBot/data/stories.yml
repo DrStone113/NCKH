@@ -1,0 +1,34 @@
+version: "3.1"
+
+stories:
+- story: health advice flow
+  steps:
+  - intent: ask_health_advice
+  - action: action_health_advice
+
+- story: nutrition info flow
+  steps:
+  - intent: ask_nutrition
+  - action: action_nutrition_info
+
+- story: exercise info flow
+  steps:
+  - intent: ask_exercise
+  - action: action_exercise_info
+
+- story: emergency flow
+  steps:
+  - intent: emergency
+  - action: action_emergency_alert
+
+- story: greet and ask health
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: ask_health_advice
+  - action: action_health_advice
+
+- story: goodbye flow
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye

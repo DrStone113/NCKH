@@ -1,0 +1,139 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - xin chào
+    - chào bạn
+    - hello
+    - hi
+    - chào
+    - hey
+    - chào buổi sáng
+    - chào buổi chiều
+    - chào buổi tối
+
+- intent: goodbye
+  examples: |
+    - tạm biệt
+    - bye
+    - goodbye
+    - hẹn gặp lại
+    - see you
+    - cảm ơn tạm biệt
+    - tạm biệt nhé
+
+- intent: affirm
+  examples: |
+    - có
+    - đúng
+    - đúng vậy
+    - chính xác
+    - ok
+    - được
+    - ừ
+    - yes
+    - vâng
+
+- intent: deny
+  examples: |
+    - không
+    - không phải
+    - sai rồi
+    - no
+    - không đúng
+    - chưa đúng
+
+- intent: mood_great
+  examples: |
+    - tuyệt vời
+    - tốt
+    - rất tốt
+    - tuyệt
+    - hoàn hảo
+    - tôi cảm thấy tốt
+    - khỏe
+
+- intent: mood_unhappy
+  examples: |
+    - buồn
+    - không vui
+    - tệ
+    - không tốt
+    - tôi cảm thấy tệ
+    - không khỏe
+
+- intent: bot_challenge
+  examples: |
+    - bạn là ai?
+    - bạn là bot à?
+    - bạn là người hay bot?
+    - bạn là con người không?
+    - tôi đang nói chuyện với ai?
+
+- intent: ask_health_info
+  examples: |
+    - tôi muốn hỏi về sức khỏe
+    - cho tôi biết về bệnh
+    - tư vấn sức khỏe
+    - tôi cần tư vấn y tế
+    - giúp tôi về vấn đề sức khỏe
+    - tôi muốn biết về bệnh lý
+
+- intent: calculate_bmi
+  examples: |
+    - tính bmi cho tôi
+    - tôi muốn tính bmi
+    - tính chỉ số bmi
+    - bmi của tôi là bao nhiêu
+    - tôi cao 170 cân nặng 65
+    - chiều cao 165cm nặng 55kg
+    - tôi 180cm và 80kg
+    - tính bmi với chiều cao 175 cân nặng 70
+    - kiểm tra bmi
+    - chỉ số khối cơ thể
+    - tính chỉ số khối cơ thể
+    - tôi muốn biết bmi
+
+- intent: log_nutrition
+  examples: |
+    - ghi nhận bữa ăn
+    - tôi vừa ăn sáng
+    - ghi bữa trưa
+    - tôi ăn tối rồi
+    - ghi nhận ăn vặt
+    - bữa sáng 500 calories
+    - tôi ăn trưa khoảng 700 calo
+    - ghi dinh dưỡng
+    - theo dõi bữa ăn
+    - lưu bữa ăn
+    - tôi vừa ăn
+    - ghi lại bữa ăn
+
+- intent: log_exercise
+  examples: |
+    - ghi nhận tập luyện
+    - tôi vừa tập chạy bộ
+    - tôi đi bộ 30 phút
+    - tập gym 60 phút
+    - tôi bơi lội được 45 phút
+    - vừa tập yoga
+    - đạp xe 40 phút
+    - ghi vận động
+    - theo dõi tập luyện
+    - lưu hoạt động thể thao
+    - tôi vừa tập thể dục
+    - ghi lại tập luyện
+
+- intent: view_health_summary
+  examples: |
+    - xem tổng quan sức khỏe
+    - báo cáo sức khỏe
+    - thống kê sức khỏe của tôi
+    - xem lịch sử theo dõi
+    - tình hình sức khỏe
+    - xem dữ liệu sức khỏe
+    - tổng kết sức khỏe
+    - xem báo cáo
+    - thống kê của tôi
+    - xem lịch sử

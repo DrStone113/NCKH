@@ -1,0 +1,54 @@
+# ============================================================
+# Flutter SDK (quá nặng ~2GB, không push)
+# ============================================================
+flutter/
+
+# ============================================================
+# MedicalBot — Python / Rasa
+# ============================================================
+MedicalBot/venv/
+MedicalBot/.venv/
+MedicalBot/.rasa/
+MedicalBot/__pycache__/
+MedicalBot/**/__pycache__/
+MedicalBot/**/*.pyc
+MedicalBot/**/*.pyo
+MedicalBot/.env
+MedicalBot/*.egg-info/
+MedicalBot/.pytest_cache/
+MedicalBot/knowledge_base/*.db
+MedicalBot/models/*.tar.gz
+
+# Dataset — không upload (quá nặng, tải từ Hugging Face)
+MedicalBot/dataset/
+
+# ============================================================
+# HealthApp — Flutter
+# ============================================================
+HealthApp/health_app/build/
+HealthApp/health_app/.dart_tool/
+HealthApp/health_app/.flutter-plugins
+HealthApp/health_app/.flutter-plugins-dependencies
+HealthApp/health_app/.packages
+HealthApp/health_app/pubspec.lock
+HealthApp/health_app/android/local.properties
+HealthApp/health_app/android/.gradle/
+HealthApp/health_app/android/app/google-services.json
+HealthApp/health_app/ios/Pods/
+HealthApp/health_app/ios/Flutter/Flutter.framework
+HealthApp/health_app/ios/Flutter/Flutter.podspec
+HealthApp/health_app/ios/Runner/GeneratedPluginRegistrant.*
+HealthApp/health_app/windows/flutter/generated_plugin_registrant.cc
+HealthApp/health_app/windows/flutter/generated_plugin_registrant.h
+HealthApp/health_app/windows/flutter/generated_plugins.cmake
+
+# Firebase config (chứa thông tin nhạy cảm)
+HealthApp/health_app/google-services.json
+HealthApp/health_app/GoogleService-Info.plist
+
+# ============================================================
+# Chung
+# ============================================================
+*.log
+.DS_Store
+Thumbs.db

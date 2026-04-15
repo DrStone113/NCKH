@@ -306,6 +306,30 @@ class DBClient:
             logger.error("get_all_embeddings failed: %s", exc)
             raise
 
+    def batch_save_embeddings(self, records: list[tuple], model_name: str) -> None:
+        """Lưu nhiều embeddings cùng lúc (bulk insert) — nhanh hơn save_embedding nhiều lần.
+
+        Args:
+            records: List of (qa_id, vector_blob).
+            model_name: Tên model đã tạo embedding.
+        """
+        sql = """
+            INSERT INTO embeddings (id, vector, model_name)
+            VALUES (?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                vector = excluded.vector,
+                model_name = excluded.model_name
+        """
+        data = [(qa_id, blob, model_name) for qa_id, blob in records]
+        try:
+            conn = self._get_connection()
+            conn.executemany(sql, data)
+            conn.commit()
+            self._release_connection(conn)
+        except sqlite3.Error as exc:
+            logger.error("batch_save_embeddings failed: %s", exc)
+            raise
+
     def save_embedding(self, qa_id: int, vector_blob: bytes, model_name: str) -> None:
         """
         Lưu hoặc cập nhật embedding cho một bản ghi medical_qa.

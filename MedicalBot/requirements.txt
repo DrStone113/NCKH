@@ -1,12 +1,37 @@
+# Rasa và dependencies
 rasa==3.6.20
-sentence-transformers==2.2.2
+
+# Sentence transformers
+sentence-transformers==2.7.0
+transformers==4.36.0
+tokenizers==0.15.2
+huggingface-hub==0.23.0
+
+# Data processing
 pandas==2.0.3
 pyarrow==12.0.1
 openpyxl==3.1.2
-hypothesis==6.100.0
+hypothesis==6.54.0
 datasets==2.14.0
 pyyaml==6.0.1
-numpy==1.24.4
-scikit-learn==1.3.0
+numpy==1.23.5
+scikit-learn==1.1.3
+networkx==2.6.3
+regex==2022.10.31
+
+# Translation
 deep-translator==1.11.4
 requests==2.31.0
+
+# PyTorch CUDA 12.1 (RTX 4060)
+# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+torch==2.1.0+cu121
+torchvision==0.16.0+cu121
+torchaudio==2.1.0+cu121
+
+# Text processing
+sentencepiece==0.1.99
+sacremoses==0.1.1
+
+# Core utils
+setuptools==67.8.0

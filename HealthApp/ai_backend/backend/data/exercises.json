@@ -1,0 +1,102 @@
+[
+  {
+    "id": "ex_001",
+    "name": "Hít đất (Push-up)",
+    "target_muscle": ["Ngực", "Tay sau", "Vai"],
+    "difficulty": "Cơ bản",
+    "equipment": "Không có",
+    "instructions": "Nằm sấp, hai tay rộng bằng vai. Hạ người xuống cho đến khi ngực gần chạm sàn rồi đẩy lên.",
+    "benefits": "Phát triển sức mạnh thân trên và ổn định cơ core.",
+    "tags": ["tại nhà", "ngực", "không dụng cụ", "calisthenics"]
+  },
+  {
+    "id": "ex_002",
+    "name": "Squat (Ngồi xổm)",
+    "target_muscle": ["Đùi trước", "Mông", "Đùi sau"],
+    "difficulty": "Cơ bản",
+    "equipment": "Không có",
+    "instructions": "Đứng thẳng, hai chân rộng bằng vai. Hạ người xuống như ngồi ghế cho đến khi đùi song song với sàn, rồi đứng lên.",
+    "benefits": "Tăng sức mạnh chân và mông, cải thiện khả năng vận động.",
+    "tags": ["tại nhà", "chân", "mông", "không dụng cụ", "calisthenics"]
+  },
+  {
+    "id": "ex_003",
+    "name": "Plank",
+    "target_muscle": ["Core", "Bụng", "Lưng dưới"],
+    "difficulty": "Cơ bản",
+    "equipment": "Không có",
+    "instructions": "Nằm sấp, chống hai khuỷu tay và mũi chân. Giữ thân người thẳng như tấm ván trong 30-60 giây.",
+    "benefits": "Tăng cường sức mạnh core, cải thiện tư thế và ổn định cột sống.",
+    "tags": ["tại nhà", "core", "bụng", "không dụng cụ", "calisthenics"]
+  },
+  {
+    "id": "ex_004",
+    "name": "Pull-up (Kéo xà)",
+    "target_muscle": ["Lưng rộng", "Tay trước", "Vai sau"],
+    "difficulty": "Trung bình",
+    "equipment": "Xà đơn",
+    "instructions": "Bám xà rộng hơn vai, lòng bàn tay hướng ra ngoài. Kéo người lên cho đến khi cằm vượt qua xà, rồi hạ xuống từ từ.",
+    "benefits": "Phát triển cơ lưng và tay trước, tăng sức mạnh kéo.",
+    "tags": ["tại nhà", "lưng", "tay trước", "xà đơn", "calisthenics"]
+  },
+  {
+    "id": "ex_005",
+    "name": "Dumbbell Bench Press (Đẩy tạ đôi nằm)",
+    "target_muscle": ["Ngực", "Tay sau", "Vai trước"],
+    "difficulty": "Trung bình",
+    "equipment": "Tạ đôi, Ghế tập",
+    "instructions": "Nằm ngửa trên ghế, cầm tạ đôi ngang ngực. Đẩy tạ lên thẳng rồi hạ xuống từ từ về vị trí ban đầu.",
+    "benefits": "Phát triển cơ ngực toàn diện, tăng sức mạnh đẩy.",
+    "tags": ["gym", "ngực", "tạ đôi", "tập tạ"]
+  },
+  {
+    "id": "ex_006",
+    "name": "Barbell Deadlift (Kéo tạ đòn)",
+    "target_muscle": ["Lưng dưới", "Đùi sau", "Mông", "Bẫy"],
+    "difficulty": "Nâng cao",
+    "equipment": "Tạ đòn",
+    "instructions": "Đứng trước tạ đòn, cúi xuống cầm tạ rộng bằng vai. Đứng thẳng lên bằng cách duỗi hông và đầu gối, giữ lưng thẳng.",
+    "benefits": "Bài tập toàn thân mạnh nhất, phát triển sức mạnh lưng và chân.",
+    "tags": ["gym", "lưng", "chân", "tạ đòn", "compound"]
+  },
+  {
+    "id": "ex_007",
+    "name": "Lunges (Bước tấn)",
+    "target_muscle": ["Đùi trước", "Mông", "Đùi sau"],
+    "difficulty": "Cơ bản",
+    "equipment": "Không có",
+    "instructions": "Đứng thẳng, bước một chân về phía trước và hạ người xuống cho đến khi đầu gối sau gần chạm sàn. Đứng lên và đổi chân.",
+    "benefits": "Tăng sức mạnh chân đơn, cải thiện thăng bằng và phối hợp.",
+    "tags": ["tại nhà", "chân", "mông", "không dụng cụ", "calisthenics"]
+  },
+  {
+    "id": "ex_008",
+    "name": "Dumbbell Shoulder Press (Đẩy tạ vai)",
+    "target_muscle": ["Vai", "Tay sau", "Bẫy trên"],
+    "difficulty": "Trung bình",
+    "equipment": "Tạ đôi",
+    "instructions": "Ngồi hoặc đứng, cầm tạ đôi ngang tai. Đẩy tạ lên thẳng đầu rồi hạ xuống từ từ.",
+    "benefits": "Phát triển cơ vai toàn diện, tăng sức mạnh đẩy trên đầu.",
+    "tags": ["gym", "vai", "tạ đôi", "tập tạ"]
+  },
+  {
+    "id": "ex_009",
+    "name": "Bicycle Crunch (Gập bụng đạp xe)",
+    "target_muscle": ["Bụng trên", "Bụng dưới", "Bụng chéo"],
+    "difficulty": "Cơ bản",
+    "equipment": "Không có",
+    "instructions": "Nằm ngửa, tay sau đầu. Nâng vai lên, đưa khuỷu tay phải chạm đầu gối trái trong khi duỗi chân phải, rồi đổi bên.",
+    "benefits": "Tăng cường cơ bụng toàn diện, đặc biệt là cơ bụng chéo.",
+    "tags": ["tại nhà", "bụng", "core", "không dụng cụ", "calisthenics"]
+  },
+  {
+    "id": "ex_010",
+    "name": "Lat Pulldown (Kéo cáp lưng)",
+    "target_muscle": ["Lưng rộng", "Tay trước", "Vai sau"],
+    "difficulty": "Cơ bản",
+    "equipment": "Máy kéo cáp",
+    "instructions": "Ngồi vào máy, cầm thanh kéo rộng hơn vai. Kéo thanh xuống ngang ngực trong khi ngả người ra sau nhẹ, rồi trả về từ từ.",
+    "benefits": "Phát triển cơ lưng rộng, thay thế tốt cho pull-up với người mới bắt đầu.",
+    "tags": ["gym", "lưng", "máy tập", "tay trước"]
+  }
+]

@@ -1,0 +1,87 @@
+services:
+
+  fastapi_backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - DATABASE_URL=postgresql+asyncpg://health:secret@postgres:5432/health_db
+      - LLM_MODEL=llama3:8b-instruct-q4_K_M
+      - EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2
+      - MAX_HISTORY_TURNS=10
+      - RAG_TOP_K=5
+      - RAG_SIMILARITY_THRESHOLD=0.5
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ai_net
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - ai_net
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: health
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: health_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U health -d health_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_net
+
+  data_loader:
+    build: ./backend
+    command: python scripts/load_dataset.py
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://health:secret@postgres:5432/health_db
+      - EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - init
+    networks:
+      - ai_net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - fastapi_backend
+    networks:
+      - ai_net
+    profiles:
+      - production  # chỉ chạy khi: docker compose --profile production up
+
+volumes:
+  ollama_data:
+  pg_data:
+
+networks:
+  ai_net:
+    driver: bridge

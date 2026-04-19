@@ -1,54 +1,92 @@
-# ============================================================
-# Flutter SDK (quá nặng ~2GB, không push)
-# ============================================================
-flutter/
+# =============================================================
+# FLUTTER SDK
+# =============================================================
+# SDK ~2GB — cài từ https://flutter.dev
+HealthApp/flutter/
 
-# ============================================================
-# MedicalBot — Python / Rasa
-# ============================================================
-MedicalBot/venv/
-MedicalBot/.venv/
-MedicalBot/.rasa/
-MedicalBot/__pycache__/
-MedicalBot/**/__pycache__/
-MedicalBot/**/*.pyc
-MedicalBot/**/*.pyo
-MedicalBot/.env
-MedicalBot/*.egg-info/
-MedicalBot/.pytest_cache/
-MedicalBot/knowledge_base/*.db
-MedicalBot/models/*.tar.gz
-
-# Dataset — không upload (quá nặng, tải từ Hugging Face)
-MedicalBot/dataset/
-
-# ============================================================
-# HealthApp — Flutter
-# ============================================================
+# =============================================================
+# FLUTTER APP — build artifacts & generated files
+# =============================================================
 HealthApp/health_app/build/
 HealthApp/health_app/.dart_tool/
 HealthApp/health_app/.flutter-plugins
 HealthApp/health_app/.flutter-plugins-dependencies
 HealthApp/health_app/.packages
+HealthApp/health_app/.metadata
+
+# pubspec.lock — để mỗi người tự resolve dependencies
 HealthApp/health_app/pubspec.lock
+
+# Android
 HealthApp/health_app/android/local.properties
 HealthApp/health_app/android/.gradle/
-HealthApp/health_app/android/app/google-services.json
-HealthApp/health_app/ios/Pods/
-HealthApp/health_app/ios/Flutter/Flutter.framework
-HealthApp/health_app/ios/Flutter/Flutter.podspec
-HealthApp/health_app/ios/Runner/GeneratedPluginRegistrant.*
+HealthApp/health_app/android/app/debug/
+HealthApp/health_app/android/app/profile/
+HealthApp/health_app/android/app/release/
+
+# Windows generated
 HealthApp/health_app/windows/flutter/generated_plugin_registrant.cc
 HealthApp/health_app/windows/flutter/generated_plugin_registrant.h
 HealthApp/health_app/windows/flutter/generated_plugins.cmake
+HealthApp/health_app/windows/flutter/ephemeral/
 
-# Firebase config (chứa thông tin nhạy cảm)
+# =============================================================
+# FIREBASE — chứa API keys, mỗi người tự cấu hình
+# Xem: HealthApp/health_app/lib/firebase_options.dart.example
+# =============================================================
+HealthApp/health_app/lib/firebase_options.dart
+HealthApp/health_app/android/app/google-services.json
 HealthApp/health_app/google-services.json
 HealthApp/health_app/GoogleService-Info.plist
+HealthApp/health_app/ios/Runner/GoogleService-Info.plist
 
-# ============================================================
-# Chung
-# ============================================================
-*.log
+# =============================================================
+# PYTHON BACKEND
+# =============================================================
+# venv — tạo lại bằng: pip install -r requirements.txt
+HealthApp/ai_backend/backend/venv/
+
+# Bytecode cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Test cache
+**/.pytest_cache/
+
+# =============================================================
+# SECRETS — KHÔNG BAO GIỜ PUSH
+# Sao chép từ .env.example và điền thông tin thực
+# =============================================================
+HealthApp/ai_backend/.env
+HealthApp/ai_backend/backend/.env
+
+# =============================================================
+# DATASET — output files tạm
+# =============================================================
+Dataset/food_database.dart.txt
+
+# =============================================================
+# HỆ ĐIỀU HÀNH
+# =============================================================
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# =============================================================
+# EDITOR
+# =============================================================
+.idea/
+*.iml
+*.ipr
+*.iws
+# .vscode/ — giữ lại vì có settings hữu ích cho team
+
+# =============================================================
+# LOGS & TMP
+# =============================================================
+*.log
+*.tmp
+*.bak
+*.swp

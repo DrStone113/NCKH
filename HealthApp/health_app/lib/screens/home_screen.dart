@@ -47,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<NutritionProvider>(context, listen: false).loadTodayMeals(userId);
         Provider.of<ExerciseProvider>(context, listen: false).loadTodayExercises(userId);
         Provider.of<HealthProvider>(context, listen: false).loadTodayWaterIntake(userId);
+        Provider.of<NutritionProvider>(context, listen: false).loadSavedMeals();
       }
       // Initialize ChatProvider
       Provider.of<ChatProvider>(context, listen: false).initialize();

@@ -116,4 +116,68 @@ class ExerciseProvider with ChangeNotifier {
         return exerciseDatabase.take(8).toList();
     }
   }
+
+  // Toggle exercise completed status
+  Future<void> toggleExerciseCompleted(String exerciseId) async {
+    try {
+      final index = _todayExercises.indexWhere((ex) => ex.id == exerciseId);
+      if (index != -1) {
+        final exercise = _todayExercises[index];
+        final updated = exercise.copyWith(isCompleted: !exercise.isCompleted);
+        _todayExercises[index] = updated;
+        notifyListeners();
+        
+        await _firestore
+            .collection(FirestoreCollections.exerciseDiary)
+            .doc(exerciseId)
+            .update({'isCompleted': updated.isCompleted});
+        
+        debugPrint('✅ Exercise completed status updated: ${updated.isCompleted}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error toggling exercise completed: $e');
+      rethrow;
+    }
+  }
+
+  // Load exercises for a specific date range
+  Future<List<ExerciseModel>> loadExercisesForDateRange(
+    String userId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection(FirestoreCollections.exerciseDiary)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      final exercises = snapshot.docs
+          .map((doc) => ExerciseModel.fromMap(doc.data() as Map<String, dynamic>))
+          .where((exercise) {
+            return exercise.date.isAfter(startDate) && exercise.date.isBefore(endDate);
+          })
+          .toList();
+      
+      exercises.sort((a, b) => b.date.compareTo(a.date)); // Newest first
+      return exercises;
+    } catch (e) {
+      debugPrint('❌ Error loading exercises for date range: $e');
+      return [];
+    }
+  }
+
+  // Get exercises for a specific date
+  Future<List<ExerciseModel>> loadExercisesForDate(String userId, DateTime date) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    return loadExercisesForDateRange(userId, startOfDay, endOfDay);
+  }
+
+  // Get completion stats
+  int get completedCount => _todayExercises.where((ex) => ex.isCompleted).length;
+  int get pendingCount => _todayExercises.where((ex) => !ex.isCompleted).length;
+  double get completionRate => _todayExercises.isEmpty 
+      ? 0.0 
+      : completedCount / _todayExercises.length;
 }

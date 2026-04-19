@@ -7,9 +7,38 @@ import '../constants/firestore_collections.dart';
 
 class UserProvider with ChangeNotifier {
   UserModel? _currentUser;
+  bool _isInitialized = false;
 
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
+  bool get isInitialized => _isInitialized;
+
+  UserProvider() {
+    _restoreSession();
+  }
+
+  /// Tự động restore session từ Firebase Auth khi app khởi động
+  Future<void> _restoreSession() async {
+    try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        debugPrint('🔄 Restoring session for: ${firebaseUser.email}');
+        final doc = await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(firebaseUser.uid)
+            .get();
+        if (doc.exists) {
+          _currentUser = UserModel.fromMap(doc.data() as Map<String, dynamic>);
+          debugPrint('✅ Session restored: ${_currentUser!.name}');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Session restore failed: $e');
+    } finally {
+      _isInitialized = true;
+      notifyListeners();
+    }
+  }
 
   /// Demo mode - set fake user for UI testing without Firebase
   void setDemoUser() {
@@ -84,73 +113,45 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithGoogle() async {
-  try {
-    final GoogleSignIn googleSignIn = GoogleSignIn(
-      clientId: '474333392741-sq62656jfsrje0ee4cikouo6fgot1hp1.apps.googleusercontent.com',
-      scopes: ['email', 'profile'],
-    );
-    
-    // Ngắt kết nối để xóa cache và buộc chọn lại tài khoản
     try {
-      await googleSignIn.disconnect();
-    } catch (_) {
-      // Ignore nếu chưa có kết nối nào
+      // Dùng Firebase popup flow - hoạt động trên localhost và web
+      final googleProvider = GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithPopup(googleProvider);
+
+      final firestore = FirebaseFirestore.instance;
+      final userDoc = await firestore
+          .collection(FirestoreCollections.users)
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        _currentUser = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+      } else {
+        // User mới - trigger onboarding
+        _currentUser = UserModel(
+          id: userCredential.user!.uid,
+          email: userCredential.user!.email ?? '',
+          name: userCredential.user!.displayName ?? 'User',
+          age: 0,
+          gender: 'male',
+          height: 0,
+          weight: 0,
+          targetWeight: 0,
+          activityLevel: 'moderate',
+          healthGoal: 'maintain',
+          createdAt: DateTime.now(),
+        );
+      }
+
+      notifyListeners();
+    } catch (e) {
+      rethrow;
     }
-    
-    // Đăng nhập với Google - sẽ hiển thị màn hình chọn tài khoản
-    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    
-    if (googleUser == null) {
-      throw Exception('Đăng nhập bị hủy');
-    }
-
-    // Lấy thông tin xác thực
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-    // Tạo credential cho Firebase
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-
-    // Đăng nhập vào Firebase
-    final UserCredential userCredential = 
-        await FirebaseAuth.instance.signInWithCredential(credential);
-
-    final firestore = FirebaseFirestore.instance;
-    final userDoc = await firestore
-        .collection(FirestoreCollections.users)
-        .doc(userCredential.user!.uid)
-        .get();
-
-    if (userDoc.exists) {
-      _currentUser = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
-    } else {
-      // User mới, tạo profile tạm thời KHÔNG lưu vào Firestore
-      // Để màn hình onboarding thu thập thông tin đầy đủ
-      _currentUser = UserModel(
-        id: userCredential.user!.uid,
-        email: googleUser.email,
-        name: googleUser.displayName ?? 'User',
-        age: 0, // Đặt 0 để trigger onboarding
-        gender: 'male',
-        height: 0, // Đặt 0 để trigger onboarding
-        weight: 0,
-        targetWeight: 0,
-        activityLevel: 'moderate',
-        healthGoal: 'maintain',
-        createdAt: DateTime.now(),
-      );
-      
-      // KHÔNG lưu vào Firestore ở đây
-      // Sẽ lưu sau khi hoàn thành onboarding
-    }
-    
-    notifyListeners();
-  } catch (e) {
-    rethrow;
   }
-}
 
 
   Future<void> signOut() async {

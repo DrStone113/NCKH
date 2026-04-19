@@ -10,6 +10,7 @@ import 'providers/health_provider.dart';
 import 'providers/nutrition_provider.dart';
 import 'providers/exercise_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/ai_chat_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
         ChangeNotifierProvider(create: (_) => ExerciseProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => AIChatProvider()),
       ],
       child: MaterialApp(
         title: 'Health App',
@@ -59,6 +61,21 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, _) {
+        // Chờ session restore xong trước khi quyết định route
+        if (!userProvider.isInitialized) {
+          return const Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Đang tải...', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          );
+        }
         if (userProvider.isAuthenticated) {
           return const HomeScreen();
         }

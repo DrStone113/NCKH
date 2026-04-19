@@ -51,6 +51,7 @@ class ExerciseModel {
   final double caloriesBurned;
   final String type; // cardio, strength, flexibility, sports
   final String intensity; // low, medium, high
+  final bool isCompleted; // Đã hoàn thành chưa
 
   ExerciseModel({
     required this.id,
@@ -62,6 +63,7 @@ class ExerciseModel {
     required this.caloriesBurned,
     required this.type,
     this.intensity = 'medium',
+    this.isCompleted = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -75,6 +77,7 @@ class ExerciseModel {
       'caloriesBurned': caloriesBurned,
       'type': type,
       'intensity': intensity,
+      'isCompleted': isCompleted,
     };
   }
 
@@ -89,6 +92,33 @@ class ExerciseModel {
       caloriesBurned: (map['caloriesBurned'] ?? 0).toDouble(),
       type: map['type'] ?? 'cardio',
       intensity: map['intensity'] ?? 'medium',
+      isCompleted: map['isCompleted'] ?? false,
+    );
+  }
+
+  ExerciseModel copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    String? exerciseTemplateId,
+    DateTime? date,
+    int? duration,
+    double? caloriesBurned,
+    String? type,
+    String? intensity,
+    bool? isCompleted,
+  }) {
+    return ExerciseModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      exerciseTemplateId: exerciseTemplateId ?? this.exerciseTemplateId,
+      date: date ?? this.date,
+      duration: duration ?? this.duration,
+      caloriesBurned: caloriesBurned ?? this.caloriesBurned,
+      type: type ?? this.type,
+      intensity: intensity ?? this.intensity,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 

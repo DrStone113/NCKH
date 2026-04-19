@@ -26,6 +26,8 @@ dependencies:
   
   # HTTP & API
   http: ^1.2.0
+  web_socket_channel: ^2.4.0
+  uuid: ^4.3.3
   
   # Local Storage
   shared_preferences: ^2.2.2

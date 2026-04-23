@@ -18,7 +18,7 @@ from services.prompt_builder import prompt_builder
 from services.rag_service import rag_service
 from services.response_parser import response_parser
 from services.wger_search import wger_search_service
-from services.meal_optimizer import meal_optimizer
+from services.dish_optimizer import dish_optimizer, MacroTarget
 
 logging.basicConfig(
     level=logging.INFO,
@@ -273,6 +273,7 @@ async def _handle_single_meal_optimized(
     from services.meal_optimizer import MacroTarget
     from services.tdee_calculator import calculate_bmr, calculate_tdee, get_recommended_calories
     from services.prompt_builder import _calc_macro_targets
+    from services.ingredient_translator import translate_ingredient_name
 
     # Phát hiện meal type
     meal_type = _extract_meal_types(request.message)
@@ -305,34 +306,42 @@ async def _handle_single_meal_optimized(
 
     logger.info(f"🍽 Optimizing {meal_vn[meal_type]}: target={meal_cal:.0f} kcal")
 
-    # Get recent ingredients
-    recent_ids = await _get_recent_ingredient_ids(request.session_id)
+    # Get recent dish IDs (thay vì ingredient IDs)
+    recent_dish_ids = await _get_recent_dish_ids(request.session_id)
 
     async with AsyncSessionLocal() as db:
         try:
-            components = await meal_optimizer.optimize_meal(
+            # Gọi dish_optimizer thay vì meal_optimizer
+            dish = await dish_optimizer.optimize_meal(
                 db=db,
                 target=meal_target,
                 meal_type=meal_type,
-                recent_ingredient_ids=recent_ids,
+                recent_dish_ids=recent_dish_ids,
             )
 
+            if not dish:
+                await websocket.send_json({
+                    "type": "error",
+                    "content": "Không tìm thấy món ăn phù hợp. Vui lòng thử lại."
+                })
+                return
+
             # Format output
-            total_cal = sum(c.calories for c in components)
-            total_protein = sum(c.protein for c in components)
-            total_carbs = sum(c.carbs for c in components)
-            total_fat = sum(c.fat for c in components)
+            total_cal = dish.total_calories
+            total_protein = dish.total_protein
+            total_carbs = dish.total_carbs
+            total_fat = dish.total_fat
 
             # Stream text với typing effect
-            text_parts = [f"Gợi ý {meal_vn[meal_type].lower()} ({total_cal:.0f} kcal):\n\n"]
-            for comp in components:
+            text_parts = [f"**{dish.name}** ({total_cal:.0f} kcal):\n\n"]
+            for comp in dish.components:
                 text_parts.append(
-                    f"• **{comp.ingredient.name}**: {comp.serving_grams}g "
-                    f"({comp.calories:.0f} kcal, P:{comp.protein:.1f}g, C:{comp.carbs:.1f}g, F:{comp.fat:.1f}g)\n"
+                    f"• **{comp.name}**: {comp.serving_grams}g "
+                    f"— {comp.calories:.0f} kcal (P:{comp.protein:.0f}g, C:{comp.carbs:.0f}g, F:{comp.fat:.0f}g)\n"
                 )
             text_parts.append(
-                f"\n**Tổng**: {total_cal:.0f} kcal | "
-                f"Protein {total_protein:.0f}g | Carbs {total_carbs:.0f}g | Fat {total_fat:.0f}g\n"
+                f"\n**Tổng cộng**: {total_cal:.0f} kcal | "
+                f"Protein {total_protein:.0f}g | Carbs {total_carbs:.0f}g | Fat {total_fat:.0f}g"
             )
 
             full_text = "".join(text_parts)
@@ -342,25 +351,26 @@ async def _handle_single_meal_optimized(
 
             # Build structured
             actions = []
-            for comp in components:
+            for comp in dish.components:
                 actions.append({
                     "kind": "food",
-                    "wger_id": comp.ingredient.id,
-                    "name": comp.ingredient.name,
+                    "wger_id": 0,  # Không cần wger_id nữa
+                    "name": comp.name,
                     "details": {
-                        "calories": comp.ingredient.energy,
-                        "protein": comp.ingredient.protein,
-                        "carbs": comp.ingredient.carbs,
-                        "fat": comp.ingredient.fat,
+                        "calories": comp.energy_per_100g,
+                        "protein": comp.protein / (comp.serving_grams / 100.0),
+                        "carbs": comp.carbs / (comp.serving_grams / 100.0),
+                        "fat": comp.fat / (comp.serving_grams / 100.0),
                         "meal_type": meal_type,
+                        "dish_name": dish.name,  # Tên món
                         "serving_grams": comp.serving_grams,
                     },
                 })
 
             structured = {
                 "type": "structured",
-                "text": f"{meal_vn[meal_type]}",
-                "meal_name": f"{meal_vn[meal_type]}",
+                "text": dish.name,
+                "meal_name": dish.name,
                 "actions": actions,
             }
 
@@ -442,6 +452,7 @@ async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
     from services.meal_optimizer import MacroTarget
     from services.tdee_calculator import calculate_bmr, calculate_tdee, get_recommended_calories
     from services.prompt_builder import _calc_macro_targets
+    from services.ingredient_translator import translate_ingredient_name
 
     meal_vn = {
         "breakfast": "Bữa sáng", "lunch": "Bữa trưa",
@@ -461,8 +472,8 @@ async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
     all_structured = []
     final_suggestions: list[str] = []
 
-    # Lấy recent ingredients để tránh lặp
-    recent_ids = await _get_recent_ingredient_ids(request.session_id)
+    # Lấy recent dishes để tránh lặp
+    recent_dish_ids = await _get_recent_dish_ids(request.session_id)
 
     async with AsyncSessionLocal() as db:
         for i, meal_type in enumerate(meal_types):
@@ -489,26 +500,30 @@ async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
             t_meal = time.time()
 
             try:
-                # Gọi optimizer
-                components = await meal_optimizer.optimize_meal(
+                # Gọi dish_optimizer
+                dish = await dish_optimizer.optimize_meal(
                     db=db,
                     target=meal_target,
                     meal_type=meal_type,
-                    recent_ingredient_ids=recent_ids,
+                    recent_dish_ids=recent_dish_ids,
                 )
 
+                if not dish:
+                    await websocket.send_json({"type": "token", "content": f"\n(Không tìm thấy món phù hợp cho {label})\n"})
+                    continue
+
                 # Format kết quả
-                total_cal = sum(c.calories for c in components)
-                total_protein = sum(c.protein for c in components)
-                total_carbs = sum(c.carbs for c in components)
-                total_fat = sum(c.fat for c in components)
+                total_cal = dish.total_calories
+                total_protein = dish.total_protein
+                total_carbs = dish.total_carbs
+                total_fat = dish.total_fat
 
                 # Stream text
-                text_parts = [f"Gợi ý {label.lower()} ({total_cal:.0f} kcal):\n\n"]
-                for comp in components:
+                text_parts = [f"**{dish.name}** ({total_cal:.0f} kcal):\n\n"]
+                for comp in dish.components:
                     text_parts.append(
-                        f"• **{comp.ingredient.name}**: {comp.serving_grams}g "
-                        f"({comp.calories:.0f} kcal, P:{comp.protein:.1f}g, C:{comp.carbs:.1f}g, F:{comp.fat:.1f}g)\n"
+                        f"• **{comp.name}**: {comp.serving_grams}g "
+                        f"— {comp.calories:.0f} kcal (P:{comp.protein:.0f}g, C:{comp.carbs:.0f}g, F:{comp.fat:.0f}g)\n"
                     )
                 text_parts.append(
                     f"\n**Tổng**: {total_cal:.0f} kcal | "
@@ -522,33 +537,34 @@ async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
 
                 # Build structured data
                 actions = []
-                for comp in components:
+                for comp in dish.components:
                     actions.append({
                         "kind": "food",
-                        "wger_id": comp.ingredient.id,
-                        "name": comp.ingredient.name,
+                        "wger_id": 0,
+                        "name": comp.name,
                         "details": {
-                            "calories": comp.ingredient.energy,
-                            "protein": comp.ingredient.protein,
-                            "carbs": comp.ingredient.carbs,
-                            "fat": comp.ingredient.fat,
+                            "calories": comp.energy_per_100g,
+                            "protein": comp.protein / (comp.serving_grams / 100.0),
+                            "carbs": comp.carbs / (comp.serving_grams / 100.0),
+                            "fat": comp.fat / (comp.serving_grams / 100.0),
                             "meal_type": meal_type,
+                            "dish_name": dish.name,  # Tên món
                             "serving_grams": comp.serving_grams,
                         },
                     })
 
                 structured = {
                     "type": "structured",
-                    "text": f"{label}",
-                    "meal_name": f"{label}",
+                    "text": dish.name,
+                    "meal_name": dish.name,
                     "actions": actions,
                 }
                 all_structured.append(structured)
 
-                # Update recent_ids
-                recent_ids.extend([c.ingredient.id for c in components])
+                # Update recent_dish_ids
+                recent_dish_ids.append(dish.id)
 
-                logger.info(f"✅ {label}: {len(components)} components in {time.time() - t_meal:.2f}s")
+                logger.info(f"✅ {label}: {dish.name} in {time.time() - t_meal:.2f}s")
 
             except Exception as e:
                 logger.error(f"❌ Optimizer error for {label}: {e}", exc_info=True)
@@ -576,6 +592,13 @@ async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
 
 async def _get_recent_ingredient_ids(session_id: str, days: int = 3) -> list[int]:
     """Lấy danh sách ingredient IDs đã dùng trong N ngày gần đây để tránh lặp."""
+    # TODO: Query từ DB history
+    # Tạm thời return empty để không block
+    return []
+
+
+async def _get_recent_dish_ids(session_id: str, days: int = 3) -> list[int]:
+    """Lấy danh sách dish IDs đã dùng trong N ngày gần đây để tránh lặp."""
     # TODO: Query từ DB history
     # Tạm thời return empty để không block
     return []

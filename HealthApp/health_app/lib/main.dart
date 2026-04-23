@@ -11,6 +11,7 @@ import 'providers/nutrition_provider.dart';
 import 'providers/exercise_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/ai_chat_provider.dart';
+import 'services/wger_cache_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,22 @@ void main() async {
     debugPrint('Firebase init failed: $e (running in demo mode)');
   }
 
+  // Pre-fetch wger data in background (không block app startup)
+  _preFetchWgerData();
+
   runApp(MyApp(firebaseOk: firebaseOk));
+}
+
+/// Pre-fetch wger data in background để cải thiện UX
+void _preFetchWgerData() {
+  Future.delayed(const Duration(milliseconds: 500), () {
+    debugPrint('🚀 Starting wger pre-fetch...');
+    WgerCacheService().preFetchData().then((_) {
+      debugPrint('✅ Wger pre-fetch completed');
+    }).catchError((e) {
+      debugPrint('⚠️ Wger pre-fetch failed: $e');
+    });
+  });
 }
 
 class MyApp extends StatelessWidget {

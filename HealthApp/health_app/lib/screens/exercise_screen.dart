@@ -6,6 +6,7 @@ import '../models/exercise_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_card.dart';
 import '../widgets/animated_counter.dart';
+import '../widgets/smart_exercise_picker.dart';
 import 'exercise_detail_screen.dart';
 import 'exercise_browser_screen.dart';
 import 'exercise_history_screen.dart';
@@ -671,94 +672,11 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   }
 
   void _showAddExerciseSheet(BuildContext context) {
-    final nameController = TextEditingController();
-    final durationController = TextEditingController();
-    final caloriesController = TextEditingController();
-    String selectedType = 'cardio';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.textHint, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 16),
-            const Text('Thêm hoạt động', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Tên hoạt động', prefixIcon: Icon(Icons.edit_outlined)),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: selectedType,
-              decoration: const InputDecoration(labelText: 'Loại', prefixIcon: Icon(Icons.category_outlined)),
-              dropdownColor: AppColors.surface,
-              items: const [
-                DropdownMenuItem(value: 'cardio', child: Text('🏃 Cardio')),
-                DropdownMenuItem(value: 'strength', child: Text('💪 Sức mạnh')),
-                DropdownMenuItem(value: 'flexibility', child: Text('🧘 Linh hoạt')),
-                DropdownMenuItem(value: 'sports', child: Text('⚽ Thể thao')),
-              ],
-              onChanged: (val) => selectedType = val!,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: durationController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Thời gian (phút)'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: caloriesController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Calo đốt (kcal)'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
-                  if (userId != null && nameController.text.isNotEmpty) {
-                    final exercise = ExerciseModel(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      userId: userId,
-                      name: nameController.text,
-                      date: DateTime.now(),
-                      duration: int.tryParse(durationController.text) ?? 0,
-                      caloriesBurned: double.tryParse(caloriesController.text) ?? 0,
-                      type: selectedType,
-                    );
-                    Provider.of<ExerciseProvider>(context, listen: false).addExercise(exercise);
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Thêm hoạt động', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) => const SmartExercisePicker(),
     );
   }
 }

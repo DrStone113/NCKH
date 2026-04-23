@@ -132,10 +132,7 @@ def _match_options(text: str, patterns: dict) -> Optional[str]:
     for pattern, value in patterns.items():
         if re.search(pattern, text, re.IGNORECASE):
             return value
-    # Thử match số thứ tự (1, 2, 3...)
-    num_match = re.search(r'^(\d+)$', text)
-    if num_match:
-        return None  # Handled by caller
+    # Không match số thứ tự ở đây, để caller xử lý
     return None
 
 
@@ -162,7 +159,8 @@ def _extract_number(text: str, valid: list[int]) -> Optional[str]:
 def _try_parse_option_index(text: str, count: int) -> Optional[int]:
     """Thử parse số thứ tự từ text (1-based)."""
     text = text.strip()
-    if re.match(r'^\d+$', text):
+    # Kiểm tra xem text có phải là số không
+    if text.isdigit():
         idx = int(text) - 1
         if 0 <= idx < count:
             return idx

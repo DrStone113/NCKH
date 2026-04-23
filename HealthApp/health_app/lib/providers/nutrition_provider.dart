@@ -4,16 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/meal_model.dart';
 import '../constants/firestore_collections.dart';
+import '../services/nutrition_cache_service.dart';
 
 class NutritionProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  final NutritionCacheService _cacheService = NutritionCacheService();
+  
   List<MealModel> _todayMeals = [];
   List<MealModel> _allMeals = [];
   DateTime _selectedDate = DateTime.now();
   bool _allMealsLoaded = false;
+  bool _isLoading = false;
 
   List<MealModel> get todayMeals => _todayMeals;
   DateTime get selectedDate => _selectedDate;
+  bool get isLoading => _isLoading;
   bool get isToday {
     final now = DateTime.now();
     return _selectedDate.year == now.year && _selectedDate.month == now.month && _selectedDate.day == now.day;
@@ -33,19 +38,47 @@ class NutritionProvider with ChangeNotifier {
   }
 
   Future<void> addMeal(MealModel meal) async {
+    // Optimistic update - add to cache immediately
     _allMeals.add(meal);
     _filterByDate(_selectedDate);
+    _cacheService.addMealToCache(meal.userId, meal.date, meal);
+    
+    // Save to Firestore in background
     try {
       await _firestore.collection(FirestoreCollections.mealDiary).doc(meal.id).set(meal.toMap());
+      debugPrint('✅ Meal saved to Firestore: ${meal.id}');
     } catch (e) {
       debugPrint('❌ Error saving meal: $e');
+      // Rollback on error
+      _allMeals.removeWhere((m) => m.id == meal.id);
+      _filterByDate(_selectedDate);
+      _cacheService.removeMealFromCache(meal.userId, meal.date, meal.id);
+      rethrow;
     }
   }
+  
   Future<void> loadTodayMeals(String userId) async {
+    // Check cache first
+    final cached = _cacheService.getCachedMeals(userId, DateTime.now());
+    if (cached != null) {
+      debugPrint('📦 Using cached meals for today');
+      _todayMeals = cached;
+      _allMealsLoaded = true;
+      notifyListeners();
+      
+      // Pre-fetch nearby dates in background
+      _preFetchNearbyDates(userId, DateTime.now());
+      return;
+    }
+
     if (_allMealsLoaded) {
       _filterByDate(DateTime.now());
       return;
     }
+    
+    _isLoading = true;
+    notifyListeners();
+    
     try {
       final snapshot = await _firestore
           .collection(FirestoreCollections.mealDiary)
@@ -56,44 +89,103 @@ class NutritionProvider with ChangeNotifier {
           .toList();
       _allMealsLoaded = true;
       _filterByDate(DateTime.now());
+      
+      // Cache the result
+      _cacheService.cacheMeals(userId, DateTime.now(), _todayMeals);
+      
+      // Pre-fetch nearby dates in background
+      _preFetchNearbyDates(userId, DateTime.now());
     } catch (e) {
       debugPrint('❌ Error loading meals: $e');
       _todayMeals = [];
+      notifyListeners();
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> loadMealsForDate(String userId, DateTime date) async {
+    // Check cache first
+    final cached = _cacheService.getCachedMeals(userId, date);
+    if (cached != null) {
+      debugPrint('📦 Using cached meals for ${date.day}/${date.month}');
+      _selectedDate = date;
+      _todayMeals = cached;
+      notifyListeners();
+      return;
+    }
+
     if (_allMealsLoaded) {
       _filterByDate(date);
       return;
     }
+    
+    _isLoading = true;
+    notifyListeners();
+    
     await loadTodayMeals(userId);
     _filterByDate(date);
+    
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// Pre-fetch meals for nearby dates in background
+  Future<void> _preFetchNearbyDates(String userId, DateTime centerDate) async {
+    await _cacheService.preFetchNearbyDates(
+      userId,
+      centerDate,
+      (date) async {
+        final start = DateTime(date.year, date.month, date.day);
+        final end = start.add(const Duration(days: 1));
+        final meals = _allMeals.where((m) => m.date.isAfter(start) && m.date.isBefore(end)).toList();
+        return meals;
+      },
+    );
   }
 
   Future<void> deleteMeal(String mealId) async {
+    // Find the meal to get its date
+    final meal = _allMeals.firstWhere((m) => m.id == mealId);
+    
+    // Optimistic update - remove from cache immediately
+    _allMeals.removeWhere((m) => m.id == mealId);
+    _todayMeals.removeWhere((m) => m.id == mealId);
+    _cacheService.removeMealFromCache(meal.userId, meal.date, mealId);
+    notifyListeners();
+    
+    // Delete from Firestore in background
     try {
       await _firestore.collection(FirestoreCollections.mealDiary).doc(mealId).delete();
-      _allMeals.removeWhere((meal) => meal.id == mealId);
-      _todayMeals.removeWhere((meal) => meal.id == mealId);
-      notifyListeners();
+      debugPrint('✅ Meal deleted from Firestore: $mealId');
     } catch (e) {
+      debugPrint('❌ Error deleting meal: $e');
+      // Rollback on error
+      _allMeals.add(meal);
+      _filterByDate(_selectedDate);
+      _cacheService.addMealToCache(meal.userId, meal.date, meal);
       rethrow;
     }
   }
 
   /// Cập nhật món ăn (thêm/xoá thành phần)
   Future<void> updateMeal(MealModel meal) async {
+    // Optimistic update - update cache immediately
     final allIdx = _allMeals.indexWhere((m) => m.id == meal.id);
     if (allIdx != -1) _allMeals[allIdx] = meal;
     final todayIdx = _todayMeals.indexWhere((m) => m.id == meal.id);
     if (todayIdx != -1) _todayMeals[todayIdx] = meal;
+    _cacheService.updateMealInCache(meal.userId, meal.date, meal);
     notifyListeners();
+    
+    // Save to Firestore in background
     try {
       await _firestore.collection(FirestoreCollections.mealDiary).doc(meal.id).set(meal.toMap());
+      debugPrint('✅ Meal updated in Firestore: ${meal.id}');
     } catch (e) {
       debugPrint('❌ Error updating meal: $e');
+      // Note: Rollback is complex here, so we just log the error
     }
   }
 
@@ -248,15 +340,17 @@ class NutritionProvider with ChangeNotifier {
       if (index != -1) {
         final meal = _todayMeals[index];
         final updated = meal.copyWith(isCompleted: !meal.isCompleted);
+        
+        // Optimistic update
         _todayMeals[index] = updated;
-
         final allIndex = _allMeals.indexWhere((m) => m.id == mealId);
         if (allIndex != -1) {
           _allMeals[allIndex] = updated;
         }
-
+        _cacheService.updateMealInCache(meal.userId, meal.date, updated);
         notifyListeners();
 
+        // Update Firestore in background
         await _firestore
             .collection(FirestoreCollections.mealDiary)
             .doc(mealId)
@@ -266,6 +360,19 @@ class NutritionProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ Error toggling meal completed: $e');
+      // Rollback on error
+      final index = _todayMeals.indexWhere((m) => m.id == mealId);
+      if (index != -1) {
+        final meal = _todayMeals[index];
+        final reverted = meal.copyWith(isCompleted: !meal.isCompleted);
+        _todayMeals[index] = reverted;
+        final allIndex = _allMeals.indexWhere((m) => m.id == mealId);
+        if (allIndex != -1) {
+          _allMeals[allIndex] = reverted;
+        }
+        _cacheService.updateMealInCache(meal.userId, meal.date, reverted);
+        notifyListeners();
+      }
       rethrow;
     }
   }

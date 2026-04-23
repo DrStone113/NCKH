@@ -2,34 +2,61 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/exercise_model.dart';
 import '../constants/firestore_collections.dart';
+import '../services/exercise_cache_service.dart';
 
 class ExerciseProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  final ExerciseCacheService _cacheService = ExerciseCacheService();
+  
   List<ExerciseModel> _todayExercises = [];
+  bool _isLoading = false;
 
   List<ExerciseModel> get todayExercises => _todayExercises;
+  bool get isLoading => _isLoading;
   double get totalCaloriesBurned => _todayExercises.fold(0, (sum, ex) => sum + ex.caloriesBurned);
   int get totalDuration => _todayExercises.fold(0, (sum, ex) => sum + ex.duration);
 
   Future<void> addExercise(ExerciseModel exercise) async {
-    // Add to local list first for immediate UI update
+    // Optimistic update - add to cache immediately
     _todayExercises.add(exercise);
+    _cacheService.addExerciseToCache(exercise.userId, exercise.date, exercise);
     notifyListeners();
     
+    // Save to Firestore in background
     try {
       await _firestore.collection(FirestoreCollections.exerciseDiary).doc(exercise.id).set(exercise.toMap());
       debugPrint('✅ Exercise saved to Firestore: ${exercise.name}');
     } catch (e) {
       debugPrint('❌ Error saving exercise to Firestore: $e');
-      // Keep in local list even if Firestore fails (offline support)
+      // Rollback on error
+      _todayExercises.removeWhere((ex) => ex.id == exercise.id);
+      _cacheService.removeExerciseFromCache(exercise.userId, exercise.date, exercise.id);
+      notifyListeners();
+      rethrow;
     }
   }
 
   Future<void> loadTodayExercises(String userId) async {
+    DateTime today = DateTime.now();
+    DateTime startOfDay = DateTime(today.year, today.month, today.day);
+    
+    // Check cache first
+    final cached = _cacheService.getCachedExercises(userId, today);
+    if (cached != null) {
+      debugPrint('📦 Using cached exercises for today');
+      _todayExercises = cached;
+      notifyListeners();
+      
+      // Pre-fetch nearby dates in background
+      _preFetchNearbyDates(userId, today);
+      return;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+    
     try {
       debugPrint('🔄 Loading exercises for user: $userId');
-      DateTime today = DateTime.now();
-      DateTime startOfDay = DateTime(today.year, today.month, today.day);
       DateTime endOfDay = startOfDay.add(const Duration(days: 1));
 
       QuerySnapshot snapshot = await _firestore
@@ -45,20 +72,58 @@ class ExerciseProvider with ChangeNotifier {
           })
           .toList();
       
+      // Cache the result
+      _cacheService.cacheExercises(userId, today, _todayExercises);
+      
+      // Cache all exercises for history
+      final allExercises = snapshot.docs
+          .map((doc) => ExerciseModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+      _cacheService.cacheAllExercises(userId, allExercises);
+      
       debugPrint('✅ Loaded ${_todayExercises.length} exercises from Firestore');
-      notifyListeners();
+      
+      // Pre-fetch nearby dates in background
+      _preFetchNearbyDates(userId, today);
     } catch (e) {
       debugPrint('❌ Error loading exercises from Firestore: $e');
       _todayExercises = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
+  /// Pre-fetch exercises for nearby dates in background
+  Future<void> _preFetchNearbyDates(String userId, DateTime centerDate) async {
+    await _cacheService.preFetchNearbyDates(
+      userId,
+      centerDate,
+      (date) async {
+        return await loadExercisesForDate(userId, date);
+      },
+    );
+  }
+
   Future<void> deleteExercise(String exerciseId) async {
+    // Find the exercise to get its date
+    final exercise = _todayExercises.firstWhere((ex) => ex.id == exerciseId);
+    
+    // Optimistic update - remove from cache immediately
+    _todayExercises.removeWhere((ex) => ex.id == exerciseId);
+    _cacheService.removeExerciseFromCache(exercise.userId, exercise.date, exerciseId);
+    notifyListeners();
+    
+    // Delete from Firestore in background
     try {
       await _firestore.collection(FirestoreCollections.exerciseDiary).doc(exerciseId).delete();
-      _todayExercises.removeWhere((ex) => ex.id == exerciseId);
-      notifyListeners();
+      debugPrint('✅ Exercise deleted from Firestore: $exerciseId');
     } catch (e) {
+      debugPrint('❌ Error deleting exercise: $e');
+      // Rollback on error
+      _todayExercises.add(exercise);
+      _cacheService.addExerciseToCache(exercise.userId, exercise.date, exercise);
+      notifyListeners();
       rethrow;
     }
   }
@@ -124,9 +189,13 @@ class ExerciseProvider with ChangeNotifier {
       if (index != -1) {
         final exercise = _todayExercises[index];
         final updated = exercise.copyWith(isCompleted: !exercise.isCompleted);
+        
+        // Optimistic update
         _todayExercises[index] = updated;
+        _cacheService.updateExerciseInCache(exercise.userId, exercise.date, updated);
         notifyListeners();
         
+        // Update Firestore in background
         await _firestore
             .collection(FirestoreCollections.exerciseDiary)
             .doc(exerciseId)
@@ -136,6 +205,15 @@ class ExerciseProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ Error toggling exercise completed: $e');
+      // Rollback on error
+      final index = _todayExercises.indexWhere((ex) => ex.id == exerciseId);
+      if (index != -1) {
+        final exercise = _todayExercises[index];
+        final reverted = exercise.copyWith(isCompleted: !exercise.isCompleted);
+        _todayExercises[index] = reverted;
+        _cacheService.updateExerciseInCache(exercise.userId, exercise.date, reverted);
+        notifyListeners();
+      }
       rethrow;
     }
   }
@@ -146,6 +224,19 @@ class ExerciseProvider with ChangeNotifier {
     DateTime startDate,
     DateTime endDate,
   ) async {
+    // Check if we have all exercises cached
+    final allCached = _cacheService.getAllCachedExercises(userId);
+    if (allCached != null) {
+      debugPrint('📦 Using cached exercises for date range');
+      final filtered = allCached
+          .where((exercise) {
+            return exercise.date.isAfter(startDate) && exercise.date.isBefore(endDate);
+          })
+          .toList();
+      filtered.sort((a, b) => b.date.compareTo(a.date)); // Newest first
+      return filtered;
+    }
+
     try {
       QuerySnapshot snapshot = await _firestore
           .collection(FirestoreCollections.exerciseDiary)
@@ -160,6 +251,13 @@ class ExerciseProvider with ChangeNotifier {
           .toList();
       
       exercises.sort((a, b) => b.date.compareTo(a.date)); // Newest first
+      
+      // Cache all exercises for future use
+      final allExercises = snapshot.docs
+          .map((doc) => ExerciseModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+      _cacheService.cacheAllExercises(userId, allExercises);
+      
       return exercises;
     } catch (e) {
       debugPrint('❌ Error loading exercises for date range: $e');
@@ -169,9 +267,21 @@ class ExerciseProvider with ChangeNotifier {
 
   // Get exercises for a specific date
   Future<List<ExerciseModel>> loadExercisesForDate(String userId, DateTime date) async {
+    // Check cache first
+    final cached = _cacheService.getCachedExercises(userId, date);
+    if (cached != null) {
+      debugPrint('📦 Using cached exercises for ${date.day}/${date.month}');
+      return cached;
+    }
+
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    return loadExercisesForDateRange(userId, startOfDay, endOfDay);
+    final exercises = await loadExercisesForDateRange(userId, startOfDay, endOfDay);
+    
+    // Cache the result
+    _cacheService.cacheExercises(userId, date, exercises);
+    
+    return exercises;
   }
 
   // Get completion stats

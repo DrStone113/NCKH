@@ -383,54 +383,42 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final exerciseActions = structuredResponse.exerciseActions;
 
     if (foodActions.isNotEmpty) {
-      // Nhóm food actions theo meal_type để tạo nhiều card nếu AI gợi ý nhiều bữa
-      final groups = <String, List<ActionItem>>{};
+      // Backend giờ luôn trả về 1 món với dish_name
+      // Nhóm theo dish_name để xử lý trường hợp có nhiều món (gợi ý cả ngày)
+      final dishGroups = <String, List<ActionItem>>{};
+      
       for (final action in foodActions) {
-        final mealType = action.details['meal_type'] as String? ?? 'sang';
-        groups.putIfAbsent(mealType, () => []).add(action);
+        final dishName = action.details['dish_name'] as String?;
+        final mealType = action.details['meal_type'] as String? ?? 'lunch';
+        
+        // Ưu tiên dish_name, fallback về meal_type nếu không có
+        final key = (dishName != null && dishName.isNotEmpty) 
+            ? dishName 
+            : _getMealTypeLabel(mealType);
+        
+        dishGroups.putIfAbsent(key, () => []).add(action);
       }
 
-      // Nếu chỉ có 1 nhóm → dùng meal_name từ structured response
-      // Nếu nhiều nhóm → mỗi nhóm là 1 card riêng
-      if (groups.length == 1) {
-        final mealName = structuredResponse.mealName?.isNotEmpty == true
-            ? structuredResponse.mealName!
-            : structuredResponse.text.isNotEmpty
-                ? structuredResponse.text
-                : foodActions.first.name;
+      // Render mỗi món thành 1 card
+      for (final entry in dishGroups.entries) {
+        final dishName = entry.key;
+        final actions = entry.value;
+        
+        // Lấy meal_type từ action đầu tiên để hiển thị subtitle
+        final mealType = actions.first.details['meal_type'] as String? ?? 'lunch';
+        
         widgets.add(Padding(
           padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
           child: _MealActionCard(
-            mealName: mealName,
-            actions: foodActions,
+            mealName: dishName,
+            mealType: mealType,
+            actions: actions,
             onSaveAll: () => _handleSaveMealToJournal(
-              mealName: mealName,
-              actions: foodActions,
+              mealName: dishName,
+              actions: actions,
             ),
           ),
         ));
-      } else {
-        // Nhiều bữa → mỗi bữa 1 card
-        final mealTypeLabels = {
-          'sang': 'Bữa sáng', 'breakfast': 'Bữa sáng',
-          'trua': 'Bữa trưa', 'lunch': 'Bữa trưa',
-          'toi': 'Bữa tối', 'dinner': 'Bữa tối',
-          'phu': 'Ăn phụ', 'snack': 'Ăn phụ',
-        };
-        for (final entry in groups.entries) {
-          final label = mealTypeLabels[entry.key] ?? entry.key;
-          widgets.add(Padding(
-            padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
-            child: _MealActionCard(
-              mealName: label,
-              actions: entry.value,
-              onSaveAll: () => _handleSaveMealToJournal(
-                mealName: label,
-                actions: entry.value,
-              ),
-            ),
-          ));
-        }
       }
     }
 
@@ -446,6 +434,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     return widgets;
+  }
+
+  /// Helper: Lấy label tiếng Việt cho meal_type
+  String _getMealTypeLabel(String mealType) {
+    const labels = {
+      'sang': 'Bữa sáng', 'breakfast': 'Bữa sáng',
+      'trua': 'Bữa trưa', 'lunch': 'Bữa trưa',
+      'toi': 'Bữa tối', 'dinner': 'Bữa tối',
+      'phu': 'Ăn phụ', 'snack': 'Ăn phụ',
+    };
+    return labels[mealType.toLowerCase()] ?? 'Bữa ăn';
   }
 
   /// Lưu food actions thành 1 MealModel với nhiều MealItem
@@ -1199,16 +1198,31 @@ class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin 
 // ═══════════════════════════════════════════════════════════════
 // Card hiển thị món ăn gợi ý từ AI (nhóm nhiều nguyên liệu)
 // ═══════════════════════════════════════════════════════════════
+// Card hiển thị món ăn gợi ý từ AI (nhóm nhiều nguyên liệu)
+// ═══════════════════════════════════════════════════════════════
 class _MealActionCard extends StatelessWidget {
   final String mealName;
+  final String mealType;
   final List<ActionItem> actions;
   final VoidCallback onSaveAll;
 
   const _MealActionCard({
     required this.mealName,
+    required this.mealType,
     required this.actions,
     required this.onSaveAll,
   });
+
+  /// Lấy nhãn bữa ăn từ meal_type
+  String get _mealTypeLabel {
+    switch (mealType.toLowerCase()) {
+      case 'breakfast': case 'sang': return 'Bữa sáng';
+      case 'lunch':     case 'trua': return 'Bữa trưa';
+      case 'dinner':    case 'toi':  return 'Bữa tối';
+      case 'snack':     case 'phu':  return 'Ăn phụ';
+      default:          return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1276,8 +1290,17 @@ class _MealActionCard extends StatelessWidget {
                     children: [
                       Text(mealName,
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A))),
-                      Text('${actions.length} nguyên liệu',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF4CAF50))),
+                      Row(
+                        children: [
+                          if (_mealTypeLabel.isNotEmpty) ...[
+                            Text(_mealTypeLabel,
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF888888))),
+                            const Text(' · ', style: TextStyle(fontSize: 11, color: Color(0xFF888888))),
+                          ],
+                          Text('${actions.length} nguyên liệu',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF4CAF50))),
+                        ],
+                      ),
                     ],
                   ),
                 ),

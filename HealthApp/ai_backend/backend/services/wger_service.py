@@ -57,9 +57,12 @@ class WgerService:
             logger.warning(f"Timeout fetching exercises from wger API: {e}")
             raise TimeoutError(f"Wger API timeout after {self.timeout} seconds")
 
-    async def fetch_all_ingredients(self, db: AsyncSession) -> list[WgerIngredientData]:
+    async def fetch_all_ingredients(self, db: AsyncSession, limit: int = 1000) -> list[WgerIngredientData]:
         """
-        Fetch tất cả thực phẩm từ wger API hoặc cache.
+        Fetch thực phẩm từ wger API hoặc cache.
+        
+        Note: Chỉ fetch 1000 ingredients đầu tiên (đủ cho meal planning).
+        Ingredients không có language filter nên bỏ language=2.
         
         Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 8.7
         """
@@ -73,10 +76,13 @@ class WgerService:
             logger.info("Cache valid, returning ingredients from DB")
             return await self._get_ingredients_from_cache(db)
 
-        # Fetch từ wger API
-        logger.info("Cache invalid or empty, fetching from wger API")
+        # Fetch từ wger API (bỏ language filter, tăng page size, giới hạn total)
+        logger.info(f"Cache invalid or empty, fetching {limit} ingredients from wger API")
         try:
-            raw_data = await self._fetch_paginated("/ingredient/?format=json&language=2")
+            raw_data = await self._fetch_paginated(
+                f"/ingredient/?format=json&limit=100",
+                max_items=limit
+            )
             ingredients = self._parse_ingredients(raw_data)
             
             # Save to cache
@@ -87,11 +93,15 @@ class WgerService:
             logger.warning(f"Timeout fetching ingredients from wger API: {e}")
             raise TimeoutError(f"Wger API timeout after {self.timeout} seconds")
 
-    async def _fetch_paginated(self, endpoint: str) -> list[dict]:
+    async def _fetch_paginated(self, endpoint: str, max_items: int = None) -> list[dict]:
         """
         Fetch tất cả trang từ wger API endpoint có pagination.
         Timeout áp dụng per-request (không phải toàn bộ session) để tránh
         timeout khi ingredient API có nhiều trang.
+
+        Args:
+            endpoint: API endpoint (đã có query params)
+            max_items: Giới hạn số items fetch (None = fetch all)
 
         Requirements: 1.3, 1.6, 1.7
         """
@@ -117,6 +127,13 @@ class WgerService:
                     data = response.json()
                     page_results = data.get("results", [])
                     results.extend(page_results)
+                    
+                    # Kiểm tra max_items limit
+                    if max_items and len(results) >= max_items:
+                        results = results[:max_items]
+                        logger.info(f"Reached max_items limit ({max_items}), stopping fetch")
+                        break
+                    
                     url = data.get("next")  # None khi hết trang
                     logger.debug(f"Page {page_num}: got {len(page_results)} items, total={len(results)}")
 

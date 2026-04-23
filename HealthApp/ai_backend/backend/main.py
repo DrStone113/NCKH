@@ -64,6 +64,8 @@ async def health_check():
 from routers.chat import router as chat_router
 from routers.wger import router as wger_router
 from routers.off import router as off_router
+from routers.nutrition import router as nutrition_router
 app.include_router(chat_router)
 app.include_router(wger_router)
 app.include_router(off_router)
+app.include_router(nutrition_router)

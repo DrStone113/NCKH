@@ -124,7 +124,10 @@ _ACTION_DATA_GUIDE = (
     "QUY TẮC BẮT BUỘC cho món ăn:\n"
     "- Mỗi action là MỘT nguyên liệu riêng lẻ (ví dụ: 'Gạo tẻ', 'Thịt heo nạc', 'Rau muống')\n"
     "- KHÔNG gộp nhiều nguyên liệu thành 1 action (KHÔNG viết 'Cơm heo quay', 'Bữa tối lành mạnh')\n"
-    "- Thêm trường 'meal_name' vào structured để đặt tên cho cả món (ví dụ: 'Cơm heo quay')\n"
+    "- Thêm trường 'meal_name' vào structured để đặt tên tổng quát\n"
+    "- QUAN TRỌNG: Mỗi nguyên liệu PHẢI có trường 'dish_name' trong details để ghi tên MÓN ĂN chứa nguyên liệu đó\n"
+    "  Ví dụ: Gạo tẻ và Thịt gà đều thuộc món 'Cơm gà' → dish_name: 'Cơm gà'\n"
+    "  Ví dụ: Khoai lang và Trứng gà thuộc 2 món khác nhau → dish_name khác nhau\n"
     "- Mỗi nguyên liệu phải có serving_grams cụ thể\n"
     "- calories/protein/carbs/fat là giá trị trên 100g của nguyên liệu đó\n"
     "- QUAN TRỌNG: meal_type phải khớp với bữa ăn đang gợi ý:\n"
@@ -135,16 +138,19 @@ _ACTION_DATA_GUIDE = (
     "Ví dụ ĐÚNG cho bữa trưa 'Cơm gà':\n"
     "[ACTION_DATA]\n"
     '{"type":"structured","text":"Cơm gà","meal_name":"Cơm gà","actions":[\n'
-    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"lunch","serving_grams":200}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Thịt gà luộc","details":{"calories":165,"protein":31,"carbs":0,"fat":3.6,"meal_type":"lunch","serving_grams":120}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Rau muống xào","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"lunch","serving_grams":150}}\n'
+    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"lunch","dish_name":"Cơm gà","serving_grams":200}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Thịt gà luộc","details":{"calories":165,"protein":31,"carbs":0,"fat":3.6,"meal_type":"lunch","dish_name":"Cơm gà","serving_grams":120}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Rau muống xào","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"lunch","dish_name":"Cơm gà","serving_grams":150}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
-    "Ví dụ ĐÚNG cho bữa sáng 'Bánh mì trứng':\n"
+    "Ví dụ ĐÚNG cho cả ngày (nhiều món, nhiều bữa):\n"
     "[ACTION_DATA]\n"
-    '{"type":"structured","text":"Bánh mì trứng","meal_name":"Bánh mì trứng","actions":[\n'
-    '  {"kind":"food","wger_id":0,"name":"Bánh mì","details":{"calories":265,"protein":9,"carbs":49,"fat":3.2,"meal_type":"breakfast","serving_grams":100}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Trứng gà","details":{"calories":155,"protein":13,"carbs":1.1,"fat":11,"meal_type":"breakfast","serving_grams":100}}\n'
+    '{"type":"structured","text":"Thực đơn cả ngày","meal_name":"Thực đơn cả ngày","actions":[\n'
+    '  {"kind":"food","wger_id":0,"name":"Bánh mì","details":{"calories":249,"protein":7.9,"carbs":52.6,"fat":0.8,"meal_type":"breakfast","dish_name":"Bánh mì trứng","serving_grams":100}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Trứng gà","details":{"calories":166,"protein":14.8,"carbs":0.5,"fat":11.6,"meal_type":"breakfast","dish_name":"Bánh mì trứng","serving_grams":60}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"lunch","dish_name":"Cơm thịt heo xào rau","serving_grams":200}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Thịt heo nạc","details":{"calories":139,"protein":19,"carbs":0,"fat":7,"meal_type":"lunch","dish_name":"Cơm thịt heo xào rau","serving_grams":100}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Rau cải xanh","details":{"calories":16,"protein":1.7,"carbs":1.9,"fat":0.2,"meal_type":"lunch","dish_name":"Cơm thịt heo xào rau","serving_grams":150}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
     "QUY TẮC BẮT BUỘC cho bài tập:\n"

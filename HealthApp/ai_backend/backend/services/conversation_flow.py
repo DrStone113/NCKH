@@ -61,27 +61,22 @@ _EXERCISE_STEPS = [
     {
         "key": "muscle_group",
         "question": "💪 Bạn muốn tập nhóm cơ nào?",
-        "options": ["🏃 Toàn thân", "💪 Ngực & Tay", "🦵 Chân", "🔙 Lưng & Vai", "🎯 Bụng & Core"],
-        "values":  ["toàn thân",   "ngực và tay",  "chân",   "lưng và vai",    "bụng và core"],
+        "options": ["Toàn thân", "Ngực", "Tay", "Chân", "Lưng", "Vai", "Bụng & Core"],
+        "values":  ["toàn thân", "ngực", "tay", "chân", "lưng", "vai", "bụng và core"],
         "parse": lambda t: _match_options(t, {
             r"toàn thân|tất cả|full body": "toàn thân",
-            r"ngực|tay|chest|arm|bicep|tricep": "ngực và tay",
+            r"ngực|chest": "ngực",
+            r"tay|arm|bicep|tricep": "tay",
             r"chân|leg|squat|lunge": "chân",
-            r"lưng|vai|back|shoulder": "lưng và vai",
+            r"lưng|back": "lưng",
+            r"vai|shoulder": "vai",
             r"bụng|core|ab": "bụng và core",
         }),
     },
     {
-        "key": "duration",
-        "question": "⏱ Bạn có bao nhiêu thời gian?",
-        "options": ["15 phút", "30 phút", "45 phút", "60 phút"],
-        "values":  ["15",      "30",      "45",      "60"],
-        "parse": lambda t: _extract_number(t, [15, 30, 45, 60]),
-    },
-    {
         "key": "equipment",
         "question": "🏋️ Bạn có dụng cụ tập không?",
-        "options": ["Không có", "Tạ tay", "Dây kháng lực", "Phòng gym đầy đủ"],
+        "options": ["Không có", "Tạ đơn", "Dây kháng lực", "Phòng gym đầy đủ"],
         "values":  ["không có dụng cụ", "tạ tay", "dây kháng lực", "đầy đủ dụng cụ gym"],
         "parse": lambda t: _match_options(t, {
             r"không|none|bodyweight": "không có dụng cụ",
@@ -89,6 +84,13 @@ _EXERCISE_STEPS = [
             r"dây|band|resistance": "dây kháng lực",
             r"gym|phòng gym|đầy đủ": "đầy đủ dụng cụ gym",
         }),
+    },
+    {
+        "key": "duration",
+        "question": "⏱ Bạn có bao nhiêu thời gian?",
+        "options": ["30 phút", "45 phút", "60 phút"],
+        "values":  ["30",      "45",      "60"],
+        "parse": lambda t: _extract_number(t, [30, 45, 60]),
     },
 ]
 

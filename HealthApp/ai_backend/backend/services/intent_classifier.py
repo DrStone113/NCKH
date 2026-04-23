@@ -84,9 +84,9 @@ _DEFAULT_SUGGESTIONS: dict[Intent, list[str]] = {
     ],
     Intent.EXERCISE_REQUEST: [
         "Tập toàn thân 30 phút",
-        "Bài tập không cần dụng cụ",
+        "Bài tập ngực",
+        "Tập chân không dụng cụ",
         "Lịch tập cả tuần",
-        "Tập cardio đốt mỡ",
     ],
     Intent.NUTRITION_REQUEST: [
         "Thực đơn giảm cân",

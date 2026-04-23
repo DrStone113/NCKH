@@ -121,7 +121,8 @@ async def _handle_chat(websocket: WebSocket, request: ChatRequest) -> None:
                 message=enriched,
                 user_context=request.user_context,
             )
-            await _call_llm(websocket, enriched_request, t0)
+            # Truyền flag from_flow=True để thay đổi suggestions
+            await _call_llm(websocket, enriched_request, t0, from_flow=True)
             return
 
     # ── 2. Classify intent ────────────────────────────────────────────────
@@ -187,7 +188,7 @@ def _needs_exercise_info(message: str, request: ChatRequest = None) -> bool:
         return False
 
     has_muscle = bool(re.search(
-        r'\b(ngực|lưng|chân|vai|bụng|toàn thân|core|tay|arm|leg|back|chest|shoulder|abs)\b', text))
+        r'\b(ngực|lưng|chân|vai|bụng|toàn thân|tay|core|arm|leg|back|chest|shoulder|abs)\b', text))
     has_duration = bool(re.search(r'\d+\s*(phút|giờ|min|hour)', text))
     has_equipment = bool(re.search(
         r'\b(không có dụng cụ|tạ tay|tạ đòn|gym|dây kháng lực|bodyweight|barbell|dumbbell)\b', text))
@@ -238,7 +239,7 @@ def _needs_nutrition_info(message: str, request: ChatRequest = None) -> bool:
 
 
 async def _call_llm(websocket: WebSocket, request: ChatRequest, t0: float,
-                    intent: Intent = None):
+                    intent: Intent = None, from_flow: bool = False):
     """Gọi RAG + LLM và stream kết quả."""
     session_id = request.session_id
 
@@ -295,7 +296,15 @@ async def _call_llm(websocket: WebSocket, request: ChatRequest, t0: float,
 
     # Parse
     clean_text, structured, suggestions = response_parser.parse(full_response)
-    if not suggestions:
+    
+    # Nếu đến từ conversation flow, thay suggestions bằng gợi ý flow mới
+    if from_flow:
+        suggestions = [
+            "Tạo bài tập mới",
+            "Gợi ý bữa ăn",
+            "Phân tích hôm nay",
+        ]
+    elif not suggestions:
         suggestions = intent_classifier.get_default_suggestions(intent)
 
     # Done

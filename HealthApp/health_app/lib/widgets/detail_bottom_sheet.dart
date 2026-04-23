@@ -54,7 +54,8 @@ class _DetailSheetState extends State<_DetailSheet> {
   @override
   Widget build(BuildContext context) {
     final isExercise = widget.action.kind == 'exercise';
-    final color = isExercise ? const Color(0xFF2196F3) : const Color(0xFF4CAF50);
+    final color =
+        isExercise ? const Color(0xFF2196F3) : const Color(0xFF4CAF50);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -72,7 +73,8 @@ class _DetailSheetState extends State<_DetailSheet> {
               padding: const EdgeInsets.only(top: 12, bottom: 4),
               child: Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
@@ -87,14 +89,16 @@ class _DetailSheetState extends State<_DetailSheet> {
               child: Row(
                 children: [
                   Container(
-                    width: 44, height: 44,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       isExercise ? Icons.fitness_center : Icons.restaurant_menu,
-                      color: color, size: 24,
+                      color: color,
+                      size: 24,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -108,7 +112,9 @@ class _DetailSheetState extends State<_DetailSheet> {
                               fontSize: 17, fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          isExercise ? 'Hướng dẫn bài tập' : 'Thông tin dinh dưỡng',
+                          isExercise
+                              ? 'Hướng dẫn bài tập'
+                              : 'Thông tin dinh dưỡng',
                           style: TextStyle(fontSize: 12, color: color),
                         ),
                       ],
@@ -152,7 +158,8 @@ class _DetailSheetState extends State<_DetailSheet> {
                   },
                   icon: const Icon(Icons.bookmark_add_outlined, size: 20),
                   label: const Text('Lưu vào nhật ký',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color,
                     foregroundColor: Colors.white,
@@ -204,11 +211,13 @@ class _DetailSheetState extends State<_DetailSheet> {
 
       // Category + Equipment chips
       Wrap(
-        spacing: 8, runSpacing: 8,
+        spacing: 8,
+        runSpacing: 8,
         children: [
           if (ex.category.isNotEmpty)
             _chip(ex.category, Icons.category_outlined, color),
-          ...ex.equipment.map((e) => _chip(e, Icons.sports_gymnastics, Colors.grey)),
+          ...ex.equipment
+              .map((e) => _chip(e, Icons.sports_gymnastics, Colors.grey)),
         ],
       ),
 
@@ -216,18 +225,22 @@ class _DetailSheetState extends State<_DetailSheet> {
       if (ex.aliases.isNotEmpty) ...[
         const SizedBox(height: 8),
         Wrap(
-          spacing: 6, runSpacing: 6,
-          children: ex.aliases.map((a) =>
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Text(a, style: const TextStyle(fontSize: 11, color: Color(0xFF666666))),
-            )
-          ).toList(),
+          spacing: 6,
+          runSpacing: 6,
+          children: ex.aliases
+              .map((a) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Text(a,
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF666666))),
+                  ))
+              .toList(),
         ),
       ],
       const SizedBox(height: 20),
@@ -245,7 +258,8 @@ class _DetailSheetState extends State<_DetailSheet> {
           ),
           child: Text(
             ex.description,
-            style: const TextStyle(fontSize: 14, height: 1.7, color: Color(0xFF333333)),
+            style: const TextStyle(
+                fontSize: 14, height: 1.7, color: Color(0xFF333333)),
           ),
         ),
         const SizedBox(height: 20),
@@ -263,7 +277,9 @@ class _DetailSheetState extends State<_DetailSheet> {
             if (ex.muscles.isNotEmpty && ex.musclesSecondary.isNotEmpty)
               const SizedBox(width: 12),
             if (ex.musclesSecondary.isNotEmpty)
-              Expanded(child: _muscleGroup('Cơ phụ', ex.musclesSecondary, Colors.orange)),
+              Expanded(
+                  child: _muscleGroup(
+                      'Cơ phụ', ex.musclesSecondary, Colors.orange)),
           ],
         ),
         const SizedBox(height: 20),
@@ -287,7 +303,9 @@ class _DetailSheetState extends State<_DetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 8),
           ...muscles.map((m) {
             final name = m.nameEn.isNotEmpty ? m.nameEn : m.name;
@@ -296,14 +314,18 @@ class _DetailSheetState extends State<_DetailSheet> {
               child: Row(
                 children: [
                   if (m.imageUrlMain != null)
-                    Image.network(m.imageUrlMain!, width: 28, height: 28,
-                        errorBuilder: (_, __, ___) => Icon(Icons.circle, size: 8, color: color))
+                    Image.network(m.imageUrlMain!,
+                        width: 28,
+                        height: 28,
+                        errorBuilder: (_, __, ___) =>
+                            Icon(Icons.circle, size: 8, color: color))
                   else
                     Icon(Icons.circle, size: 8, color: color),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(name,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF333333))),
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF333333))),
                   ),
                 ],
               ),
@@ -320,9 +342,12 @@ class _DetailSheetState extends State<_DetailSheet> {
       _sectionTitle('⏱ Thông tin bài tập', color),
       const SizedBox(height: 8),
       _infoCard([
-        if (d['duration'] != null) _infoRow('Thời gian', '${d['duration']} phút'),
-        if (d['calories_burned'] != null) _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
-        if (d['type'] != null) _infoRow('Loại', _translateType(d['type'].toString())),
+        if (d['duration'] != null)
+          _infoRow('Thời gian', '${d['duration']} phút'),
+        if (d['calories_burned'] != null)
+          _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
+        if (d['type'] != null)
+          _infoRow('Loại', _translateType(d['type'].toString())),
       ], color),
       const SizedBox(height: 16),
       Container(
@@ -352,8 +377,10 @@ class _DetailSheetState extends State<_DetailSheet> {
     final d = widget.action.details;
     return [
       if (d['duration'] != null) _infoRow('Thời gian', '${d['duration']} phút'),
-      if (d['calories_burned'] != null) _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
-      if (d['type'] != null) _infoRow('Loại', _translateType(d['type'].toString())),
+      if (d['calories_burned'] != null)
+        _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
+      if (d['type'] != null)
+        _infoRow('Loại', _translateType(d['type'].toString())),
     ];
   }
 
@@ -368,7 +395,9 @@ class _DetailSheetState extends State<_DetailSheet> {
       if (ing.imageUrl != null) ...[
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.network(ing.imageUrl!, height: 160, width: double.infinity,
+          child: Image.network(ing.imageUrl!,
+              height: 160,
+              width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const SizedBox.shrink()),
         ),
@@ -411,13 +440,17 @@ class _DetailSheetState extends State<_DetailSheet> {
       _sectionTitle('🔥 Dinh dưỡng / 100g', color),
       const SizedBox(height: 12),
       Row(children: [
-        _macroCard('Calo', '${ing.energy?.toStringAsFixed(0) ?? '-'}', 'kcal', const Color(0xFFFF7043)),
+        _macroCard('Calo', ing.energy?.toStringAsFixed(0) ?? '-', 'kcal',
+            const Color(0xFFFF7043)),
         const SizedBox(width: 8),
-        _macroCard('Protein', '${ing.protein?.toStringAsFixed(1) ?? '-'}', 'g', const Color(0xFFE53935)),
+        _macroCard('Protein', ing.protein?.toStringAsFixed(1) ?? '-', 'g',
+            const Color(0xFFE53935)),
         const SizedBox(width: 8),
-        _macroCard('Carbs', '${ing.carbohydrates?.toStringAsFixed(1) ?? '-'}', 'g', const Color(0xFFFFA000)),
+        _macroCard('Carbs', ing.carbohydrates?.toStringAsFixed(1) ?? '-', 'g',
+            const Color(0xFFFFA000)),
         const SizedBox(width: 8),
-        _macroCard('Fat', '${ing.fat?.toStringAsFixed(1) ?? '-'}', 'g', const Color(0xFF00ACC1)),
+        _macroCard('Fat', ing.fat?.toStringAsFixed(1) ?? '-', 'g',
+            const Color(0xFF00ACC1)),
       ]),
       const SizedBox(height: 20),
 
@@ -425,14 +458,24 @@ class _DetailSheetState extends State<_DetailSheet> {
       _sectionTitle('📊 Chi tiết dinh dưỡng', color),
       const SizedBox(height: 8),
       _infoCard([
-        if (ing.energy != null) _infoRow('Năng lượng', '${ing.energy!.toStringAsFixed(0)} kcal'),
-        if (ing.protein != null) _infoRow('Protein', '${ing.protein!.toStringAsFixed(1)} g'),
-        if (ing.carbohydrates != null) _infoRow('Carbohydrates', '${ing.carbohydrates!.toStringAsFixed(1)} g'),
-        if (ing.carbohydratesSugar != null) _infoRow('  └ Đường', '${ing.carbohydratesSugar!.toStringAsFixed(1)} g'),
-        if (ing.fat != null) _infoRow('Chất béo', '${ing.fat!.toStringAsFixed(1)} g'),
-        if (ing.fatSaturated != null) _infoRow('  └ Bão hòa', '${ing.fatSaturated!.toStringAsFixed(1)} g'),
-        if (ing.fiber != null) _infoRow('Chất xơ', '${ing.fiber!.toStringAsFixed(1)} g'),
-        if (ing.sodium != null) _infoRow('Natri', '${(ing.sodium! * 1000).toStringAsFixed(0)} mg'),
+        if (ing.energy != null)
+          _infoRow('Năng lượng', '${ing.energy!.toStringAsFixed(0)} kcal'),
+        if (ing.protein != null)
+          _infoRow('Protein', '${ing.protein!.toStringAsFixed(1)} g'),
+        if (ing.carbohydrates != null)
+          _infoRow(
+              'Carbohydrates', '${ing.carbohydrates!.toStringAsFixed(1)} g'),
+        if (ing.carbohydratesSugar != null)
+          _infoRow(
+              '  └ Đường', '${ing.carbohydratesSugar!.toStringAsFixed(1)} g'),
+        if (ing.fat != null)
+          _infoRow('Chất béo', '${ing.fat!.toStringAsFixed(1)} g'),
+        if (ing.fatSaturated != null)
+          _infoRow('  └ Bão hòa', '${ing.fatSaturated!.toStringAsFixed(1)} g'),
+        if (ing.fiber != null)
+          _infoRow('Chất xơ', '${ing.fiber!.toStringAsFixed(1)} g'),
+        if (ing.sodium != null)
+          _infoRow('Natri', '${(ing.sodium! * 1000).toStringAsFixed(0)} mg'),
       ], color),
 
       // Weight units
@@ -441,9 +484,9 @@ class _DetailSheetState extends State<_DetailSheet> {
         _sectionTitle('⚖️ Đơn vị đo lường', color),
         const SizedBox(height: 8),
         _infoCard(
-          ing.weightUnits.map((wu) =>
-            _infoRow(wu.name, '${wu.gram.toStringAsFixed(0)} g')
-          ).toList(),
+          ing.weightUnits
+              .map((wu) => _infoRow(wu.name, '${wu.gram.toStringAsFixed(0)} g'))
+              .toList(),
           color,
         ),
       ],
@@ -470,15 +513,21 @@ class _DetailSheetState extends State<_DetailSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(8)),
+            width: 32,
+            height: 32,
+            decoration:
+                BoxDecoration(color: c, borderRadius: BorderRadius.circular(8)),
             child: Center(
               child: Text(score.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16)),
             ),
           ),
           const SizedBox(width: 10),
-          Text('Nutri-Score $score', style: TextStyle(color: c, fontWeight: FontWeight.w600)),
+          Text('Nutri-Score $score',
+              style: TextStyle(color: c, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -492,10 +541,12 @@ class _DetailSheetState extends State<_DetailSheet> {
       Row(
         children: [
           if (d['calories'] != null)
-            _macroCard('Calo', '${d['calories']}', 'kcal', const Color(0xFFFF7043)),
+            _macroCard(
+                'Calo', '${d['calories']}', 'kcal', const Color(0xFFFF7043)),
           if (d['protein'] != null) ...[
             const SizedBox(width: 8),
-            _macroCard('Protein', '${d['protein']}', 'g', const Color(0xFFE53935)),
+            _macroCard(
+                'Protein', '${d['protein']}', 'g', const Color(0xFFE53935)),
           ],
           if (d['carbs'] != null) ...[
             const SizedBox(width: 8),
@@ -535,8 +586,8 @@ class _DetailSheetState extends State<_DetailSheet> {
 
   Widget _sectionTitle(String title, Color color) => Text(
         title,
-        style: TextStyle(
-            fontSize: 15, fontWeight: FontWeight.w700, color: color),
+        style:
+            TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color),
       );
 
   Widget _chip(String label, IconData icon, Color color) => Container(
@@ -565,8 +616,11 @@ class _DetailSheetState extends State<_DetailSheet> {
       child: Row(
         children: [
           if (m.imageUrlMain != null)
-            Image.network(m.imageUrlMain!, width: 32, height: 32,
-                errorBuilder: (_, __, ___) => Icon(Icons.circle, size: 10, color: color))
+            Image.network(m.imageUrlMain!,
+                width: 32,
+                height: 32,
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.circle, size: 10, color: color))
           else
             Icon(Icons.circle, size: 10, color: color),
           const SizedBox(width: 10),
@@ -593,7 +647,11 @@ class _DetailSheetState extends State<_DetailSheet> {
               children: [
                 e.value,
                 if (!isLast)
-                  Divider(height: 1, color: Colors.grey[200], indent: 16, endIndent: 16),
+                  Divider(
+                      height: 1,
+                      color: Colors.grey[200],
+                      indent: 16,
+                      endIndent: 16),
               ],
             );
           }).toList(),
@@ -629,11 +687,10 @@ class _DetailSheetState extends State<_DetailSheet> {
             children: [
               Text(value,
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: color)),
+                      fontSize: 18, fontWeight: FontWeight.w800, color: color)),
               Text(unit,
-                  style: TextStyle(fontSize: 11, color: color.withOpacity(0.8))),
+                  style:
+                      TextStyle(fontSize: 11, color: color.withOpacity(0.8))),
               const SizedBox(height: 2),
               Text(label,
                   style: const TextStyle(

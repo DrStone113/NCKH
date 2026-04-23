@@ -66,10 +66,12 @@ async def load_data():
 
     print(f"Loaded {len(exercises)} exercises and {len(nutrition_items)} nutrition items from JSON.")
 
-    # 2. Init SentenceTransformer
-    print(f"Loading embedding model: {settings.embedding_model} ...")
-    model = SentenceTransformer(settings.embedding_model)
-    print("Embedding model ready.")
+    # 2. Init SentenceTransformer with GPU support
+    import torch
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Loading embedding model: {settings.embedding_model} on device: {device} ...")
+    model = SentenceTransformer(settings.embedding_model, device=device)
+    print(f"Embedding model ready on {device}.")
 
     # 3. Connect asyncpg
     dsn = _get_asyncpg_dsn(settings.database_url)

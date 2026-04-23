@@ -41,6 +41,10 @@ if %errorlevel% == 0 (
     pip install -r backend\requirements.txt --quiet
 
     echo.
+    echo [GPU] Kiem tra GPU support...
+    %PYTHON_CMD% check_gpu.py
+    echo.
+
     echo [Ollama] Kiem tra Ollama...
     ollama --version >nul 2>&1
     if %errorlevel% == 0 (

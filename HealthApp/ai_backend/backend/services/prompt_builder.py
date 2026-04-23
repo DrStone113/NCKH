@@ -89,7 +89,7 @@ def _calc_macro_targets(recommended_kcal: float, health_goal: str,
 # System prompt cơ bản — ngắn gọn, rõ ràng
 _BASE_SYSTEM = (
     "Bạn là trợ lý sức khỏe AI. Trả lời HOÀN TOÀN bằng tiếng Việt, ngắn gọn, chuyên nghiệp.\n"
-    "KHÔNG dùng tiếng Anh dù chỉ 1 từ.\n"
+    "Chỉ sử dụng tiếng Anh cho tên các bài tập (Deadlift, Leg raise,..), còn lại đều là tiếng Việt.\n"
     "KHÔNG bịa đặt tên người dùng — không có tên trong dữ liệu thì KHÔNG đề cập tên.\n"
     "KHÔNG thêm câu xã giao thừa như 'Vui vẻ!', 'Chúc bạn...', 'Tuyệt vời!', 'Rất vui được...'.\n"
     "Đi thẳng vào nội dung, không mở đầu bằng lời chào hay câu cảm thán.\n\n"
@@ -112,13 +112,20 @@ _ACTION_DATA_GUIDE = (
     '  {"kind":"food","wger_id":0,"name":"Rau muống luộc","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"dinner","serving_grams":150}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
+    "QUY TẮC BẮT BUỘC cho bài tập:\n"
+    "- Mỗi action chỉ có 2 trường trong details: duration (phút) và calories_burned (kcal)\n"
+    "- TUYỆT ĐỐI KHÔNG thêm trường 'type', 'category', 'difficulty', 'muscle_group' hay bất kỳ trường nào khác\n"
+    "- CHỈ GHI: duration, calories_burned - KHÔNG GHI GÌ THÊM\n\n"
     "Ví dụ ĐÚNG cho bài tập:\n"
     "[ACTION_DATA]\n"
     '{"type":"structured","text":"Bài tập gợi ý","actions":[\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Chạy bộ","details":{"duration":30,"calories_burned":250,"type":"cardio"}},\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Hít đất","details":{"duration":15,"calories_burned":80,"type":"strength"}}\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Chạy bộ","details":{"duration":30,"calories_burned":250}},\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Hít đất","details":{"duration":15,"calories_burned":80}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
+    "Ví dụ SAI (KHÔNG làm như thế này):\n"
+    '  {"kind":"exercise","wger_id":0,"name":"Squat","details":{"duration":30,"calories_burned":120,"type":"strength"}}  ← SAI vì có trường "type"\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Plank","details":{"duration":20,"calories_burned":50,"category":"core"}}  ← SAI vì có trường "category"\n\n'
     "Quy tắc wger_id: lấy từ [WGER_EXERCISE id=X] hoặc [WGER_INGREDIENT id=X] nếu có trong dữ liệu tham khảo, không thì dùng 0.\n\n"
 )
 
@@ -332,214 +339,6 @@ class PromptBuilder:
             system += _ACTION_DATA_GUIDE
 
         else:
-            system += _ACTION_DATA_GUIDE
-
-        system += _SUGGESTIONS_GUIDE
-
-        # Build messages
-        messages: list[dict] = [{"role": "system", "content": system}]
-
-        for turn in history[-max_history:]:
-            role = turn.role if turn.role in ("user", "assistant") else "user"
-            messages.append({"role": role, "content": turn.content})
-
-        messages.append({"role": "user", "content": user_message})
-
-        return messages
-
-
-# Singleton
-prompt_builder = PromptBuilder()
-
-
-# Phần hướng dẫn ACTION_DATA — chỉ thêm khi cần
-_ACTION_DATA_GUIDE = (
-    "Khi gợi ý món ăn hoặc bài tập CỤ THỂ, PHẢI thêm block [ACTION_DATA] ở CUỐI (trước [SUGGESTIONS]).\n\n"
-    "QUY TẮC BẮT BUỘC cho món ăn:\n"
-    "- Mỗi action là MỘT nguyên liệu riêng lẻ (ví dụ: 'Gạo tẻ', 'Thịt heo nạc', 'Rau muống')\n"
-    "- KHÔNG gộp nhiều nguyên liệu thành 1 action (KHÔNG viết 'Cơm heo quay', 'Bữa tối lành mạnh')\n"
-    "- Thêm trường 'meal_name' vào structured để đặt tên cho cả món (ví dụ: 'Cơm heo quay')\n"
-    "- Mỗi nguyên liệu phải có serving_grams cụ thể\n"
-    "- calories/protein/carbs/fat là giá trị trên 100g của nguyên liệu đó\n\n"
-    "Ví dụ ĐÚNG cho bữa tối 'Cơm heo quay':\n"
-    "[ACTION_DATA]\n"
-    '{"type":"structured","text":"Cơm heo quay","meal_name":"Cơm heo quay","actions":[\n'
-    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"dinner","serving_grams":200}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Thịt heo ba chỉ","details":{"calories":260,"protein":16.5,"carbs":0,"fat":21.5,"meal_type":"dinner","serving_grams":100}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Rau muống luộc","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"dinner","serving_grams":150}}\n'
-    "]}\n"
-    "[/ACTION_DATA]\n\n"
-    "Ví dụ ĐÚNG cho bài tập:\n"
-    "[ACTION_DATA]\n"
-    '{"type":"structured","text":"Bài tập gợi ý","actions":[\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Chạy bộ","details":{"duration":30,"calories_burned":250,"type":"cardio"}},\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Hít đất","details":{"duration":15,"calories_burned":80,"type":"strength"}}\n'
-    "]}\n"
-    "[/ACTION_DATA]\n\n"
-    "Quy tắc wger_id: lấy từ [WGER_EXERCISE id=X] hoặc [WGER_INGREDIENT id=X] nếu có trong dữ liệu tham khảo, không thì dùng 0.\n\n"
-)
-
-# Hướng dẫn SUGGESTIONS — luôn thêm
-_SUGGESTIONS_GUIDE = (
-    "Cuối response, thêm 2-3 gợi ý câu hỏi tiếp theo:\n"
-    "[SUGGESTIONS]\n"
-    '["Gợi ý 1","Gợi ý 2","Gợi ý 3"]\n'
-    "[/SUGGESTIONS]"
-)
-
-# Hướng dẫn hỏi thêm thông tin
-_CLARIFY_GUIDE = (
-    "Nếu yêu cầu chưa đủ thông tin, hỏi ngược lại TỐI ĐA 2 câu ngắn.\n"
-    "Ví dụ: 'Bạn muốn tập nhóm cơ nào?' hoặc 'Đây là bữa sáng, trưa hay tối?'\n"
-    "KHÔNG thêm [ACTION_DATA] khi đang hỏi thêm.\n\n"
-    "Khi đã đủ thông tin về bữa ăn, PHẢI liệt kê từng món riêng lẻ với gram cụ thể.\n"
-    "Ví dụ: 'Cơm trắng 200g, Thịt gà luộc 120g, Rau muống xào 150g' — KHÔNG viết chung 'Bữa tối lành mạnh'.\n\n"
-)
-
-
-class PromptBuilder:
-    def build(
-        self,
-        user_context: UserContext,
-        rag_chunks: list[KnowledgeChunk],
-        history: list[ChatTurn],
-        user_message: str,
-        intent: Intent = Intent.GENERAL,
-        max_history: int = 8,
-    ) -> list[dict]:
-        bmr = calculate_bmr(
-            age=user_context.age,
-            gender=user_context.gender,
-            height_cm=user_context.height,
-            weight_kg=user_context.weight,
-        )
-        tdee = calculate_tdee(bmr, user_context.activity_level)
-        recommended = get_recommended_calories(tdee, user_context.health_goal)
-
-        goal = HEALTH_GOAL_VN.get(user_context.health_goal, user_context.health_goal)
-        activity = ACTIVITY_LEVEL_VN.get(user_context.activity_level, user_context.activity_level)
-        gender = "Nam" if user_context.gender == "male" else "Nữ"
-
-        # User profile — compact
-        user_profile = (
-            f"Người dùng: {gender}, {user_context.age} tuổi, "
-            f"{user_context.height:.0f}cm, {user_context.weight:.0f}kg | "
-            f"Mục tiêu: {goal} | Hoạt động: {activity}\n"
-            f"Calo khuyến nghị: {recommended:.0f} kcal/ngày (BMR={bmr:.0f}, TDEE={tdee:.0f})\n"
-        )
-
-        # Today's activity context
-        today_context = ""
-        if user_context.today_calories_consumed is not None or user_context.today_calories_burned is not None:
-            today_parts = []
-            if user_context.today_calories_consumed is not None and user_context.today_meals_count:
-                remaining = recommended - user_context.today_calories_consumed
-                today_parts.append(
-                    f"Hôm nay đã ăn: {user_context.today_calories_consumed:.0f} kcal "
-                    f"({user_context.today_meals_count} bữa), còn lại: {remaining:.0f} kcal"
-                )
-            if user_context.today_calories_burned is not None and user_context.today_exercises_count:
-                today_parts.append(
-                    f"Đã tập: {user_context.today_exercises_count} bài, "
-                    f"đốt {user_context.today_calories_burned:.0f} kcal"
-                )
-            if today_parts:
-                today_context = "Hoạt động hôm nay: " + " | ".join(today_parts) + "\n"
-
-        # Chi tiết bữa ăn hôm nay
-        if user_context.today_meals:
-            meal_type_vn = {"sang": "Sáng", "trua": "Trưa", "toi": "Tối", "phu": "Phụ",
-                            "breakfast": "Sáng", "lunch": "Trưa", "dinner": "Tối", "snack": "Phụ"}
-            meal_lines = []
-            for m in user_context.today_meals:
-                mtype = meal_type_vn.get(m.get("meal_type", ""), m.get("meal_type", ""))
-                name = m.get("name", "")
-                cal = m.get("calories", "?")
-                items = m.get("items", [])
-                status = "✓" if m.get("is_completed") else "○"
-                if items:
-                    items_str = ", ".join(items)
-                    meal_lines.append(f"  {status} [{mtype}] {name}: {items_str} → {cal} kcal")
-                else:
-                    meal_lines.append(f"  {status} [{mtype}] {name}: {cal} kcal")
-            if meal_lines:
-                today_context += (
-                    "Bữa ăn hôm nay (CHỈ để tham khảo, KHÔNG được lặp lại trong gợi ý):\n"
-                    + "\n".join(meal_lines) + "\n"
-                )
-
-        # Chi tiết bài tập hôm nay
-        if user_context.today_exercises:
-            ex_lines = []
-            for e in user_context.today_exercises:
-                name = e.get("name", "")
-                dur = e.get("duration", "?")
-                cal = e.get("calories_burned", "?")
-                ex_lines.append(f"  • {name}: {dur} phút, đốt {cal} kcal")
-            if ex_lines:
-                today_context += (
-                    "Bài tập hôm nay (CHỈ để tham khảo, KHÔNG được lặp lại trong gợi ý):\n"
-                    + "\n".join(ex_lines) + "\n"
-                )
-
-        if today_context:
-            today_context = (
-                "--- Dữ liệu hôm nay (CHỈ đọc, KHÔNG echo lại) ---\n"
-                + today_context
-                + "---\n"
-                "LƯU Ý: Khi gợi ý, hãy đề xuất món ĂN MỚI khác với những gì đã ăn hôm nay.\n\n"
-            )
-
-        user_profile += today_context + "\n"
-
-        # RAG context
-        rag_context = ""
-        if rag_chunks:
-            lines = []
-            for chunk in rag_chunks:
-                wger_id = chunk.metadata.get("wger_id")
-                if wger_id:
-                    tag = "WGER_EXERCISE" if chunk.category == "wger_exercise" else "WGER_INGREDIENT"
-                    lines.append(f"[{tag} id={wger_id}] {chunk.title}: {chunk.content[:200]}")
-                else:
-                    lines.append(f"[{chunk.category.upper()}] {chunk.title}: {chunk.content[:200]}")
-            rag_context = "Dữ liệu tham khảo:\n" + "\n".join(lines) + "\n\n"
-
-        # Build system prompt theo intent
-        system = _BASE_SYSTEM + user_profile
-
-        if rag_context:
-            system += rag_context
-
-        # Thêm hướng dẫn theo intent
-        if intent in (Intent.EXERCISE_REQUEST, Intent.NUTRITION_REQUEST):
-            system += _CLARIFY_GUIDE
-            system += _ACTION_DATA_GUIDE
-
-        elif intent == Intent.PROGRESS_CHECK:
-            system += (
-                "Phân tích hoạt động hôm nay của người dùng. "
-                "Nhận xét cụ thể: đã đủ calo chưa, cân bằng macro thế nào, "
-                "có nên tập thêm không. Đưa ra 2-3 lời khuyên thực tế.\n\n"
-            )
-            system += _ACTION_DATA_GUIDE
-
-        elif intent == Intent.CALCULATION:
-            system += (
-                "Tính toán chính xác dựa trên thông tin người dùng. "
-                "Giải thích rõ ràng từng bước.\n\n"
-            )
-
-        elif intent == Intent.HEALTH_QUERY:
-            system += (
-                "Tư vấn dựa trên thông tin sức khỏe người dùng. "
-                "Nếu triệu chứng nghiêm trọng (đau ngực, khó thở, chóng mặt nặng), "
-                "khuyên đến gặp bác sĩ ngay.\n\n"
-            )
-            system += _ACTION_DATA_GUIDE
-
-        else:
-            # GENERAL — thêm action data guide phòng trường hợp LLM gợi ý cụ thể
             system += _ACTION_DATA_GUIDE
 
         system += _SUGGESTIONS_GUIDE

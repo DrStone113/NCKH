@@ -39,6 +39,20 @@ if %errorlevel% neq 0 (
         goto START_BACKEND
     )
     echo  [OK] Cai dat Ollama thanh cong
+    echo.
+    echo  ==========================================
+    echo   YEU CAU KHOI DONG LAI TERMINAL
+    echo  ==========================================
+    echo.
+    echo  Ollama vua duoc cai dat nhung can khoi dong
+    echo  lai terminal de cap nhat PATH.
+    echo.
+    echo  Vui long:
+    echo    1. Dong cua so nay
+    echo    2. Mo lai quick-start.bat
+    echo.
+    pause
+    exit /b 0
 )
 
 REM Kiem tra xem Ollama da chay chua
@@ -47,23 +61,17 @@ if %errorlevel% equ 0 (
     echo  [OK] Ollama da dang chay
 ) else (
     start "Ollama Server" ollama serve
-    timeout /t 5 /nobreak >nul
+    timeout /t 8 /nobreak >nul
     echo  [OK] Ollama da khoi dong
 )
 
-REM Kiem tra va pull model neu chua co
-echo  [Ollama] Kiem tra model llama3:8b-instruct-q4_K_M...
-ollama list 2>nul | findstr "llama3:8b-instruct-q4_K_M" >nul 2>&1
-if %errorlevel% neq 0 (
-    echo  [Ollama] Model chua co - Dang tai xuong (co the mat vai phut)...
-    ollama pull llama3:8b-instruct-q4_K_M
-    if errorlevel 1 (
-        echo  [CANH BAO] Khong the tai model. Chatbot se khong hoat dong.
-    ) else (
-        echo  [OK] Tai model thanh cong
-    )
+REM Pull model (neu da co ollama se bo qua, khong tai lai)
+echo  [Ollama] Dang kiem tra va cap nhat model llama3:8b-instruct-q4_K_M...
+ollama pull llama3:8b-instruct-q4_K_M
+if errorlevel 1 (
+    echo  [CANH BAO] Khong the tai model. Chatbot se khong hoat dong.
 ) else (
-    echo  [OK] Model da san sang
+    echo  [OK] Model san sang
 )
 
 REM ==========================================
@@ -75,9 +83,11 @@ echo  [2/3] Khoi dong Backend...
 
 REM Tim Python
 set "PYTHON_CMD="
-where python >nul 2>&1 && set "PYTHON_CMD=python"
+where python >nul 2>&1
+if %errorlevel% equ 0 set "PYTHON_CMD=python"
 if "!PYTHON_CMD!"=="" (
-    where py >nul 2>&1 && set "PYTHON_CMD=py"
+    where py >nul 2>&1
+    if !errorlevel! equ 0 set "PYTHON_CMD=py"
 )
 if "!PYTHON_CMD!"=="" (
     echo  [LOI] Khong tim thay Python. Vui long cai Python truoc.
@@ -96,6 +106,21 @@ if not exist "%VENV_PYTHON%" (
         exit /b 1
     )
     echo  [OK] Tao venv thanh cong
+)
+
+REM Tao .env neu chua co
+set "ENV_FILE=%ROOT%HealthApp\ai_backend\.env"
+set "ENV_EXAMPLE=%ROOT%HealthApp\ai_backend\.env.example"
+if not exist "!ENV_FILE!" (
+    if exist "!ENV_EXAMPLE!" (
+        echo  [Setup] Tao file .env tu .env.example...
+        copy "!ENV_EXAMPLE!" "!ENV_FILE!" >nul
+        echo  [OK] Tao .env thanh cong - Kiem tra va chinh sua neu can: HealthApp\ai_backend\.env
+    ) else (
+        echo  [CANH BAO] Khong tim thay .env.example
+    )
+) else (
+    echo  [OK] File .env da ton tai
 )
 
 REM Cai dependencies neu chua co hoac requirements thay doi
@@ -128,13 +153,14 @@ echo  [3/3] Khoi dong Flutter...
 
 REM Tim Flutter command
 set "FLUTTER_CMD="
-where flutter >nul 2>&1 && set "FLUTTER_CMD=flutter"
-if "%FLUTTER_CMD%"=="" (
+where flutter >nul 2>&1
+if %errorlevel% equ 0 set "FLUTTER_CMD=flutter"
+if "!FLUTTER_CMD!"=="" (
     set "FLUTTER_SDK=%ROOT%HealthApp\flutter\bin\flutter.bat"
     if exist "!FLUTTER_SDK!" set "FLUTTER_CMD=!FLUTTER_SDK!"
 )
 
-if "%FLUTTER_CMD%"=="" (
+if "!FLUTTER_CMD!"=="" (
     echo  [!] Flutter chua duoc cai dat
     pause
     exit /b 1
@@ -184,4 +210,6 @@ if /i "!OPEN_BROWSER!"=="Y" (
     start http://localhost:%PORT_FLUTTER%
 )
 
-exit
+echo.
+pause
+exit /b 0

@@ -187,6 +187,7 @@ async def sync_items(
 
 async def sync_exercises(model: SentenceTransformer, pool: asyncpg.Pool, dry_run: bool = False) -> int:
     """Requirements: 2.1, 2.2, 2.4, 2.5, 2.6"""
+    print("  Fetching exercises from wger.de (co the mat 1-2 phut)...", flush=True)
     async with AsyncSessionLocal() as db:
         exercises = await wger_service.fetch_all_exercises(db)
 
@@ -219,6 +220,7 @@ async def sync_exercises(model: SentenceTransformer, pool: asyncpg.Pool, dry_run
 
 async def sync_ingredients(model: SentenceTransformer, pool: asyncpg.Pool, dry_run: bool = False) -> int:
     """Requirements: 2.1, 2.3, 2.4, 2.5, 2.6"""
+    print("  Fetching ingredients from wger.de (co the mat 5-10 phut, nhieu trang)...", flush=True)
     async with AsyncSessionLocal() as db:
         ingredients = await wger_service.fetch_all_ingredients(db)
 

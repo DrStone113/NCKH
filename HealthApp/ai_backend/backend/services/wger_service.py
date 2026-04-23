@@ -107,6 +107,7 @@ class WgerService:
                 try:
                     logger.info(f"Fetching page {page_num} from {url}")
                     response = await client.get(url)
+                    print(f"  Page {page_num}: fetched...", flush=True)
 
                     if response.status_code != 200:
                         error_msg = f"Wger API error: endpoint={endpoint}, status_code={response.status_code}"

@@ -1,8 +1,9 @@
 @echo off
+cd /d "%~dp0"
 title Setup Database
 set PGPASSWORD=123
 set PSQL="C:\Program Files\PostgreSQL\18\bin\psql.exe"
-set INIT_SQL=C:\NCKH\NCKH\HealthApp\ai_backend\backend\db\init.sql
+set INIT_SQL=%~dp0HealthApp\ai_backend\backend\db\init.sql
 
 echo [1] Tao database va user...
 %PSQL% -U postgres -c "CREATE DATABASE health_db;"

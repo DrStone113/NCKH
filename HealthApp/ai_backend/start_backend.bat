@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 title AI Health Chatbot - Backend
 echo ========================================
 echo   AI Health Chatbot Backend

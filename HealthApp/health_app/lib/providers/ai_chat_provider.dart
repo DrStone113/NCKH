@@ -5,8 +5,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
 import '../models/chat_message.dart';
-import '../models/wger_models.dart';
-import '../models/exercise_model.dart';
+import '../models/wger_models.dart';import '../models/exercise_model.dart';
 import '../models/meal_model.dart';
 import '../constants/ai_chatbot_config.dart';
 import 'exercise_provider.dart';
@@ -133,7 +132,7 @@ class AIChatProvider extends ChangeNotifier {
       timestamp: DateTime.now(),
     ));
 
-    // 2. Tạo streaming message placeholder
+    // 2. Tạo streaming message placeholder — status: thinking
     final streamingId = _uuid.v4();
     _streamingMessageId = streamingId;
     _isStreaming = true;
@@ -143,6 +142,7 @@ class AIChatProvider extends ChangeNotifier {
       text: '',
       isUser: false,
       isStreaming: true,
+      status: MessageStatus.thinking,
       timestamp: DateTime.now(),
     ));
     notifyListeners();
@@ -218,25 +218,34 @@ class AIChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Append token vào streaming message — chỉ update message cuối, không rebuild toàn bộ list
+  /// Append token vào streaming message — text tích lũy ở background, không hiện ra UI
   void _onTokenReceived(String token) {
     if (_streamingMessageId == null) return;
 
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
 
+    // Chuyển sang streaming khi nhận token đầu tiên
+    final currentStatus = _messages[idx].status;
     _messages[idx] = _messages[idx].copyWith(
       text: _messages[idx].text + token,
+      status: currentStatus == MessageStatus.thinking
+          ? MessageStatus.streaming
+          : currentStatus,
     );
-    notifyListeners();
+    // Không gọi notifyListeners() để tránh rebuild UI liên tục khi stream
+    // UI chỉ cần biết đang "thinking/streaming" — indicator đã handle animation riêng
   }
 
-  /// Lấy text hiển thị khi đang stream — ẩn tất cả data block tags
+  /// Lấy text hiển thị khi đang stream — ẩn tất cả data block tags và SUGGESTIONS
   static String getDisplayText(String text, bool isStreaming) {
     if (!isStreaming) return text;
-    // Ẩn bất kỳ [TAG], **TAG**, hoặc bare JSON block khi đang stream
+    // Ẩn từ vị trí bắt đầu của bất kỳ tag nào trở đi
     final tagPattern = RegExp(
-      r'(\[(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA)\]|\*\*(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA)\*\*|\{\s*"type"\s*:\s*"structured")',
+      r'(\[(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA|SUGGESTIONS)\]'
+      r'|\*\*(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA|SUGGESTIONS)\*\*'
+      r'|(?<!\[)SUGGESTIONS'   // "SUGGESTIONS" không có [ ở đầu
+      r'|\{\s*"type"\s*:\s*"structured")',
       caseSensitive: false,
     );
     final match = tagPattern.firstMatch(text);
@@ -273,8 +282,8 @@ class AIChatProvider extends ChangeNotifier {
         _messages[idx] = _messages[idx].copyWith(
           text: fullResponse.isNotEmpty ? fullResponse : _messages[idx].text,
           isStreaming: false,
+          status: MessageStatus.done,
           structuredResponse: structuredResponse,
-          // options (flow) ưu tiên hơn suggestions
           suggestions: options.isNotEmpty ? options : suggestions,
           isFlowQuestion: options.isNotEmpty,
         );

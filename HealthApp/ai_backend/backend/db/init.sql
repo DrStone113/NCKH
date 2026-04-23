@@ -71,6 +71,11 @@ CREATE TABLE IF NOT EXISTS wger_ingredients (
 CREATE INDEX IF NOT EXISTS wger_exercises_name_idx ON wger_exercises USING gin(to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS wger_ingredients_name_idx ON wger_ingredients USING gin(to_tsvector('simple', name));
 
+-- Index cho tìm kiếm theo category và muscles (dùng bởi WgerSearchService)
+CREATE INDEX IF NOT EXISTS wger_exercises_category_idx ON wger_exercises (category_id);
+CREATE INDEX IF NOT EXISTS wger_exercises_muscles_idx ON wger_exercises USING gin(muscles);
+CREATE INDEX IF NOT EXISTS wger_exercises_equipment_idx ON wger_exercises USING gin(equipment);
+
 -- Migration: cập nhật category constraint để hỗ trợ wger (idempotent cho DB đã tồn tại)
 ALTER TABLE knowledge_chunks DROP CONSTRAINT IF EXISTS knowledge_chunks_category_check;
 ALTER TABLE knowledge_chunks ADD CONSTRAINT knowledge_chunks_category_check

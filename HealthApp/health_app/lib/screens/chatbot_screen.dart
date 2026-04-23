@@ -71,9 +71,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget build(BuildContext context) {
     final aiChatProvider = Provider.of<AIChatProvider>(context);
     final messages = aiChatProvider.messages;
-    final showTypingIndicator =
-        aiChatProvider.isStreaming && messages.isNotEmpty && messages.last.text.isEmpty;
-
+    final showTypingIndicator = false; // thinking bubble được render trong message list
     // Determine connection status
     final bool isConnected = aiChatProvider.errorMessage == null && !aiChatProvider.isStreaming;
     final bool isConnecting = aiChatProvider.isStreaming;
@@ -153,16 +151,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
-                itemCount: messages.length + (showTypingIndicator ? 1 : 0),
+                itemCount: messages.length,
                 itemBuilder: (context, index) {
-                  if (index == messages.length && showTypingIndicator) {
-                    return _buildTypingIndicator();
-                  }
-                  final msg = messages[index];
-                  // Ẩn streaming bubble rỗng — typing indicator đã thay thế
-                  if (msg.isStreaming && msg.text.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
                   return AnimatedCard(
                     delay: 0,
                     child: _buildMessageBubble(messages[index]),
@@ -222,20 +212,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildMessageBubble(AIChatMessage message) {
-    // Ẩn [ACTION_DATA] block khi đang stream
-    final rawText = message.isStreaming
-        ? AIChatProvider.getDisplayText(message.text, true)
-        : message.text;
-    final displayText = message.isStreaming ? '$rawText▌' : rawText;
+    // Bot đang thinking/streaming → chỉ hiện indicator, ẩn hoàn toàn text
+    if (message.isThinking) {
+      return _buildThinkingBubble();
+    }
 
-    // Nếu có structured response, hiển thị text từ structured response
-    final String finalDisplayText;
+    // Nếu có structured response, dùng text từ đó
+    final String displayText;
     if (!message.isUser && message.structuredResponse != null) {
-      finalDisplayText = message.structuredResponse!.text.isNotEmpty 
-          ? message.structuredResponse!.text 
-          : displayText;
+      displayText = message.structuredResponse!.text.isNotEmpty
+          ? message.structuredResponse!.text
+          : message.text;
     } else {
-      finalDisplayText = displayText;
+      displayText = message.text;
     }
 
     return Column(
@@ -294,7 +283,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   ],
                 ),
                 child: Text(
-                  finalDisplayText,
+                  displayText,
                   style: TextStyle(
                     fontSize: 14,
                     color: message.isUser
@@ -308,19 +297,82 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             if (message.isUser) const SizedBox(width: 10),
           ],
         ),
-        
-        // Render ActionCardWidget if structured response exists
+
+        // Action cards
         if (!message.isUser && message.structuredResponse != null)
           ..._buildActionCards(message.structuredResponse!),
 
-        // Suggestion tags hoặc Flow option buttons
-        if (!message.isUser && !message.isStreaming && message.suggestions.isNotEmpty)
+        // Suggestions / flow options
+        if (!message.isUser && message.status == MessageStatus.done && message.suggestions.isNotEmpty)
           message.isFlowQuestion
               ? _buildFlowOptions(message.suggestions)
               : _buildSuggestions(message.suggestions),
 
         const SizedBox(height: 12),
       ],
+    );
+  }
+
+  /// Bubble "Đang suy nghĩ..." với animated dots + label trạng thái
+  Widget _buildThinkingBubble() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+                bottomLeft: Radius.circular(4),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _TypingDots(),
+                const SizedBox(width: 10),
+                Text(
+                  'Đang suy nghĩ...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -972,50 +1024,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.cardDark,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-                bottomLeft: Radius.circular(4),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const _TypingDots(),
-          ),
-        ],
-      ),
-    );
+    // Không dùng nữa — replaced by _buildThinkingBubble() inside _buildMessageBubble
+    return const SizedBox.shrink();
   }
 
   Widget _buildInputArea() {

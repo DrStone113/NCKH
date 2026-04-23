@@ -17,6 +17,8 @@ from services.llm_service import llm_service
 from services.prompt_builder import prompt_builder
 from services.rag_service import rag_service
 from services.response_parser import response_parser
+from services.wger_search import wger_search_service
+from services.meal_optimizer import meal_optimizer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,7 +28,34 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-STREAM_TIMEOUT_SECONDS = 120
+STREAM_TIMEOUT_SECONDS = 180
+
+# Map từ khóa → meal type
+_MEAL_KEYWORDS = {
+    "bữa sáng": "breakfast", "ăn sáng": "breakfast", "sáng": "breakfast",
+    "bữa trưa": "lunch",     "ăn trưa": "lunch",     "trưa": "lunch",
+    "bữa tối": "dinner",     "ăn tối": "dinner",      "tối": "dinner",
+    "bữa phụ": "snack",      "ăn phụ": "snack",       "snack": "snack",
+}
+
+def _extract_meal_types(message: str) -> list[str]:
+    """
+    Phát hiện các bữa ăn được đề cập trong message.
+    Ví dụ: 'gợi ý bữa trưa và bữa tối' → ['lunch', 'dinner']
+    """
+    import re
+    text = message.lower()
+    found: list[str] = []
+    seen: set[str] = set()
+    # Sắp xếp theo độ dài giảm dần để match cụm dài trước
+    for kw, meal_type in sorted(_MEAL_KEYWORDS.items(), key=lambda x: -len(x[0])):
+        if re.search(rf'\b{re.escape(kw)}\b', text) and meal_type not in seen:
+            found.append(meal_type)
+            seen.add(meal_type)
+    # Sắp xếp theo thứ tự tự nhiên trong ngày
+    order = ["breakfast", "lunch", "snack", "dinner"]
+    found.sort(key=lambda x: order.index(x) if x in order else 99)
+    return found
 
 
 @router.websocket("/chat/stream")
@@ -122,7 +151,8 @@ async def _handle_chat(websocket: WebSocket, request: ChatRequest) -> None:
                 user_context=request.user_context,
             )
             # Truyền flag from_flow=True để thay đổi suggestions
-            await _call_llm(websocket, enriched_request, t0, from_flow=True)
+            await _call_llm(websocket, enriched_request, t0, from_flow=True,
+                            enriched_message=enriched)
             return
 
     # ── 2. Classify intent ────────────────────────────────────────────────
@@ -167,6 +197,14 @@ async def _handle_chat(websocket: WebSocket, request: ChatRequest) -> None:
         return
 
     # ── 5. Gọi LLM ───────────────────────────────────────────────────────
+    # Kiểm tra yêu cầu nhiều bữa ăn cùng lúc → tách thành từng request
+    if intent == Intent.NUTRITION_REQUEST:
+        meal_types = _extract_meal_types(message)
+        if len(meal_types) >= 2:
+            logger.info("🍽 Multi-meal request: %s → splitting", meal_types)
+            await _handle_multi_meal(websocket, request, meal_types, t0)
+            return
+
     await _call_llm(websocket, request, t0, intent=intent)
 
 
@@ -175,16 +213,8 @@ def _needs_exercise_info(message: str, request: ChatRequest = None) -> bool:
     import re
     text = message.lower()
 
-    # Nếu app đã gửi dữ liệu bài tập hôm nay → đủ context, không hỏi thêm
-    if request and request.user_context.today_exercises:
-        return False
-
-    # Nếu là báo cáo / phân tích hôm nay → KHÔNG cần hỏi thêm, gửi thẳng LLM
-    is_report = bool(re.search(
-        r'(hôm nay tôi đã|đã ăn|đã tập|phân tích|lời khuyên|nhận xét|tổng kết|báo cáo)',
-        text, re.IGNORECASE
-    ))
-    if is_report:
+    # Nếu là báo cáo / phân tích hôm nay → gửi thẳng LLM
+    if re.search(r'(hôm nay tôi đã|đã ăn|đã tập|phân tích|lời khuyên|nhận xét|tổng kết|báo cáo)', text):
         return False
 
     has_muscle = bool(re.search(
@@ -193,16 +223,16 @@ def _needs_exercise_info(message: str, request: ChatRequest = None) -> bool:
     has_equipment = bool(re.search(
         r'\b(không có dụng cụ|tạ tay|tạ đòn|gym|dây kháng lực|bodyweight|barbell|dumbbell)\b', text))
 
+    # Đủ 2/3 thông tin → không cần hỏi thêm
     if sum([has_muscle, has_duration, has_equipment]) >= 2:
         return False
 
-    if len(message.split()) <= 5:
-        return True
+    # Có đủ muscle + duration → không cần hỏi thêm
+    if has_muscle and has_duration:
+        return False
 
-    if not has_muscle and not has_duration:
-        return True
-
-    return False
+    # Thiếu thông tin → cần hỏi
+    return True
 
 
 def _needs_nutrition_info(message: str, request: ChatRequest = None) -> bool:
@@ -210,56 +240,391 @@ def _needs_nutrition_info(message: str, request: ChatRequest = None) -> bool:
     import re
     text = message.lower()
 
-    # Nếu app đã gửi dữ liệu bữa ăn hôm nay → đủ context, không hỏi thêm
-    if request and request.user_context.today_meals:
+    # Nếu là báo cáo / phân tích → gửi thẳng LLM
+    if re.search(r'(hôm nay tôi đã|đã ăn|đã tập|phân tích|lời khuyên|nhận xét|tổng kết|báo cáo)', text):
         return False
 
-    # Nếu là báo cáo / phân tích → KHÔNG cần hỏi thêm
-    is_report = bool(re.search(
-        r'(hôm nay tôi đã|đã ăn|đã tập|phân tích|lời khuyên|nhận xét|tổng kết|báo cáo)',
-        text, re.IGNORECASE
-    ))
-    if is_report:
-        return False
-
+    # Nhận diện loại bữa ăn — cả dạng đầy đủ lẫn rút gọn
     has_meal_type = bool(re.search(
-        r'\b(bữa sáng|bữa trưa|bữa tối|bữa phụ|snack|breakfast|lunch|dinner)\b', text))
+        r'\b(bữa sáng|bữa trưa|bữa tối|bữa phụ|snack|breakfast|lunch|dinner'
+        r'|sáng nay|trưa nay|tối nay|buổi sáng|buổi trưa|buổi tối'
+        r'|ăn sáng|ăn trưa|ăn tối|ăn phụ'
+        r'|sáng|trưa|tối)\b',
+        text))
     has_goal = bool(re.search(
         r'\b(giảm cân|tăng cơ|duy trì|ít calo|nhiều protein|low carb|keto)\b', text))
     has_specific = bool(re.search(
-        r'\b(thực đơn.*ngày|meal plan|7 ngày|cả tuần)\b', text))
+        r'\b(thực đơn|meal plan|7 ngày|cả tuần|hôm nay)\b', text))
 
     if has_meal_type or has_goal or has_specific:
         return False
 
-    if len(message.split()) <= 4:
-        return True
+    # Thiếu thông tin → cần hỏi
+    return True
 
-    return False
+
+async def _handle_single_meal_optimized(
+    websocket: WebSocket, request: ChatRequest, t0: float, from_flow: bool
+) -> None:
+    """
+    Xử lý single meal request bằng optimizer.
+    Nhanh hơn LLM (< 1s vs 15s), chính xác hơn về macro.
+    """
+    from services.meal_optimizer import MacroTarget
+    from services.tdee_calculator import calculate_bmr, calculate_tdee, get_recommended_calories
+    from services.prompt_builder import _calc_macro_targets
+
+    # Phát hiện meal type
+    meal_type = _extract_meal_types(request.message)
+    if not meal_type:
+        meal_type = ["lunch"]  # Default
+    meal_type = meal_type[0]
+
+    meal_vn = {
+        "breakfast": "Bữa sáng", "lunch": "Bữa trưa",
+        "dinner": "Bữa tối", "snack": "Bữa phụ",
+    }
+    meal_ratios = {
+        "breakfast": 0.30, "lunch": 0.35, "dinner": 0.25, "snack": 0.10,
+    }
+
+    # Tính macro target
+    ctx = request.user_context
+    bmr = calculate_bmr(ctx.age, ctx.gender, ctx.height, ctx.weight)
+    tdee = calculate_tdee(bmr, ctx.activity_level)
+    daily_cal = get_recommended_calories(tdee, ctx.health_goal)
+    daily_macro = _calc_macro_targets(daily_cal, ctx.health_goal, ctx.weight, ctx.height)
+
+    meal_cal = daily_cal * meal_ratios[meal_type]
+    meal_target = MacroTarget(
+        calories=meal_cal,
+        protein_g=daily_macro["protein_g"] * meal_ratios[meal_type],
+        carbs_g=daily_macro["carbs_g"] * meal_ratios[meal_type],
+        fat_g=daily_macro["fat_g"] * meal_ratios[meal_type],
+    )
+
+    logger.info(f"🍽 Optimizing {meal_vn[meal_type]}: target={meal_cal:.0f} kcal")
+
+    # Get recent ingredients
+    recent_ids = await _get_recent_ingredient_ids(request.session_id)
+
+    async with AsyncSessionLocal() as db:
+        try:
+            components = await meal_optimizer.optimize_meal(
+                db=db,
+                target=meal_target,
+                meal_type=meal_type,
+                recent_ingredient_ids=recent_ids,
+            )
+
+            # Format output
+            total_cal = sum(c.calories for c in components)
+            total_protein = sum(c.protein for c in components)
+            total_carbs = sum(c.carbs for c in components)
+            total_fat = sum(c.fat for c in components)
+
+            # Stream text với typing effect
+            text_parts = [f"Gợi ý {meal_vn[meal_type].lower()} ({total_cal:.0f} kcal):\n\n"]
+            for comp in components:
+                text_parts.append(
+                    f"• **{comp.ingredient.name}**: {comp.serving_grams}g "
+                    f"({comp.calories:.0f} kcal, P:{comp.protein:.1f}g, C:{comp.carbs:.1f}g, F:{comp.fat:.1f}g)\n"
+                )
+            text_parts.append(
+                f"\n**Tổng**: {total_cal:.0f} kcal | "
+                f"Protein {total_protein:.0f}g | Carbs {total_carbs:.0f}g | Fat {total_fat:.0f}g\n"
+            )
+
+            full_text = "".join(text_parts)
+            for word in full_text.split(" "):
+                await websocket.send_json({"type": "token", "content": word + " "})
+                await asyncio.sleep(0.01)
+
+            # Build structured
+            actions = []
+            for comp in components:
+                actions.append({
+                    "kind": "food",
+                    "wger_id": comp.ingredient.id,
+                    "name": comp.ingredient.name,
+                    "details": {
+                        "calories": comp.ingredient.energy,
+                        "protein": comp.ingredient.protein,
+                        "carbs": comp.ingredient.carbs,
+                        "fat": comp.ingredient.fat,
+                        "meal_type": meal_type,
+                        "serving_grams": comp.serving_grams,
+                    },
+                })
+
+            structured = {
+                "type": "structured",
+                "text": f"{meal_vn[meal_type]}",
+                "meal_name": f"{meal_vn[meal_type]}",
+                "actions": actions,
+            }
+
+            # Suggestions
+            if from_flow:
+                suggestions = ["Tạo bài tập mới", "Gợi ý bữa ăn khác", "Phân tích hôm nay"]
+            else:
+                suggestions = ["Gợi ý bữa ăn khác", "Phân tích dinh dưỡng", "Tính calo"]
+
+            # Done
+            await websocket.send_json({
+                "type": "done",
+                "full_response": full_text,
+                "structured": structured,
+                "suggestions": suggestions,
+                "options": [],
+            })
+
+            session_store.append_turn(request.session_id, role="user", content=request.message)
+            session_store.append_turn(request.session_id, role="assistant", content=full_text)
+
+            logger.info(f"✅ Optimized meal in {time.time() - t0:.2f}s")
+
+        except Exception as e:
+            logger.error(f"❌ Optimizer error: {e}", exc_info=True)
+            # Fallback to LLM
+            await _call_llm_fallback(websocket, request, t0, Intent.NUTRITION_REQUEST, from_flow)
+
+
+async def _call_llm_fallback(websocket: WebSocket, request: ChatRequest, t0: float,
+                              intent: Intent, from_flow: bool):
+    """Fallback khi optimizer fail — gọi LLM như cũ."""
+    logger.warning("⚠️  Falling back to LLM")
+    # Copy logic từ _call_llm cũ (phần sau "# History")
+    history = session_store.get_history(request.session_id, max_turns=8)
+    messages = prompt_builder.build(
+        user_context=request.user_context,
+        rag_chunks=[],
+        history=history,
+        user_message=request.message,
+        intent=intent,
+    )
+
+    full_response_parts: list[str] = []
+    try:
+        async for token in llm_service.stream_chat(messages=messages):
+            full_response_parts.append(token)
+            await websocket.send_json({"type": "token", "content": token})
+    except Exception as e:
+        logger.error("❌ LLM error: %s", e)
+        await websocket.send_json(ErrorMessage(code="LLM_UNAVAILABLE", message=str(e)).model_dump())
+        return
+
+    full_response = "".join(full_response_parts)
+    clean_text, structured, suggestions = response_parser.parse(full_response)
+
+    if from_flow:
+        suggestions = ["Tạo bài tập mới", "Gợi ý bữa ăn", "Phân tích hôm nay"]
+    elif not suggestions:
+        suggestions = intent_classifier.get_default_suggestions(intent)
+
+    await websocket.send_json({
+        "type": "done",
+        "full_response": clean_text,
+        "structured": structured.model_dump() if structured else None,
+        "suggestions": suggestions,
+        "options": [],
+    })
+    session_store.append_turn(request.session_id, role="user", content=request.message)
+    session_store.append_turn(request.session_id, role="assistant", content=clean_text)
+
+
+async def _handle_multi_meal(websocket: WebSocket, request: ChatRequest,
+                             meal_types: list[str], t0: float) -> None:
+    """
+    Xử lý yêu cầu nhiều bữa ăn bằng Meal Optimizer.
+    Mỗi bữa được tối ưu riêng, stream kết quả với separator rõ ràng.
+    """
+    from services.meal_optimizer import MacroTarget
+    from services.tdee_calculator import calculate_bmr, calculate_tdee, get_recommended_calories
+    from services.prompt_builder import _calc_macro_targets
+
+    meal_vn = {
+        "breakfast": "Bữa sáng", "lunch": "Bữa trưa",
+        "dinner": "Bữa tối",     "snack": "Bữa phụ",
+    }
+    meal_ratios = {
+        "breakfast": 0.30, "lunch": 0.35, "dinner": 0.25, "snack": 0.10,
+    }
+
+    # Tính macro targets
+    ctx = request.user_context
+    bmr = calculate_bmr(ctx.age, ctx.gender, ctx.height, ctx.weight)
+    tdee = calculate_tdee(bmr, ctx.activity_level)
+    daily_cal = get_recommended_calories(tdee, ctx.health_goal)
+    daily_macro = _calc_macro_targets(daily_cal, ctx.health_goal, ctx.weight, ctx.height)
+
+    all_structured = []
+    final_suggestions: list[str] = []
+
+    # Lấy recent ingredients để tránh lặp
+    recent_ids = await _get_recent_ingredient_ids(request.session_id)
+
+    async with AsyncSessionLocal() as db:
+        for i, meal_type in enumerate(meal_types):
+            is_last = (i == len(meal_types) - 1)
+            label = meal_vn.get(meal_type, meal_type)
+
+            # Separator
+            if i > 0:
+                await websocket.send_json({"type": "token", "content": f"\n\n---\n\n"})
+
+            # Header
+            await websocket.send_json({"type": "token", "content": f"**{label}**\n"})
+
+            # Tính macro target cho bữa này
+            meal_cal = daily_cal * meal_ratios[meal_type]
+            meal_target = MacroTarget(
+                calories=meal_cal,
+                protein_g=daily_macro["protein_g"] * meal_ratios[meal_type],
+                carbs_g=daily_macro["carbs_g"] * meal_ratios[meal_type],
+                fat_g=daily_macro["fat_g"] * meal_ratios[meal_type],
+            )
+
+            logger.info(f"🍽 Optimizing {label}: target={meal_cal:.0f} kcal")
+            t_meal = time.time()
+
+            try:
+                # Gọi optimizer
+                components = await meal_optimizer.optimize_meal(
+                    db=db,
+                    target=meal_target,
+                    meal_type=meal_type,
+                    recent_ingredient_ids=recent_ids,
+                )
+
+                # Format kết quả
+                total_cal = sum(c.calories for c in components)
+                total_protein = sum(c.protein for c in components)
+                total_carbs = sum(c.carbs for c in components)
+                total_fat = sum(c.fat for c in components)
+
+                # Stream text
+                text_parts = [f"Gợi ý {label.lower()} ({total_cal:.0f} kcal):\n\n"]
+                for comp in components:
+                    text_parts.append(
+                        f"• **{comp.ingredient.name}**: {comp.serving_grams}g "
+                        f"({comp.calories:.0f} kcal, P:{comp.protein:.1f}g, C:{comp.carbs:.1f}g, F:{comp.fat:.1f}g)\n"
+                    )
+                text_parts.append(
+                    f"\n**Tổng**: {total_cal:.0f} kcal | "
+                    f"Protein {total_protein:.0f}g | Carbs {total_carbs:.0f}g | Fat {total_fat:.0f}g\n"
+                )
+
+                full_text = "".join(text_parts)
+                for word in full_text.split(" "):
+                    await websocket.send_json({"type": "token", "content": word + " "})
+                    await asyncio.sleep(0.01)
+
+                # Build structured data
+                actions = []
+                for comp in components:
+                    actions.append({
+                        "kind": "food",
+                        "wger_id": comp.ingredient.id,
+                        "name": comp.ingredient.name,
+                        "details": {
+                            "calories": comp.ingredient.energy,
+                            "protein": comp.ingredient.protein,
+                            "carbs": comp.ingredient.carbs,
+                            "fat": comp.ingredient.fat,
+                            "meal_type": meal_type,
+                            "serving_grams": comp.serving_grams,
+                        },
+                    })
+
+                structured = {
+                    "type": "structured",
+                    "text": f"{label}",
+                    "meal_name": f"{label}",
+                    "actions": actions,
+                }
+                all_structured.append(structured)
+
+                # Update recent_ids
+                recent_ids.extend([c.ingredient.id for c in components])
+
+                logger.info(f"✅ {label}: {len(components)} components in {time.time() - t_meal:.2f}s")
+
+            except Exception as e:
+                logger.error(f"❌ Optimizer error for {label}: {e}", exc_info=True)
+                await websocket.send_json({"type": "token", "content": f"\n(Lỗi khi tối ưu {label})\n"})
+                continue
+
+    if not final_suggestions:
+        final_suggestions = ["Phân tích dinh dưỡng hôm nay", "Gợi ý bài tập", "Tính calo"]
+
+    # Done
+    await websocket.send_json({
+        "type": "done",
+        "full_response": "",
+        "structured": all_structured[0] if len(all_structured) == 1 else (all_structured or None),
+        "suggestions": final_suggestions,
+        "options": [],
+    })
+
+    session_store.append_turn(request.session_id, role="user", content=request.message)
+    session_store.append_turn(
+        request.session_id, role="assistant",
+        content=f"[Đã tối ưu {len(meal_types)} bữa ăn bằng thuật toán]"
+    )
+
+
+async def _get_recent_ingredient_ids(session_id: str, days: int = 3) -> list[int]:
+    """Lấy danh sách ingredient IDs đã dùng trong N ngày gần đây để tránh lặp."""
+    # TODO: Query từ DB history
+    # Tạm thời return empty để không block
+    return []
 
 
 async def _call_llm(websocket: WebSocket, request: ChatRequest, t0: float,
-                    intent: Intent = None, from_flow: bool = False):
-    """Gọi RAG + LLM và stream kết quả."""
+                    intent: Intent = None, from_flow: bool = False,
+                    enriched_message: str = ""):
+    """Gọi RAG + wger search + LLM và stream kết quả."""
     session_id = request.session_id
 
     if intent is None:
         intent = intent_classifier.classify(request.message)
 
+    # ── Nutrition request → dùng optimizer thay vì LLM ──────────────────
+    if intent == Intent.NUTRITION_REQUEST:
+        await _handle_single_meal_optimized(websocket, request, t0, from_flow)
+        return
+
     # History
     history = session_store.get_history(session_id, max_turns=8)
     logger.info("📚 History: %d turns", len(history))
 
-    # RAG
+    # RAG + wger exercise search (chạy song song)
     rag_chunks = []
+    wger_exercises_text = ""
+
     if intent_classifier.needs_rag(intent):
-        logger.info("🔍 RAG query...")
+        logger.info("🔍 RAG + wger search...")
         try:
-            async with AsyncSessionLocal() as db:
-                rag_chunks = await rag_service.retrieve(query=request.message, db=db)
+            # RAG và wger search chạy song song
+            if intent == Intent.EXERCISE_REQUEST:
+                search_params = wger_search_service.parse_search_params(
+                    message=request.message,
+                    enriched_message=enriched_message or request.message,
+                )
+                async with AsyncSessionLocal() as db:
+                    rag_task = rag_service.retrieve(query=request.message, db=db)
+                    wger_task = wger_search_service.search_exercises(search_params)
+                    rag_chunks, wger_exercises = await asyncio.gather(rag_task, wger_task)
+                wger_exercises_text = wger_search_service.format_for_prompt(wger_exercises)
+                logger.info("✅ wger exercises: %d found (%.2fs)", len(wger_exercises), time.time() - t0)
+            else:
+                async with AsyncSessionLocal() as db:
+                    rag_chunks = await rag_service.retrieve(query=request.message, db=db)
+
             logger.info("✅ RAG: %d chunks (%.2fs)", len(rag_chunks), time.time() - t0)
         except Exception as e:
-            logger.warning("⚠️  RAG failed: %s", e)
+            logger.warning("⚠️  RAG/wger search failed: %s", e)
     else:
         logger.info("⏭️  RAG skipped")
 
@@ -270,6 +635,7 @@ async def _call_llm(websocket: WebSocket, request: ChatRequest, t0: float,
         history=history,
         user_message=request.message,
         intent=intent,
+        wger_exercises_text=wger_exercises_text,
     )
     logger.info("📝 Prompt: %d messages", len(messages))
 

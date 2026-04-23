@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from services.llm_service import llm_service
+from services.rag_service import rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,17 @@ async def lifespan(app: FastAPI):
         )
     else:
         logger.info("Ollama health check OK — model=%s", settings.llm_model)
+
+    # Warm up embedding model để tránh delay 60s ở request đầu tiên
+    import asyncio
+    loop = asyncio.get_event_loop()
+    try:
+        logger.info("Warming up embedding model...")
+        await loop.run_in_executor(None, rag_service._get_model)
+        logger.info("Embedding model ready")
+    except Exception as e:
+        logger.warning("Embedding model warm-up failed (non-fatal): %s", e)
+
     yield
     # Shutdown
     logger.info("Shutting down AI Health Chatbot — cleanup complete")

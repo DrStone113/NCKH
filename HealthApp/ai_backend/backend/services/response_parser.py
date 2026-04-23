@@ -21,14 +21,11 @@ class ResponseParser:
         """
         logger.debug(f"🔍 Parsing response (length: {len(full_response)})")
 
-        # Extract suggestions first
+        # Extract suggestions first (trước khi strip bất cứ thứ gì)
         suggestions = self._extract_suggestions(full_response)
 
-        # Remove suggestions block from text
-        clean = re.sub(
-            r'\[SUGGESTIONS\].*?\[/SUGGESTIONS\]', '',
-            full_response, flags=re.DOTALL | re.IGNORECASE
-        ).strip()
+        # Strip toàn bộ SUGGESTIONS block (mọi variant LLM có thể viết)
+        clean = self._strip_suggestions(full_response)
 
         # Extract action block
         action_json = self._extract_action_block(clean)
@@ -107,11 +104,29 @@ class ResponseParser:
             return (self._remove_all_blocks(clean), None, suggestions)
 
     def _extract_suggestions(self, text: str) -> list[str]:
-        """Extract [SUGGESTIONS]...[/SUGGESTIONS] block"""
+        """
+        Extract suggestions từ mọi variant LLM có thể viết:
+        - [SUGGESTIONS]...[/SUGGESTIONS]
+        - SUGGESTIONS\n...\n[/SUGGESTIONS]
+        - **SUGGESTIONS**\n...
+        """
+        # Variant 1: proper tag [SUGGESTIONS]...[/SUGGESTIONS]
         match = re.search(
             r'\[SUGGESTIONS\]\s*(.*?)\s*\[/SUGGESTIONS\]',
             text, re.DOTALL | re.IGNORECASE
         )
+        # Variant 2: không có [ ở đầu — "SUGGESTIONS\n[...]\n[/SUGGESTIONS]"
+        if not match:
+            match = re.search(
+                r'(?<!\[)SUGGESTIONS\]?\s*(.*?)\s*\[?/SUGGESTIONS\]?',
+                text, re.DOTALL | re.IGNORECASE
+            )
+        # Variant 3: **SUGGESTIONS**
+        if not match:
+            match = re.search(
+                r'\*\*SUGGESTIONS\*\*\s*(.*?)(?:\*\*/SUGGESTIONS\*\*|$)',
+                text, re.DOTALL | re.IGNORECASE
+            )
         if not match:
             return []
         try:
@@ -125,8 +140,36 @@ class ResponseParser:
         except Exception:
             return []
 
+    def _strip_suggestions(self, text: str) -> str:
+        """
+        Xóa toàn bộ SUGGESTIONS block khỏi text — mọi variant LLM có thể viết.
+        Đây là bước quan trọng để không hiển thị raw tag ra UI.
+        """
+        result = text
+        # Variant 1: [SUGGESTIONS]...[/SUGGESTIONS]
+        result = re.sub(
+            r'\[SUGGESTIONS\].*?\[/SUGGESTIONS\]',
+            '', result, flags=re.DOTALL | re.IGNORECASE
+        )
+        # Variant 2: "SUGGESTIONS\n[...]\n[/SUGGESTIONS]" (thiếu [ ở đầu)
+        result = re.sub(
+            r'(?<!\[)SUGGESTIONS\]?\s*\[.*?\]\s*\[?/?SUGGESTIONS\]?',
+            '', result, flags=re.DOTALL | re.IGNORECASE
+        )
+        # Variant 3: **SUGGESTIONS**...**[/SUGGESTIONS]**
+        result = re.sub(
+            r'\*\*SUGGESTIONS\*\*.*?(?:\*\*/SUGGESTIONS\*\*|\Z)',
+            '', result, flags=re.DOTALL | re.IGNORECASE
+        )
+        # Variant 4: dòng chỉ chứa "SUGGESTIONS" hoặc "[/SUGGESTIONS]" còn sót
+        result = re.sub(
+            r'^\s*\[?/?SUGGESTIONS\]?\s*$',
+            '', result, flags=re.MULTILINE | re.IGNORECASE
+        )
+        return result.strip()
+
     def _remove_all_blocks(self, text: str) -> str:
-        """Remove all [TAG]...[/TAG] and **TAG**...{} blocks"""
+        """Remove all [TAG]...[/TAG] and **TAG**...{} blocks, bao gồm SUGGESTIONS"""
         result = text
         for tag in ['ACTION_DATA', 'CUSTOM_DATA', 'STRUCTURED_DATA', 'DATA', 'SUGGESTIONS']:
             result = re.sub(rf'\[{tag}\].*?\[/{tag}\]', '', result,
@@ -138,6 +181,10 @@ class ResponseParser:
         result = re.sub(
             r'\{\s*"type"\s*:\s*"structured".*\}', '', result, flags=re.DOTALL
         )
+        # Strip SUGGESTIONS variants còn sót
+        result = self._strip_suggestions(result)
+        # Strip dòng trống thừa
+        result = re.sub(r'\n{3,}', '\n\n', result)
         return result.strip()
 
     def _extract_action_block(self, text: str) -> Optional[str]:

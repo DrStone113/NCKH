@@ -107,6 +107,15 @@ _BASE_SYSTEM = (
     "- KHÔNG nêu mục tiêu macro, đã ăn protein/carbs/fat, còn cần bổ sung\n"
     "- KHÔNG nêu quy tắc cân bằng dinh dưỡng, lời khuyên theo BMI\n"
     "- KHÔNG giải thích lý do chọn món\n\n"
+    "=== QUY TẮC FORMAT TUYỆT ĐỐI (KHÔNG ĐƯỢC VI PHẠM) ===\n"
+    "Chỉ được dùng ĐÚNG 2 loại block đặc biệt sau, KHÔNG được dùng bất kỳ tag nào khác:\n"
+    "  1. [ACTION_DATA] ... [/ACTION_DATA]   — chứa JSON bài tập hoặc món ăn\n"
+    "  2. [SUGGESTIONS] ... [/SUGGESTIONS]  — chứa JSON array gợi ý\n\n"
+    "NGHIÊM CẤM:\n"
+    "- Viết 'SUGGESTIONS' không có dấu [ ] bao quanh\n"
+    "- Dùng **SUGGESTIONS**, **ACTION_DATA** hay bất kỳ markdown bold nào cho tag\n"
+    "- Tự tạo tag mới như [DATA], [CUSTOM_DATA], [RESULT], v.v.\n"
+    "- Viết JSON ngoài block [ACTION_DATA]\n\n"
 )
 
 # Phần hướng dẫn ACTION_DATA — chỉ thêm khi cần
@@ -142,6 +151,8 @@ _ACTION_DATA_GUIDE = (
     "- Tên bài tập PHẢI là tiếng Anh (Push-up, Squat, Plank, Deadlift, Bicep Curl, Tricep Dip, Leg Raise, Lunge, etc.)\n"
     "- NGOẠI LỆ: Chỉ 4 bài tập sau được dùng tiếng Việt: 'Chạy bộ', 'Hít đất', 'Đi bộ', 'Gập bụng'\n"
     "- Các bài tập khác PHẢI dùng tiếng Anh (KHÔNG viết 'Nâng tạ', 'Lắng tay', 'Nhảy dây')\n"
+    "- Chỉ dùng bài tập từ danh sách [WGER_EXERCISE id=X] đã cung cấp\n"
+    "- wger_id PHẢI là số id thực từ danh sách, KHÔNG dùng 0 nếu có trong danh sách\n"
     "- Mỗi action chỉ có 2 trường trong details: duration (phút) và calories_burned (kcal)\n"
     "- TUYỆT ĐỐI KHÔNG thêm trường 'type', 'category', 'difficulty', 'muscle_group' hay bất kỳ trường nào khác\n"
     "- CHỈ GHI: duration, calories_burned - KHÔNG GHI GÌ THÊM\n\n"
@@ -161,21 +172,23 @@ _ACTION_DATA_GUIDE = (
     "Quy tắc wger_id: lấy từ [WGER_EXERCISE id=X] hoặc [WGER_INGREDIENT id=X] nếu có trong dữ liệu tham khảo, không thì dùng 0.\n\n"
 )
 
-# Hướng dẫn SUGGESTIONS — luôn thêm
+# Hướng dẫn SUGGESTIONS — luôn thêm, format cứng
 _SUGGESTIONS_GUIDE = (
-    "Cuối response, thêm 2-3 gợi ý câu hỏi tiếp theo:\n"
+    "=== BLOCK [SUGGESTIONS] ===\n"
+    "Cuối MỌI response, PHẢI thêm đúng block này — KHÔNG được bỏ qua:\n\n"
     "[SUGGESTIONS]\n"
-    '["Gợi ý 1","Gợi ý 2","Gợi ý 3"]\n'
-    "[/SUGGESTIONS]"
+    '["Gợi ý câu hỏi 1","Gợi ý câu hỏi 2","Gợi ý câu hỏi 3"]\n'
+    "[/SUGGESTIONS]\n\n"
+    "Quy tắc:\n"
+    "- Phải có đúng dấu [ ở đầu SUGGESTIONS và [/ ở đầu /SUGGESTIONS]\n"
+    "- Nội dung là JSON array các string, 2-3 gợi ý liên quan đến cuộc trò chuyện\n"
+    "- KHÔNG viết 'SUGGESTIONS' không có dấu ngoặc, KHÔNG dùng **SUGGESTIONS**\n"
 )
 
 # Hướng dẫn hỏi thêm thông tin
 _CLARIFY_GUIDE = (
     "Nếu yêu cầu chưa đủ thông tin, hỏi ngược lại TỐI ĐA 2 câu ngắn.\n"
-    "Ví dụ: 'Bạn muốn tập nhóm cơ nào?' hoặc 'Đây là bữa sáng, trưa hay tối?'\n"
     "KHÔNG thêm [ACTION_DATA] khi đang hỏi thêm.\n\n"
-    "Khi đã đủ thông tin về bữa ăn, PHẢI liệt kê từng nguyên liệu riêng lẻ với gram cụ thể.\n"
-    "Ví dụ: 'Cơm trắng 200g, Thịt gà luộc 120g, Rau muống xào 150g' — KHÔNG viết chung 'Bữa tối lành mạnh'.\n\n"
 )
 
 # Hướng dẫn cân bằng dinh dưỡng — thêm vào nutrition intent
@@ -240,6 +253,7 @@ class PromptBuilder:
         user_message: str,
         intent: Intent = Intent.GENERAL,
         max_history: int = 8,
+        wger_exercises_text: str = "",
     ) -> list[dict]:
         bmr = calculate_bmr(
             age=user_context.age,
@@ -373,6 +387,10 @@ class PromptBuilder:
 
         if rag_context:
             system += rag_context
+
+        # Inject wger exercises thực (ưu tiên cao hơn RAG)
+        if wger_exercises_text:
+            system += wger_exercises_text + "\n\n"
 
         # Thêm hướng dẫn theo intent
         if intent == Intent.NUTRITION_REQUEST:

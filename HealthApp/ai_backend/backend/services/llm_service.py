@@ -30,9 +30,14 @@ class LLMService:
             "model": model,
             "messages": messages,
             "stream": True,
+            "options": {
+                "num_predict": 700,   # Giới hạn output ~700 tokens/request
+                "num_ctx": 3072,      # Context window vừa đủ, giảm prefill time
+                "temperature": 0.7,
+            },
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=180.0) as client:
             async with client.stream(
                 "POST",
                 f"{settings.ollama_url}/api/chat",

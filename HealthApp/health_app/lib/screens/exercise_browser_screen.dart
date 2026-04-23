@@ -63,9 +63,12 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen>
 
   Future<void> _loadInitialData() async {
     setState(() {
-      _isLoading = true;
+      _isLoading = false; // reset trước để _loadMore không bị block
       _hasError = false;
       _usingLocalFallback = false;
+      _exercises.clear();
+      _currentPage = 1;
+      _hasMore = true;
     });
 
     try {
@@ -75,19 +78,25 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen>
         _wgerService.fetchMuscles(),
       ]);
 
-      _categories = results[0] as List<WgerExerciseCategory>;
-      _muscles = results[1] as List<WgerMuscle>;
+      if (mounted) {
+        setState(() {
+          _categories = results[0] as List<WgerExerciseCategory>;
+          _muscles = results[1] as List<WgerMuscle>;
+        });
+      }
 
       // Load first page of exercises
       await _loadMore();
     } catch (e) {
       // Fall back to local exercise database
       debugPrint('⚠️ wger API unavailable, using local fallback: $e');
-      setState(() {
-        _usingLocalFallback = true;
-        _isLoading = false;
-        _hasError = false;
-      });
+      if (mounted) {
+        setState(() {
+          _usingLocalFallback = true;
+          _isLoading = false;
+          _hasError = false;
+        });
+      }
     }
   }
 
@@ -119,7 +128,8 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen>
       setState(() {
         _exercises.addAll(response.results);
         _currentPage++;
-        _hasMore = response.next != null;
+        // hasMore dựa vào count thực tế thay vì next URL (next trỏ wger.de gây CORS)
+        _hasMore = _exercises.length < response.count && response.results.isNotEmpty;
         _isLoading = false;
         _usingLocalFallback = false;
       });

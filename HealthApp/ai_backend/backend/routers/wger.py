@@ -276,7 +276,64 @@ async def list_exercises(
                 raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
             
             data = resp.json()
-            return data
+
+            # Extract tên và mô tả từ translations cho mỗi bài tập
+            results = []
+            for item in data.get("results", []):
+                translations = item.get("translations", [])
+                # Ưu tiên tiếng Anh (language=2), fallback sang bản đầu tiên
+                en_trans = next((t for t in translations if t.get("language") == 2), None)
+                trans = en_trans or (translations[0] if translations else {})
+
+                name = trans.get("name", "").strip()
+                description = _strip_html(trans.get("description", ""))
+
+                # Bỏ qua bài tập không có tên
+                if not name:
+                    continue
+
+                # Category
+                category_data = item.get("category", {})
+                category_name = category_data.get("name", "") if isinstance(category_data, dict) else ""
+
+                # Muscles
+                muscles_list = [
+                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    for m in item.get("muscles", [])
+                ]
+                muscles_secondary_list = [
+                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    for m in item.get("muscles_secondary", [])
+                ]
+
+                # Equipment
+                equipment_list = [
+                    {"id": e["id"], "name": e.get("name", "")}
+                    for e in item.get("equipment", [])
+                ]
+
+                # Image
+                images = item.get("images", [])
+                image_url = images[0].get("image") if images else None
+
+                results.append({
+                    "id": item["id"],
+                    "name": name,
+                    "description": description,
+                    "category": category_name,
+                    "category_name": category_name,
+                    "muscles": muscles_list,
+                    "muscles_secondary": muscles_secondary_list,
+                    "equipment": equipment_list,
+                    "image_url": image_url,
+                })
+
+            return {
+                "count": data.get("count", 0),
+                "next": data.get("next"),  # giữ nguyên để Flutter biết còn trang
+                "previous": data.get("previous"),
+                "results": results,
+            }
         except HTTPException:
             raise
         except Exception as e:

@@ -123,9 +123,23 @@ if not exist "!ENV_FILE!" (
     echo  [OK] File .env da ton tai
 )
 
+REM Cai torch voi CUDA neu chua co (phai cai truoc requirements)
+"%BACKEND_DIR%\venv\Scripts\python.exe" -c "import torch; assert torch.cuda.is_available()" >nul 2>&1
+if errorlevel 1 (
+    echo  [Setup] Cai PyTorch voi CUDA 12.4 cho GPU...
+    "%BACKEND_DIR%\venv\Scripts\python.exe" -m pip install torch --index-url https://download.pytorch.org/whl/cu124
+    if errorlevel 1 (
+        echo  [CANH BAO] Cai torch CUDA that bai, dung ban CPU
+    ) else (
+        echo  [OK] PyTorch CUDA da san sang
+    )
+) else (
+    echo  [OK] PyTorch CUDA da co san
+)
+
 REM Cai dependencies neu chua co hoac requirements thay doi
 echo  [Setup] Cai dat dependencies...
-"%BACKEND_DIR%\venv\Scripts\pip.exe" install -r "%BACKEND_DIR%\requirements.txt" --quiet
+"%BACKEND_DIR%\venv\Scripts\pip.exe" install -r "%BACKEND_DIR%\requirements.txt"
 if errorlevel 1 (
     echo  [LOI] Cai dat dependencies that bai.
     pause
@@ -143,6 +157,24 @@ if %errorlevel% equ 0 (
     popd
     timeout /t 4 /nobreak >nul
     echo  [OK] Backend da khoi dong
+)
+
+REM Sync wger data vao RAG (chi chay lan dau hoac khi can cap nhat)
+set "SYNC_FLAG=%BACKEND_DIR%\.wger_synced"
+if not exist "!SYNC_FLAG!" (
+    echo  [RAG] Chua co du lieu wger - Dang dong bo bai tap va thuc pham vao AI...
+    echo  [RAG] Qua trinh nay co the mat 5-15 phut lan dau, vui long cho...
+    pushd "%BACKEND_DIR%"
+    "%VENV_PYTHON%" -m scripts.sync_wger
+    if errorlevel 1 (
+        echo  [CANH BAO] Dong bo wger that bai - AI se khong co du lieu bai tap
+    ) else (
+        echo. > "!SYNC_FLAG!"
+        echo  [OK] Dong bo wger hoan tat - AI da co du lieu bai tap va thuc pham
+    )
+    popd
+) else (
+    echo  [OK] Du lieu wger da duoc dong bo truoc do
 )
 
 REM ==========================================

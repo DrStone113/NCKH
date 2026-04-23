@@ -9,6 +9,9 @@ sentence-transformers>=2.7.0
 httpx>=0.27.0
 python-dotenv>=1.0.0
 
+# PyTorch với CUDA 12.4 (RTX 4060) — cài riêng trước requirements
+# pip install torch --index-url https://download.pytorch.org/whl/cu124
+
 # Dev / testing
 hypothesis>=6.100.0
 pytest>=8.0.0

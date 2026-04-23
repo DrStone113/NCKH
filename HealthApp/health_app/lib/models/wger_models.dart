@@ -102,19 +102,13 @@ class WgerExercise {
   });
 
   factory WgerExercise.fromJson(Map<String, dynamic> json) {
-    // Extract name from translations if available
-    String name = '';
-    if (json['name'] != null && json['name'].toString().isNotEmpty) {
-      name = json['name'].toString();
-    }
+    // Extract name
+    String name = json['name']?.toString().trim() ?? '';
     
     // Extract description
-    String description = '';
-    if (json['description'] != null && json['description'].toString().isNotEmpty) {
-      description = json['description'].toString();
-    }
+    String description = json['description']?.toString() ?? '';
     
-    // Extract category name
+    // Extract category name — backend trả về "category" hoặc "category_name"
     String categoryName = '';
     if (json['category_name'] != null) {
       categoryName = json['category_name'].toString();
@@ -269,13 +263,15 @@ class WgerExerciseListResponse {
   });
 
   factory WgerExerciseListResponse.fromJson(Map<String, dynamic> json) {
+    final results = (json['results'] as List<dynamic>?)
+            ?.map((e) => WgerExercise.fromJson(e as Map<String, dynamic>))
+            .where((e) => e.name.isNotEmpty) // lọc bài tập không có tên
+            .toList() ??
+        [];
     return WgerExerciseListResponse(
       count: json['count'] ?? 0,
-      next: json['next'],
-      results: (json['results'] as List<dynamic>?)
-              ?.map((e) => WgerExercise.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      next: json['next'] as String?,
+      results: results,
     );
   }
 }

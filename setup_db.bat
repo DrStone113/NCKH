@@ -10,6 +10,8 @@ echo [1] Tao database va user...
 %PSQL% -U postgres -c "CREATE USER health WITH PASSWORD 'secret';"
 %PSQL% -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE health_db TO health;"
 %PSQL% -U postgres -d health_db -c "GRANT ALL ON SCHEMA public TO health;"
+%PSQL% -U postgres -d health_db -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO health;"
+%PSQL% -U postgres -d health_db -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO health;"
 
 echo [2] Cai pgvector extension...
 %PSQL% -U postgres -d health_db -c "CREATE EXTENSION IF NOT EXISTS vector;"

@@ -1,8 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+import logging
 
 from models.schemas import KnowledgeChunk
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class RAGService:
@@ -11,8 +14,11 @@ class RAGService:
 
     def _get_model(self):
         if self._model is None:
+            import torch
             from sentence_transformers import SentenceTransformer  # lazy import
-            self._model = SentenceTransformer(settings.embedding_model)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            logger.info(f"Loading embedding model on device: {device}")
+            self._model = SentenceTransformer(settings.embedding_model, device=device)
         return self._model
 
     def embed(self, text_input: str) -> list[float]:

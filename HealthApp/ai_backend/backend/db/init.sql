@@ -75,3 +75,7 @@ CREATE INDEX IF NOT EXISTS wger_ingredients_name_idx ON wger_ingredients USING g
 ALTER TABLE knowledge_chunks DROP CONSTRAINT IF EXISTS knowledge_chunks_category_check;
 ALTER TABLE knowledge_chunks ADD CONSTRAINT knowledge_chunks_category_check
     CHECK (category IN ('food', 'exercise', 'wger_exercise', 'wger_ingredient'));
+
+-- Grant quyền cho user health trên tất cả bảng hiện tại
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO health;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO health;

@@ -31,9 +31,14 @@ REM ==========================================
 echo  [1/3] Khoi dong Ollama...
 where ollama >nul 2>&1
 if %errorlevel% neq 0 (
-    echo  [!] Ollama chua duoc cai dat
-    echo  [*] Bo qua Ollama
-    goto START_BACKEND
+    echo  [!] Ollama chua duoc cai dat - Dang tu dong cai dat...
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://ollama.com/install.ps1 | iex"
+    if errorlevel 1 (
+        echo  [LOI] Cai dat Ollama that bai. Vui long cai thu cong tai: https://ollama.com
+        echo  [*] Bo qua Ollama, tiep tuc...
+        goto START_BACKEND
+    )
+    echo  [OK] Cai dat Ollama thanh cong
 )
 
 REM Kiem tra xem Ollama da chay chua
@@ -42,8 +47,23 @@ if %errorlevel% equ 0 (
     echo  [OK] Ollama da dang chay
 ) else (
     start "Ollama Server" ollama serve
-    timeout /t 3 /nobreak >nul
+    timeout /t 5 /nobreak >nul
     echo  [OK] Ollama da khoi dong
+)
+
+REM Kiem tra va pull model neu chua co
+echo  [Ollama] Kiem tra model llama3:8b-instruct-q4_K_M...
+ollama list 2>nul | findstr "llama3:8b-instruct-q4_K_M" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo  [Ollama] Model chua co - Dang tai xuong (co the mat vai phut)...
+    ollama pull llama3:8b-instruct-q4_K_M
+    if errorlevel 1 (
+        echo  [CANH BAO] Khong the tai model. Chatbot se khong hoat dong.
+    ) else (
+        echo  [OK] Tai model thanh cong
+    )
+) else (
+    echo  [OK] Model da san sang
 )
 
 REM ==========================================
@@ -53,12 +73,40 @@ REM ==========================================
 echo.
 echo  [2/3] Khoi dong Backend...
 
-if not exist "%VENV_PYTHON%" (
-    echo  [!] Python environment chua duoc cai dat
-    echo  [*] Chay 'dev.bat' va chon [4] de cai dat dependencies
+REM Tim Python
+set "PYTHON_CMD="
+where python >nul 2>&1 && set "PYTHON_CMD=python"
+if "!PYTHON_CMD!"=="" (
+    where py >nul 2>&1 && set "PYTHON_CMD=py"
+)
+if "!PYTHON_CMD!"=="" (
+    echo  [LOI] Khong tim thay Python. Vui long cai Python truoc.
     pause
     exit /b 1
 )
+echo  [Python] Tim thay: !PYTHON_CMD!
+
+REM Tao venv neu chua co
+if not exist "%VENV_PYTHON%" (
+    echo  [Setup] Tao virtual environment...
+    !PYTHON_CMD! -m venv "%BACKEND_DIR%\venv"
+    if errorlevel 1 (
+        echo  [LOI] Khong the tao venv.
+        pause
+        exit /b 1
+    )
+    echo  [OK] Tao venv thanh cong
+)
+
+REM Cai dependencies neu chua co hoac requirements thay doi
+echo  [Setup] Cai dat dependencies...
+"%BACKEND_DIR%\venv\Scripts\pip.exe" install -r "%BACKEND_DIR%\requirements.txt" --quiet
+if errorlevel 1 (
+    echo  [LOI] Cai dat dependencies that bai.
+    pause
+    exit /b 1
+)
+echo  [OK] Dependencies da san sang
 
 REM Kiem tra xem Backend da chay chua
 netstat -ano 2>nul | findstr ":%PORT_BACKEND% " | findstr "LISTENING" >nul 2>&1

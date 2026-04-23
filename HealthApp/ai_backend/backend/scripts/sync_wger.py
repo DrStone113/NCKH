@@ -178,7 +178,7 @@ async def sync_items(
         print(
             f"  {label}: {count}/{total} "
             f"({rate:.1f} items/s, ETA: {eta:.0f}s)",
-            end="\r",
+            flush=True,
         )
 
     print(f"  {label}: {count}/{total} - DONE ({time.time()-t0:.1f}s)          ")
@@ -274,8 +274,10 @@ async def main():
     pool = None
 
     if not args.dry_run:
-        print(f"Loading embedding model: {settings.embedding_model} ...")
-        model = SentenceTransformer(settings.embedding_model)
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"Loading embedding model: {settings.embedding_model} on {device.upper()} ...")
+        model = SentenceTransformer(settings.embedding_model, device=device)
         print("Model loaded.\n")
 
         dsn = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
@@ -288,13 +290,11 @@ async def main():
     do_ingredients = not args.exercises_only
 
     if do_exercises and do_ingredients and not args.dry_run:
-        # Fetch cả hai song song
-        print("[1/2] Fetching + syncing exercises...")
-        print("[2/2] Fetching ingredients (song song)...")
-        exercise_count, ingredient_count = await asyncio.gather(
-            sync_exercises(model, pool, dry_run=False),
-            sync_ingredients(model, pool, dry_run=False),
-        )
+        # Fetch tuần tự để tránh timeout/rate limit từ wger.de
+        print("[1/2] Syncing exercises...")
+        exercise_count = await sync_exercises(model, pool, dry_run=False)
+        print("[2/2] Syncing ingredients...")
+        ingredient_count = await sync_ingredients(model, pool, dry_run=False)
     else:
         if do_exercises:
             print("[1/2] Syncing exercises...")

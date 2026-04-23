@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     rag_similarity_threshold: float = 0.5
     wger_base_url: str = "https://wger.de/api/v2"
     wger_cache_ttl_hours: int = 24
-    wger_request_timeout_seconds: int = 30
+    wger_request_timeout_seconds: int = 120
     wger_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

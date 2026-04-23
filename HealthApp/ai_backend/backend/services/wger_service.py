@@ -99,7 +99,7 @@ class WgerService:
         url = f"{self.base_url}{endpoint}"
         page_num = 0
         # Per-request timeout: đủ lớn cho mỗi trang nhưng không block mãi
-        per_request_timeout = httpx.Timeout(connect=10.0, read=60.0, write=10.0, pool=5.0)
+        per_request_timeout = httpx.Timeout(connect=15.0, read=120.0, write=15.0, pool=5.0)
 
         async with httpx.AsyncClient(timeout=per_request_timeout) as client:
             while url:

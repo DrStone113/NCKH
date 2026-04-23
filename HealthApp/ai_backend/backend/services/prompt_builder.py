@@ -89,10 +89,24 @@ def _calc_macro_targets(recommended_kcal: float, health_goal: str,
 # System prompt cơ bản — ngắn gọn, rõ ràng
 _BASE_SYSTEM = (
     "Bạn là trợ lý sức khỏe AI. Trả lời HOÀN TOÀN bằng tiếng Việt, ngắn gọn, chuyên nghiệp.\n"
-    "Chỉ sử dụng tiếng Anh cho tên các bài tập (Deadlift, Leg raise,..), còn lại đều là tiếng Việt.\n"
+    "QUAN TRỌNG: Tên bài tập PHẢI là tiếng Anh (ví dụ: Push-up, Squat, Plank, Deadlift, Bicep Curl).\n"
+    "Ngoại lệ: Chỉ 4 bài tập sau được dùng tiếng Việt: 'Chạy bộ', 'Hít đất', 'Đi bộ', 'Gập bụng'.\n"
+    "Tên món ăn và nguyên liệu dùng tiếng Việt.\n"
     "KHÔNG bịa đặt tên người dùng — không có tên trong dữ liệu thì KHÔNG đề cập tên.\n"
     "KHÔNG thêm câu xã giao thừa như 'Vui vẻ!', 'Chúc bạn...', 'Tuyệt vời!', 'Rất vui được...'.\n"
     "Đi thẳng vào nội dung, không mở đầu bằng lời chào hay câu cảm thán.\n\n"
+    "PHÂN CHIA CALORIES VÀ MACRO CHO 4 BỮA ĂN/NGÀY:\n"
+    "- Bữa sáng: 30% tổng calories\n"
+    "- Bữa trưa: 35% tổng calories\n"
+    "- Bữa phụ: 10% tổng calories (ăn nhẹ)\n"
+    "- Bữa tối: 25% tổng calories\n"
+    "Khi gợi ý bữa ăn, tính calories theo tỷ lệ trên.\n\n"
+    "KHI GỢI Ý BỮA ĂN:\n"
+    "- Chỉ nêu: hôm nay đã ăn bao nhiêu calo, còn lại bao nhiêu\n"
+    "- Sau đó gợi ý bữa ăn với nguyên liệu và khẩu phần cụ thể\n"
+    "- KHÔNG nêu mục tiêu macro, đã ăn protein/carbs/fat, còn cần bổ sung\n"
+    "- KHÔNG nêu quy tắc cân bằng dinh dưỡng, lời khuyên theo BMI\n"
+    "- KHÔNG giải thích lý do chọn món\n\n"
 )
 
 # Phần hướng dẫn ACTION_DATA — chỉ thêm khi cần
@@ -103,29 +117,47 @@ _ACTION_DATA_GUIDE = (
     "- KHÔNG gộp nhiều nguyên liệu thành 1 action (KHÔNG viết 'Cơm heo quay', 'Bữa tối lành mạnh')\n"
     "- Thêm trường 'meal_name' vào structured để đặt tên cho cả món (ví dụ: 'Cơm heo quay')\n"
     "- Mỗi nguyên liệu phải có serving_grams cụ thể\n"
-    "- calories/protein/carbs/fat là giá trị trên 100g của nguyên liệu đó\n\n"
-    "Ví dụ ĐÚNG cho bữa tối 'Cơm heo quay':\n"
+    "- calories/protein/carbs/fat là giá trị trên 100g của nguyên liệu đó\n"
+    "- QUAN TRỌNG: meal_type phải khớp với bữa ăn đang gợi ý:\n"
+    "  * Bữa sáng → meal_type: \"breakfast\"\n"
+    "  * Bữa trưa → meal_type: \"lunch\"\n"
+    "  * Bữa tối → meal_type: \"dinner\"\n"
+    "  * Bữa phụ → meal_type: \"snack\"\n\n"
+    "Ví dụ ĐÚNG cho bữa trưa 'Cơm gà':\n"
     "[ACTION_DATA]\n"
-    '{"type":"structured","text":"Cơm heo quay","meal_name":"Cơm heo quay","actions":[\n'
-    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"dinner","serving_grams":200}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Thịt heo ba chỉ","details":{"calories":260,"protein":16.5,"carbs":0,"fat":21.5,"meal_type":"dinner","serving_grams":100}},\n'
-    '  {"kind":"food","wger_id":0,"name":"Rau muống luộc","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"dinner","serving_grams":150}}\n'
+    '{"type":"structured","text":"Cơm gà","meal_name":"Cơm gà","actions":[\n'
+    '  {"kind":"food","wger_id":0,"name":"Gạo tẻ","details":{"calories":344,"protein":7.9,"carbs":76,"fat":1.0,"meal_type":"lunch","serving_grams":200}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Thịt gà luộc","details":{"calories":165,"protein":31,"carbs":0,"fat":3.6,"meal_type":"lunch","serving_grams":120}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Rau muống xào","details":{"calories":19,"protein":2.6,"carbs":3,"fat":0.2,"meal_type":"lunch","serving_grams":150}}\n'
+    "]}\n"
+    "[/ACTION_DATA]\n\n"
+    "Ví dụ ĐÚNG cho bữa sáng 'Bánh mì trứng':\n"
+    "[ACTION_DATA]\n"
+    '{"type":"structured","text":"Bánh mì trứng","meal_name":"Bánh mì trứng","actions":[\n'
+    '  {"kind":"food","wger_id":0,"name":"Bánh mì","details":{"calories":265,"protein":9,"carbs":49,"fat":3.2,"meal_type":"breakfast","serving_grams":100}},\n'
+    '  {"kind":"food","wger_id":0,"name":"Trứng gà","details":{"calories":155,"protein":13,"carbs":1.1,"fat":11,"meal_type":"breakfast","serving_grams":100}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
     "QUY TẮC BẮT BUỘC cho bài tập:\n"
+    "- Tên bài tập PHẢI là tiếng Anh (Push-up, Squat, Plank, Deadlift, Bicep Curl, Tricep Dip, Leg Raise, Lunge, etc.)\n"
+    "- NGOẠI LỆ: Chỉ 4 bài tập sau được dùng tiếng Việt: 'Chạy bộ', 'Hít đất', 'Đi bộ', 'Gập bụng'\n"
+    "- Các bài tập khác PHẢI dùng tiếng Anh (KHÔNG viết 'Nâng tạ', 'Lắng tay', 'Nhảy dây')\n"
     "- Mỗi action chỉ có 2 trường trong details: duration (phút) và calories_burned (kcal)\n"
     "- TUYỆT ĐỐI KHÔNG thêm trường 'type', 'category', 'difficulty', 'muscle_group' hay bất kỳ trường nào khác\n"
     "- CHỈ GHI: duration, calories_burned - KHÔNG GHI GÌ THÊM\n\n"
     "Ví dụ ĐÚNG cho bài tập:\n"
     "[ACTION_DATA]\n"
     '{"type":"structured","text":"Bài tập gợi ý","actions":[\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Chạy bộ","details":{"duration":30,"calories_burned":250}},\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Hít đất","details":{"duration":15,"calories_burned":80}}\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Hít đất","details":{"duration":15,"calories_burned":80}},\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Squat","details":{"duration":20,"calories_burned":120}},\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Gập bụng","details":{"duration":10,"calories_burned":50}}\n'
     "]}\n"
     "[/ACTION_DATA]\n\n"
     "Ví dụ SAI (KHÔNG làm như thế này):\n"
-    '  {"kind":"exercise","wger_id":0,"name":"Squat","details":{"duration":30,"calories_burned":120,"type":"strength"}}  ← SAI vì có trường "type"\n'
-    '  {"kind":"exercise","wger_id":0,"name":"Plank","details":{"duration":20,"calories_burned":50,"category":"core"}}  ← SAI vì có trường "category"\n\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Nâng tạ","details":{...}}  ← SAI, phải dùng "Bicep Curl" hoặc "Deadlift"\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Nhảy dây","details":{...}}  ← SAI, phải dùng "Jump Rope"\n'
+    '  {"kind":"food","wger_id":0,"name":"Cơm","details":{"meal_type":"breakfast","serving_grams":200}}  ← SAI vì gợi ý bữa trưa nhưng dùng meal_type: "breakfast"\n'
+    '  {"kind":"exercise","wger_id":0,"name":"Squat","details":{"duration":30,"calories_burned":120,"type":"strength"}}  ← SAI vì có trường "type"\n\n'
     "Quy tắc wger_id: lấy từ [WGER_EXERCISE id=X] hoặc [WGER_INGREDIENT id=X] nếu có trong dữ liệu tham khảo, không thì dùng 0.\n\n"
 )
 
@@ -183,6 +215,23 @@ def _nutrition_balance_guide(macro: dict, eaten_protein: float, eaten_carbs: flo
 
 
 class PromptBuilder:
+    def _detect_meal_type(self, message: str) -> str | None:
+        """Phát hiện bữa ăn nào đang được yêu cầu từ message."""
+        import re
+        text = message.lower()
+        
+        # Kiểm tra từ khóa
+        if re.search(r'\b(bữa sáng|sáng|breakfast|morning)\b', text):
+            return "breakfast"
+        if re.search(r'\b(bữa trưa|trưa|lunch|noon)\b', text):
+            return "lunch"
+        if re.search(r'\b(bữa tối|tối|dinner|evening)\b', text):
+            return "dinner"
+        if re.search(r'\b(bữa phụ|phụ|snack|xế)\b', text):
+            return "snack"
+        
+        return None
+    
     def build(
         self,
         user_context: UserContext,
@@ -207,16 +256,25 @@ class PromptBuilder:
         activity = ACTIVITY_LEVEL_VN.get(user_context.activity_level, user_context.activity_level)
         gender = "Nam" if user_context.gender == "male" else "Nữ"
 
-        # User profile — compact với BMI
-        user_profile = (
-            f"Người dùng: {gender}, {user_context.age} tuổi, "
-            f"{user_context.height:.0f}cm, {user_context.weight:.0f}kg | "
-            f"BMI: {macro['bmi']} ({macro['bmi_cat']}) | "
-            f"Mục tiêu: {goal} | Hoạt động: {activity}\n"
-            f"Calo khuyến nghị: {recommended:.0f} kcal/ngày (BMR={bmr:.0f}, TDEE={tdee:.0f})\n"
-            f"Macro mục tiêu: Protein {macro['protein_g']}g ({macro['protein_per_kg']}g/kg) | "
-            f"Carbs {macro['carbs_g']}g | Fat {macro['fat_g']}g\n"
-        )
+        # User profile — ngắn gọn cho nutrition, đầy đủ cho các intent khác
+        if intent == Intent.NUTRITION_REQUEST:
+            # Chỉ cần thông tin calo cho gợi ý bữa ăn - KHÔNG cần macro
+            user_profile = (
+                f"Calo khuyến nghị: {recommended:.0f} kcal/ngày\n"
+                f"Phân chia: Sáng {recommended*0.30:.0f} kcal | Trưa {recommended*0.35:.0f} kcal | "
+                f"Phụ {recommended*0.10:.0f} kcal | Tối {recommended*0.25:.0f} kcal\n"
+            )
+        else:
+            # Đầy đủ thông tin cho các intent khác
+            user_profile = (
+                f"Người dùng: {gender}, {user_context.age} tuổi, "
+                f"{user_context.height:.0f}cm, {user_context.weight:.0f}kg | "
+                f"BMI: {macro['bmi']} ({macro['bmi_cat']}) | "
+                f"Mục tiêu: {goal} | Hoạt động: {activity}\n"
+                f"Calo khuyến nghị: {recommended:.0f} kcal/ngày (BMR={bmr:.0f}, TDEE={tdee:.0f})\n"
+                f"Macro mục tiêu: Protein {macro['protein_g']}g ({macro['protein_per_kg']}g/kg) | "
+                f"Carbs {macro['carbs_g']}g | Fat {macro['fat_g']}g\n"
+            )
 
         # Tính macro đã ăn hôm nay từ today_meals
         eaten_protein = sum(float(m.get("protein", 0)) for m in user_context.today_meals)
@@ -225,24 +283,34 @@ class PromptBuilder:
 
         # Today's activity context
         today_context = ""
-        if user_context.today_calories_consumed is not None or user_context.today_calories_burned is not None:
-            today_parts = []
+        if intent == Intent.NUTRITION_REQUEST:
+            # Cho nutrition: chỉ cần tóm tắt ngắn gọn
             if user_context.today_calories_consumed is not None and user_context.today_meals_count:
                 remaining = recommended - user_context.today_calories_consumed
-                today_parts.append(
+                today_context = (
                     f"Hôm nay đã ăn: {user_context.today_calories_consumed:.0f} kcal "
-                    f"({user_context.today_meals_count} bữa), còn lại: {remaining:.0f} kcal"
+                    f"({user_context.today_meals_count} bữa), còn lại: {remaining:.0f} kcal\n"
                 )
-            if user_context.today_calories_burned is not None and user_context.today_exercises_count:
-                today_parts.append(
-                    f"Đã tập: {user_context.today_exercises_count} bài, "
-                    f"đốt {user_context.today_calories_burned:.0f} kcal"
-                )
-            if today_parts:
-                today_context = "Hoạt động hôm nay: " + " | ".join(today_parts) + "\n"
+        else:
+            # Cho các intent khác: đầy đủ thông tin
+            if user_context.today_calories_consumed is not None or user_context.today_calories_burned is not None:
+                today_parts = []
+                if user_context.today_calories_consumed is not None and user_context.today_meals_count:
+                    remaining = recommended - user_context.today_calories_consumed
+                    today_parts.append(
+                        f"Hôm nay đã ăn: {user_context.today_calories_consumed:.0f} kcal "
+                        f"({user_context.today_meals_count} bữa), còn lại: {remaining:.0f} kcal"
+                    )
+                if user_context.today_calories_burned is not None and user_context.today_exercises_count:
+                    today_parts.append(
+                        f"Đã tập: {user_context.today_exercises_count} bài, "
+                        f"đốt {user_context.today_calories_burned:.0f} kcal"
+                    )
+                if today_parts:
+                    today_context = "Hoạt động hôm nay: " + " | ".join(today_parts) + "\n"
 
-        # Chi tiết bữa ăn hôm nay
-        if user_context.today_meals:
+        # Chi tiết bữa ăn hôm nay - chỉ hiển thị cho intent không phải NUTRITION_REQUEST
+        if user_context.today_meals and intent != Intent.NUTRITION_REQUEST:
             meal_type_vn = {"sang": "Sáng", "trua": "Trưa", "toi": "Tối", "phu": "Phụ",
                             "breakfast": "Sáng", "lunch": "Trưa", "dinner": "Tối", "snack": "Phụ"}
             meal_lines = []
@@ -263,8 +331,8 @@ class PromptBuilder:
                     + "\n".join(meal_lines) + "\n"
                 )
 
-        # Chi tiết bài tập hôm nay
-        if user_context.today_exercises:
+        # Chi tiết bài tập hôm nay - chỉ hiển thị cho intent không phải NUTRITION_REQUEST
+        if user_context.today_exercises and intent != Intent.NUTRITION_REQUEST:
             ex_lines = []
             for e in user_context.today_exercises:
                 name = e.get("name", "")
@@ -308,7 +376,26 @@ class PromptBuilder:
 
         # Thêm hướng dẫn theo intent
         if intent == Intent.NUTRITION_REQUEST:
-            system += _nutrition_balance_guide(macro, eaten_protein, eaten_carbs, eaten_fat)
+            # Phát hiện bữa ăn nào đang được gợi ý từ user_message
+            detected_meal_type = self._detect_meal_type(user_message)
+            
+            # KHÔNG thêm nutrition_balance_guide - chỉ cần thông tin meal_type
+            
+            # Thêm thông tin về bữa ăn đang gợi ý
+            if detected_meal_type:
+                meal_type_map = {
+                    "breakfast": "bữa sáng",
+                    "lunch": "bữa trưa", 
+                    "dinner": "bữa tối",
+                    "snack": "bữa phụ"
+                }
+                meal_type_vn = meal_type_map.get(detected_meal_type, detected_meal_type)
+                system += (
+                    f"QUAN TRỌNG: Bạn đang gợi ý {meal_type_vn}.\n"
+                    f"Trong [ACTION_DATA], TẤT CẢ các nguyên liệu PHẢI có meal_type: \"{detected_meal_type}\"\n"
+                    f"KHÔNG được dùng meal_type khác.\n\n"
+                )
+            
             system += _CLARIFY_GUIDE
             system += _ACTION_DATA_GUIDE
 

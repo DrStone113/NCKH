@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserContext(BaseModel):
@@ -20,6 +20,16 @@ class UserContext(BaseModel):
     # Chi tiết bữa ăn và bài tập hôm nay
     today_meals: list[dict] = []
     today_exercises: list[dict] = []
+
+    @field_validator('health_goal', mode='before')
+    @classmethod
+    def normalize_health_goal(cls, v):
+        """Convert short format to full format for backward compatibility"""
+        if v == 'lose':
+            return 'lose_weight'
+        elif v == 'gain':
+            return 'gain_muscle'
+        return v
 
 
 class ChatRequest(BaseModel):

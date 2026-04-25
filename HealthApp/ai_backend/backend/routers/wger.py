@@ -377,3 +377,22 @@ async def list_muscles():
         except Exception as e:
             logger.error(f"Error fetching muscles: {e}")
             raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/equipment/", response_model=dict)
+async def list_equipment():
+    """Proxy endpoint để lấy danh sách dụng cụ tập từ wger"""
+    url = f"{WGER_BASE}/equipment/?format=json"
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+            
+            return resp.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching equipment: {e}")
+            raise HTTPException(status_code=502, detail=str(e))

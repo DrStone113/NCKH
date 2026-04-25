@@ -18,7 +18,25 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
   void initState() {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
-    _selectedGoal = user?.healthGoal ?? 'maintain';
+
+    // Map full format to short format for UI
+    if (user?.healthGoal != null) {
+      switch (user!.healthGoal) {
+        case 'lose_weight':
+          _selectedGoal = 'lose';
+          break;
+        case 'gain_muscle':
+          _selectedGoal = 'gain';
+          break;
+        case 'maintain':
+          _selectedGoal = 'maintain';
+          break;
+        default:
+          _selectedGoal = 'maintain';
+      }
+    } else {
+      _selectedGoal = 'maintain';
+    }
   }
 
   Future<void> _saveGoal() async {
@@ -31,7 +49,21 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
       final currentUser = userProvider.currentUser;
 
       if (currentUser != null) {
-        final updatedUser = currentUser.copyWith(healthGoal: _selectedGoal);
+        // Map short format to full format for backend compatibility
+        String fullGoalFormat = _selectedGoal!;
+        switch (_selectedGoal) {
+          case 'lose':
+            fullGoalFormat = 'lose_weight';
+            break;
+          case 'gain':
+            fullGoalFormat = 'gain_muscle';
+            break;
+          case 'maintain':
+            fullGoalFormat = 'maintain';
+            break;
+        }
+
+        final updatedUser = currentUser.copyWith(healthGoal: fullGoalFormat);
         await userProvider.updateProfile(updatedUser);
 
         if (mounted) {

@@ -39,7 +39,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (user.height > 0) _height = user.height;
       if (user.weight > 0) _weight = user.weight;
       _activityLevel = user.activityLevel;
-      _healthGoal = user.healthGoal;
+
+      // Map full format to short format for UI
+      switch (user.healthGoal) {
+        case 'lose_weight':
+          _healthGoal = 'lose';
+          break;
+        case 'gain_muscle':
+          _healthGoal = 'gain';
+          break;
+        case 'maintain':
+          _healthGoal = 'maintain';
+          break;
+        default:
+          _healthGoal = 'maintain';
+      }
     }
   }
 
@@ -72,8 +86,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.currentUser;
-    
+
     if (currentUser != null) {
+      // Map short format to full format for backend compatibility
+      String fullGoalFormat = _healthGoal;
+      switch (_healthGoal) {
+        case 'lose':
+          fullGoalFormat = 'lose_weight';
+          break;
+        case 'gain':
+          fullGoalFormat = 'gain_muscle';
+          break;
+        case 'maintain':
+          fullGoalFormat = 'maintain';
+          break;
+      }
+
       // Create updated user model with new information
       final updatedUser = UserModel(
         id: currentUser.id,
@@ -85,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         weight: _weight,
         targetWeight: _weight, // Đặt target weight = weight hiện tại
         activityLevel: _activityLevel,
-        healthGoal: _healthGoal,
+        healthGoal: fullGoalFormat,
         createdAt: currentUser.createdAt,
       );
 
@@ -115,8 +143,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       height: 4,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
-                        color: index <= _currentPage 
-                            ? AppColors.primary 
+                        color: index <= _currentPage
+                            ? AppColors.primary
                             : AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(2),
                       ),
@@ -169,7 +197,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(_currentPage == 5 ? 'Hoàn thành' : 'Tiếp tục'),
+                      child:
+                          Text(_currentPage == 5 ? 'Hoàn thành' : 'Tiếp tục'),
                     ),
                   ),
                 ],
@@ -295,7 +324,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
             ),
           ),
           const SizedBox(height: 80),
@@ -321,7 +351,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 48),
-          
+
           // Age slider
           Container(
             padding: const EdgeInsets.all(24),
@@ -333,7 +363,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 Text(
                   '$_age tuổi',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary),
                 ),
                 const SizedBox(height: 16),
                 Slider(
@@ -348,15 +381,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('10', style: TextStyle(color: AppColors.textSecondary)),
-                    Text('100', style: TextStyle(color: AppColors.textSecondary)),
+                    Text('10',
+                        style: TextStyle(color: AppColors.textSecondary)),
+                    Text('100',
+                        style: TextStyle(color: AppColors.textSecondary)),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Gender selection
           Row(
             children: [
@@ -429,7 +464,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 48),
-          
+
           // Height
           Container(
             padding: const EdgeInsets.all(24),
@@ -445,12 +480,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Text(
                       _height.toStringAsFixed(0),
-                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary),
                     ),
                     const SizedBox(width: 8),
                     const Padding(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('cm', style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
+                      child: Text('cm',
+                          style: TextStyle(
+                              fontSize: 18, color: AppColors.textSecondary)),
                     ),
                   ],
                 ),
@@ -467,15 +507,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('100 cm', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    Text('220 cm', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text('100 cm',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
+                    Text('220 cm',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Weight
           Container(
             padding: const EdgeInsets.all(24),
@@ -491,12 +535,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Text(
                       _weight.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.calories),
+                      style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.calories),
                     ),
                     const SizedBox(width: 8),
                     const Padding(
                       padding: EdgeInsets.only(bottom: 8),
-                      child: Text('kg', style: TextStyle(fontSize: 18, color: AppColors.textSecondary)),
+                      child: Text('kg',
+                          style: TextStyle(
+                              fontSize: 18, color: AppColors.textSecondary)),
                     ),
                   ],
                 ),
@@ -513,8 +562,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('30 kg', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    Text('150 kg', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text('30 kg',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
+                    Text('150 kg',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
                   ],
                 ),
               ],
@@ -549,8 +602,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 32),
-          
-          _buildActivityCard('sedentary', 'Ít vận động', 'Ngồi nhiều, ít hoạt động'),
+          _buildActivityCard(
+              'sedentary', 'Ít vận động', 'Ngồi nhiều, ít hoạt động'),
           const SizedBox(height: 12),
           _buildActivityCard('light', 'Nhẹ nhàng', 'Tập nhẹ 1-3 ngày/tuần'),
           const SizedBox(height: 12),
@@ -558,7 +611,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 12),
           _buildActivityCard('active', 'Năng động', 'Tập 6-7 ngày/tuần'),
           const SizedBox(height: 12),
-          _buildActivityCard('very_active', 'Rất năng động', 'Vận động viên, tập nặng'),
+          _buildActivityCard(
+              'very_active', 'Rất năng động', 'Vận động viên, tập nặng'),
           const SizedBox(height: 40),
         ],
       ),
@@ -572,7 +626,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceLight,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -606,7 +662,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -649,19 +707,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 32),
-          
-          _buildGoalCard('lose', 'Giảm cân', 'Giảm mỡ, cải thiện vóc dáng', Icons.trending_down, AppColors.error),
+          _buildGoalCard('lose', 'Giảm cân', 'Giảm mỡ, cải thiện vóc dáng',
+              Icons.trending_down, AppColors.error),
           const SizedBox(height: 12),
-          _buildGoalCard('maintain', 'Duy trì', 'Giữ cân nặng hiện tại', Icons.remove, AppColors.success),
+          _buildGoalCard('maintain', 'Duy trì', 'Giữ cân nặng hiện tại',
+              Icons.remove, AppColors.success),
           const SizedBox(height: 12),
-          _buildGoalCard('gain', 'Tăng cân', 'Tăng cơ, tăng cân lành mạnh', Icons.trending_up, AppColors.info),
+          _buildGoalCard('gain', 'Tăng cân', 'Tăng cơ, tăng cân lành mạnh',
+              Icons.trending_up, AppColors.info),
           const SizedBox(height: 40),
         ],
       ),
     );
   }
 
-  Widget _buildGoalCard(String value, String title, String subtitle, IconData icon, Color color) {
+  Widget _buildGoalCard(
+      String value, String title, String subtitle, IconData icon, Color color) {
     final isSelected = _healthGoal == value;
     return GestureDetector(
       onTap: () => setState(() => _healthGoal = value),
@@ -710,8 +771,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: color, size: 28),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 28),
           ],
         ),
       ),

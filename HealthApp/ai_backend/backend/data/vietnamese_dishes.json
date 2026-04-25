@@ -1235,5 +1235,892 @@
       }
     ],
     "estimated_calories": 390
+  },
+  {
+    "id": 51,
+    "name": "Chuối",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Chuối tiêu",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 135
+  },
+  {
+    "id": 52,
+    "name": "Sữa chua",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Sữa chua (từ sữa bò)",
+        "grams": 200,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 120
+  },
+  {
+    "id": 53,
+    "name": "Trứng luộc",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Trứng gà",
+        "grams": 100,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 155
+  },
+  {
+    "id": 54,
+    "name": "Khoai lang luộc",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Khoai lang",
+        "grams": 200,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 172
+  },
+  {
+    "id": 55,
+    "name": "Táo",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Táo tây",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 78
+  },
+  {
+    "id": 56,
+    "name": "Cam",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Cam",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 70
+  },
+  {
+    "id": 57,
+    "name": "Sữa tươi",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Sữa bò tươi",
+        "grams": 250,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 150
+  },
+  {
+    "id": 58,
+    "name": "Khoai tây luộc",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Khoai tây",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 116
+  },
+  {
+    "id": 59,
+    "name": "Chuối và sữa chua",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Chuối tiêu",
+        "grams": 100,
+        "category": "carb"
+      },
+      {
+        "name": "Sữa chua (từ sữa bò)",
+        "grams": 150,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 180
+  },
+  {
+    "id": 60,
+    "name": "Ngô luộc",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Ngô bắp tươi",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 123
+  },
+  {
+    "id": 61,
+    "name": "Hạt điều rang",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Hạt điều",
+        "grams": 30,
+        "category": "fat"
+      }
+    ],
+    "estimated_calories": 165
+  },
+  {
+    "id": 62,
+    "name": "Đu đủ",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Đu đủ chín",
+        "grams": 200,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 86
+  },
+  {
+    "id": 63,
+    "name": "Xoài",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Xoài chín",
+        "grams": 150,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 90
+  },
+  {
+    "id": 64,
+    "name": "Sữa đậu nành",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Sữa đậu nành (100g đậu/lít)",
+        "grams": 250,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 130
+  },
+  {
+    "id": 65,
+    "name": "Bánh mì nhỏ",
+    "meal_types": [
+      "snack"
+    ],
+    "ingredients": [
+      {
+        "name": "Bánh mỳ",
+        "grams": 50,
+        "category": "carb"
+      }
+    ],
+    "estimated_calories": 125
+  },
+  {
+    "id": 66,
+    "name": "Mì xào hải sản",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 80,
+        "category": "protein"
+      },
+      {
+        "name": "Mực tươi",
+        "grams": 60,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 580
+  },
+  {
+    "id": 67,
+    "name": "Cháo cá",
+    "meal_types": [
+      "breakfast",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 80,
+        "category": "carb"
+      },
+      {
+        "name": "Cá rô phi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Gừng tươi",
+        "grams": 5,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 300
+  },
+  {
+    "id": 68,
+    "name": "Bún cá",
+    "meal_types": [
+      "breakfast",
+      "lunch"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Cá rô phi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cà chua",
+        "grams": 80,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 500
+  },
+  {
+    "id": 69,
+    "name": "Cơm cá hồi",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Cá hồi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 680
+  },
+  {
+    "id": 70,
+    "name": "Miến xào tôm",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Miến dong",
+        "grams": 150,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 480
+  },
+  {
+    "id": 71,
+    "name": "Cơm xúc xích",
+    "meal_types": [
+      "breakfast",
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Xúc xích",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Trứng gà",
+        "grams": 60,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 650
+  },
+  {
+    "id": 72,
+    "name": "Phở gà nấm",
+    "meal_types": [
+      "breakfast",
+      "lunch"
+    ],
+    "ingredients": [
+      {
+        "name": "Bánh phở",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt gà ta",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Nấm rơm",
+        "grams": 80,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 520
+  },
+  {
+    "id": 73,
+    "name": "Cháo tôm",
+    "meal_types": [
+      "breakfast",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 80,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Gừng tươi",
+        "grams": 5,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 320
+  },
+  {
+    "id": 74,
+    "name": "Bún mực",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Mực tươi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Rau muống",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 520
+  },
+  {
+    "id": 75,
+    "name": "Cơm cá thu",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Cá thu",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 640
+  },
+  {
+    "id": 76,
+    "name": "Miến gà",
+    "meal_types": [
+      "breakfast",
+      "lunch"
+    ],
+    "ingredients": [
+      {
+        "name": "Miến dong",
+        "grams": 150,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt gà ta",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Nấm rơm",
+        "grams": 50,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 480
+  },
+  {
+    "id": 77,
+    "name": "Cháo hải sản",
+    "meal_types": [
+      "breakfast",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 80,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 60,
+        "category": "protein"
+      },
+      {
+        "name": "Mực tươi",
+        "grams": 50,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 340
+  },
+  {
+    "id": 78,
+    "name": "Bún tôm",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Rau muống",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 540
+  },
+  {
+    "id": 79,
+    "name": "Cơm cá ngừ",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Cá ngừ",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 650
+  },
+  {
+    "id": 80,
+    "name": "Phở hải sản",
+    "meal_types": [
+      "breakfast",
+      "lunch"
+    ],
+    "ingredients": [
+      {
+        "name": "Bánh phở",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 80,
+        "category": "protein"
+      },
+      {
+        "name": "Mực tươi",
+        "grams": 60,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 560
+  },
+  {
+    "id": 81,
+    "name": "Cơm giò lụa",
+    "meal_types": [
+      "breakfast",
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Giò lụa",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Trứng gà",
+        "grams": 60,
+        "category": "protein"
+      }
+    ],
+    "estimated_calories": 620
+  },
+  {
+    "id": 82,
+    "name": "Bún chả cá",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Chả lợn",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Rau muống",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 580
+  },
+  {
+    "id": 83,
+    "name": "Miến xào bò",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Miến dong",
+        "grams": 150,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt bò loại I",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 520
+  },
+  {
+    "id": 84,
+    "name": "Cháo bò",
+    "meal_types": [
+      "breakfast",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 80,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt bò loại I",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Gừng tươi",
+        "grams": 5,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 360
+  },
+  {
+    "id": 85,
+    "name": "Cơm mực xào",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Mực tươi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 620
+  },
+  {
+    "id": 86,
+    "name": "Phở tôm",
+    "meal_types": [
+      "breakfast",
+      "lunch"
+    ],
+    "ingredients": [
+      {
+        "name": "Bánh phở",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Rau muống",
+        "grams": 50,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 540
+  },
+  {
+    "id": 87,
+    "name": "Bún bò xào",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Bún",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt bò loại I",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 580
+  },
+  {
+    "id": 88,
+    "name": "Cơm tôm xào",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 200,
+        "category": "carb"
+      },
+      {
+        "name": "Tôm biển",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Cải xanh",
+        "grams": 100,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 640
+  },
+  {
+    "id": 89,
+    "name": "Miến lươn",
+    "meal_types": [
+      "lunch",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Miến dong",
+        "grams": 150,
+        "category": "carb"
+      },
+      {
+        "name": "Cá rô phi",
+        "grams": 120,
+        "category": "protein"
+      },
+      {
+        "name": "Rau muống",
+        "grams": 80,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 480
+  },
+  {
+    "id": 90,
+    "name": "Cháo vịt",
+    "meal_types": [
+      "breakfast",
+      "dinner"
+    ],
+    "ingredients": [
+      {
+        "name": "Gạo tẻ máy",
+        "grams": 80,
+        "category": "carb"
+      },
+      {
+        "name": "Thịt vịt",
+        "grams": 100,
+        "category": "protein"
+      },
+      {
+        "name": "Gừng tươi",
+        "grams": 5,
+        "category": "veggie"
+      }
+    ],
+    "estimated_calories": 350
   }
 ]

@@ -171,7 +171,7 @@ class DishOptimizer:
         dietary_restrictions: list[str] = None,
     ) -> Optional[Dish]:
         """
-        Tối ưu 1 bữa ăn bằng cách chọn món ăn phù hợp.
+        Tối ưu 1 bữa ăn bằng cách chọn món ăn phù hợp với sự đa dạng cao.
         
         Args:
             db: Database session (không dùng nhưng giữ để tương thích)
@@ -208,12 +208,73 @@ class DishOptimizer:
                 )
             ]
 
-        # 3. Loại bỏ món đã dùng gần đây
+        # 3. Phân loại món theo loại tinh bột và protein để tăng đa dạng
+        def get_carb_type(dish: Dish) -> str:
+            """Xác định loại tinh bột chính của món"""
+            for comp in dish.components:
+                name_lower = comp.name.lower()
+                if "cơm" in name_lower or "gạo" in name_lower:
+                    return "cơm"
+                elif "phở" in name_lower or "bánh phở" in name_lower:
+                    return "phở"
+                elif "bún" in name_lower:
+                    return "bún"
+                elif "miến" in name_lower:
+                    return "miến"
+                elif "mì" in name_lower:
+                    return "mì"
+                elif "cháo" in name_lower:
+                    return "cháo"
+                elif "xôi" in name_lower or "nếp" in name_lower:
+                    return "xôi"
+            return "khác"
+        
+        def get_protein_type(dish: Dish) -> str:
+            """Xác định loại protein chính của món"""
+            for comp in dish.components:
+                name_lower = comp.name.lower()
+                if "gà" in name_lower:
+                    return "gà"
+                elif "bò" in name_lower:
+                    return "bò"
+                elif "heo" in name_lower or "lợn" in name_lower or "sườn" in name_lower:
+                    return "heo"
+                elif "cá" in name_lower:
+                    return "cá"
+                elif "tôm" in name_lower:
+                    return "tôm"
+                elif "mực" in name_lower:
+                    return "mực"
+                elif "trứng" in name_lower:
+                    return "trứng"
+                elif "xúc xích" in name_lower or "giò" in name_lower or "chả" in name_lower:
+                    return "chế biến"
+            return "khác"
+
+        # 4. Loại bỏ món đã dùng gần đây và ưu tiên món có loại tinh bột/protein khác
         if recent_dish_ids:
-            suitable_dishes = [
+            # Lấy thông tin về các món đã ăn gần đây
+            recent_dishes = [d for d in self.dishes if d.id in recent_dish_ids]
+            recent_carb_types = set(get_carb_type(d) for d in recent_dishes)
+            recent_protein_types = set(get_protein_type(d) for d in recent_dishes)
+            
+            # Ưu tiên món có loại tinh bột và protein khác với các bữa gần đây
+            diverse_dishes = [
                 dish for dish in suitable_dishes
                 if dish.id not in recent_dish_ids
+                and (get_carb_type(dish) not in recent_carb_types
+                     or get_protein_type(dish) not in recent_protein_types)
             ]
+            
+            # Nếu có món đa dạng, dùng chúng; không thì dùng tất cả trừ món đã ăn
+            if diverse_dishes:
+                suitable_dishes = diverse_dishes
+                logger.info(f"🎲 Prioritizing diverse dishes: {len(diverse_dishes)}")
+            else:
+                suitable_dishes = [
+                    dish for dish in suitable_dishes
+                    if dish.id not in recent_dish_ids
+                ]
         
         if not suitable_dishes:
             logger.warning(f"⚠️  No dishes left after filtering")
@@ -223,22 +284,24 @@ class DishOptimizer:
                 if meal_type in dish.meal_types
             ]
 
-        # 4. Chọn món có calories gần với target nhất
+        # 5. Chọn món có calories gần với target nhất
         # Sắp xếp theo độ chênh lệch calories
         suitable_dishes.sort(
             key=lambda d: abs(d.total_calories - target.calories)
         )
         
-        # Random trong top 5 để đa dạng
-        top_dishes = suitable_dishes[:5]
+        # Random trong top 8 để đa dạng hơn (tăng từ 5 lên 8)
+        top_dishes = suitable_dishes[:8]
         selected_dish = random.choice(top_dishes)
         
+        carb_type = get_carb_type(selected_dish)
+        protein_type = get_protein_type(selected_dish)
         logger.info(
-            f"🍽 Selected dish: {selected_dish.name} "
+            f"🍽 Selected dish: {selected_dish.name} ({carb_type} + {protein_type}) "
             f"(base: {selected_dish.total_calories:.0f} kcal, target: {target.calories:.0f} kcal)"
         )
 
-        # 5. Scale khẩu phần để đạt target
+        # 6. Scale khẩu phần để đạt target
         scaled_dish = self._scale_dish(selected_dish, target)
         
         return scaled_dish

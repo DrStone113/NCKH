@@ -14,6 +14,7 @@ import 'nutrition_screen.dart';
 import 'exercise_screen.dart';
 import 'chatbot_screen.dart';
 import 'auth_screen.dart';
+import 'goal_settings_screen.dart';
 import '../widgets/bento_card.dart';
 import 'dart:math' as math;
 
@@ -42,11 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+      final userId =
+          Provider.of<UserProvider>(context, listen: false).currentUser?.id;
       if (userId != null) {
-        Provider.of<NutritionProvider>(context, listen: false).loadTodayMeals(userId);
-        Provider.of<ExerciseProvider>(context, listen: false).loadTodayExercises(userId);
-        Provider.of<HealthProvider>(context, listen: false).loadTodayWaterIntake(userId);
+        Provider.of<NutritionProvider>(context, listen: false)
+            .loadTodayMeals(userId);
+        Provider.of<ExerciseProvider>(context, listen: false)
+            .loadTodayExercises(userId);
+        Provider.of<HealthProvider>(context, listen: false)
+            .loadTodayWaterIntake(userId);
         Provider.of<NutritionProvider>(context, listen: false).loadSavedMeals();
       }
       // Initialize ChatProvider
@@ -140,9 +145,11 @@ class _DashboardTab extends StatelessWidget {
 
                 // Stats Grid - Responsive
                 isTabletOrLarger
-                    ? _buildTabletStatsGrid(context, nutritionProvider, exerciseProvider, user)
-                    : _buildMobileStatsGrid(context, nutritionProvider, exerciseProvider, user),
-                
+                    ? _buildTabletStatsGrid(
+                        context, nutritionProvider, exerciseProvider, user)
+                    : _buildMobileStatsGrid(
+                        context, nutritionProvider, exerciseProvider, user),
+
                 const SizedBox(height: 24),
 
                 // Quick Actions
@@ -154,9 +161,8 @@ class _DashboardTab extends StatelessWidget {
                       Text(
                         'Truy cập nhanh',
                         style: TextStyle(
-                          fontSize: ResponsiveUtils.getTitleSize(context), 
-                          fontWeight: FontWeight.bold
-                        ),
+                            fontSize: ResponsiveUtils.getTitleSize(context),
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
                       _buildQuickActions(context),
@@ -178,8 +184,11 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileStatsGrid(BuildContext context, NutritionProvider nutritionProvider, 
-      ExerciseProvider exerciseProvider, dynamic user) {
+  Widget _buildMobileStatsGrid(
+      BuildContext context,
+      NutritionProvider nutritionProvider,
+      ExerciseProvider exerciseProvider,
+      dynamic user) {
     return Column(
       children: [
         // Calorie & Exercise Row
@@ -223,8 +232,11 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTabletStatsGrid(BuildContext context, NutritionProvider nutritionProvider, 
-      ExerciseProvider exerciseProvider, dynamic user) {
+  Widget _buildTabletStatsGrid(
+      BuildContext context,
+      NutritionProvider nutritionProvider,
+      ExerciseProvider exerciseProvider,
+      dynamic user) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -287,18 +299,21 @@ class _DashboardTab extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(greetIcon, color: AppColors.primary, size: iconSize * 0.8),
+                  Icon(greetIcon,
+                      color: AppColors.primary, size: iconSize * 0.8),
                   const SizedBox(width: 8),
                   Text(
                     greeting,
-                    style: TextStyle(fontSize: bodySize, color: AppColors.textSecondary),
+                    style: TextStyle(
+                        fontSize: bodySize, color: AppColors.textSecondary),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 user.name,
-                style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: headingSize, fontWeight: FontWeight.bold),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -313,24 +328,28 @@ class _DashboardTab extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const HealthStatsScreen()),
               ),
               child: Container(
-                padding: EdgeInsets.all(ResponsiveUtils.getCardPadding(context) * 0.5),
+                padding: EdgeInsets.all(
+                    ResponsiveUtils.getCardPadding(context) * 0.5),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.bar_chart, color: AppColors.primary, size: iconSize),
+                child: Icon(Icons.bar_chart,
+                    color: AppColors.primary, size: iconSize),
               ),
             ),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () => _showLogoutDialog(context),
               child: Container(
-                padding: EdgeInsets.all(ResponsiveUtils.getCardPadding(context) * 0.5),
+                padding: EdgeInsets.all(
+                    ResponsiveUtils.getCardPadding(context) * 0.5),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.logout, color: AppColors.textSecondary, size: iconSize),
+                child: Icon(Icons.logout,
+                    color: AppColors.textSecondary, size: iconSize),
               ),
             ),
           ],
@@ -377,17 +396,23 @@ class _DashboardTab extends StatelessWidget {
             children: [
               Text(
                 'Chỉ số BMI',
-                style: TextStyle(fontSize: bodySize, color: AppColors.textSecondary),
+                style: TextStyle(
+                    fontSize: bodySize, color: AppColors.textSecondary),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: cardPadding * 0.5, vertical: cardPadding * 0.25),
+                padding: EdgeInsets.symmetric(
+                    horizontal: cardPadding * 0.5,
+                    vertical: cardPadding * 0.25),
                 decoration: BoxDecoration(
                   color: bmiColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   user.bmiCategory,
-                  style: TextStyle(fontSize: smallSize, fontWeight: FontWeight.w600, color: bmiColor),
+                  style: TextStyle(
+                      fontSize: smallSize,
+                      fontWeight: FontWeight.w600,
+                      color: bmiColor),
                 ),
               ),
             ],
@@ -407,7 +432,8 @@ class _DashboardTab extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'kg/m²',
-                style: TextStyle(fontSize: bodySize, color: AppColors.textSecondary),
+                style: TextStyle(
+                    fontSize: bodySize, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -429,8 +455,12 @@ class _DashboardTab extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${user.height.toStringAsFixed(0)} cm', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
-              Text('${user.weight.toStringAsFixed(1)} kg', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+              Text('${user.height.toStringAsFixed(0)} cm',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
+              Text('${user.weight.toStringAsFixed(1)} kg',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
             ],
           ),
         ],
@@ -438,7 +468,8 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildCalorieCard(BuildContext context, NutritionProvider nutritionProvider, dynamic user) {
+  Widget _buildCalorieCard(
+      BuildContext context, NutritionProvider nutritionProvider, dynamic user) {
     final target = user.recommendedCalories;
     final consumed = nutritionProvider.totalCalories;
     final progress = target > 0 ? (consumed / target).clamp(0.0, 1.5) : 0.0;
@@ -453,16 +484,21 @@ class _DashboardTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.local_fire_department, color: AppColors.calories, size: iconSize * 0.75),
+              Icon(Icons.local_fire_department,
+                  color: AppColors.calories, size: iconSize * 0.75),
               const SizedBox(width: 6),
-              Text('Calo', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+              Text('Calo',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
             ],
           ),
           SizedBox(height: cardPadding * 0.6),
           AnimatedCircularProgress(
             value: progress.clamp(0.0, 1.0),
-            size: ResponsiveUtils.responsive(context, mobile: 80.0, tablet: 100.0, desktop: 120.0),
-            strokeWidth: ResponsiveUtils.responsive(context, mobile: 6.0, tablet: 8.0, desktop: 10.0),
+            size: ResponsiveUtils.responsive(context,
+                mobile: 80.0, tablet: 100.0, desktop: 120.0),
+            strokeWidth: ResponsiveUtils.responsive(context,
+                mobile: 6.0, tablet: 8.0, desktop: 10.0),
             color: consumed > target ? AppColors.error : AppColors.calories,
             backgroundColor: AppColors.surfaceLight,
             child: AnimatedCounter(
@@ -474,14 +510,16 @@ class _DashboardTab extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '/ ${target.toStringAsFixed(0)} kcal',
-            style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary),
+            style:
+                TextStyle(fontSize: smallSize, color: AppColors.textSecondary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildExerciseCard(BuildContext context, ExerciseProvider exerciseProvider) {
+  Widget _buildExerciseCard(
+      BuildContext context, ExerciseProvider exerciseProvider) {
     final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final titleSize = ResponsiveUtils.getTitleSize(context);
@@ -494,21 +532,30 @@ class _DashboardTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.fitness_center, color: AppColors.success, size: iconSize * 0.75),
+              Icon(Icons.fitness_center,
+                  color: AppColors.success, size: iconSize * 0.75),
               const SizedBox(width: 6),
-              Text('Vận động', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+              Text('Vận động',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
             ],
           ),
           SizedBox(height: cardPadding * 0.6),
           AnimatedCounter(
             value: exerciseProvider.totalDuration.toDouble(),
             decimals: 0,
-            style: TextStyle(fontSize: titleSize * 1.4, fontWeight: FontWeight.bold, color: AppColors.success),
+            style: TextStyle(
+                fontSize: titleSize * 1.4,
+                fontWeight: FontWeight.bold,
+                color: AppColors.success),
           ),
-          Text('phút', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+          Text('phút',
+              style: TextStyle(
+                  fontSize: smallSize, color: AppColors.textSecondary)),
           const SizedBox(height: 8),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: cardPadding * 0.5, vertical: cardPadding * 0.25),
+            padding: EdgeInsets.symmetric(
+                horizontal: cardPadding * 0.5, vertical: cardPadding * 0.25),
             decoration: BoxDecoration(
               color: AppColors.calories.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
@@ -521,7 +568,8 @@ class _DashboardTab extends StatelessWidget {
                   value: exerciseProvider.totalCaloriesBurned,
                   decimals: 0,
                   suffix: ' kcal',
-                  style: TextStyle(fontSize: smallSize, color: AppColors.calories),
+                  style:
+                      TextStyle(fontSize: smallSize, color: AppColors.calories),
                 ),
               ],
             ),
@@ -547,7 +595,9 @@ class _DashboardTab extends StatelessWidget {
             children: [
               Icon(Icons.bolt, color: AppColors.accent, size: iconSize * 0.75),
               const SizedBox(width: 6),
-              Text('TDEE', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+              Text('TDEE',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
             ],
           ),
           const SizedBox(height: 8),
@@ -556,7 +606,9 @@ class _DashboardTab extends StatelessWidget {
             decimals: 0,
             style: TextStyle(fontSize: titleSize, fontWeight: FontWeight.bold),
           ),
-          Text('kcal/ngày', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
+          Text('kcal/ngày',
+              style: TextStyle(
+                  fontSize: smallSize, color: AppColors.textSecondary)),
           const SizedBox(height: 4),
           Text(
             user.healthGoalText,
@@ -573,10 +625,10 @@ class _DashboardTab extends StatelessWidget {
     final current = waterProvider.todayWaterIntake;
     final glassesTarget = (waterGoal * 1000 / 250).round();
     final glassesDone = (current / 250).round();
-    
+
     final isOverLimit = current > 5000;
     final isNearLimit = current > 4000 && current <= 5000;
-    
+
     final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final titleSize = ResponsiveUtils.getTitleSize(context);
@@ -587,69 +639,101 @@ class _DashboardTab extends StatelessWidget {
       onTap: () => _addWater(context, user),
       padding: EdgeInsets.all(cardPadding),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.water_drop,
+                  color: isOverLimit
+                      ? AppColors.error
+                      : (isNearLimit ? AppColors.warning : AppColors.info),
+                  size: iconSize * 0.75),
+              const SizedBox(width: 6),
+              Text('Nước uống',
+                  style: TextStyle(
+                      fontSize: smallSize, color: AppColors.textSecondary)),
+              if (isOverLimit || isNearLimit) ...[
+                const Spacer(),
                 Icon(
-                  Icons.water_drop, 
-                  color: isOverLimit ? AppColors.error : (isNearLimit ? AppColors.warning : AppColors.info), 
-                  size: iconSize * 0.75
+                  Icons.warning_amber,
+                  color: isOverLimit ? AppColors.error : AppColors.warning,
+                  size: iconSize * 0.67,
                 ),
-                const SizedBox(width: 6),
-                Text('Nước uống', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
-                if (isOverLimit || isNearLimit) ...[
-                  const Spacer(),
-                  Icon(
-                    Icons.warning_amber,
-                    color: isOverLimit ? AppColors.error : AppColors.warning,
-                    size: iconSize * 0.67,
-                  ),
-                ],
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(current / 1000).toStringAsFixed(1)}L',
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${(current / 1000).toStringAsFixed(1)}L',
+            style: TextStyle(
+                fontSize: titleSize,
+                fontWeight: FontWeight.bold,
+                color: isOverLimit
+                    ? AppColors.error
+                    : (isNearLimit ? AppColors.warning : AppColors.info)),
+          ),
+          Text('/ ${waterGoal.toStringAsFixed(1)}L',
               style: TextStyle(
-                fontSize: titleSize, 
-                fontWeight: FontWeight.bold, 
-                color: isOverLimit ? AppColors.error : (isNearLimit ? AppColors.warning : AppColors.info)
+                  fontSize: smallSize, color: AppColors.textSecondary)),
+          const SizedBox(height: 4),
+          Text(
+            '$glassesDone / $glassesTarget ly',
+            style: TextStyle(
+                fontSize: smallSize, color: AppColors.info.withOpacity(0.7)),
+          ),
+          if (isOverLimit)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                '⚠️ Quá nhiều!',
+                style: TextStyle(
+                    fontSize: smallSize * 0.83,
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600),
+              ),
+            )
+          else if (isNearLimit)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                '⚠️ Gần giới hạn',
+                style: TextStyle(
+                    fontSize: smallSize * 0.83,
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w600),
               ),
             ),
-            Text('/ ${waterGoal.toStringAsFixed(1)}L', style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary)),
-            const SizedBox(height: 4),
-            Text(
-              '$glassesDone / $glassesTarget ly',
-              style: TextStyle(fontSize: smallSize, color: AppColors.info.withOpacity(0.7)),
-            ),
-            if (isOverLimit)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  '⚠️ Quá nhiều!',
-                  style: TextStyle(fontSize: smallSize * 0.83, color: AppColors.error, fontWeight: FontWeight.w600),
-                ),
-              )
-            else if (isNearLimit)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  '⚠️ Gần giới hạn',
-                  style: TextStyle(fontSize: smallSize * 0.83, color: AppColors.warning, fontWeight: FontWeight.w600),
-                ),
-              ),
-          ],
-        ),
+        ],
+      ),
     );
   }
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
-      {'icon': Icons.restaurant, 'label': 'Thêm bữa ăn', 'color': AppColors.calories, 'tab': 1},
-      {'icon': Icons.fitness_center, 'label': 'Ghi tập luyện', 'color': AppColors.success, 'tab': 2},
-      {'icon': Icons.chat_bubble, 'label': 'Hỏi chatbot', 'color': AppColors.accent, 'tab': 3},
-      {'icon': Icons.bar_chart, 'label': 'Chỉ số', 'color': AppColors.primary, 'tab': -1},
+      {
+        'icon': Icons.restaurant,
+        'label': 'Thêm bữa ăn',
+        'color': AppColors.calories,
+        'tab': 1
+      },
+      {
+        'icon': Icons.fitness_center,
+        'label': 'Ghi tập luyện',
+        'color': AppColors.success,
+        'tab': 2
+      },
+      {
+        'icon': Icons.chat_bubble,
+        'label': 'Hỏi chatbot',
+        'color': AppColors.accent,
+        'tab': 3
+      },
+      {
+        'icon': Icons.flag,
+        'label': 'Thay đổi mục tiêu',
+        'color': AppColors.primary,
+        'tab': -2
+      },
     ];
 
     final smallSize = ResponsiveUtils.getSmallSize(context);
@@ -663,9 +747,18 @@ class _DashboardTab extends StatelessWidget {
           child: GestureDetector(
             onTap: () {
               if (action['tab'] == -1) {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const HealthStatsScreen()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const HealthStatsScreen()));
+              } else if (action['tab'] == -2) {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const GoalSettingsScreen()));
               } else {
-                final homeState = context.findAncestorStateOfType<_HomeScreenState>();
+                final homeState =
+                    context.findAncestorStateOfType<_HomeScreenState>();
                 homeState?._onTabChanged(action['tab'] as int);
               }
             },
@@ -680,12 +773,14 @@ class _DashboardTab extends StatelessWidget {
                       color: (action['color'] as Color).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(action['icon'] as IconData, color: action['color'] as Color, size: iconSize),
+                    child: Icon(action['icon'] as IconData,
+                        color: action['color'] as Color, size: iconSize),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     action['label'] as String,
-                    style: TextStyle(fontSize: smallSize, color: AppColors.textSecondary),
+                    style: TextStyle(
+                        fontSize: smallSize, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -719,7 +814,10 @@ class _DashboardTab extends StatelessWidget {
       padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.15), AppColors.accent.withOpacity(0.1)],
+          colors: [
+            AppColors.primary.withOpacity(0.15),
+            AppColors.accent.withOpacity(0.1)
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary.withOpacity(0.2)),
@@ -738,12 +836,18 @@ class _DashboardTab extends StatelessWidget {
               children: [
                 Text(
                   'Mẹo sức khỏe hôm nay',
-                  style: TextStyle(fontSize: bodySize, fontWeight: FontWeight.w600, color: AppColors.primary),
+                  style: TextStyle(
+                      fontSize: bodySize,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   tips[tipIndex].replaceFirst(RegExp(r'^[^\s]+\s'), ''),
-                  style: TextStyle(fontSize: bodySize, color: AppColors.textPrimary, height: 1.4),
+                  style: TextStyle(
+                      fontSize: bodySize,
+                      color: AppColors.textPrimary,
+                      height: 1.4),
                   softWrap: true,
                 ),
               ],
@@ -766,7 +870,8 @@ class _DashboardTab extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Thêm nước uống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Thêm nước uống',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -774,12 +879,13 @@ class _DashboardTab extends StatelessWidget {
                 return Flexible(
                   child: GestureDetector(
                     onTap: () async {
-                      final warning = await Provider.of<HealthProvider>(context, listen: false)
+                      final warning = await Provider.of<HealthProvider>(context,
+                              listen: false)
                           .addWater(user.id, ml.toDouble());
-                      
+
                       if (context.mounted) {
                         Navigator.pop(context);
-                        
+
                         // Hiển thị cảnh báo nếu có
                         if (warning != null) {
                           showDialog(
@@ -788,7 +894,8 @@ class _DashboardTab extends StatelessWidget {
                               backgroundColor: AppColors.surface,
                               title: const Row(
                                 children: [
-                                  Icon(Icons.warning_amber, color: AppColors.warning, size: 28),
+                                  Icon(Icons.warning_amber,
+                                      color: AppColors.warning, size: 28),
                                   SizedBox(width: 10),
                                   Text('Cảnh báo sức khỏe'),
                                 ],
@@ -807,17 +914,21 @@ class _DashboardTab extends StatelessWidget {
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.info.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.info.withOpacity(0.3)),
+                        border:
+                            Border.all(color: AppColors.info.withOpacity(0.3)),
                       ),
                       child: Column(
                         children: [
                           const Icon(Icons.water_drop, color: AppColors.info),
                           const SizedBox(height: 4),
-                          Text('${ml}ml', style: const TextStyle(fontWeight: FontWeight.w600)),
+                          Text('${ml}ml',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),

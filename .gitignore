@@ -1,0 +1,88 @@
+# =============================================================
+# SECRETS — KHÔNG BAO GIỜ COMMIT
+# Sao chép từ .env.example và điền thông tin thực
+# =============================================================
+.env
+.env.local
+**/.env
+!**/.env.example
+!**/.env.docker
+
+# Firebase — chứa API keys, mỗi người tự cấu hình
+# Xem: apps/mobile/lib/firebase_options.dart.example
+apps/mobile/lib/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+
+# =============================================================
+# FLUTTER SDK — cài riêng ngoài project, xem README
+# =============================================================
+/flutter/
+
+# =============================================================
+# FLUTTER APP (apps/mobile) — build & generated
+# =============================================================
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.metadata
+**/pubspec.lock
+**/devtools_options.yaml
+
+# Android
+**/android/local.properties
+**/android/.gradle/
+**/android/.kotlin/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/key.properties
+*.jks
+*.keystore
+
+# Windows / desktop generated
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+**/windows/flutter/ephemeral/
+
+# =============================================================
+# PYTHON BACKEND (apps/backend)
+# venv tạo lại bằng: pip install -r requirements.txt
+# =============================================================
+**/venv/
+**/.venv/
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.hypothesis/
+**/.mypy_cache/
+**/.ruff_cache/
+*.egg-info/
+
+# =============================================================
+# DATA — output tạm sinh ra từ script
+# =============================================================
+data/generated/
+
+# =============================================================
+# EDITOR & OS
+# =============================================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+desktop.ini
+# .vscode/ — giữ lại vì có settings hữu ích cho team
+
+# =============================================================
+# LOGS & TMP
+# =============================================================
+*.log
+*.tmp
+*.bak
+*.swp

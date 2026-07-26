@@ -1,0 +1,520 @@
+"""
+Wger detail endpoints — fetch chi tiết exercise/ingredient từ wger API
+"""
+import logging
+import re
+import httpx
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from config import settings
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/wger", tags=["wger"])
+
+WGER_BASE = settings.wger_base_url
+TIMEOUT = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+
+
+# ─── Schemas ────────────────────────────────────────────────────────────────
+
+class MuscleDetail(BaseModel):
+    id: int
+    name: str
+    name_en: str
+    is_front: bool
+    image_url_main: str | None = None
+    image_url_secondary: str | None = None
+
+
+class ExerciseDetail(BaseModel):
+    id: int
+    name: str
+    description: str
+    category: str
+    muscles: list[MuscleDetail]
+    muscles_secondary: list[MuscleDetail]
+    equipment: list[str]
+    image_url: str | None = None
+    aliases: list[str] = []
+
+
+class WeightUnit(BaseModel):
+    id: int
+    gram: float
+    name: str
+
+
+class IngredientDetail(BaseModel):
+    id: int
+    name: str
+    common_name: str | None = None
+    brand: str | None = None
+    energy: float | None = None
+    protein: float | None = None
+    carbohydrates: float | None = None
+    carbohydrates_sugar: float | None = None
+    fat: float | None = None
+    fat_saturated: float | None = None
+    fiber: float | None = None
+    sodium: float | None = None
+    is_vegan: bool | None = None
+    is_vegetarian: bool | None = None
+    nutriscore: str | None = None
+    weight_units: list[WeightUnit] = []
+    image_url: str | None = None
+
+
+# ─── Helpers ────────────────────────────────────────────────────────────────
+
+def _strip_html(text: str) -> str:
+    """Xóa HTML tags, giữ lại text thuần, format đẹp"""
+    if not text:
+        return ""
+    # Replace block tags with newlines
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(p|li|div|h[1-6])>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<li[^>]*>', '• ', text, flags=re.IGNORECASE)
+    text = re.sub(r'<ol[^>]*>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'<ul[^>]*>', '', text, flags=re.IGNORECASE)
+    # Remove remaining tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Clean up whitespace
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+# ─── Endpoints ──────────────────────────────────────────────────────────────
+
+@router.get("/exercise/{exercise_id}", response_model=ExerciseDetail)
+async def get_exercise_detail(exercise_id: int):
+    """Fetch chi tiết bài tập từ wger /exerciseinfo/{id}/"""
+    url = f"{WGER_BASE}/exerciseinfo/{exercise_id}/?format=json"
+
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code == 404:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+
+            data = resp.json()
+
+            # Lấy translation tiếng Anh (language=2) hoặc đầu tiên
+            translations = data.get("translations", [])
+            en_trans = next((t for t in translations if t.get("language") == 2), None)
+            trans = en_trans or (translations[0] if translations else {})
+
+            name = trans.get("name", f"Exercise #{exercise_id}")
+            description = _strip_html(trans.get("description", ""))
+
+            # Aliases từ translation
+            aliases = trans.get("aliases", [])
+            alias_names = [a.get("alias", "") for a in aliases if a.get("alias")]
+
+            # Category
+            category = data.get("category", {})
+            category_name = category.get("name", "") if isinstance(category, dict) else ""
+
+            # Muscles
+            muscles = [
+                MuscleDetail(
+                    id=m["id"],
+                    name=m.get("name", ""),
+                    name_en=m.get("name_en", ""),
+                    is_front=m.get("is_front", True),
+                    image_url_main=m.get("image_url_main"),
+                    image_url_secondary=m.get("image_url_secondary"),
+                )
+                for m in data.get("muscles", [])
+            ]
+            muscles_secondary = [
+                MuscleDetail(
+                    id=m["id"],
+                    name=m.get("name", ""),
+                    name_en=m.get("name_en", ""),
+                    is_front=m.get("is_front", True),
+                    image_url_main=m.get("image_url_main"),
+                    image_url_secondary=m.get("image_url_secondary"),
+                )
+                for m in data.get("muscles_secondary", [])
+            ]
+
+            # Equipment
+            equipment = [e.get("name", "") for e in data.get("equipment", [])]
+
+            # Image (từ images array)
+            images = data.get("images", [])
+            image_url = images[0].get("image") if images else None
+
+            return ExerciseDetail(
+                id=exercise_id,
+                name=name,
+                description=description,
+                category=category_name,
+                muscles=muscles,
+                muscles_secondary=muscles_secondary,
+                equipment=equipment,
+                image_url=image_url,
+                aliases=alias_names,
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching exercise {exercise_id}: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/ingredient/{ingredient_id}", response_model=IngredientDetail)
+async def get_ingredient_detail(ingredient_id: int):
+    """Fetch chi tiết thực phẩm từ wger /ingredientinfo/{id}/"""
+    url = f"{WGER_BASE}/ingredientinfo/{ingredient_id}/?format=json"
+
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code == 404:
+                raise HTTPException(status_code=404, detail="Ingredient not found")
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+
+            data = resp.json()
+
+            # Weight units
+            weight_units = [
+                WeightUnit(
+                    id=wu["id"],
+                    gram=float(wu.get("gram", 0)),
+                    name=wu.get("name", ""),
+                )
+                for wu in data.get("weight_units", [])
+            ]
+
+            # Image
+            image_url = None
+            if data.get("image"):
+                image_url = data["image"]
+            elif data.get("thumbnails"):
+                image_url = data["thumbnails"].get("original")
+
+            def _to_float(val):
+                try:
+                    return float(val) if val is not None else None
+                except (ValueError, TypeError):
+                    return None
+
+            return IngredientDetail(
+                id=ingredient_id,
+                name=data.get("name", f"Ingredient #{ingredient_id}"),
+                common_name=data.get("common_name"),
+                brand=data.get("brand"),
+                energy=_to_float(data.get("energy")),
+                protein=_to_float(data.get("protein")),
+                carbohydrates=_to_float(data.get("carbohydrates")),
+                carbohydrates_sugar=_to_float(data.get("carbohydrates_sugar")),
+                fat=_to_float(data.get("fat")),
+                fat_saturated=_to_float(data.get("fat_saturated")),
+                fiber=_to_float(data.get("fiber")),
+                sodium=_to_float(data.get("sodium")),
+                is_vegan=data.get("is_vegan"),
+                is_vegetarian=data.get("is_vegetarian"),
+                nutriscore=data.get("nutriscore"),
+                weight_units=weight_units,
+                image_url=image_url,
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching ingredient {ingredient_id}: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/search/exercise")
+async def search_exercise(name: str, limit: int = 5):
+    """Tìm kiếm bài tập theo tên từ wger"""
+    url = f"{WGER_BASE}/exercise/search/?term={name}&language=english&format=json"
+
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return {"suggestions": []}
+            data = resp.json()
+            return {"suggestions": data.get("suggestions", [])[:limit]}
+        except Exception as e:
+            logger.warning(f"Exercise search failed: {e}")
+            return {"suggestions": []}
+
+
+@router.get("/exercises", response_model=dict)
+async def list_exercises(
+    page: int = 1,
+    category: int | None = None,
+    muscles: int | None = None,
+):
+    """Proxy endpoint để lấy danh sách bài tập từ wger (tránh CORS)"""
+    params = {
+        "format": "json",
+        "language": "2",
+        "page": str(page),
+    }
+    
+    if category is not None:
+        params["category"] = str(category)
+    
+    if muscles is not None:
+        params["muscles"] = str(muscles)
+    
+    url = f"{WGER_BASE}/exerciseinfo/"
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+            
+            data = resp.json()
+
+            # Extract tên và mô tả từ translations cho mỗi bài tập
+            results = []
+            for item in data.get("results", []):
+                translations = item.get("translations", [])
+                # Ưu tiên tiếng Anh (language=2), fallback sang bản đầu tiên
+                en_trans = next((t for t in translations if t.get("language") == 2), None)
+                trans = en_trans or (translations[0] if translations else {})
+
+                name = trans.get("name", "").strip()
+                description = _strip_html(trans.get("description", ""))
+
+                # Bỏ qua bài tập không có tên
+                if not name:
+                    continue
+
+                # Category
+                category_data = item.get("category", {})
+                category_name = category_data.get("name", "") if isinstance(category_data, dict) else ""
+
+                # Muscles
+                muscles_list = [
+                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    for m in item.get("muscles", [])
+                ]
+                muscles_secondary_list = [
+                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    for m in item.get("muscles_secondary", [])
+                ]
+
+                # Equipment
+                equipment_list = [
+                    {"id": e["id"], "name": e.get("name", "")}
+                    for e in item.get("equipment", [])
+                ]
+
+                # Image
+                images = item.get("images", [])
+                image_url = images[0].get("image") if images else None
+
+                results.append({
+                    "id": item["id"],
+                    "name": name,
+                    "description": description,
+                    "category": category_name,
+                    "category_name": category_name,
+                    "muscles": muscles_list,
+                    "muscles_secondary": muscles_secondary_list,
+                    "equipment": equipment_list,
+                    "image_url": image_url,
+                })
+
+            return {
+                "count": data.get("count", 0),
+                "next": data.get("next"),  # giữ nguyên để Flutter biết còn trang
+                "previous": data.get("previous"),
+                "results": results,
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching exercises: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/categories", response_model=dict)
+async def list_categories():
+    """Proxy endpoint để lấy danh mục bài tập từ wger"""
+    url = f"{WGER_BASE}/exercisecategory/?format=json"
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+            
+            return resp.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching categories: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/muscles", response_model=dict)
+async def list_muscles():
+    """Proxy endpoint để lấy danh sách nhóm cơ từ wger"""
+    url = f"{WGER_BASE}/muscle/?format=json"
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+            
+            return resp.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching muscles: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/equipment/", response_model=dict)
+async def list_equipment():
+    """Proxy endpoint để lấy danh sách dụng cụ tập từ wger"""
+    url = f"{WGER_BASE}/equipment/?format=json"
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Wger API error: {resp.status_code}")
+            
+            return resp.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching equipment: {e}")
+            raise HTTPException(status_code=502, detail=str(e))
+
+
+# ─── SVG Proxy — giải quyết CORS khi Flutter Web fetch SVG từ wger.de ────────
+
+from fastapi.responses import Response
+
+# Whitelist path patterns được phép proxy
+_SVG_ALLOWED = re.compile(
+    r'^/static/images/muscles/(muscular_system_(front|back)\.svg'
+    r'|main/muscle-\d+\.[a-f0-9]+\.svg'
+    r'|secondary/muscle-\d+\.[a-f0-9]+\.svg)$'
+)
+
+# Cache in-memory đơn giản (SVG không đổi, cache vĩnh viễn trong session)
+_svg_cache: dict[str, bytes] = {}
+
+
+@router.get("/svg")
+async def proxy_wger_svg(path: str):
+    """
+    Proxy SVG từ wger.de để tránh CORS trên Flutter Web.
+    Chỉ cho phép path thuộc /static/images/muscles/*.
+    
+    Ví dụ: GET /wger/svg?path=/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg
+    """
+    # Validate path — chỉ cho phép SVG nhóm cơ
+    if not _SVG_ALLOWED.match(path):
+        raise HTTPException(status_code=400, detail="Invalid SVG path")
+
+    # Trả từ cache nếu có
+    if path in _svg_cache:
+        return Response(
+            content=_svg_cache[path],
+            media_type="image/svg+xml",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    url = f"https://wger.de{path}"
+    try:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(connect=10.0, read=15.0, write=5.0, pool=5.0),
+            headers={"User-Agent": "HealthApp/1.0"},
+            follow_redirects=True,
+        ) as client:
+            resp = await client.get(url)
+
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"wger SVG error: {resp.status_code}")
+
+        content = resp.content
+        _svg_cache[path] = content  # cache lại
+
+        return Response(
+            content=content,
+            media_type="image/svg+xml",
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="wger SVG timeout")
+    except Exception as e:
+        logger.error("SVG proxy error for %s: %s", path, e)
+        raise HTTPException(status_code=502, detail=str(e))
+
+# ─── Image Proxy — exercise images từ wger.de/media/ ────────────────────────
+
+# Whitelist: chỉ cho phép /media/exercise-images/
+_IMG_ALLOWED = re.compile(r'^/media/exercise-images/\d+/[\w\-\.]+\.(jpg|jpeg|png|webp)$', re.IGNORECASE)
+
+_img_cache: dict[str, bytes] = {}
+
+_MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+
+
+@router.get("/img")
+async def proxy_wger_image(path: str):
+    """
+    Proxy ảnh bài tập từ wger.de để tránh CORS trên Flutter Web.
+    Ví dụ: GET /wger/img?path=/media/exercise-images/957/abc.jpg
+    """
+    if not _IMG_ALLOWED.match(path):
+        raise HTTPException(status_code=400, detail="Invalid image path")
+
+    if path in _img_cache:
+        ext = path.rsplit(".", 1)[-1].lower()
+        return Response(
+            content=_img_cache[path],
+            media_type=_MIME.get(ext, "image/jpeg"),
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    url = f"https://wger.de{path}"
+    try:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(connect=10.0, read=20.0, write=5.0, pool=5.0),
+            headers={"User-Agent": "HealthApp/1.0"},
+            follow_redirects=True,
+        ) as client:
+            resp = await client.get(url)
+
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"wger image error: {resp.status_code}")
+
+        ext = path.rsplit(".", 1)[-1].lower()
+        content = resp.content
+        _img_cache[path] = content
+
+        return Response(
+            content=content,
+            media_type=_MIME.get(ext, "image/jpeg"),
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="wger image timeout")
+    except Exception as e:
+        logger.error("Image proxy error for %s: %s", path, e)
+        raise HTTPException(status_code=502, detail=str(e))

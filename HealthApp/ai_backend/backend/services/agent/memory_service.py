@@ -1,0 +1,1007 @@
+"""MemoryService — long-term memory for the agent (rolling summary + facts).
+
+Implements the core surface of §4.5 of
+``backend/.kiro/specs/chatbot-redesign/design.md`` (task 5.1) and the context
+loader / RAG delegation of §8.1 / §9.6 (task 5.3):
+
+- ``getRollingSummary(session_id)`` / ``saveRollingSummary(session_id, summary)``
+  read / upsert ``chat_session_memory.rolling_summary`` for one session.
+- ``getPinnedFacts(session_id)`` returns ``user_facts`` rows belonging to the
+  user that owns the session, filtered to ``status='confirmed'``.
+- ``proposeFact(session_id, fact_text, category, source_msg_id)`` inserts a new
+  ``user_facts`` row with ``status='pending'`` for that user.
+- ``confirmFact(fact_id)`` / ``rejectFact(fact_id)`` flip the ``status`` column.
+- ``queryRag(query, top_k)`` delegates to :class:`RAGService` (task 4.8). When
+  no ``RAGService`` is wired in (e.g. unit tests, embeddings disabled) it
+  returns ``[]`` so callers can compose without a None-check.
+- ``loadContext(session_id, user_text)`` aggregates the four pieces the agent
+  orchestrator needs to build the system prompt: the last N raw turns, the
+  rolling summary, the confirmed pinned facts, and the top-k RAG chunks
+  relevant to ``user_text``.
+- ``updateRollingSummary(session_id, llm_client)`` (task 5.2) re-summarises
+  the old turns once the session exceeds :data:`config.settings.summary_threshold`
+  and proposes new pinned facts via the LLM.
+
+Validates Requirements 5.2, 5.3, 5.4, 5.5, 5.6, 5.8, 7.5.
+
+Schema deviation note
+---------------------
+Migration ``001_chatbot_redesign.sql`` creates ``user_facts`` keyed by
+``user_id`` (a per-user list of preferences / allergies / goals), not by
+``session_id``. To keep the design-level signature
+``getPinnedFacts(session_id)`` while staying faithful to the schema, this
+service joins through ``chat_sessions`` to resolve the owner ``user_id``
+before reading ``user_facts``. The same join is used by ``proposeFact``.
+``confirmFact`` and ``rejectFact`` operate on a ``fact_id`` directly because
+moderation is per-fact rather than per-session.
+
+Implementation notes
+--------------------
+- All SQL uses :func:`sqlalchemy.text` with bound parameters; no string
+  interpolation of caller input.
+- The service does NOT commit on its own. The caller (the orchestrator or a
+  FastAPI dependency such as :func:`db.database.get_db`) controls the
+  transaction boundary.
+- Methods are ``async`` so they compose with the existing ``AsyncSession``
+  used everywhere else in the backend.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import re
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Protocol
+from uuid import uuid4
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from config import settings
+from models.schemas import ChatTurn, Fact, KnowledgeChunk
+
+if TYPE_CHECKING:  # pragma: no cover - import only used for type hints
+    from services.agent.rag_service import RAGService
+
+
+class _LLMChatProtocol(Protocol):
+    """Minimal ``LLMClient`` surface used by :meth:`updateRollingSummary`.
+
+    Declared as a protocol so unit tests can pass any object exposing
+    ``async def chat(messages, tools=None, stream=False)`` without importing
+    the concrete client. Mirrors
+    :meth:`services.agent.llm_client.LLMClient.chat`.
+    """
+
+    async def chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = ...,
+        stream: bool = ...,
+    ) -> Any:  # pragma: no cover - protocol definition
+        ...
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Context:
+    """Bundle of memory pieces consumed by ``buildSystemPrompt``.
+
+    Mirrors the four arguments the orchestrator threads into the system
+    prompt (``design.md`` §8.1):
+
+    - ``history``: the last N raw chat turns from ``chat_messages``.
+    - ``rolling_summary``: the cumulative summary kept in
+      ``chat_session_memory.rolling_summary``.
+    - ``pinned_facts``: confirmed ``user_facts`` rows for the owning user.
+    - ``rag_chunks``: top-k knowledge chunks retrieved for the current
+      ``user_text``.
+
+    Using a dataclass (rather than a ``BaseModel``) keeps the type lightweight
+    and avoids the validation overhead — every field is already produced by a
+    typed accessor. Defaults are empty so partial construction in tests does
+    not require passing every argument.
+    """
+
+    history: list[ChatTurn] = field(default_factory=list)
+    rolling_summary: str = ""
+    pinned_facts: list[Fact] = field(default_factory=list)
+    rag_chunks: list[KnowledgeChunk] = field(default_factory=list)
+
+
+# Categories accepted on ``proposeFact``. Matches the design.md §6 description
+# of pinned facts ("preference / allergy / goal / constraint"). ``other`` is
+# kept as an escape hatch so the LLM can still propose facts that don't slot
+# cleanly into one of the canonical buckets — the moderation step
+# (``confirmFact`` / ``rejectFact``) is the gate that protects the prompt.
+_ALLOWED_CATEGORIES: frozenset[str] = frozenset(
+    {"preference", "allergy", "goal", "constraint", "other"}
+)
+
+
+class MemoryService:
+    """Persistence surface for rolling summaries and pinned facts.
+
+    Parameters
+    ----------
+    db_session:
+        Active SQLAlchemy :class:`AsyncSession`. The service holds a reference
+        to one session for its lifetime; callers wanting transaction
+        isolation should construct a fresh ``MemoryService`` per request /
+        per turn (matching the ``get_db`` dependency pattern).
+    rag_service:
+        Optional :class:`RAGService` used by :meth:`queryRag` and
+        :meth:`loadContext`. When ``None`` the RAG retrieval becomes a no-op
+        that returns an empty list — useful for unit tests, environments
+        where the embedding model is not available, or while the RAG corpus
+        is being populated.
+    """
+
+    def __init__(
+        self,
+        db_session: AsyncSession,
+        rag_service: "RAGService | None" = None,
+    ) -> None:
+        self._session = db_session
+        self._rag_service = rag_service
+
+    # ------------------------------------------------------------------ summary
+    async def getRollingSummary(self, session_id: str) -> str:
+        """Return the rolling summary for ``session_id``.
+
+        Returns an empty string when the session has no summary row yet —
+        this matches the ``DEFAULT ''`` of the ``rolling_summary`` column and
+        lets callers concatenate the result into a system prompt without a
+        ``None`` check.
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+
+        result = await self._session.execute(
+            text(
+                """
+                SELECT rolling_summary
+                FROM chat_session_memory
+                WHERE session_id = :sid
+                """
+            ),
+            {"sid": session_id},
+        )
+        row = result.first()
+        if row is None:
+            return ""
+        return row[0] or ""
+
+    async def saveRollingSummary(self, session_id: str, summary: str) -> None:
+        """Upsert ``summary`` for ``session_id``.
+
+        Uses ``INSERT ... ON CONFLICT (session_id) DO UPDATE`` so the call is
+        safe whether or not a row already exists. The ``updated_at`` column
+        is bumped on every write.
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+        if not isinstance(summary, str):
+            raise ValueError("INVALID_SUMMARY")
+
+        await self._session.execute(
+            text(
+                """
+                INSERT INTO chat_session_memory (session_id, rolling_summary, updated_at)
+                VALUES (:sid, :summary, NOW())
+                ON CONFLICT (session_id) DO UPDATE
+                    SET rolling_summary = EXCLUDED.rolling_summary,
+                        updated_at      = NOW()
+                """
+            ),
+            {"sid": session_id, "summary": summary},
+        )
+        logger.debug(
+            "saveRollingSummary upserted summary len=%d for session=%s",
+            len(summary),
+            session_id,
+        )
+
+    # -------------------------------------------------------------------- facts
+    async def getPinnedFacts(self, session_id: str) -> list[Fact]:
+        """Return confirmed pinned facts for the user that owns ``session_id``.
+
+        Joins ``chat_sessions`` to resolve ``user_id`` from the session id and
+        returns only rows with ``status = 'confirmed'`` (Requirement 5.4).
+
+        Returns an empty list when the session does not exist or the user has
+        no confirmed facts yet.
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+
+        result = await self._session.execute(
+            text(
+                """
+                SELECT
+                    f.id,
+                    f.user_id,
+                    f.category,
+                    f.fact,
+                    f.status,
+                    f.source_msg_id,
+                    f.created_at
+                FROM user_facts AS f
+                JOIN chat_sessions AS s ON s.user_id = f.user_id
+                WHERE s.id = :sid
+                  AND f.status = 'confirmed'
+                ORDER BY f.created_at ASC
+                """
+            ),
+            {"sid": session_id},
+        )
+        rows = result.all()
+        return [self._row_to_fact(row) for row in rows]
+
+    async def proposeFact(
+        self,
+        session_id: str,
+        fact_text: str,
+        category: str,
+        source_msg_id: str | None,
+        status: str = "pending",
+    ) -> str:
+        """Insert a new ``user_facts`` row.
+
+        ``status`` defaults to ``'pending'`` (the original behaviour), but
+        :meth:`updateRollingSummary` passes ``'confirmed'`` for high-confidence
+        facts. Rationale: ``getPinnedFacts`` only reads confirmed rows, and no
+        moderation UI ever existed, so every extracted fact used to sit in
+        ``pending`` forever — the bot extracted memories it could never read
+        back, which is why it kept re-asking things the user had already said.
+
+        Resolves the owning ``user_id`` from ``chat_sessions`` so the fact is
+        attached to the correct user rather than the session. Returns the
+        UUID string of the freshly inserted row, suitable as a tool result.
+
+        Parameters
+        ----------
+        session_id:
+            Session that the LLM was reasoning about when it proposed the
+            fact. Used only to look up the owning ``user_id``.
+        fact_text:
+            Natural-language fact, e.g. ``"dị ứng hải sản"``.
+        category:
+            One of ``{"preference", "allergy", "goal", "constraint", "other"}``.
+        source_msg_id:
+            Optional ``chat_messages.id`` that triggered the proposal. Stored
+            for later auditing; ``NULL`` is acceptable when the proposal does
+            not correspond to a single message (e.g. it was distilled from
+            the rolling summary update).
+
+        Raises
+        ------
+        ValueError
+            ``"INVALID_SESSION_ID"``, ``"INVALID_FACT_TEXT"``,
+            ``"INVALID_CATEGORY"``, or ``"SESSION_NOT_FOUND"`` when the
+            session id does not exist.
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+        if not isinstance(fact_text, str) or not fact_text.strip():
+            raise ValueError("INVALID_FACT_TEXT")
+        if not isinstance(category, str) or category not in _ALLOWED_CATEGORIES:
+            raise ValueError("INVALID_CATEGORY")
+        if source_msg_id is not None and (
+            not isinstance(source_msg_id, str) or not source_msg_id
+        ):
+            raise ValueError("INVALID_SOURCE_MSG_ID")
+        if status not in {"pending", "confirmed"}:
+            raise ValueError("INVALID_STATUS")
+
+        owner = await self._session.execute(
+            text("SELECT user_id FROM chat_sessions WHERE id = :sid"),
+            {"sid": session_id},
+        )
+        owner_row = owner.first()
+        if owner_row is None:
+            raise ValueError("SESSION_NOT_FOUND")
+        user_id = owner_row[0]
+
+        fact_id = str(uuid4())
+        await self._session.execute(
+            text(
+                """
+                INSERT INTO user_facts (
+                    id, user_id, category, fact, status, source_msg_id
+                )
+                VALUES (
+                    :id, :user_id, :category, :fact, :status, :source
+                )
+                """
+            ),
+            {
+                "id": fact_id,
+                "user_id": user_id,
+                "category": category,
+                "fact": fact_text.strip(),
+                "status": status,
+                "source": source_msg_id,
+            },
+        )
+        logger.info(
+            "proposeFact inserted fact id=%s user=%s category=%s status=%s",
+            fact_id,
+            user_id,
+            category,
+            status,
+        )
+        return fact_id
+
+    async def confirmFact(self, fact_id: str) -> None:
+        """Flip ``user_facts.status`` to ``'confirmed'`` for ``fact_id``."""
+        await self._set_fact_status(fact_id, status="confirmed")
+
+    async def rejectFact(self, fact_id: str) -> None:
+        """Flip ``user_facts.status`` to ``'rejected'`` for ``fact_id``."""
+        await self._set_fact_status(fact_id, status="rejected")
+
+    # ------------------------------------------------------------ summarisation
+    async def updateRollingSummary(
+        self,
+        session_id: str,
+        llm_client: _LLMChatProtocol,
+    ) -> None:
+        """Cô đặc các turn cũ vào ``rolling_summary`` và đề xuất pinned facts.
+
+        Triển khai pseudocode §8.4 của ``design.md`` (task 5.2):
+
+        1. Đếm số turn trong ``chat_messages`` cho ``session_id``. Nếu không
+           vượt :data:`config.settings.summary_threshold` → return ngay (không
+           có gì để cô đặc).
+        2. Load các turn cũ (tất cả trừ :data:`config.settings.keep_raw_turns`
+           turn gần nhất) cùng với rolling summary hiện tại.
+        3. Gọi ``llm_client.chat(buildSummaryPrompt(turns_text, prior_summary))``
+           với ``stream=False`` và ``tools=None``. Lấy ``full_text`` làm
+           summary mới và lưu qua :meth:`saveRollingSummary`.
+        4. Gọi ``llm_client.chat(buildFactExtractionPrompt(turns_text))`` để
+           trích ``candidate_facts`` (một mảng JSON ``[{category, fact}, ...]``).
+           Với mỗi fact chưa tồn tại (so sánh case-insensitive với toàn bộ
+           ``user_facts`` của user) → :meth:`proposeFact` với
+           ``status='pending'``.
+
+        Best-effort. Mọi exception từ LLM (``LLMUnavailableError``,
+        ``GarbledOutputError``, JSON parse fail, …) đều được nuốt và log
+        warning để cập nhật memory không làm hỏng turn chat đang chạy
+        (Requirement 5.2 / 5.3).
+
+        Parameters
+        ----------
+        session_id:
+            Session cần cập nhật rolling summary.
+        llm_client:
+            Đối tượng có method ``async def chat(messages, tools=None,
+            stream=False)`` (xem
+            :class:`services.agent.llm_client.LLMClient`). Tools không cần
+            khi gọi summarisation, chỉ cần text completion.
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+        if llm_client is None:
+            raise ValueError("INVALID_LLM_CLIENT")
+
+        threshold = settings.summary_threshold
+        keep = settings.keep_raw_turns
+        # Defensive: a misconfigured ``keep_raw_turns >= summary_threshold``
+        # would cause us to load zero turns. Bail out cleanly so a config
+        # mistake doesn't silently kill summarisation.
+        if keep < 0 or threshold <= keep:
+            logger.warning(
+                "updateRollingSummary skipped: invalid config "
+                "(summary_threshold=%d, keep_raw_turns=%d)",
+                threshold,
+                keep,
+            )
+            return
+
+        total = await self._count_turns(session_id)
+        if total <= threshold:
+            logger.debug(
+                "updateRollingSummary skipped: total=%d ≤ threshold=%d",
+                total,
+                threshold,
+            )
+            return
+
+        old_count = total - keep
+        old_turns = await self._load_oldest_turns(session_id, limit=old_count)
+        if not old_turns:
+            return
+
+        prior_summary = await self.getRollingSummary(session_id)
+        turns_text = _format_turns_for_prompt(old_turns)
+
+        # 1) Re-summarise. If this fails, we still attempt fact extraction
+        #    on the same turns since the two LLM calls are independent.
+        new_summary: str | None = None
+        try:
+            summary_messages = buildSummaryPrompt(turns_text, prior_summary)
+            response = await llm_client.chat(
+                summary_messages, tools=None, stream=False
+            )
+            new_summary = (getattr(response, "full_text", "") or "").strip()
+        except Exception as exc:  # noqa: BLE001 - best-effort summarisation
+            logger.warning(
+                "updateRollingSummary: summary LLM call failed for session=%s: %s",
+                session_id,
+                exc,
+            )
+
+        if new_summary:
+            try:
+                await self.saveRollingSummary(session_id, new_summary)
+            except Exception as exc:  # noqa: BLE001 - best-effort
+                logger.warning(
+                    "updateRollingSummary: saveRollingSummary failed "
+                    "for session=%s: %s",
+                    session_id,
+                    exc,
+                )
+
+        # 2) Extract candidate facts from the same turns and propose those
+        #    that the user does not already have. Failures here are also
+        #    best-effort — the rolling summary update is the primary goal.
+        try:
+            fact_messages = buildFactExtractionPrompt(turns_text)
+            response = await llm_client.chat(
+                fact_messages, tools=None, stream=False
+            )
+            raw_text = getattr(response, "full_text", "") or ""
+        except Exception as exc:  # noqa: BLE001 - best-effort
+            logger.warning(
+                "updateRollingSummary: fact extraction LLM call failed "
+                "for session=%s: %s",
+                session_id,
+                exc,
+            )
+            return
+
+        candidates = _parse_fact_candidates(raw_text)
+        if not candidates:
+            return
+
+        existing = await self._load_existing_fact_texts(session_id)
+        for cand in candidates:
+            fact_text = cand.get("fact", "").strip()
+            category = cand.get("category", "").strip().lower()
+            if not fact_text:
+                continue
+            if category not in _ALLOWED_CATEGORIES:
+                # Unknown / missing category → bucket as "other" so the
+                # moderation queue still sees the candidate.
+                category = "other"
+            normalised = fact_text.casefold()
+            if normalised in existing:
+                continue
+            status = self._fact_status_for(cand, category)
+            try:
+                await self.proposeFact(
+                    session_id=session_id,
+                    fact_text=fact_text,
+                    category=category,
+                    source_msg_id=None,
+                    status=status,
+                )
+                existing.add(normalised)
+            except ValueError as exc:
+                logger.debug(
+                    "updateRollingSummary: skipping invalid fact candidate "
+                    "(%s): %r",
+                    exc,
+                    cand,
+                )
+
+    @staticmethod
+    def _fact_status_for(candidate: dict[str, str], category: str) -> str:
+        """Decide whether an extracted fact goes straight into the prompt.
+
+        Auto-confirmation is deliberately narrow. A fact only skips the
+        (nonexistent) moderation queue when the model marked it ``high``
+        confidence *and* it falls in a category the user states about
+        themselves in plain words — allergies, goals, preferences, physical
+        constraints. Everything else stays ``pending``: it is recorded for
+        later review but never injected into the system prompt, so a
+        hallucinated "fact" cannot quietly poison every future turn.
+        """
+        auto_confirm_categories = {"allergy", "goal", "preference", "constraint"}
+        if (
+            candidate.get("confidence") == "high"
+            and category in auto_confirm_categories
+        ):
+            return "confirmed"
+        return "pending"
+
+    async def _set_fact_status(self, fact_id: str, *, status: str) -> None:
+        if not isinstance(fact_id, str) or not fact_id:
+            raise ValueError("INVALID_FACT_ID")
+        # ``status`` is internal-only (set by ``confirmFact`` / ``rejectFact``)
+        # and never accepts caller input, but we still defend the check
+        # constraint at the column level to fail fast in tests if someone
+        # introduces a typo.
+        if status not in {"pending", "confirmed", "rejected"}:
+            raise ValueError("INVALID_STATUS")
+
+        result = await self._session.execute(
+            text(
+                """
+                UPDATE user_facts
+                   SET status = :status
+                 WHERE id = :id
+                """
+            ),
+            {"id": fact_id, "status": status},
+        )
+        # ``rowcount`` may be -1 when the driver does not report it; treat
+        # zero as "fact not found" so callers see a deterministic error.
+        rowcount = getattr(result, "rowcount", -1)
+        if rowcount == 0:
+            raise ValueError("FACT_NOT_FOUND")
+
+    async def _count_turns(self, session_id: str) -> int:
+        """Return the total number of ``chat_messages`` rows for a session."""
+        result = await self._session.execute(
+            text(
+                """
+                SELECT COUNT(*) FROM chat_messages WHERE session_id = :sid
+                """
+            ),
+            {"sid": session_id},
+        )
+        row = result.first()
+        if row is None:
+            return 0
+        return int(row[0] or 0)
+
+    async def _load_oldest_turns(
+        self, session_id: str, *, limit: int
+    ) -> list[ChatTurn]:
+        """Load the oldest ``limit`` turns of ``session_id`` (chronological).
+
+        Used by :meth:`updateRollingSummary` to feed the summariser with the
+        turns that fall outside the ``KEEP_RAW_TURNS`` recency window.
+        """
+        if limit <= 0:
+            return []
+        result = await self._session.execute(
+            text(
+                """
+                SELECT id, session_id, role, content,
+                       tool_call_id, tool_name, created_at
+                FROM chat_messages
+                WHERE session_id = :sid
+                ORDER BY created_at ASC, id ASC
+                LIMIT :lim
+                """
+            ),
+            {"sid": session_id, "lim": limit},
+        )
+        return [self._row_to_chat_turn(row) for row in result.all()]
+
+    async def _load_existing_fact_texts(self, session_id: str) -> set[str]:
+        """Return the case-folded set of every existing fact text for owner.
+
+        Used to dedupe candidate facts emitted by the LLM. Includes facts in
+        any status (pending / confirmed / rejected) — proposing the same
+        text again would just clutter the moderation queue.
+        """
+        result = await self._session.execute(
+            text(
+                """
+                SELECT f.fact
+                FROM user_facts AS f
+                JOIN chat_sessions AS s ON s.user_id = f.user_id
+                WHERE s.id = :sid
+                """
+            ),
+            {"sid": session_id},
+        )
+        return {
+            (row[0] or "").strip().casefold()
+            for row in result.all()
+            if row[0]
+        }
+
+    @staticmethod
+    def _row_to_fact(row: Any) -> Fact:
+        """Convert a SQLAlchemy ``Row`` for ``user_facts`` to a :class:`Fact`."""
+        # Row exposes both index and attribute access. Use index to be
+        # compatible with the lightweight fakes used in unit tests.
+        return Fact(
+            id=str(row[0]),
+            user_id=str(row[1]),
+            category=str(row[2]),
+            fact=str(row[3]),
+            status=str(row[4]),
+            source_msg_id=str(row[5]) if row[5] is not None else None,
+            created_at=row[6],
+        )
+
+    # ------------------------------------------------------------------- RAG
+    async def queryRag(
+        self, query: str, top_k: int
+    ) -> list[KnowledgeChunk]:
+        """Delegate to :class:`RAGService` to retrieve top-k knowledge chunks.
+
+        Returns an empty list when no ``RAGService`` is wired in. The
+        underlying ``RAGService`` itself returns ``[]`` when
+        ``chunk_embeddings`` is empty (Requirement 5.8); this wrapper keeps
+        the same contract at the memory-service surface so the orchestrator
+        can call ``memory.queryRag`` unconditionally.
+
+        Parameters
+        ----------
+        query:
+            Non-empty natural-language string. Validation (empty / wrong
+            type) is delegated to :meth:`RAGService.query`, which raises
+            ``ValueError("INVALID_QUERY")``.
+        top_k:
+            Strictly positive integer; same delegation applies.
+        """
+        if self._rag_service is None:
+            logger.debug("queryRag: rag_service not configured, returning []")
+            return []
+        return await self._rag_service.query(query, top_k, db=self._session)
+
+    # --------------------------------------------------------------- context
+    async def loadContext(
+        self, session_id: str, user_text: str
+    ) -> Context:
+        """Aggregate the four pieces needed to build the system prompt.
+
+        Returns a :class:`Context` containing:
+
+        - ``history``: last :data:`config.settings.max_history_turns` turns
+          from ``chat_messages`` for ``session_id`` (chronological,
+          oldest-first), as :class:`models.schemas.ChatTurn` objects.
+        - ``rolling_summary``: stored in ``chat_session_memory`` (empty
+          string when there is no row yet).
+        - ``pinned_facts``: confirmed facts for the session's owning user
+          (Requirement 5.4).
+        - ``rag_chunks``: result of :meth:`queryRag` on ``user_text`` with
+          :data:`config.settings.rag_top_k`. Empty when no RAGService is
+          wired, when the corpus is empty, or when ``user_text`` is blank.
+
+        Validates Requirements 5.5, 5.6, 5.8.
+
+        Parameters
+        ----------
+        session_id:
+            Session whose history / memory should be loaded.
+        user_text:
+            The just-arrived user message. Used as the RAG query. A blank
+            string skips RAG retrieval (no useful query to embed).
+        """
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+        if not isinstance(user_text, str):
+            raise ValueError("INVALID_USER_TEXT")
+
+        history = await self._load_recent_turns(
+            session_id, limit=settings.max_history_turns
+        )
+        rolling_summary = await self.getRollingSummary(session_id)
+        pinned_facts = await self.getPinnedFacts(session_id)
+
+        rag_chunks: list[KnowledgeChunk] = []
+        # Skip RAG when the message is blank or a simple greeting/chitchat
+        if user_text.strip() and not is_simple_greeting_or_chitchat(user_text) and self._rag_service is not None:
+            # Query expansion for reference/pronouns to improve pgvector search accuracy
+            rag_query = user_text
+            if history:
+                last_user_turn = None
+                for turn in reversed(history):
+                    if turn.role == "user":
+                        last_user_turn = turn
+                        break
+                if last_user_turn and last_user_turn.content:
+                    pronouns = ["nó", "đấy", "đó", "này", "thêm", "bổ sung", "món đó", "món này", "bài đó", "bài này", "ăn lúc"]
+                    if any(p in user_text.lower() for p in pronouns):
+                        rag_query = f"{last_user_turn.content} {user_text}"
+                        logger.info("Expanded RAG query: %r", rag_query)
+
+            try:
+                rag_chunks = await self.queryRag(
+                    rag_query, top_k=settings.rag_top_k
+                )
+            except ValueError as exc:
+                # Defensive: if RAGService rejects the query for any reason,
+                # log and degrade gracefully rather than failing the whole
+                # context load. Memory has already been gathered.
+                logger.warning(
+                    "queryRag rejected rag_query for session=%s: %s",
+                    session_id,
+                    exc,
+                )
+
+        return Context(
+            history=history,
+            rolling_summary=rolling_summary,
+            pinned_facts=pinned_facts,
+            rag_chunks=rag_chunks,
+        )
+
+    async def _load_recent_turns(
+        self, session_id: str, *, limit: int
+    ) -> list[ChatTurn]:
+        """Return the last ``limit`` chat turns for ``session_id``.
+
+        Pulls rows from ``chat_messages`` ordered by ``created_at DESC``
+        (with ``id`` as a tiebreaker so two turns inserted in the same
+        millisecond keep a deterministic order), then reverses to
+        chronological order before returning. The reverse step matters for
+        the orchestrator: the LLM expects user / assistant / tool turns in
+        the order they happened.
+
+        Sub-1 ``limit`` short-circuits to ``[]`` so callers don't pay for a
+        round-trip to the DB just to throw the result away.
+        """
+        if limit <= 0:
+            return []
+
+        result = await self._session.execute(
+            text(
+                """
+                SELECT id, session_id, role, content,
+                       tool_call_id, tool_name, created_at
+                FROM chat_messages
+                WHERE session_id = :sid
+                ORDER BY created_at DESC, id DESC
+                LIMIT :lim
+                """
+            ),
+            {"sid": session_id, "lim": limit},
+        )
+        rows = result.all()
+        # Reverse so the oldest turn comes first — matches how messages are
+        # appended into the LLM ``messages`` list in ``handleChatMessage``.
+        return [self._row_to_chat_turn(row) for row in reversed(rows)]
+
+    @staticmethod
+    def _row_to_chat_turn(row: Any) -> ChatTurn:
+        """Convert a ``chat_messages`` row to :class:`ChatTurn`."""
+        return ChatTurn(
+            id=str(row[0]),
+            session_id=str(row[1]),
+            role=str(row[2]),
+            content=str(row[3]) if row[3] is not None else "",
+            tool_call_id=str(row[4]) if row[4] is not None else None,
+            tool_name=str(row[5]) if row[5] is not None else None,
+            created_at=row[6],
+        )
+
+
+def is_simple_greeting_or_chitchat(text: str) -> bool:
+    """Check if text is a simple greeting, farewell, or polite expression."""
+    if not isinstance(text, str):
+        return False
+    cleaned = text.strip().lower()
+    for ch in ".!?,:;~":
+        cleaned = cleaned.replace(ch, "")
+    cleaned = cleaned.strip()
+    if not cleaned:
+        return True
+    greetings = {
+        "chào", "chào bạn", "chào em", "chào anh", "chào chị", "chào bô", "xin chào",
+        "hi", "hello", "hey", "cảm ơn", "cảm ơn bạn", "cảm ơn nhé", "cam on",
+        "tạm biệt", "bye", "goodbye", "bạn là ai", "bạn tên gì", "ok", "oke", "dạ", "vâng"
+    }
+    return cleaned in greetings
+
+
+__all__ = [
+    "Context",
+    "MemoryService",
+    "buildFactExtractionPrompt",
+    "buildSummaryPrompt",
+    "is_simple_greeting_or_chitchat",
+]
+
+
+# --------------------------------------------------------------------------- #
+# Module-level prompt builders + helpers
+# --------------------------------------------------------------------------- #
+
+
+# Cap how much old-turn text we feed into a single LLM call to bound the
+# context length. The agent's qwen2.5:7b deployment has plenty of headroom but
+# truncating prevents pathological memory growth.
+_MAX_TURNS_TEXT_CHARS = 6000
+
+# Recognise ```json … ``` and ``` … ``` fences so the parser can recover the
+# inner JSON when the model emits markdown.
+_JSON_FENCE_RE = re.compile(
+    r"```(?:json)?\s*(?P<body>.*?)```",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _format_turns_for_prompt(turns: list[ChatTurn]) -> str:
+    """Render a list of :class:`ChatTurn` as plain text for the LLM.
+
+    Output format::
+
+        user: ...
+        assistant: ...
+        tool[get_weight_history]: ...
+
+    Tool turns include ``tool_name`` to give the summariser context. Empty
+    contents (rare but possible for tool turns) are skipped to keep the
+    prompt compact.
+    """
+    if not turns:
+        return ""
+    lines: list[str] = []
+    for turn in turns:
+        if not turn.content:
+            continue
+        if turn.role == "tool":
+            label = (
+                f"tool[{turn.tool_name}]" if turn.tool_name else "tool"
+            )
+        else:
+            label = turn.role
+        lines.append(f"{label}: {turn.content.strip()}")
+    rendered = "\n".join(lines)
+    if len(rendered) > _MAX_TURNS_TEXT_CHARS:
+        # Keep the most recent portion of the old-turns window — a long-tail
+        # session is more likely to have relevant facts in the recent past.
+        rendered = rendered[-_MAX_TURNS_TEXT_CHARS:]
+    return rendered
+
+
+def buildSummaryPrompt(
+    turns_text: str, prior_summary: str
+) -> list[dict[str, Any]]:
+    """Return the ``messages`` payload for the rolling-summary LLM call.
+
+    Format matches what
+    :meth:`services.agent.llm_client.LLMClient.chat` expects: a list of
+    ``{"role", "content"}`` dicts. The system prompt is short and Vietnamese
+    (the chatbot's primary language) and explicitly asks for a single
+    paragraph so we don't store sprawling text in
+    ``chat_session_memory.rolling_summary``.
+
+    Parameters
+    ----------
+    turns_text:
+        Output of :func:`_format_turns_for_prompt` for the old turns.
+    prior_summary:
+        Existing ``rolling_summary`` content. May be empty for the first
+        run; included in the prompt so the LLM can extend rather than
+        replace.
+    """
+    system = (
+        "Bạn đang viết ghi chú hồ sơ cho một huấn luyện viên sức khỏe, để buổi "
+        "tư vấn sau họ đọc là nối tiếp được ngay mà không cần đọc lại hội thoại.\n"
+        "Gộp phần tóm tắt trước (nếu có) với các turn mới thành MỘT đoạn tiếng "
+        "Việt ≤ 8 câu. Ưu tiên giữ, theo đúng thứ tự này:\n"
+        "1. Mục tiêu người dùng đang theo đuổi và deadline nếu có.\n"
+        "2. Ràng buộc lâu dài: dị ứng, bệnh nền, thiết bị tập, lịch sinh hoạt.\n"
+        "3. Lời khuyên đã đưa ra và người dùng phản ứng thế nào (đồng ý, từ chối, "
+        "đã thử rồi không hợp) — để lần sau không lặp lại đề xuất họ đã bác.\n"
+        "4. Con số quan trọng kèm mốc thời gian (cân nặng, TDEE, calo mục tiêu).\n"
+        "5. Việc còn dang dở hoặc câu hỏi chưa trả lời xong.\n"
+        "Bỏ qua chào hỏi, cảm ơn, và chi tiết vụn vặt. Không bịa thông tin không "
+        "có trong input. Chỉ trả về đoạn tóm tắt, không tiêu đề, không giải thích."
+    )
+    user_parts: list[str] = []
+    if prior_summary.strip():
+        user_parts.append(f"Tóm tắt trước đây:\n{prior_summary.strip()}")
+    user_parts.append(f"Các turn cũ cần cô đặc:\n{turns_text}")
+    user_content = "\n\n".join(user_parts)
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user_content},
+    ]
+
+
+def buildFactExtractionPrompt(turns_text: str) -> list[dict[str, Any]]:
+    """Return the ``messages`` payload for the fact-extraction LLM call.
+
+    The LLM is instructed to emit a JSON array of
+    ``{"category": ..., "fact": ...}`` objects. ``category`` must be one of
+    the values accepted by :meth:`MemoryService.proposeFact`
+    (``preference``, ``allergy``, ``goal``, ``constraint``, ``other``).
+    Empty arrays are explicitly allowed to discourage the model from making
+    things up when no fact is present.
+
+    Output is parsed by :func:`_parse_fact_candidates`, which is tolerant of
+    markdown fences, leading prose, and extra whitespace.
+    """
+    allowed = ", ".join(sorted(_ALLOWED_CATEGORIES))
+    system = (
+        "Bạn là module trích xuất pinned facts về user từ hội thoại sức khỏe. "
+        "Đọc các turn dưới đây và trích các sự thật ổn định (sở thích ăn "
+        "uống, dị ứng, mục tiêu, ràng buộc lối sống, bệnh nền, thiết bị tập "
+        "sẵn có, lịch sinh hoạt). KHÔNG trích các sự kiện ngắn hạn (bữa ăn "
+        "hôm nay, cân nặng đo hôm nay, tâm trạng hôm nay).\n"
+        "Mỗi fact viết ở ngôi thứ ba, ngắn gọn, tự đứng độc lập được — người "
+        'đọc sau này không thấy hội thoại gốc. Vd: "Dị ứng hải sản", "Mục tiêu '
+        'giảm 5kg trong 3 tháng", "Tập tại nhà, chỉ có tạ đơn".\n'
+        '"confidence" = "high" khi người dùng nói thẳng ra điều đó; '
+        '"low" khi bạn đang suy diễn. Suy diễn thì thà bỏ qua còn hơn đoán sai.\n'
+        "Trả VỀ DUY NHẤT một mảng JSON, không kèm văn bản khác, theo schema: "
+        f'[{{"category": "<một trong: {allowed}>", "fact": "<câu mô tả '
+        'ngắn gọn bằng tiếng Việt>", "confidence": "high|low"}}, ...]. '
+        "Nếu không có fact phù hợp, trả về [] (mảng rỗng). Không bịa thông tin."
+    )
+    user_content = f"Các turn cần phân tích:\n{turns_text}"
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user_content},
+    ]
+
+
+def _parse_fact_candidates(raw_text: str) -> list[dict[str, str]]:
+    """Best-effort parse the LLM's fact-extraction response.
+
+    Strategy:
+
+    1. If the response contains a fenced code block (``\\`\\`\\`json … \\`\\`\\```),
+       try parsing its body first.
+    2. Otherwise, scan for the first ``[`` and matching ``]`` and parse that
+       slice as JSON.
+    3. Anything that does not parse to a list of dicts becomes an empty list.
+
+    Each candidate is normalised to ``{"category": str, "fact": str}`` with
+    both fields trimmed; entries missing either field are dropped.
+    """
+    if not isinstance(raw_text, str) or not raw_text.strip():
+        return []
+
+    candidate_blobs: list[str] = []
+    fence = _JSON_FENCE_RE.search(raw_text)
+    if fence is not None:
+        candidate_blobs.append(fence.group("body").strip())
+
+    # Always include the first balanced top-level array as a fallback.
+    start = raw_text.find("[")
+    end = raw_text.rfind("]")
+    if start != -1 and end != -1 and end > start:
+        candidate_blobs.append(raw_text[start : end + 1])
+
+    parsed: Any = None
+    for blob in candidate_blobs:
+        if not blob:
+            continue
+        try:
+            parsed = json.loads(blob)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, list):
+            break
+        parsed = None
+    if not isinstance(parsed, list):
+        return []
+
+    results: list[dict[str, str]] = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            continue
+        fact = item.get("fact")
+        category = item.get("category")
+        if not isinstance(fact, str) or not fact.strip():
+            continue
+        if not isinstance(category, str):
+            category = "other"
+        confidence = item.get("confidence")
+        if not isinstance(confidence, str) or confidence.strip().lower() not in {
+            "high",
+            "low",
+        }:
+            # Missing / malformed confidence is treated as low so an
+            # unverified guess never auto-promotes into the system prompt.
+            confidence = "low"
+        results.append({
+            "category": category.strip(),
+            "fact": fact.strip(),
+            "confidence": confidence.strip().lower(),
+        })
+    return results

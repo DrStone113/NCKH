@@ -11,8 +11,8 @@ import pdfplumber
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-PDF_PATH = Path(__file__).parent / 'VTN_FCT_2007.pdf'
-OUT_PATH = Path(__file__).parent / 'vietnamese_foods_full.json'
+PDF_PATH = Path(__file__).resolve().parent.parent / 'raw' / 'VTN_FCT_2007.pdf'
+OUT_PATH = Path(__file__).resolve().parent.parent / 'raw' / 'vietnamese_foods_full.json'
 
 # ── Nutrient name → key ──────────────────────────────────────────────────────
 NUTRIENT_MAP = {

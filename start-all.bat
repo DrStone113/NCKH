@@ -18,12 +18,12 @@ if %ERRORLEVEL% NEQ 0 (
 REM 2. Launch Backend
 echo.
 echo [2/3] Khoi dong Backend FastAPI (Port 8080)...
-start "HealthApp Backend" /min cmd /k "cd /d %~dp0HealthApp\ai_backend\backend && venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
+start "HealthApp Backend" /min cmd /k "cd /d %~dp0apps\backend && venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
 
 REM 3. Launch Web Server
 echo.
 echo [3/3] Khoi dong Web Server (Port 3000)...
-start "HealthApp Web Server" /min cmd /k "cd /d %~dp0HealthApp\health_app && ..\ai_backend\backend\venv\Scripts\python.exe serve_web.py"
+start "HealthApp Web Server" /min cmd /k "cd /d %~dp0apps\mobile && ..\backend\venv\Scripts\python.exe serve_web.py"
 
 echo.
 echo ========================================================

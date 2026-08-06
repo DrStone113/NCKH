@@ -2,7 +2,7 @@
 
 Tài liệu này hướng dẫn cách chuẩn bị môi trường và khởi chạy toàn bộ hệ thống HealthApp bao gồm **Cơ sở dữ liệu**, **FastAPI Backend**, và **Flutter Web Client**.
 
-> **Thư mục gốc dự án hiện tại**: `C:\Project\Chatbot\NCKH`
+> **Thư mục gốc dự án hiện tại**: `C:\Project\Chatbot`
 
 ---
 
@@ -29,7 +29,7 @@ flutter devices
 
 ## ⚡ Khởi Chạy Nhanh (Automated Script)
 
-Thư mục dự án cung cấp script khởi động tự động: **`C:\Project\Chatbot\NCKH\start-all.bat`**.
+Thư mục dự án cung cấp script khởi động tự động: **`C:\Project\Chatbot\start-all.bat`**.
 
 ### Yêu cầu trước khi chạy:
 1. Đảm bảo ứng dụng **Docker Desktop** đã được mở và chạy trên máy tính của bạn.
@@ -56,7 +56,7 @@ docker compose up -d postgres
 ### Bước 2: Khởi chạy FastAPI Backend (AI Engine)
 Mở cửa sổ PowerShell mới và di chuyển vào thư mục backend:
 ```powershell
-cd HealthApp/ai_backend/backend
+cd apps/backend
 ```
 Kích hoạt môi trường ảo và khởi chạy server uvicorn:
 ```powershell
@@ -67,7 +67,7 @@ Kích hoạt môi trường ảo và khởi chạy server uvicorn:
 ### Bước 3: Khởi chạy Web Client (Flutter Web Simulator)
 Mở cửa sổ PowerShell mới và di chuyển vào thư mục ứng dụng Flutter:
 ```powershell
-cd HealthApp/health_app
+cd apps/mobile
 ```
 
 #### Cách 1: Phục vụ bản build tĩnh qua Python (khung giả lập điện thoại)
@@ -88,7 +88,7 @@ flutter run -d edge --web-port 3000
 
 ## ✅ Lệnh Kiểm Thử (Verification Commands)
 
-Chạy tại `HealthApp/health_app`:
+Chạy tại `apps/mobile`:
 
 ```powershell
 flutter pub get                                  # Cài dependencies

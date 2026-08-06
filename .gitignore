@@ -79,6 +79,10 @@ Thumbs.db
 desktop.ini
 # .vscode/ — giữ lại vì có settings hữu ích cho team
 
+# Config riêng của từng AI IDE (không dùng chung cho team)
+/rules/
+/.continue/
+
 # =============================================================
 # LOGS & TMP
 # =============================================================

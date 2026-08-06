@@ -30,7 +30,7 @@ Bữa trưa · 3 nguyên liệu
 
 ## 5. Rebuild app:
 ```bash
-cd HealthApp/health_app
+cd apps/mobile
 flutter clean
 flutter pub get
 flutter run

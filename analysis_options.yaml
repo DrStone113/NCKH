@@ -1,4 +1,0 @@
-# Root analysis options to exclude embedded Flutter SDK submodules from IDE analysis
-analyzer:
-  exclude:
-    - 'flutter/**'

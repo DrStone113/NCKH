@@ -109,7 +109,7 @@ Dành cho lập trình viên khi phát triển thêm tính năng mới. Vì `C:\
 
 1. **Kiểm tra lints tự động cho Flutter**:
    ```powershell
-   cd HealthApp/health_app
+   cd apps/mobile
    flutter analyze
    ```
 
@@ -125,5 +125,5 @@ Dành cho lập trình viên khi phát triển thêm tính năng mới. Vì `C:\
 
 3. **Kiểm tra cú pháp Python Backend**:
    ```bash
-   python -c "import py_compile, os; [py_compile.compile(os.path.join(r, f), doraise=True) for r, d, fs in os.walk('HealthApp/ai_backend/backend') if 'venv' not in r for f in fs if f.endswith('.py')]"
+   python -c "import py_compile, os; [py_compile.compile(os.path.join(r, f), doraise=True) for r, d, fs in os.walk('apps/backend') if 'venv' not in r for f in fs if f.endswith('.py')]"
    ```

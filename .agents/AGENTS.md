@@ -5,16 +5,25 @@
 
 ---
 
+## 🚨 ĐIỀU KHOẢN TỐI CAO: CHỐNG TÁI PHÁT LỖI (ZERO-REPEAT DEFECT MANDATE)
+
+> **CẢNH BÁO:** Tuyệt đối không được lặp lại bất kỳ lỗi nào đã xảy ra trước đó. 
+> 1. **Trước khi thực thi/viết code:** BẮT BUỘC phải đọc lại toàn bộ các file nguồn liên quan (UI, Logic, Model, Route, Config) và file tài liệu lỗi (`docs/04_troubleshooting.md`).
+> 2. **Ngay khi tìm ra giải pháp fix lỗi:** BẮT BUỘC phải ghi nhận lại ngay nguyên nhân gốc rễ (Root cause) và cách xử lý vào thư mục `docs/` trước khi chuyển sang tác vụ mới.
+
+---
+
 ## 1. QUY TRÌNH PHÂN TÍCH DỰ ÁN (PROJECT DISCOVERY & CONTEXT)
 
 Trước khi viết hoặc sửa đổi bất kỳ dòng code nào, bạn **BẮT BUỘC** phải thực hiện các bước sau:
 
-1. **Rà soát Thư mục `docs/`:** Đọc toàn bộ tài liệu trong `docs/` để nắm vững kiến trúc tổng thể, luồng dữ liệu (data flow), và danh sách lỗi cũ.
+1. **Rà soát Thư mục `docs/`:** Đọc toàn bộ tài liệu trong `docs/` để nắm vững kiến trúc tổng thể, luồng dữ liệu (data flow), và danh sách lỗi/nhận diện rủi ro cũ.
 2. **Quét Cây Thư Mục & Phụ Thuộc (Dependency Mapping):**
    - **Flutter:** Phân tích các state management (BLoC/Riverpod/Provider), router, services, repositories.
    - **Python/AI:** Phân tích API framework (FastAPI/Django/Flask), LLM pipelines (LangChain/LlamaIndex/DSPy), Vector DB, RAG context.
    - **Database:** Phân tích Schemas, ORM Models (SQLAlchemy/Tortoise/Prisma), Migrations, Connection Pools.
-3. **Phân Tích Tác Động (Impact Analysis):** Xác định rõ hàm/module cần sửa có liên hệ với những hàm, UI, API contract hay Service nào khác trong hệ thống. Không được sửa "mù" một điểm mà làm gãy điểm khác.
+3. **Đọc Toàn Bộ File Liên Quan:** Đọc trực tiếp các file code nằm trong chuỗi gọi (call chain) của tính năng để đảm bảo nắm trọn context, không bỏ sót side-effect.
+4. **Phân Tích Tác Động (Impact Analysis):** Xác định rõ hàm/module cần sửa có liên hệ với những hàm, UI, API contract hay Service nào khác trong hệ thống. Không được sửa "mù" một điểm mà làm gãy điểm khác.
 
 ---
 
@@ -54,10 +63,9 @@ Thư mục `docs/` là **Bộ Nhớ Dài Hạn (Long-term Memory)** của AI Age
 ### Cấu Trúc Bắt Buộc Của Thư Mục `docs/`:
 ```text
 docs/
-├── 01_architecture.md   # Tổng quan kiến trúc, sơ đồ luồng, công nghệ sử dụng
-├── 02_database_schema.md# Cấu trúc bảng, quan hệ, indexes, vector collections
+├── 01_architecture.md    # Tổng quan kiến trúc, sơ đồ luồng, công nghệ sử dụng
+├── 02_database_schema.md # Cấu trúc bảng, quan hệ, indexes, vector collections
 ├── 03_features/          # Tài liệu chi tiết cho từng tính năng lớn
 │   └── <feature_name>.md
-├── 04_troubleshooting.md# Sổ tay sửa lỗi: Lỗi thường gặp, nguyên nhân & cách xử lý
-└── CHANGELOG.md         # Lịch sử phiên bản và các thay đổi chi tiết
-```
+├── 04_troubleshooting.md # Sổ tay sửa lỗi: Lỗi thường gặp, nguyên nhân & cách xử lý
+└── CHANGELOG.md          # Lịch sử phiên bản và các thay đổi chi tiết

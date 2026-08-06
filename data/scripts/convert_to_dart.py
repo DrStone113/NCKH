@@ -4,6 +4,12 @@ Convert food_data.csv → Dart FoodItem list cho nutrition_provider.dart
 import csv
 import re
 import json
+from pathlib import Path
+
+# scripts/ -> data/
+DATA_DIR = Path(__file__).resolve().parent.parent
+CSV_PATH = DATA_DIR / 'raw' / 'food_data.csv'
+OUT_PATH = DATA_DIR / 'generated' / 'food_database.dart.txt'
 
 # Map category CSV → category hiển thị
 CATEGORY_MAP = {
@@ -38,7 +44,7 @@ def escape_dart(s):
 items = []
 seen_names = set()
 
-with open('food_data.csv', encoding='utf-8-sig') as f:
+with open(CSV_PATH, encoding='utf-8-sig') as f:
     reader = csv.reader(f)
     next(reader)  # skip header
     for i, row in enumerate(reader):
@@ -94,8 +100,9 @@ lines.append("  ];")
 
 dart_code = '\n'.join(lines)
 
-with open('food_database.dart.txt', 'w', encoding='utf-8') as f:
+OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+with open(OUT_PATH, 'w', encoding='utf-8') as f:
     f.write(dart_code)
 
-print(f"✅ Written to food_database.dart.txt")
+print(f"✅ Written to {OUT_PATH}")
 print(f"   Categories: {set(i['category'] for i in items)}")

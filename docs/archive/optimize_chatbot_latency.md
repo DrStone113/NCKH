@@ -23,7 +23,7 @@
     - Added RAG query expansion to `loadContext` to combine recent user chat history when the current query contains Vietnamese pronouns (e.g. "nó", "đó", "thêm") or is short, ensuring pgvector matching matches the correct food/exercise entries.
   - `ai_backend/backend/data/nutrition.json`:
     - Added Bún Riêu with its list of ingredients, serving details, and nutritional value. Loaded it using `data_loader` so it is stored and indexed in pgvector.
-  - `HealthApp/health_app/Dockerfile` & `web/index.html`:
+  - `apps/mobile/Dockerfile` & `web/index.html`:
     - Renamed `main.dart.js` to `main_v2.dart.js` in the web build output and updated bootstrap script references to bypass Cloudflare edge CDN caches.
 - **Anti-Repetition Safeguards:**
   - Standardized all access scope qualifiers to ensure Dart visibility across file boundaries (renamed private `_lookupFoodNutrition` to public `lookupFoodNutrition`).

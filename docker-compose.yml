@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -8,7 +6,7 @@ services:
   flutter_web:
     image: health_frontend_image:latest
     build: 
-      context: ./HealthApp/health_app
+      context: ./apps/mobile
       dockerfile: Dockerfile
       args:
         - API_BASE_URL=${API_BASE_URL}
@@ -18,7 +16,7 @@ services:
     depends_on:
       - fastapi_backend
     volumes:
-      - ./HealthApp/health_app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./apps/mobile/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
     networks:
       - ai_net
@@ -29,7 +27,7 @@ services:
   fastapi_backend:
     image: health_backend_image:latest
     build: 
-      context: ./HealthApp/ai_backend/backend
+      context: ./apps/backend
       dockerfile: Dockerfile
     container_name: health_backend
     ports:
@@ -48,7 +46,7 @@ services:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - HF_HUB_DISABLE_XET=1
     volumes:
-      - ./HealthApp/ai_backend/backend/data:/app/data:ro  # Read-only data
+      - ./apps/backend/data:/app/data:ro  # Read-only data
       - backend_logs:/app/logs
     depends_on:
       postgres:
@@ -79,7 +77,7 @@ services:
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./HealthApp/ai_backend/backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./apps/backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-health} -d ${POSTGRES_DB:-health_db}"]
       interval: 5s
@@ -95,7 +93,7 @@ services:
   data_loader:
     image: health_backend_image:latest
     build: 
-      context: ./HealthApp/ai_backend/backend
+      context: ./apps/backend
       dockerfile: Dockerfile
     container_name: health_data_loader
     command: python scripts/load_dataset.py
@@ -105,7 +103,7 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
-      - ./HealthApp/ai_backend/backend/data:/app/data:ro
+      - ./apps/backend/data:/app/data:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,7 +118,7 @@ services:
   wger_sync:
     image: health_backend_image:latest
     build: 
-      context: ./HealthApp/ai_backend/backend
+      context: ./apps/backend
       dockerfile: Dockerfile
     container_name: health_wger_sync
     command: python -m scripts.sync_wger
@@ -131,7 +129,7 @@ services:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
-      - ./HealthApp/ai_backend/backend/data:/app/data
+      - ./apps/backend/data:/app/data
     depends_on:
       postgres:
         condition: service_healthy

@@ -18,8 +18,10 @@ def parse_vn_float(s):
         return 0.0
 
 # Paths
-csv_path = Path(__file__).parent.parent.parent.parent.parent / 'Dataset' / 'food_data.csv'
-json_path = Path(__file__).parent.parent / 'data' / 'vietnamese_foods.json'
+# scripts/ -> backend/ -> apps/ -> <repo root>
+REPO_ROOT = Path(__file__).resolve().parents[3]
+csv_path = REPO_ROOT / 'data' / 'raw' / 'food_data.csv'
+json_path = Path(__file__).resolve().parents[1] / 'data' / 'vietnamese_foods.json'
 
 items = []
 seen_names = set()

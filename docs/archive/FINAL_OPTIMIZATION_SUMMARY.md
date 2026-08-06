@@ -233,7 +233,7 @@ GET /api/nutrition/stats
 ### 1. Backend Setup:
 
 ```bash
-cd HealthApp/ai_backend
+cd apps/backend
 
 # Install dependencies (if needed)
 pip install fastapi uvicorn
@@ -245,7 +245,7 @@ python -m uvicorn backend.main:app --reload --port 8000
 ### 2. Flutter Setup:
 
 ```bash
-cd HealthApp/health_app
+cd apps/mobile
 
 # Get dependencies
 flutter pub get

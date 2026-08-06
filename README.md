@@ -53,7 +53,7 @@ Script này chạy Flutter local với:
 ### 1. Backend (FastAPI)
 
 ```bat
-cd HealthApp\ai_backend\backend
+cd apps\backend
 
 # Tạo virtual environment
 python -m venv venv
@@ -85,12 +85,12 @@ ollama serve
 ### 3. Flutter App
 
 ```bat
-cd HealthApp\health_app
+cd apps\mobile
 
 # Cài dependencies
 flutter pub get
 
-# Cấu hình Firebase (xem HealthApp\setup_firebase_guide.md)
+# Cấu hình Firebase (xem docs/guides/setup_firebase.md)
 
 # Chạy web (máy chưa có Chrome → dùng edge hoặc web-server)
 flutter run -d edge --web-port 3000
@@ -113,31 +113,43 @@ flutter build web --release --no-tree-shake-icons :: build production web
 ## Cấu trúc project
 
 ```
-NCKH/
-├── quick-start.bat          # Khởi động tất cả dịch vụ
+Chatbot/
+├── start-all.bat            # Khởi động tất cả dịch vụ (DB + backend + web)
 ├── stop-all.bat             # Dừng tất cả dịch vụ
-├── Dataset/
-│   ├── food_data.csv        # Bảng thành phần thực phẩm Việt Nam
-│   └── convert_to_dart.py   # Script convert dataset → Dart code
-└── HealthApp/
-    ├── ai_backend/          # FastAPI + Ollama backend
-    │   ├── backend/
-    │   │   ├── main.py
-    │   │   ├── requirements.txt
-    │   │   ├── routers/     # API endpoints
-    │   │   ├── services/    # Business logic (AI, RAG, prompt)
-    │   │   ├── models/      # Pydantic schemas
-    │   │   └── db/          # Database + session store
-    │   ├── .env.example     # Template cấu hình
-    │   └── docker-compose.yml
-    └── health_app/          # Flutter app
-        ├── lib/
-        │   ├── screens/     # UI screens
-        │   ├── providers/   # State management
-        │   ├── models/      # Data models
-        │   ├── services/    # API services
-        │   └── widgets/     # Reusable widgets
-        └── pubspec.yaml
+├── docker-compose.yml       # Postgres/pgvector, backend, frontend, tunnel
+├── apps/
+│   ├── backend/             # FastAPI + LLM backend
+│   │   ├── main.py
+│   │   ├── requirements.txt
+│   │   ├── config.py
+│   │   ├── modules/         # API endpoints (chat, nutrition, wger, plans...)
+│   │   ├── services/        # Business logic (agent, RAG, prompt, tools)
+│   │   ├── models/          # Pydantic schemas + ORM models
+│   │   ├── db/              # Database, migrations, session store
+│   │   ├── scripts/         # Data loading & sync scripts
+│   │   ├── tests/           # pytest suite
+│   │   └── .env.example     # Template cấu hình
+│   └── mobile/              # Flutter app (package: health_app)
+│       ├── lib/
+│       │   ├── features/    # Màn hình theo tính năng
+│       │   ├── providers/   # State management
+│       │   ├── models/      # Data models
+│       │   ├── services/    # API services
+│       │   └── widgets/     # Reusable widgets
+│       ├── test/            # Unit & widget tests
+│       └── pubspec.yaml
+├── data/
+│   ├── raw/                 # Dataset gốc (CSV, JSON, PDF nguồn)
+│   └── scripts/             # Script parse/convert dataset
+└── docs/
+    ├── architecture/        # Kiến trúc, schema DB, thiết kế modular
+    ├── features/            # Tài liệu từng tính năng
+    ├── guides/              # Hướng dẫn chạy, cài đặt, Docker, GPU
+    ├── archive/             # Nhật ký task đã hoàn thành
+    ├── thesis/              # Tài liệu thuyết minh NCKH
+    ├── CHANGELOG.md
+    ├── evaluation_matrix.md
+    └── troubleshooting.md
 ```
 
 ---
@@ -151,6 +163,6 @@ NCKH/
 
 ## Lưu ý
 
-- File `firebase_options.dart` và `google-services.json` không được push (chứa API keys). Xem `setup_firebase_guide.md` để cấu hình.
+- File `firebase_options.dart` và `google-services.json` không được push (chứa API keys). Xem `docs/guides/setup_firebase.md` để cấu hình.
 - File `.env` không được push. Sao chép từ `.env.example` và điền thông tin.
 - `venv/` không được push. Chạy `pip install -r requirements.txt` để tạo lại.

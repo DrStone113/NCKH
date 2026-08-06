@@ -13,7 +13,7 @@
 
 ### Bước 1: Chạy script tự động
 ```bash
-cd NCKH/HealthApp/ai_backend
+cd apps/backend
 docker-start.bat
 ```
 

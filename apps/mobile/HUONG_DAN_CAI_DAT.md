@@ -22,15 +22,14 @@ Cấu trúc thư mục hiện tại:
 ```
 C:\flutter\                   # Flutter SDK (nằm ngoài workspace)
 
-C:\Project\Chatbot\NCKH\
-└── HealthApp/
-    ├── ai_backend/           # FastAPI backend
-    └── health_app/           # Ứng dụng Flutter
+C:\Project\Chatbot\
+└── apps/
+    ├── backend/              # FastAPI backend
+    └── mobile/               # Ứng dụng Flutter (package: health_app)
         ├── lib/
         ├── android/
         ├── test/
-        ├── setup.bat
-        └── run.bat
+        └── pubspec.yaml
 ```
 
 ## Bước 2: Cài đặt Firebase
@@ -72,7 +71,7 @@ C:\Project\Chatbot\NCKH\
 ## Bước 3: Cài đặt ứng dụng
 
 ```powershell
-cd C:\Project\Chatbot\NCKH\HealthApp\health_app
+cd C:\Project\Chatbot\apps\mobile
 flutter pub get
 ```
 
@@ -106,7 +105,7 @@ Chọn một trong hai cách:
 
 ### 4.2. Chạy ứng dụng
 ```powershell
-cd C:\Project\Chatbot\NCKH\HealthApp\health_app
+cd C:\Project\Chatbot\apps\mobile
 flutter run
 ```
 
@@ -228,7 +227,7 @@ flutter clean
 
 ## Trạng thái kiểm thử gần nhất
 
-Chạy ngày **2026-08-06** với Flutter 3.44.8 / Dart 3.12.2 tại `C:\Project\Chatbot\NCKH\HealthApp\health_app`:
+Chạy ngày **2026-08-06** với Flutter 3.44.8 / Dart 3.12.2 tại `C:\Project\Chatbot\apps\mobile`:
 
 | Lệnh | Kết quả |
 | :--- | :--- |

@@ -26,7 +26,7 @@ Dưới đây là hướng dẫn từng bước để tạo dự án Firebase, k
 4. Chọn **Start in Test mode** (Cho phép đọc/ghi thoải mái trong quá trình dev) và bấm Enable.
 
 ### Bước 4: Kết nối với Flutter bằng FlutterFire CLI
-Để app Flutter hiểu được Firebase, bạn cần thiết lập cấu hình. Mở Terminal trong VSCode (hoặc PowerShell tại thư mục `G:\NCKH\health_app`) và chạy:
+Để app Flutter hiểu được Firebase, bạn cần thiết lập cấu hình. Mở Terminal trong VSCode (hoặc PowerShell tại thư mục `C:\Project\Chatbot\apps\mobile`) và chạy:
 
 1. Cài đặt Firebase CLI (nếu chưa có):
 ```bash
@@ -51,7 +51,7 @@ Vì Firestore là cơ sở dữ liệu NoSQL (lưu dạng Document thay vì Tabl
 
 ### 1. Tập hợp (Collection): `users`
 *(Thay thế bảng `nguoi_dung`)*
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Document ID mặc định của Firebase Auth)
+- `id` (Document ID mặc định của Firebase Auth)
 - `ho_ten`: String
 - `email`: String
 - `gioi_tinh`: String ("nam", "nu", "khac")
@@ -64,15 +64,15 @@ Vì Firestore là cơ sở dữ liệu NoSQL (lưu dạng Document thay vì Tabl
 ### 2. Tập hợp (Collection): `body_metrics`
 *(Thay thế bảng `chi_so_co_the`)*
 Khuyên dùng: Tạo root collection `body_metrics` để dễ truy vấn theo ngày.
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto-generated Document ID)
+- `id` (Auto-generated Document ID)
 - `userId`: String (Tham chiếu tới Document ID của `users`)
 - `can_nang`: Number (kg)
-- [bmi](file:///g:/NCKH/health_app/lib/screens/auth_screen.dart#405-444): Number
+- `bmi`: Number
 - `ngay_ghi_nhan`: Timestamp
 
 ### 3. Tập hợp (Collection): `foods`
 *(Thay thế bảng `mon_an`)*
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto-generated Document ID)
+- `id` (Auto-generated Document ID)
 - `userId`: String (Gán `"system"` nếu là món do hệ thống cung cấp)
 - `ten_mon`: String
 - `calo_tren_100g`: Number
@@ -87,7 +87,7 @@ Khuyên dùng: Tạo root collection `body_metrics` để dễ truy vấn theo n
 *(Thay thế bảng `thuc_don` và `chi_tiet_thuc_don`)*
 Vì Firestore hỗ trợ lưu Array of Objects, ta kết hợp 2 bảng này vào một Document.
 **Collection `menus`**:
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto-generated)
+- `id` (Auto-generated)
 - `userId`: String (hoặc null/"system")
 - `ten_thuc_don`: String
 - `loai_muc_tieu`: String ("giam_can", "duy_tri", "tang_co", "tuy_chinh")
@@ -99,7 +99,7 @@ Vì Firestore hỗ trợ lưu Array of Objects, ta kết hợp 2 bảng này và
 
 ### 5. Tập hợp (Collection): `meal_logs`
 *(Thay thế bảng `nhat_ky_an_uong`)*
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto-generated)
+- `id` (Auto-generated)
 - `userId`: String
 - `mon_an_id`: String
 - `khoi_luong_an`: Number
@@ -109,13 +109,13 @@ Vì Firestore hỗ trợ lưu Array of Objects, ta kết hợp 2 bảng này và
 ### 6. Tập hợp (Collection): `exercises` & `exercise_logs`
 *(Thay thế bảng `bai_tap` và `nhat_ky_tap_luyen`)*
 **Collection `exercises`**:
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto)
+- `id` (Auto)
 - `ten_bai_tap`: String
 - `chi_so_met`: Number
 - `mo_ta`: String
 
 **Collection `exercise_logs`**:
-- [id](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart#5-331) (Auto)
+- `id` (Auto)
 - `userId`: String
 - `bai_tap_id`: String
 - `thoi_gian_phut`: Number
@@ -124,5 +124,5 @@ Vì Firestore hỗ trợ lưu Array of Objects, ta kết hợp 2 bảng này và
 
 ### 7. Nhóm Chatbot & Triệu chứng
 Với bảng DBML `trieu_chung`, `thieu_hut_vi_chat`, `ban_do_trieu_chung`, `thuc_pham_bo_sung`:
-Vì nội dung này ít khi thay đổi (kiến thức y khoa cố định), **cách tốt nhất để tối ưu chi phí Firebase (tránh tốn lượt đọc)** là hardcode database này thành các class Dart trong file [providers/chat_provider.dart](file:///g:/NCKH/health_app/lib/providers/chat_provider.dart) (như cách ứng dụng hiện tại đang làm).
+Vì nội dung này ít khi thay đổi (kiến thức y khoa cố định), **cách tốt nhất để tối ưu chi phí Firebase (tránh tốn lượt đọc)** là hardcode database này thành các class Dart trong file `providers/chat_provider.dart` (như cách ứng dụng hiện tại đang làm).
 Nếu bạn vẫn muốn lưu trên Firebase để sau này admin tự thêm bớt không cần update app, hãy tạo collection `chatbot_knowledge`, trong đó mỗi Document ứng với một "Triệu Chứng" (gộp mô tả, thiếu hụt, cách bổ sung thành 1 array).

@@ -126,7 +126,7 @@ dev.bat
 ### Backend lỗi?
 ```bash
 # Xem logs chi tiết
-cd HealthApp\ai_backend\backend
+cd apps\backend
 venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
 
@@ -137,7 +137,7 @@ flutter --version
 flutter doctor -v
 
 # Chạy với logs chi tiết (máy chưa có Chrome → dùng edge)
-cd HealthApp\health_app
+cd apps\mobile
 flutter run -d edge --web-port 3000 -v
 
 # Nếu lỗi dependency / cache

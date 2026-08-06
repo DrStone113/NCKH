@@ -5,10 +5,13 @@ Pattern: '-' thay cho 'ư' do lỗi font TCVN3
 import json
 import re
 import sys
+from pathlib import Path
 sys.stdout.reconfigure(encoding='utf-8')
 
-INPUT  = 'Dataset/vietnamese_foods_Unicode.json'
-OUTPUT = 'HealthApp/ai_backend/backend/data/vietnamese_foods.json'
+# scripts/ -> data/ -> <repo root>
+REPO_ROOT = Path(__file__).resolve().parents[2]
+INPUT = REPO_ROOT / 'data' / 'raw' / 'vietnamese_foods_Unicode.json'
+OUTPUT = REPO_ROOT / 'apps' / 'backend' / 'data' / 'vietnamese_foods.json'
 
 def fix_uw(name: str) -> str:
     """Fix tất cả pattern '-' + dấu → ư + dấu"""
@@ -114,8 +117,7 @@ for food in foods[1:10]:
     print(f'  [{food["stt"]}] {food["name"]}')
 
 # Save
-import os
-os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
+OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 with open(OUTPUT, 'w', encoding='utf-8') as f:
     json.dump(foods, f, ensure_ascii=False, indent=2)
 

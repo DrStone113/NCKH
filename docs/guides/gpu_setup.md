@@ -97,7 +97,7 @@ Script này sẽ:
 
 1. Kích hoạt virtual environment:
 ```bash
-cd HealthApp/ai_backend
+cd apps/backend
 backend\venv\Scripts\activate
 ```
 
@@ -143,7 +143,7 @@ restart_backend.bat
 ### Cách 3: Khởi động thủ công
 
 ```bash
-cd HealthApp/ai_backend
+cd apps/backend
 backend\venv\Scripts\activate
 python check_gpu.py
 cd backend

@@ -12,7 +12,7 @@
    ```powershell
    flutter --version   # Kỳ vọng: Flutter 3.44.8 • channel stable • Dart 3.12.2
    ```
-2. **Thư mục gốc dự án**: `C:\Project\Chatbot\NCKH`
+2. **Thư mục gốc dự án**: `C:\Project\Chatbot`
 3. **Android SDK**: `36.0.0` tại `C:\Users\ADMIN\AppData\Local\Android\sdk` (JDK 21 đi kèm Android Studio).
    - Nếu `flutter doctor` báo thiếu license, chạy: `flutter doctor --android-licenses`
 4. **Giả lập LDPlayer 9**: Đã bật sẵn trên máy (Port ADB mặc định: `emulator-5554`).
@@ -29,7 +29,7 @@
 Mở terminal PowerShell thứ nhất và chuyển vào thư mục backend:
 
 ```powershell
-cd C:\Project\Chatbot\NCKH\HealthApp\ai_backend\backend
+cd C:\Project\Chatbot\apps\backend
 ```
 
 Khởi chạy server uvicorn (Host `0.0.0.0` trên cổng `8080`):
@@ -50,7 +50,7 @@ Khởi chạy server uvicorn (Host `0.0.0.0` trên cổng `8080`):
 Mở terminal PowerShell thứ hai và chuyển vào thư mục ứng dụng Flutter:
 
 ```powershell
-cd C:\Project\Chatbot\NCKH\HealthApp\health_app
+cd C:\Project\Chatbot\apps\mobile
 ```
 
 Thêm đường dẫn ADB của LDPlayer vào biến môi trường PATH tạm thời và kiểm tra thiết bị:
@@ -93,7 +93,7 @@ Nếu bạn muốn bấm nút **"Tiếp tục với Google"** bằng tài khoả
 3. Tìm ứng dụng Android (`com.example.app`) -> Bấm **Add fingerprint (Thêm vân tay)**.
 4. Dán mã SHA-1 của máy bạn vào:
    `39:CB:76:D6:7F:72:9A:DE:47:42:33:D6:0F:19:C1:12:93:78:B5:AE`
-5. Tải file `google-services.json` mới về dán đè vào thư mục `HealthApp/health_app/android/app/google-services.json`.
+5. Tải file `google-services.json` mới về dán đè vào thư mục `apps/mobile/android/app/google-services.json`.
 
 > 💡 **Mẹo**: Nếu chưa thêm SHA-1, bạn có thể chọn **"Đăng nhập / Đăng ký bằng Email"** hoặc bấm **"🚀 Dùng thử ứng dụng (Tài khoản Demo)"** để vào app trải nghiệm ngay 100% tính năng.
 

@@ -6,8 +6,8 @@ import json
 import re
 from pathlib import Path
 
-input_path  = Path(__file__).parent / 'dinhduongvietnam.txt'
-output_path = Path(__file__).parent / 'vietnamese_foods_full.json'
+input_path  = Path(__file__).resolve().parent.parent / 'raw' / 'dinhduongvietnam.txt'
+output_path = Path(__file__).resolve().parent.parent / 'raw' / 'vietnamese_foods_full.json'
 
 # ── Bảng decode font TCVN3 (ABC) → Unicode ──────────────────────────────────
 # Các ký tự Latin bị dùng thay cho chữ Việt trong font cũ

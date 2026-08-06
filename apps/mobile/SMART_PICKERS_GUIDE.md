@@ -137,7 +137,7 @@ void _showAddExerciseSheet(BuildContext context) {
 ### 1. Start Backend Server:
 
 ```bash
-cd HealthApp/ai_backend
+cd apps/backend
 python -m uvicorn backend.main:app --reload --port 8000
 ```
 

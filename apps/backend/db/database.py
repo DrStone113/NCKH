@@ -53,6 +53,135 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             pass
 
 
+class ScopedSession:
+    """Session-shaped facade that runs each statement on its own connection.
+
+    A single :class:`AsyncSession` cannot serve overlapping awaits: asyncpg
+    raises ``another operation is in progress`` / ``this session is in
+    'prepared' state`` and the session stays permanently broken afterwards.
+
+    The chat stack has three sources of overlap that all shared one session:
+
+    * ``ChatGateway`` spawns a task per incoming message, so a second message
+      arriving mid-turn runs concurrently with the first.
+    * ``AgentOrchestrator`` schedules the rolling-summary update as a
+      background task that outlives the turn that started it.
+    * Server-side tools were bound to a process-wide session at startup while
+      the WebSocket used its own request-scoped one.
+
+    The visible damage was silent: ``_load_recent_turns`` failed, chat history
+    came back empty, and the model — no longer able to see what it had already
+    suggested — invented dish names instead of calling ``suggest_dish``.
+
+    This facade exposes only what the codebase actually uses (``execute``,
+    ``commit``, ``rollback``), so existing call sites are untouched. Each
+    ``execute`` acquires a fresh session, commits, and releases it, which means
+    concurrent callers can never collide. The trade-off is that a caller cannot
+    span several statements in one transaction; nothing in the chat path does,
+    and the multi-statement writer (``KnowledgeIngestService``) is handed a real
+    session instead.
+    """
+
+    def __init__(self, session_factory=AsyncSessionLocal) -> None:
+        self._session_factory = session_factory
+
+    async def execute(self, statement, params=None):
+        async with self._session_factory() as session:
+            result = (
+                await session.execute(statement, params)
+                if params is not None
+                else await session.execute(statement)
+            )
+            # Detach the rows before the connection goes back to the pool;
+            # a closed session cannot stream a server-side cursor.
+            try:
+                buffered = _BufferedResult(result.fetchall(), result.rowcount)
+            except Exception:
+                # Non-row-returning statement (INSERT/UPDATE/DDL).
+                buffered = _BufferedResult([], getattr(result, "rowcount", -1))
+            await session.commit()
+            return buffered
+
+    async def commit(self) -> None:
+        """No-op: :meth:`execute` already commits per statement."""
+
+    async def rollback(self) -> None:
+        """No-op: each statement runs in its own committed transaction."""
+
+    async def close(self) -> None:
+        """No-op: sessions are created and released per statement."""
+
+
+class _BufferedResult:
+    """The subset of SQLAlchemy's ``Result`` API the codebase relies on."""
+
+    __slots__ = ("_rows", "rowcount")
+
+    def __init__(self, rows, rowcount) -> None:
+        self._rows = list(rows)
+        self.rowcount = rowcount
+
+    def fetchall(self):
+        return list(self._rows)
+
+    def all(self):
+        return list(self._rows)
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+    def first(self):
+        return self._rows[0] if self._rows else None
+
+    def scalar(self):
+        row = self.first()
+        return row[0] if row is not None else None
+
+    def scalar_one_or_none(self):
+        return self.scalar()
+
+    def scalars(self):
+        return _ScalarResult([row[0] for row in self._rows if row is not None])
+
+    def mappings(self):
+        return _MappingResult([row._mapping for row in self._rows])
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+class _ScalarResult:
+    __slots__ = ("_values",)
+
+    def __init__(self, values) -> None:
+        self._values = values
+
+    def all(self):
+        return list(self._values)
+
+    def first(self):
+        return self._values[0] if self._values else None
+
+    def __iter__(self):
+        return iter(self._values)
+
+
+class _MappingResult:
+    __slots__ = ("_rows",)
+
+    def __init__(self, rows) -> None:
+        self._rows = rows
+
+    def all(self):
+        return list(self._rows)
+
+    def first(self):
+        return self._rows[0] if self._rows else None
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
 async def _ensure_migrations_table(conn: AsyncConnection) -> None:
     """Tạo bảng `schema_migrations` nếu chưa có để track các migration đã apply."""
     await conn.execute(

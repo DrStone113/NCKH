@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-from db.database import AsyncSessionLocal, apply_migrations
+from db.database import ScopedSession, apply_migrations
 from db.session_store import DbSessionStore
 from services.agent.llm_client import LLMClient
 from services.agent.memory_service import MemoryService
@@ -49,7 +49,12 @@ async def lifespan(app: FastAPI):
         logger.warning("DB connection unavailable (%s) - running in standalone mode.", e)
 
 
-    app.state.db_session = AsyncSessionLocal()
+    # Every DB consumer gets a facade that opens (and releases) its own session
+    # per statement. A single shared AsyncSession cannot survive the overlapping
+    # awaits this app produces — background memory updates, per-message chat
+    # tasks, and parallel tool dispatch — and once it breaks it stays broken,
+    # which silently emptied chat history. See db.database.ScopedSession.
+    app.state.db_session = ScopedSession()
     app.state.rag_service = RAGService()
     app.state.registry = ToolRegistry()
     register_server_tools(app.state.registry, app.state.rag_service, app.state.db_session)
@@ -104,11 +109,10 @@ async def lifespan(app: FastAPI):
     
     asyncio.create_task(_async_warmup())
 
-    try:
-        yield
-    finally:
-        await app.state.db_session.close()
-    # Shutdown
+    yield
+
+    # Shutdown — ScopedSession owns no long-lived connection, so there is
+    # nothing to close here; the engine's pool is torn down by SQLAlchemy.
     logger.info("Shutting down AI Health Chatbot - cleanup complete")
 
 

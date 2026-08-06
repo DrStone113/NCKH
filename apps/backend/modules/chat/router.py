@@ -2,7 +2,7 @@ from fastapi import APIRouter, WebSocket, Depends, Query
 from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from db.database import get_db
+from db.database import ScopedSession, get_db
 
 from services.agent.chat_gateway import ChatGateway
 from services.agent.orchestrator import AgentOrchestrator
@@ -107,7 +107,7 @@ async def delete_chat_session(
 
 
 @router.websocket("/chat/stream")
-async def chat_stream(websocket: WebSocket, db_session: AsyncSession = Depends(get_db)):
+async def chat_stream(websocket: WebSocket):
     await websocket.accept()
     import uuid
     session_id = websocket.query_params.get("session_id")
@@ -118,8 +118,15 @@ async def chat_stream(websocket: WebSocket, db_session: AsyncSession = Depends(g
             session_id = str(uuid.uuid4())
     except ValueError:
         session_id = str(uuid.uuid4())
-    
+
+    # A WebSocket outlives many overlapping DB operations: one task per incoming
+    # message plus background memory updates. Holding a single request-scoped
+    # AsyncSession for all of them corrupts it on the first overlap (asyncpg:
+    # "another operation is in progress") and it never recovers, which wiped
+    # chat history mid-conversation. ScopedSession hands out a fresh session per
+    # statement instead.
     app = websocket.app
+    db_session = ScopedSession()
     memory = MemoryService(db_session, app.state.rag_service)
     session_store = DbSessionStore(db_session)
     dispatcher = ToolDispatcher(app.state.registry, db_session=db_session)

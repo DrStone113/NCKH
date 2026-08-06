@@ -29,6 +29,7 @@ import inspect
 import json
 import logging
 import time
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, Awaitable
 
@@ -38,6 +39,32 @@ from .llm_client import ToolCall
 from .tool_registry import ToolDescriptor, ToolRegistry
 
 logger = logging.getLogger(__name__)
+
+#: Tools whose results should be diversified across a chat session by feeding
+#: back recently returned ids. ``suggest_dish`` picks deterministically by
+#: ``(|total_calories - target|, id)``; because every dish is scaled to the
+#: target kcal, that distance is near-zero for *all* candidates, so the same
+#: dish would otherwise win on every turn. See design.md §9.4 / requirement
+#: 4.3, which already specifies ``recent_dish_ids`` for this purpose — the
+#: planner passed it, but plain chat never did.
+_RECENT_IDS_ARG = "recent_dish_ids"
+_RECENT_IDS_TOOLS = frozenset({"suggest_dish"})
+
+#: FIFO window size for chat-driven diversification.
+#:
+#: design.md §6 caps ``recent_dish_ids`` at 6 for the *planner* (a 7-day meal
+#: plan only needs to avoid repeats within a short stretch). In free-form chat
+#: a window of 6 makes the suggestion cycle repeat every 7 turns even though
+#: ~60 dishes qualify for a given meal type, so chat keeps a wider window.
+#: ``suggest_dish`` falls back to previously seen dishes when the window
+#: excludes every candidate, so a large window can never cause NO_DISH_FOUND.
+_RECENT_IDS_MAXLEN = 40
+
+#: Upper bound on how many sessions keep a diversity window. The per-request
+#: dispatcher in ``modules/chat/router.py`` is short-lived, but the one on
+#: ``app.state`` lives for the whole process, so cap the map to stop it from
+#: growing without bound if ``cleanup_session`` is never called for a session.
+_RECENT_IDS_MAX_SESSIONS = 512
 
 
 # ---------------------------------------------------------------------------- #
@@ -92,6 +119,8 @@ class ToolDispatcher:
         self.gateway = gateway
         self.db_session = db_session
         self._pending_calls: dict[str, tuple[str, asyncio.Future[ToolResult]]] = {}
+        # session_id -> tool_name -> FIFO of ids already returned this session.
+        self._recent_ids: dict[str, dict[str, deque[int]]] = {}
 
     # ----------------------------------------------------------------- dispatch
     async def dispatch(
@@ -157,9 +186,11 @@ class ToolDispatcher:
 
             result: ToolResult
             if descriptor.side == "server":
+                self._apply_recent_ids(session_id, call)
                 result = await self._dispatch_server(
                     descriptor, call, timeout_s, session_id
                 )
+                self._remember_result_id(session_id, call, result)
             elif descriptor.side == "client":
                 result = await self._dispatch_client(
                     descriptor, call, timeout_s, session_id
@@ -245,6 +276,67 @@ class ToolDispatcher:
             self._pending_calls.pop(call_id, None)
             if not future.done():
                 future.set_result(ToolResult(ok=False, error="DISCONNECTED"))
+        self._recent_ids.pop(session_id, None)
+
+    # ------------------------------------------------------- diversity helpers
+    def _apply_recent_ids(self, session_id: str, call: ToolCall) -> None:
+        """Inject this session's recently returned ids into ``call.arguments``.
+
+        Without this, ``suggest_dish`` returns the same dish on every turn of a
+        conversation: it ranks candidates by ``|total_calories - target_kcal|``,
+        but every dish is scaled to hit the target, so that distance is
+        effectively zero for all of them and the ``id`` tiebreak always picks
+        the same winner.
+
+        An explicit value supplied by the LLM is never overwritten.
+        """
+        if call.name not in _RECENT_IDS_TOOLS:
+            return
+        if call.arguments.get(_RECENT_IDS_ARG):
+            # Caller (e.g. the planner) is managing the window itself.
+            return
+        seen = self._recent_ids.get(session_id, {}).get(call.name)
+        if not seen:
+            return
+        # ``ToolCall.arguments`` is a plain dict owned by this call; mutating it
+        # here keeps the tool signature untouched and preserves idempotency of
+        # ``suggest_dish`` itself (same arguments still yield the same dish).
+        call.arguments[_RECENT_IDS_ARG] = list(seen)
+
+    def _remember_result_id(
+        self, session_id: str, call: ToolCall, result: ToolResult
+    ) -> None:
+        """Record the id this tool just returned so the next turn can skip it."""
+        if call.name not in _RECENT_IDS_TOOLS or not result.ok:
+            return
+        data = result.data
+        if not isinstance(data, dict):
+            return
+        raw_id = data.get("id")
+        try:
+            item_id = int(raw_id)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return
+        window = self._recent_ids.setdefault(session_id, {}).setdefault(
+            call.name, deque(maxlen=_RECENT_IDS_MAXLEN)
+        )
+        if item_id in window:
+            # Keep FIFO order meaningful: re-appending would evict a genuinely
+            # older entry and let the duplicate linger.
+            return
+        window.append(item_id)
+        self._evict_stale_sessions(session_id)
+
+    def _evict_stale_sessions(self, keep_session_id: str) -> None:
+        """Drop the oldest diversity windows once the map grows too large."""
+        overflow = len(self._recent_ids) - _RECENT_IDS_MAX_SESSIONS
+        if overflow <= 0:
+            return
+        # ``dict`` preserves insertion order, so the head holds the least
+        # recently created sessions.
+        for stale_id in list(self._recent_ids)[:overflow]:
+            if stale_id != keep_session_id:
+                self._recent_ids.pop(stale_id, None)
 
     async def _insert_invocation(
         self,

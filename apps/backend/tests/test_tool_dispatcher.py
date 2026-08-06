@@ -158,3 +158,111 @@ async def test_non_idempotent_tool_reuses_cached_result_for_same_request_id():
 
     assert first == ToolResult(ok=True, data={"saved": "a"})
     assert second == ToolResult(ok=True, data={"saved": "a"})
+
+
+# ---------------------------------------------------------------------------
+# Per-session diversification of suggest_dish
+#
+# ``suggest_dish`` ranks candidates by ``(|total_calories - target_kcal|, id)``.
+# Every dish is scaled to hit the target, so that distance is ~0 for all of
+# them and the id tiebreak would return the same dish on every turn. The
+# dispatcher feeds back the ids already returned in this session so plain chat
+# gets the variety that only the planner used to have.
+# ---------------------------------------------------------------------------
+
+
+def _dish_registry() -> ToolRegistry:
+    from services.agent.tools.dish import TOOL_DESCRIPTOR
+
+    return _registry_with(TOOL_DESCRIPTOR)
+
+
+def _dish_call(index: int, **overrides: Any) -> ToolCall:
+    args: dict[str, Any] = {"meal_type": "lunch", "target_kcal": 850}
+    args.update(overrides)
+    return ToolCall(id=f"dish-{index}", name="suggest_dish", arguments=args)
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_does_not_repeat_within_a_session():
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    names: list[str] = []
+    for i in range(10):
+        result = await dispatcher.dispatch("session-1", _dish_call(i), 5000)
+        assert result.ok, result.error
+        names.append(result.data["name"])
+
+    # Without the diversity window this would be the same dish 10 times.
+    assert len(set(names)) == len(names), f"repeated suggestions: {names}"
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_diversity_is_scoped_per_session():
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    first_a = await dispatcher.dispatch("session-a", _dish_call(0), 5000)
+    second_a = await dispatcher.dispatch("session-a", _dish_call(1), 5000)
+    first_b = await dispatcher.dispatch("session-b", _dish_call(2), 5000)
+
+    assert first_a.data["id"] != second_a.data["id"]
+    # A fresh conversation must not inherit another session's history.
+    assert first_b.data["id"] == first_a.data["id"]
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_keeps_caller_supplied_recent_ids():
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    baseline = await dispatcher.dispatch("session-1", _dish_call(0), 5000)
+    excluded = baseline.data["id"]
+
+    # The planner manages its own FIFO window; the dispatcher must not clobber
+    # an explicit value.
+    result = await dispatcher.dispatch(
+        "session-2", _dish_call(1, recent_dish_ids=[excluded]), 5000
+    )
+
+    assert result.ok, result.error
+    assert result.data["id"] != excluded
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_falls_back_instead_of_failing_when_exhausted():
+    """A saturated window must never turn into a spurious NO_DISH_FOUND."""
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    # "snack" is the smallest bucket in the catalog, so this loop exhausts
+    # every candidate several times over.
+    for i in range(40):
+        result = await dispatcher.dispatch(
+            "session-1", _dish_call(i, meal_type="snack", target_kcal=200), 5000
+        )
+        assert result.ok, f"call {i} failed with {result.error}"
+
+
+@pytest.mark.asyncio
+async def test_cleanup_session_clears_diversity_window():
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    first = await dispatcher.dispatch("session-1", _dish_call(0), 5000)
+    assert dispatcher._recent_ids
+
+    dispatcher.cleanup_session("session-1")
+    assert dispatcher._recent_ids == {}
+
+    # History is gone, so the ranking restarts from the best-fitting dish.
+    after_cleanup = await dispatcher.dispatch("session-1", _dish_call(1), 5000)
+    assert after_cleanup.data["id"] == first.data["id"]
+
+
+@pytest.mark.asyncio
+async def test_diversity_window_does_not_grow_unbounded():
+    from services.agent.tool_dispatcher import _RECENT_IDS_MAX_SESSIONS
+
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    for i in range(_RECENT_IDS_MAX_SESSIONS + 25):
+        await dispatcher.dispatch(f"session-{i}", _dish_call(i), 5000)
+
+    assert len(dispatcher._recent_ids) <= _RECENT_IDS_MAX_SESSIONS

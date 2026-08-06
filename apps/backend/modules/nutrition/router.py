@@ -5,12 +5,16 @@ Provides endpoints for Vietnamese food and dish data
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any
 import json
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nutrition", tags=["nutrition"])
 
 # Load data files
-DATA_DIR = Path(__file__).parent.parent / "data"
+# router.py -> nutrition/ -> modules/ -> backend/
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 DISHES_FILE = DATA_DIR / "vietnamese_dishes.json"
 FOODS_FILE = DATA_DIR / "vietnamese_foods.json"
 
@@ -24,14 +28,14 @@ def load_dishes() -> List[Dict[str, Any]]:
     global _dishes_cache
     if _dishes_cache:
         return _dishes_cache
-    
+
     try:
         with open(DISHES_FILE, 'r', encoding='utf-8') as f:
             _dishes_cache = json.load(f)
-        print(f"✅ Loaded {len(_dishes_cache)} Vietnamese dishes")
+        logger.info("Loaded %d Vietnamese dishes", len(_dishes_cache))
         return _dishes_cache
     except Exception as e:
-        print(f"❌ Error loading dishes: {e}")
+        logger.error("Error loading dishes from %s: %s", DISHES_FILE, e)
         return []
 
 
@@ -40,14 +44,14 @@ def load_foods() -> List[Dict[str, Any]]:
     global _foods_cache
     if _foods_cache:
         return _foods_cache
-    
+
     try:
         with open(FOODS_FILE, 'r', encoding='utf-8') as f:
             _foods_cache = json.load(f)
-        print(f"✅ Loaded {len(_foods_cache)} Vietnamese foods")
+        logger.info("Loaded %d Vietnamese foods", len(_foods_cache))
         return _foods_cache
     except Exception as e:
-        print(f"❌ Error loading foods: {e}")
+        logger.error("Error loading foods from %s: %s", FOODS_FILE, e)
         return []
 
 

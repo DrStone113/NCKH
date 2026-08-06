@@ -1,4 +1,17 @@
 ## [2026-08-06]
+- **Changed:** **Tái cấu trúc cây thư mục theo chuẩn monorepo.** Phẳng hoá `Chatbot/NCKH/` → `Chatbot/` (bỏ 1 tầng lồng thừa); `HealthApp/health_app/` → `apps/mobile/`; `HealthApp/ai_backend/backend/` → `apps/backend/` (bỏ 2 tầng lồng thừa). Thư mục `HealthApp/` bị loại bỏ hoàn toàn.
+- **Changed:** `Dataset/` tách thành `data/raw/` (CSV, JSON, PDF nguồn) và `data/scripts/` (script parse/convert). Đổi tên `Cook book Vietnamese of Twin cooker_final.pdf` → `cookbook_vietnamese_twin_cooker.pdf` (bỏ khoảng trắng trong tên file).
+- **Changed:** Sắp xếp lại `docs/` thành `architecture/`, `features/`, `guides/`, `archive/`, `thesis/`. Gộp tài liệu backend rải rác (`QUICK_START.md`, `GPU_SETUP.md`, `PGVECTOR_GUIDE.md`, `DOCKER_README.md`, `setup_firebase_guide.md`) vào `docs/guides/`; chuyển nhật ký task đã hoàn thành vào `docs/archive/`.
+- **Fixed:** Xoá `HealthApp/.gitignore` — đây là `.gitignore` của **repo Flutter SDK** bị đặt nhầm, không liên quan tới ứng dụng. Xoá `HealthApp/.gitattributes` và `HealthApp/.vscode/settings.json` trùng lặp với bản ở gốc.
+- **Fixed:** Gộp 3 bản `pyrightconfig.json` trùng lặp (gốc workspace, `NCKH/`, `backend/`) còn 1 bản ở gốc trỏ đúng `apps/backend`. Cập nhật `.vscode/settings.json` với interpreter, pytest args và `dart.flutterSdkPath`.
+- **Fixed:** Gộp 2 bản `AGENTS.md` trùng lặp, giữ bản superset (có mục "ZERO-REPEAT DEFECT MANDATE"), lưu UTF-8 không BOM.
+- **Security:** Gỡ `firebase_options.dart` (chứa API keys) khỏi git index bằng `git rm --cached` — file vẫn còn trên đĩa và đã có rule trong `.gitignore`. Chỉ `firebase_options.dart.example` được track.
+- **Fixed:** Cập nhật đường dẫn theo cấu trúc mới trong `docker-compose.yml`, `start-all.bat`, và các script Python (`convert_vn_foods.py`, `fix_uw.py`, `parse_pdf_full.py`, `parse_dinhduong.py`, `convert_to_dart.py`) — thay đường dẫn tương đối dễ vỡ bằng `Path(__file__).resolve().parents[n]`.
+- **Fixed:** Xoá `analysis_options.yaml` ở gốc (loại trừ `flutter/**` không còn tồn tại); `apps/mobile` đã có bản riêng. Bỏ thuộc tính `version` lỗi thời trong `docker-compose.yml`.
+- **Changed:** Thêm `/rules/` và `/.continue/` (config riêng của từng AI IDE) vào `.gitignore`.
+- **Verified:** `flutter analyze` 22 info / 0 error, `flutter test` 23/23 passed, `flutter build web` thành công, `pytest` backend **399/399 passed**, `docker compose config` hợp lệ.
+
+## [2026-08-06] — Môi trường Flutter
 - **Changed:** Flutter SDK 3.44.8 (Dart 3.12.2) được cài đặt ngoài workspace tại `C:\flutter` và thêm `C:\flutter\bin` vào biến môi trường `PATH` hệ thống. Toàn bộ tài liệu chuyển từ đường dẫn tương đối (`..\..\flutter\bin\flutter.bat`, `../../../flutter/bin/...`) sang gọi lệnh `flutter` / `dart` trực tiếp.
 - **Changed:** Cập nhật đường dẫn thư mục dự án trong `docs/RUN_GUIDE_LDPLAYER.md` và `docs/05_run_guide.md` từ `C:\Users\ADMIN\Downloads\Project\Chatbot-NCKH\NCKH\NCKH` sang `C:\Project\Chatbot`; thay các link `file:///` tuyệt đối bằng đường dẫn tương đối trong `docs/04_troubleshooting.md`.
 - **Added:** Bổ sung mục "Môi Trường Đã Xác Minh" và "Lệnh Kiểm Thử" vào `docs/05_run_guide.md`, ghi nhận kết quả: `flutter pub get` OK, `flutter analyze` 22 info / 0 error / 0 warning, `flutter test` 23/23 passed, `flutter build web --release --no-tree-shake-icons` thành công.

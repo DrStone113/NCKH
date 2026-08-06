@@ -176,7 +176,7 @@ class _AnimatedCircularProgressState extends State<AnimatedCircularProgress>
                   value: _animation.value,
                   strokeWidth: widget.strokeWidth,
                   backgroundColor: widget.backgroundColor ??
-                      Colors.grey.withOpacity(0.2),
+                      Colors.grey.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     widget.color ?? Theme.of(context).primaryColor,
                   ),
@@ -269,7 +269,7 @@ class _AnimatedProgressBarState extends State<AnimatedProgressBar>
         return Container(
           height: widget.height,
           decoration: BoxDecoration(
-            color: widget.backgroundColor ?? Colors.grey.withOpacity(0.2),
+            color: widget.backgroundColor ?? Colors.grey.withValues(alpha: 0.2),
             borderRadius: widget.borderRadius ?? BorderRadius.circular(100),
           ),
           child: Align(
@@ -284,7 +284,7 @@ class _AnimatedProgressBarState extends State<AnimatedProgressBar>
                         colors: [
                           widget.color ?? Theme.of(context).primaryColor,
                           (widget.color ?? Theme.of(context).primaryColor)
-                              .withOpacity(0.7),
+                              .withValues(alpha: 0.7),
                         ],
                       ),
                   borderRadius: widget.borderRadius ?? BorderRadius.circular(100),

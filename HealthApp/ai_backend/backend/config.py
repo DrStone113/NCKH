@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     # ``keep_raw_turns`` turn gần nhất ở dạng raw.
     summary_threshold: int = 20
     keep_raw_turns: int = 10
-    max_agent_steps: int = 6
-    tool_timeout_ms: int = 15000
+    max_agent_steps: int = 3
+    tool_timeout_ms: int = 5000
 
     # Always load the project-level .env regardless of current working directory.
     model_config = SettingsConfigDict(

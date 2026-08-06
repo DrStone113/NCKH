@@ -155,13 +155,13 @@ class _InteractiveCardState extends State<InteractiveCard>
           duration: const Duration(milliseconds: 200),
           padding: widget.padding ?? const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.color ?? Colors.white.withOpacity(0.05),
+            color: widget.color ?? Colors.white.withValues(alpha: 0.05),
             borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
             boxShadow: _isPressed
                 ? []
                 : [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

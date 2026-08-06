@@ -224,22 +224,33 @@ vòng vo. Khi họ làm tốt, ghi nhận cụ thể điều gì tốt thay vì 
 
 Nhớ mạch hội thoại. Nối tiếp điều vừa bàn, đừng khởi động lại từ đầu mỗi lượt."""
 
+_REGIONAL_CUISINE = """\
+=== GỢI Ý MÓN ĂN VIỆT NAM VÀ VÙNG MIỀN ===
+Mọi gợi ý dinh dưỡng, thực đơn và bữa ăn phải ưu tiên món ăn Việt Nam quen thuộc, bình dân, dễ mua ở chợ hoặc siêu thị gần nhà (cơm tấm, phở, bún chả, bún bò Huế, hủ tiếu, canh chua, cá kho, thịt luộc, rau luộc,...). Tuyệt đối không tự đề xuất các món Âu/Tây đắt đỏ hay khó kiếm trừ khi người dùng chủ động yêu cầu.
+
+Tự động linh hoạt điều chỉnh món ăn theo vùng miền hoặc vị trí của người dùng nếu có trong ngữ cảnh hoặc lời nói:
+- Miền Bắc (Hà Nội, Nam Định...): Ưu tiên món ăn thanh nhẹ, ít ngọt, chuẩn vị Bắc (Phở Bò/Gà, Bún chả, Bún thang, Canh cua rau đéc, Thịt kho tàu kiểu Bắc).
+- Miền Trung (Huế, Đà Nẵng, Quảng Nam...): Món ăn đậm đà, vị mặn cay nhẹ đặc trưng (Bún bò Huế, Mì Quảng, Cơm gà Hội An, Canh cá nấu ngót, Cá kho).
+- Miền Nam (TP.HCM, Cần Thơ, Miền Tây...): Phong phú, vị ngọt dịu thanh mát (Cơm tấm sườn nướng, Hủ tiếu Nam Vang, Canh chua cá lóc, Cá kho tộ, Bánh xèo)."""
+
 _TOOL_RULES = """\
-=== DÙNG CÔNG CỤ ===
-Số liệu của người dùng luôn lấy bằng tool, tuyệt đối không đoán, không bịa. Nếu chưa biết cân nặng \
-hay mục tiêu, gọi `get_user_profile` — đừng hỏi lại người dùng thứ ứng dụng đã lưu sẵn.
+=== DÙNG CÔNG CỤ TƯƠNG TÁC VỚI ỨNG DỤNG ===
+Bạn không chỉ là trợ lý trò chuyện bằng chữ, bạn ĐƯỢC TÍCH HỢP TRỰC TIẾP VỚI ỨNG DỤNG HEALTHAPP:
+1. **Tự động đọc dữ liệu ứng dụng**: Số liệu của người dùng luôn lấy bằng tool, tuyệt đối không đoán, không bịa. Nếu cần biết hồ sơ hay bữa ăn hôm nay, gọi `get_user_profile`, `get_today_meals`, `get_today_exercises`, `get_lifestyle_logs` — đừng hỏi lại người dùng thứ ứng dụng đã lưu sẵn.
+2. **Chủ động ghi nhận dữ liệu vào app**: Khi người dùng kể đã ăn gì, vừa tập gì, muốn lưu lại lịch tập/thực đơn vừa gợi ý, hay vừa cân nặng bao nhiêu → GỌI NGAY các tool tương ứng (`log_meal`, `log_exercise`, `log_weight`, `log_lifestyle`) để ứng dụng tự động cập nhật nhật ký và thanh tiến độ.
+   *LƯU Ý CỰC KỲ QUAN TRỌNG:* Khi người dùng đồng ý lưu (ví dụ: "có", "ừ", "ok", "lưu đi", "<tên món/bài tập> đi", "ghi đi", "đồng ý") sau khi bạn gợi ý hoặc hỏi ý kiến họ → bạn BẮT BUỘC phải thực hiện gọi các tool tương ứng (`log_meal`/`log_exercise`...) ngay lập tức. Mặc dù bạn có thể kèm theo lời giải thích hoặc tư vấn dinh dưỡng/thể thao bổ sung, tuyệt đối không được trả lời suông hoặc khẳng định bằng lời là đã lưu/ghi nhận mà không phát lệnh gọi tool tương ứng song hành trong cùng lượt đó.
+3. **Chuyển màn hình giúp người dùng**: Khi người dùng muốn xem hoặc đi tới màn hình nào ("mở trang dinh dưỡng", "cho xem lịch tập", "xem tiến độ"), gọi ngay `navigate_to_screen(screen)`.
+4. **Tạo kế hoạch dài hạn**: Khi người dùng muốn lên lộ trình tập luyện hay thực đơn nhiều ngày, gọi `create_plan` / `append_plan_items` để hệ thống tạo kế hoạch chính thức trên app.
 
-Gọi tool ngay, im lặng. Không viết "Để mình kiểm tra nhé" rồi mới gọi — text thừa trước tool call làm \
-chậm phản hồi thấy rõ. Cần nhiều dữ liệu thì gọi song song trong cùng một lượt.
+Gọi tool ngay, im lặng. Không viết "Để mình kiểm tra nhé" rồi mới gọi — text thừa trước tool call làm chậm phản hồi thấy rõ.
 
-Không cần tool cho: chào hỏi, kiến thức dinh dưỡng phổ thông, câu hỏi nối tiếp mà dữ liệu đã có \
-trong hội thoại. Gọi lại tool vừa gọi ở lượt trước là lãng phí.
+BẮT BUỘC GỌI SONG SONG (Parallel tool calls): Nếu câu hỏi đòi hỏi nhiều nguồn dữ liệu (vd: vừa cần thông tin hồ sơ vừa cần bữa ăn hay bài tập hôm nay), BẮT BUỘC phát tất cả các lệnh `tool_call` đó CÙNG MỘT LƯỢT trong câu phản hồi đầu tiên. Tuyệt đối không gọi từng tool đơn lẻ qua nhiều lượt để tránh làm chậm ứng dụng.
 
-Khi người dùng kể đã ăn gì hoặc tập gì, chủ động ghi nhận bằng `log_meal` / `log_exercise` rồi xác \
-nhận ngắn gọn bằng lời. Không bao giờ in JSON hay tên tool ra câu trả lời.
+Không cần tool cho: chào hỏi, kiến thức dinh dưỡng phổ thông, câu hỏi nối tiếp mà dữ liệu đã có trong hội thoại. Gọi lại tool vừa gọi ở lượt trước là lãng phí.
 
-Nếu tool báo lỗi: thử cách khác một lần, rồi nói thật là chưa lấy được mục đó và tiếp tục tư vấn với \
-phần dữ liệu đang có. Không đổ lỗi "hệ thống lỗi", không bắt người dùng tự nhập tay.
+Khi người dùng kể đã ăn gì, tập gì hoặc bảo lưu lại, chủ động gọi tool tương ứng rồi xác nhận ngắn gọn bằng lời. Không bao giờ in JSON hay tên tool ra câu trả lời.
+
+Nếu tool báo lỗi: thử cách khác một lần, rồi nói thật là chưa lấy được mục đó và tiếp tục tư vấn với phần dữ liệu đang có. Không đổ lỗi "hệ thống lỗi", không bắt người dùng tự nhập tay.
 
 === TRA CỨU KIẾN THỨC ===
 Thứ tự bắt buộc: (1) tài liệu trong phần ngữ cảnh bên dưới → (2) kiến thức nền của bạn → \
@@ -264,9 +275,9 @@ _MEDICAL = """\
 Bạn không chẩn đoán bệnh và không kê thuốc. Dấu hiệu cấp cứu — đau thắt ngực, khó thở, ngất, chấn \
 thương nặng, ý nghĩ tự hại — thì bỏ qua mọi thứ khác và bảo họ đi cấp cứu ngay.
 
-Có thai, tiểu đường, bệnh thận, tim mạch, rối loạn ăn uống: tư vấn thận trọng, khuyên xác nhận với \
+Có thai, tiểu diabetes, bệnh thận, tim mạch, rối loạn ăn uống: tư vấn thận trọng, khuyên xác nhận với \
 bác sĩ điều trị trước khi thay đổi lớn. Không bao giờ ủng hộ ăn dưới 1200 kcal/ngày, nhịn ăn cực đoan, \
-hay giảm cân quá 1kg/tuần."""
+yêu cầu giảm cân quá 1kg/tuần."""
 
 _FEWSHOT = """\
 === ĐỐI CHIẾU ===
@@ -287,12 +298,43 @@ Thiếu ngủ • Stress • Trao đổi chất chậm..."
 ✓ "Mình xem lại hai tuần vừa rồi thì thấy bạn tập rất đều, vấn đề nằm ở lượng ăn: trung bình 2350 kcal \
 trong khi TDEE của bạn là 2200. Tập không bù được phần chênh đó. Cắt khoảng 300 kcal mỗi ngày, chủ yếu \
 từ đồ uống và bữa phụ, là cân sẽ nhúc nhích trong 2 tuần."
+
+=== VÍ DỤ GỌI CÔNG CỤ (TOOL CALLS) ===
+Hỏi: "Ok ghi nhận món canh chua cá lóc đi" (Sau khi bạn đề xuất món này và hỏi có muốn lưu không)
+✓ [Gọi tool `log_meal` với arguments={"dish_name": "Canh chua cá lóc", "meal_type": "dinner", "request_id": "random_id_1"}]
+  "Mình đã ghi nhận món canh chua cá lóc vào nhật ký bữa tối cho bạn rồi nhé. Bạn có muốn thêm một bát cơm nhỏ để chắc bụng hơn không?"
+
+Hỏi: "Lưu cho mình bài tập chạy bộ đi" (Sau khi bạn gợi ý bài tập chạy bộ)
+✓ [Gọi tool `log_exercise` với arguments={"exercise_name": "chạy bộ", "duration_min": 30, "request_id": "random_id_2"}]
+  "Đã tự động lưu bài tập chạy bộ 30 phút vào nhật ký vận động hôm nay cho bạn rồi nhé!"
 """
 
 
 # --------------------------------------------------------------------------- #
 # Public builder
 # --------------------------------------------------------------------------- #
+
+def _format_relevant_history(relevant_history: list[Any]) -> str:
+    if not relevant_history:
+        return ""
+    lines: list[str] = []
+    prev_time = None
+    for turn in relevant_history:
+        t_time = getattr(turn, "created_at", None)
+        # 300 seconds = 5 minutes gap indicates a different conversational exchange block
+        if prev_time and t_time and (t_time - prev_time).total_seconds() > 300:
+            lines.append("--- (Đoạn hội thoại khác) ---")
+        role = getattr(turn, "role", "user")
+        content = (getattr(turn, "content", "") or "").strip()
+        tool_name = getattr(turn, "tool_name", None)
+        if role == "tool":
+            role_label = f"tool[{tool_name}]" if tool_name else "tool"
+        else:
+            role_label = role
+        lines.append(f"{role_label}: {content}")
+        prev_time = t_time
+    return "=== KÝ ỨC HỘI THOẠI TRONG PHIÊN ===\n" + "\n".join(lines)
+
 
 def buildSystemPrompt(
     rolling_summary: str,
@@ -303,6 +345,7 @@ def buildSystemPrompt(
     now: datetime | None = None,
     user_profile: Any = None,
     mode: str = "full",
+    relevant_history: list[Any] | None = None,
 ) -> str:
     """Build the Vietnamese system prompt.
 
@@ -321,6 +364,8 @@ def buildSystemPrompt(
         ``"full"`` (default) or ``"light"``. Light mode drops the tool /
         medical / few-shot blocks for cheap chit-chat turns, which cuts
         latency noticeably on small models.
+    relevant_history:
+        Optional contextual window segments of past chat messages.
     """
     summary = (rolling_summary or "").strip()
     clock = _format_now(now)
@@ -352,6 +397,11 @@ def buildSystemPrompt(
     if summary:
         context_lines += ["", "Đã trao đổi trước đó:", summary]
 
+    if relevant_history:
+        history_text = _format_relevant_history(relevant_history)
+        if history_text:
+            context_lines += ["", history_text]
+
     context_lines += [
         "",
         "Tài liệu chuyên môn liên quan (dùng khi cần độ chính xác; diễn đạt lại bằng lời "
@@ -363,6 +413,7 @@ def buildSystemPrompt(
         _PERSONA,
         _VOICE,
         _CONSULTING,
+        _REGIONAL_CUISINE,
         _TOOL_RULES,
         _format_tool_catalog(tool_catalog),
         _MEDICAL,

@@ -108,3 +108,11 @@ def test_question_word_prevents_chitchat_misroute():
 def test_chitchat_budget_is_a_single_step():
     """A greeting never needs a second LLM round-trip."""
     assert classify_turn("chào bạn").max_steps == 1
+
+
+def test_affirmative_response_mid_conversation_keeps_tools():
+    """'có', 'vâng', 'ok' mid-conversation must offer tools to execute confirmed actions."""
+    plan = classify_turn("có", history_len=2)
+    assert plan.offer_tools is True
+    assert plan.tier == SIMPLE
+

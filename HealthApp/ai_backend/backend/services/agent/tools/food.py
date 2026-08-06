@@ -326,7 +326,7 @@ def _search_foods(query: str, top_k: int) -> list[dict[str, Any]]:
 
 
 async def _query_rag(
-    rag_service: Any, query: str, top_k: int
+    rag_service: Any, query: str, top_k: int, db: Any = None
 ) -> list[Any]:
     """Invoke the duck-typed ``rag_service``.
 
@@ -341,10 +341,12 @@ async def _query_rag(
     backend never breaks the chat turn.
     """
     method = None
+    matched_attr = None
     for attr in ("queryRag", "query"):
         candidate = getattr(rag_service, attr, None)
         if callable(candidate):
             method = candidate
+            matched_attr = attr
             break
     if method is None:
         logger.warning(
@@ -353,7 +355,10 @@ async def _query_rag(
         return []
 
     try:
-        result = await method(query, top_k)
+        if matched_attr == "query" and db is not None:
+            result = await method(query, top_k, db=db)
+        else:
+            result = await method(query, top_k)
     except Exception as exc:  # pragma: no cover - exercised in tests
         logger.warning("search_food_nutrition: RAG lookup failed: %s", exc)
         return []
@@ -408,6 +413,7 @@ async def search_food_nutrition(
     *,
     rag_service: Any = None,
     top_k: int = _DEFAULT_TOP_K,
+    db: Any = None,
 ) -> list[dict[str, Any]]:
     """Search Vietnamese foods + RAG knowledge for ``query``.
 
@@ -424,6 +430,8 @@ async def search_food_nutrition(
     top_k:
         Per-source cap. The returned list contains ``≤ top_k`` foods entries
         followed by ``≤ top_k`` RAG entries.
+    db:
+        Optional database session context passed to the RAG query.
 
     Returns
     -------
@@ -447,7 +455,7 @@ async def search_food_nutrition(
 
     rag_block: list[dict[str, Any]] = []
     if rag_service is not None:
-        chunks = await _query_rag(rag_service, query, top_k)
+        chunks = await _query_rag(rag_service, query, top_k, db=db)
         for chunk in chunks:
             payload = _chunk_payload(chunk)
             if payload is not None:

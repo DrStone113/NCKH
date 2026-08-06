@@ -134,7 +134,7 @@ class HealthProvider with ChangeNotifier {
             final date = DateTime.parse(dateStr);
             return date.isAfter(startOfDay);
           })
-          .fold(0.0, (sum, doc) => sum + ((doc.data() as Map<String, dynamic>)['amount'] ?? 0).toDouble());
+          .fold(0.0, (acc, doc) => acc + ((doc.data() as Map<String, dynamic>)['amount'] ?? 0).toDouble());
       
       debugPrint('✅ Loaded water intake: ${_todayWaterIntake}ml from Firestore');
       notifyListeners();

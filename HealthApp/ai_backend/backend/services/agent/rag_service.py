@@ -30,6 +30,7 @@ before passing a populated descriptor to
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -128,10 +129,16 @@ class RAGService:
     def _get_model(self) -> Any:
         """Load the embedding model on first call. Idempotent."""
         if self._model is None:
+            import os
+            import torch
+            num_threads = max(1, os.cpu_count() or 4)
+            with contextlib.suppress(Exception):
+                torch.set_num_threads(num_threads)
             from sentence_transformers import SentenceTransformer
             logger.info(
-                "Init local embedding model %s",
+                "Init local embedding model %s (threads=%d)",
                 settings.embedding_model,
+                num_threads,
             )
             self._model = SentenceTransformer(settings.embedding_model)
         return self._model

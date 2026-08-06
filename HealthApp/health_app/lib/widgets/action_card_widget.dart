@@ -25,10 +25,10 @@ class ActionCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primaryColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.08),
+            color: primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -41,7 +41,7 @@ class ActionCardWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.06),
+              color: primaryColor.withValues(alpha: 0.06),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(14),
                 topRight: Radius.circular(14),
@@ -53,11 +53,11 @@ class ActionCardWidget extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.15),
+                    color: primaryColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    isExercise ? Icons.fitness_center : Icons.restaurant_menu,
+                    isExercise ? Icons.fitness_center : Icons.restaurant,
                     color: primaryColor,
                     size: 20,
                   ),
@@ -99,18 +99,23 @@ class ActionCardWidget extends StatelessWidget {
           ),
 
           // Divider
-          Divider(height: 1, color: primaryColor.withOpacity(0.1)),
+          Divider(height: 1, color: primaryColor.withValues(alpha: 0.1)),
 
           // Buttons
           Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
               children: [
-                Expanded(
-                  child: _buildSaveButton(context, primaryColor),
-                ),
-                const SizedBox(width: 8),
-                _buildDetailButton(context, primaryColor),
+                if (onSaveToJournal != null) ...[
+                  Expanded(
+                    child: _buildSaveButton(context, primaryColor),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildDetailButton(context, primaryColor),
+                ] else
+                  Expanded(
+                    child: _buildDetailButton(context, primaryColor),
+                  ),
               ],
             ),
           ),
@@ -163,9 +168,9 @@ class ActionCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: color.withOpacity(0.3)),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -184,7 +189,7 @@ class ActionCardWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF9C27B0).withOpacity(0.08),
+                    color: const Color(0xFF9C27B0).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -207,7 +212,7 @@ class ActionCardWidget extends StatelessWidget {
                 Icons.local_fire_department_outlined,
                 hasServing
                     ? '${_fmt((calories as num) * multiplier)} kcal'
-                    : '${_fmt(calories)} kcal/100g',
+                    : '${_fmt(calories)} kcal',
                 const Color(0xFFFF7043),
               ),
             if (protein != null)
@@ -252,7 +257,7 @@ class ActionCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -307,11 +312,25 @@ class ActionCardWidget extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
-        child: Icon(Icons.open_in_new_rounded, color: color, size: 18),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.open_in_new, color: color, size: 18),
+            const SizedBox(width: 4),
+            Text(
+              'Xem chi tiết',
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

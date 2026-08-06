@@ -16,8 +16,8 @@ class ExerciseProvider with ChangeNotifier {
 
   List<ExerciseModel> get todayExercises => _todayExercises;
   bool get isLoading => _isLoading;
-  double get totalCaloriesBurned => _todayExercises.fold(0, (sum, ex) => sum + ex.caloriesBurned);
-  int get totalDuration => _todayExercises.fold(0, (sum, ex) => sum + ex.duration);
+  double get totalCaloriesBurned => _todayExercises.fold(0, (acc, ex) => acc + ex.caloriesBurned);
+  int get totalDuration => _todayExercises.fold(0, (acc, ex) => acc + ex.duration);
 
   /// Load wger exercises khi khởi động app
   Future<void> initWgerExercises() async {

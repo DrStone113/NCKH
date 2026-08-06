@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/proactive_provider.dart';
 import '../providers/user_provider.dart';
-import '../theme/app_theme.dart';
+import '../providers/nutrition_provider.dart';
+import '../providers/exercise_provider.dart';
+import '../providers/health_provider.dart';
 
 class ProactiveCheckinCard extends StatelessWidget {
   final VoidCallback? onOpenChat;
@@ -15,15 +17,15 @@ class ProactiveCheckinCard extends StatelessWidget {
   IconData _getCategoryIcon(String category) {
     switch (category) {
       case 'hydration':
-        return Icons.water_drop_rounded;
+        return Icons.water_drop;
       case 'nutrition':
-        return Icons.restaurant_rounded;
+        return Icons.restaurant;
       case 'fitness':
-        return Icons.fitness_center_rounded;
+        return Icons.fitness_center;
       case 'mental':
-        return Icons.spa_rounded;
+        return Icons.spa;
       default:
-        return Icons.chat_bubble_outline_rounded;
+        return Icons.chat_bubble_outline;
     }
   }
 
@@ -66,9 +68,45 @@ class ProactiveCheckinCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ProactiveProvider>(
       builder: (context, provider, child) {
-        final nudge = provider.activeNudge;
-        if (nudge == null || provider.isDismissed) {
-          return const SizedBox.shrink();
+        var nudge = provider.activeNudge;
+        
+        // Fallback: nếu không có server nudge, tạo Nudge AI dựa trên dữ liệu sức khỏe thực tế hôm nay
+        if ((nudge == null || provider.isDismissed)) {
+          final nutrition = Provider.of<NutritionProvider>(context, listen: false);
+          final exercise = Provider.of<ExerciseProvider>(context, listen: false);
+          final health = Provider.of<HealthProvider>(context, listen: false);
+
+          if (health.todayWaterIntake < 1000) {
+            nudge = {
+              'category': 'hydration',
+              'title': '💡 AI Nudge: Nạp nước sinh hoạt',
+              'message': 'Hôm nay bạn mới nạp ${health.todayWaterIntake.toStringAsFixed(0)}ml nước. Cơ thể cần khoảng 2000ml để duy trì năng lượng và sự tập trung!',
+              'quick_options': [
+                {'id': 'water_500', 'label': '+ 500ml Nước', 'action_type': 'quick_log'},
+                {'id': 'open_chat', 'label': '💬 Hỏi Trợ lý AI', 'action_type': 'chat'},
+              ]
+            };
+          } else if (nutrition.todayMeals.isEmpty) {
+            nudge = {
+              'category': 'nutrition',
+              'title': '💡 AI Nudge: Nhật ký dinh dưỡng',
+              'message': 'Bạn chưa ghi nhận bữa ăn nào hôm nay. Kể cho AI trợ lý món bạn đã ăn để theo dõi calo chuẩn xác nhé!',
+              'quick_options': [
+                {'id': 'open_chat', 'label': '💬 Nhắn cho AI món đã ăn', 'action_type': 'chat'},
+              ]
+            };
+          } else if (exercise.todayExercises.isEmpty) {
+            nudge = {
+              'category': 'fitness',
+              'title': '💡 AI Nudge: Gợi ý vận động',
+              'message': 'Hôm nay bạn chưa có buổi tập nào. Hãy dành 15-20 phút vận động nhẹ nhàng để sảng khoái hơn!',
+              'quick_options': [
+                {'id': 'open_chat', 'label': '🏃 Nhờ AI gợi ý bài tập', 'action_type': 'chat'},
+              ]
+            };
+          } else {
+            return const SizedBox.shrink();
+          }
         }
 
         final category = (nudge['category'] ?? 'hydration').toString();
@@ -83,7 +121,7 @@ class ProactiveCheckinCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -99,7 +137,7 @@ class ProactiveCheckinCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -120,7 +158,7 @@ class ProactiveCheckinCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 20),
+                      icon: const Icon(Icons.close, color: Colors.white70, size: 20),
                       onPressed: () => provider.dismissCheckin(),
                     ),
                   ],
@@ -148,6 +186,33 @@ class ProactiveCheckinCard extends StatelessWidget {
 
                       return InkWell(
                         onTap: () async {
+                          if (actionType == 'quick_log' && optId == 'water_500') {
+                            final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+                            if (userId != null) {
+                              await Provider.of<HealthProvider>(context, listen: false).addWater(userId, 500);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Row(
+                                      children: [
+                                        Icon(Icons.water_drop, color: Colors.lightBlueAccent, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Đã cộng thêm 500ml nước uống!'),
+                                      ],
+                                    ),
+                                    backgroundColor: const Color(0xFF1E293B),
+                                    duration: const Duration(seconds: 3),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                            return;
+                          }
+
                           if (actionType == 'chat' && onOpenChat != null) {
                             onOpenChat!();
                             return;
@@ -155,7 +220,7 @@ class ProactiveCheckinCard extends StatelessWidget {
 
                           final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id ?? 'default_user';
                           final res = await provider.respondToCheckin(
-                            nudgeId: (nudge['id'] ?? '').toString(),
+                            nudgeId: (nudge?['id'] ?? '').toString(),
                             selectedOptionId: optId,
                             userId: userId,
                           );
@@ -189,11 +254,11 @@ class ProactiveCheckinCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),

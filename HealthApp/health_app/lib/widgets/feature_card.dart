@@ -33,8 +33,8 @@ class _FeatureCardState extends State<FeatureCard> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
         transform: Matrix4.identity()
-          ..translate(0.0, _isHovered ? -6.0 : 0.0)
-          ..scale(_isHovered ? 1.03 : 1.0),
+          ..translateByDouble(0.0, _isHovered ? -6.0 : 0.0, 0.0, 0.0)
+          ..scaleByDouble(_isHovered ? 1.03 : 1.0, _isHovered ? 1.03 : 1.0, 1.0, 1.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),

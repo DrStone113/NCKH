@@ -110,6 +110,13 @@ def _normalise(text: str) -> str:
     return cleaned.strip()
 
 
+_AFFIRMATIVE_RESPONSES: frozenset[str] = frozenset({
+    "có", "có chứ", "có nhé", "ừ", "ừm", "vâng", "dạ", "được", "được nhé",
+    "ok", "oke", "okay", "okie", "ghi đi", "ghi lại", "ghi nhé", "lưu lại", "lưu đi",
+    "đồng ý", "uh", "dạ có", "vâng ạ"
+})
+
+
 def classify_turn(user_text: str, *, history_len: int = 0) -> TurnPlan:
     """Classify ``user_text`` into a :class:`TurnPlan`.
 
@@ -122,6 +129,11 @@ def classify_turn(user_text: str, *, history_len: int = 0) -> TurnPlan:
 
     cleaned = _normalise(user_text)
     words = cleaned.split()
+
+    # Mid-conversation affirmative responses (e.g. "có", "vâng", "ok" after an AI question)
+    # MUST keep tools enabled so the model can execute the confirmed action.
+    if history_len > 0 and (cleaned in _AFFIRMATIVE_RESPONSES or (len(words) <= 3 and any(a in cleaned for a in _AFFIRMATIVE_RESPONSES))):
+        return TurnPlan(SIMPLE, False, True, "full", 4)
 
     # ---- tier 1: chitchat ------------------------------------------------- #
     if cleaned in _CHITCHAT_EXACT:

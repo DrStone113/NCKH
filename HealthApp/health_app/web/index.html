@@ -31,13 +31,28 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Health App v1.1.0</title>
+  <title>Health App v1.2.0</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://apis.google.com/js/api.js"></script>
   <script>
     gapi.load('client', () => {
       console.log('gapi.client loaded');
     });
+
+    // Unregister active service workers to solve aggressive caching issues
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister().then(function(success) {
+            if (success) {
+              console.log('Service Worker unregistered successfully.');
+              // Force page reload on first unregistration to pick up fresh server files
+              window.location.reload();
+            }
+          });
+        }
+      });
+    }
   </script>
 </head>
 <body>
@@ -49,6 +64,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js?v=1.1.0" async></script>
+  <script src="flutter_bootstrap.js?v=1.2.0" async></script>
 </body>
 </html>

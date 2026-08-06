@@ -66,8 +66,8 @@ class _BentoCardState extends State<BentoCard> with SingleTickerProviderStateMix
             boxShadow: [
               BoxShadow(
                 color: _isHovered 
-                    ? Colors.black.withOpacity(0.08) 
-                    : Colors.black.withOpacity(0.04), // Very subtle shadow
+                    ? Colors.black.withValues(alpha: 0.08) 
+                    : Colors.black.withValues(alpha: 0.04), // Very subtle shadow
                 blurRadius: _isHovered ? 24 : 16,
                 offset: Offset(0, _isHovered ? 12 : 8),
               ),

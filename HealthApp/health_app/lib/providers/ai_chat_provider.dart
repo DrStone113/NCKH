@@ -10,6 +10,7 @@ import '../models/exercise_model.dart';
 import '../models/meal_model.dart';
 import '../models/lifestyle_model.dart';
 import '../constants/ai_chatbot_config.dart';
+import '../services/backend_api_service.dart';
 import 'exercise_provider.dart';
 import 'nutrition_provider.dart';
 import 'lifestyle_provider.dart';
@@ -25,6 +26,7 @@ class AIChatProvider extends ChangeNotifier {
   Timer? _timeoutTimer;
   final _uuid = const Uuid();
   String? _sessionId;
+  final BackendApiService _backendApi = BackendApiService();
 
   // Lưu lại context của lần gửi cuối để retry
   String? _lastMessageText;
@@ -42,6 +44,9 @@ class AIChatProvider extends ChangeNotifier {
   LifestyleProvider? _lifestyleProvider;
   HealthProvider? _healthProvider;
 
+  /// Callback to navigate screens in Flutter UI
+  void Function(String screen)? onNavigateToScreen;
+
   List<AIChatMessage> get messages => List.unmodifiable(_messages);
   bool get isStreaming => _isStreaming;
   String? get errorMessage => _errorMessage;
@@ -55,10 +60,10 @@ class AIChatProvider extends ChangeNotifier {
     LifestyleProvider? lifestyleProvider,
     HealthProvider? healthProvider,
   }) {
-    _exerciseProvider = exerciseProvider;
-    _nutritionProvider = nutritionProvider;
-    _lifestyleProvider = lifestyleProvider;
-    _healthProvider = healthProvider;
+    if (exerciseProvider != null) _exerciseProvider = exerciseProvider;
+    if (nutritionProvider != null) _nutritionProvider = nutritionProvider;
+    if (lifestyleProvider != null) _lifestyleProvider = lifestyleProvider;
+    if (healthProvider != null) _healthProvider = healthProvider;
   }
 
   /// Khởi tạo với welcome message và tạo session ID mới
@@ -160,11 +165,14 @@ class AIChatProvider extends ChangeNotifier {
         _handleMessage,
         onError: (error) {
           debugPrint('❌ [AIChatProvider] Stream error: $error');
+          disconnect(); // Clear resources and set _channel = null
           _onError('CONNECTION_ERROR', error.toString());
         },
         onDone: () {
           debugPrint('🔌 [AIChatProvider] Connection closed');
-          if (_isStreaming) {
+          final wasStreaming = _isStreaming;
+          disconnect(); // Clear resources and set _channel = null
+          if (wasStreaming) {
             _onError('CONNECTION_ERROR', 'Kết nối bị ngắt');
           }
         },
@@ -297,6 +305,12 @@ class AIChatProvider extends ChangeNotifier {
         case 'token':
           _onTokenReceived(data['content'] as String? ?? '');
           break;
+        case 'thought':
+          _onThoughtReceived(data['content'] as String? ?? '');
+          break;
+        case 'status':
+          _onStatusReceived(data['content'] as String? ?? '');
+          break;
         case 'tool_call':
           _handleToolCall(data);
           break;
@@ -320,6 +334,7 @@ class AIChatProvider extends ChangeNotifier {
 
   /// Xử lý tool call từ AI
   Future<void> _handleToolCall(Map<String, dynamic> data) async {
+    _resetTimeoutTimer();
     final correlationId = data['correlation_id'] as String?;
     final name = data['name'] as String?;
     final args = data['arguments'] as Map<String, dynamic>? ?? {};
@@ -528,7 +543,7 @@ class AIChatProvider extends ChangeNotifier {
         _messages.add(AIChatMessage(
           id: _uuid.v4(),
           text:
-              '✅ Đã tự động ghi nhận bài tập **$exName** (${duration} phút, ~${calBurned.toStringAsFixed(0)} kcal) vào nhật ký vận động!',
+              '✅ Đã tự động ghi nhận bài tập **$exName** ($duration phút, ~${calBurned.toStringAsFixed(0)} kcal) vào nhật ký vận động!',
           isUser: false,
           isStreaming: false,
           timestamp: DateTime.now(),
@@ -687,14 +702,43 @@ class AIChatProvider extends ChangeNotifier {
         break;
 
       case 'get_active_plan':
-        // Chưa có plan store phía client. Trả về null là ĐÚNG sự thật ở đây
-        // (không có kế hoạch nào đang chạy), khác với việc bịa danh sách rỗng.
-        resultData = {'active_plan': null};
+        if (_lastUser != null) {
+          try {
+            final planDetail = await _backendApi.getActivePlanDetail(_lastUser!.id);
+            resultData = {'active_plan': planDetail};
+          } catch (e) {
+            debugPrint('⚠️ [AIChatProvider] get_active_plan error: $e');
+            resultData = {'active_plan': null};
+          }
+        } else {
+          resultData = {'active_plan': null};
+        }
         break;
 
       case 'mark_plan_item_complete':
+        final itemId = args['item_id'] as String?;
+        if (itemId != null && itemId.isNotEmpty) {
+          try {
+            await _backendApi.updatePlanItemCompletion(itemId: itemId, completed: true);
+            resultData = {'status': 'success', 'item_id': itemId, 'completed': true};
+          } catch (e) {
+            debugPrint('❌ [AIChatProvider] mark_plan_item_complete error: $e');
+            isOk = false;
+            error = 'TOOL_INTERNAL_ERROR';
+          }
+        } else {
+          isOk = false;
+          error = 'INVALID_ARGS';
+        }
+        break;
+
       case 'navigate_to_screen':
-        resultData = {'status': 'success'};
+        final screen = args['screen'] as String? ?? 'dashboard';
+        debugPrint('📱 [AIChatProvider] Navigating to screen: $screen');
+        if (onNavigateToScreen != null) {
+          onNavigateToScreen!(screen);
+        }
+        resultData = {'status': 'success', 'screen': screen};
         break;
       default:
         isOk = false;
@@ -855,8 +899,17 @@ class AIChatProvider extends ChangeNotifier {
     }
   }
 
+  void _resetTimeoutTimer() {
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(AIChatbotConfig.streamTimeout, () {
+      debugPrint('⏰ [AIChatProvider] Stream timeout');
+      _onError('TIMEOUT', 'Phản hồi quá lâu');
+    });
+  }
+
   /// Append token vào streaming message — text tích lũy ở background, không hiện ra UI
   void _onTokenReceived(String token) {
+    _resetTimeoutTimer();
     if (_streamingMessageId == null) return;
 
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
@@ -871,6 +924,37 @@ class AIChatProvider extends ChangeNotifier {
           : currentStatus,
     );
     // Gọi notifyListeners() để cập nhật UI chữ chạy thời gian thực
+    notifyListeners();
+  }
+
+  /// Nhận token suy nghĩ từ backend
+  void _onThoughtReceived(String token) {
+    _resetTimeoutTimer();
+    if (_streamingMessageId == null) return;
+
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
+
+    final currentMessage = _messages[idx];
+    _messages[idx] = currentMessage.copyWith(
+      thoughts: currentMessage.thoughts + token,
+      status: MessageStatus.thinking, // Giữ hoặc chuyển về thinking khi nhận thought token
+    );
+    notifyListeners();
+  }
+
+  /// Nhận cập nhật trạng thái hoạt động từ backend
+  void _onStatusReceived(String statusText) {
+    _resetTimeoutTimer();
+    if (_streamingMessageId == null) return;
+
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
+
+    final currentMessage = _messages[idx];
+    _messages[idx] = currentMessage.copyWith(
+      statusText: statusText,
+    );
     notifyListeners();
   }
 
@@ -934,6 +1018,7 @@ class AIChatProvider extends ChangeNotifier {
 
   /// Xử lý lỗi — set error message tiếng Việt dựa trên code
   void _onError(String code, String message) {
+    disconnect(); // Ensure channel is completely cleaned up and nullified
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
 

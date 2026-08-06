@@ -1,2 +1,11 @@
 {
+  "python.defaultInterpreterPath": "${workspaceFolder}/ai_backend/backend/venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/ai_backend/backend",
+    "${workspaceFolder}/ai_backend/backend/venv/Lib/site-packages"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/ai_backend/backend",
+    "${workspaceFolder}/ai_backend/backend/venv/Lib/site-packages"
+  ]
 }

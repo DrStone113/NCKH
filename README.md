@@ -4,12 +4,17 @@
 
 ## Yêu cầu cài đặt
 
-| Công cụ    | Phiên bản | Link                                         |
-| ---------- | --------- | -------------------------------------------- |
-| Flutter    | ≥ 3.0     | https://flutter.dev/docs/get-started/install |
-| Python     | ≥ 3.10    | https://python.org                           |
-| PostgreSQL | ≥ 14      | https://postgresql.org                       |
-| Ollama     | Latest    | https://ollama.com                           |
+| Công cụ    | Phiên bản yêu cầu | Đã cài trên máy hiện tại | Link                                         |
+| ---------- | ----------------- | ------------------------ | -------------------------------------------- |
+| Flutter    | ≥ 3.0             | ✅ 3.44.8 (stable) tại `C:\flutter`, `C:\flutter\bin` đã có trong `PATH` | https://flutter.dev/docs/get-started/install |
+| Dart       | đi kèm Flutter    | ✅ 3.12.2                | —                                            |
+| Android SDK| ≥ 34              | ✅ 36.0.0 (`%LOCALAPPDATA%\Android\sdk`) — cần `flutter doctor --android-licenses` | https://developer.android.com/studio |
+| Python     | ≥ 3.10            | ✅                       | https://python.org                           |
+| PostgreSQL | ≥ 14              | ✅ (qua Docker `pgvector`)| https://postgresql.org                       |
+| Ollama     | Latest            | —                        | https://ollama.com                           |
+
+> Trình duyệt: máy **chưa cài Chrome**. Dùng `flutter run -d edge` hoặc `-d web-server`.
+> Kiểm tra nhanh: `flutter --version` và `flutter doctor -v`.
 
 ## Khởi động nhanh
 
@@ -87,9 +92,21 @@ flutter pub get
 
 # Cấu hình Firebase (xem HealthApp\setup_firebase_guide.md)
 
-# Chạy web
+# Chạy web (máy chưa có Chrome → dùng edge hoặc web-server)
+flutter run -d edge --web-port 3000
 flutter run -d web-server --web-port 3000
 ```
+
+#### Kiểm thử
+
+```bat
+flutter analyze                                   :: lint (kỳ vọng: 0 error, 0 warning)
+flutter test                                      :: 23/23 test passed
+flutter build web --release --no-tree-shake-icons :: build production web
+```
+
+> Kết quả kiểm thử ngày 2026-08-06 (Flutter 3.44.8): `pub get` OK · `analyze` 22 info (`withOpacity` deprecated) · `test` 23/23 passed · `build web` thành công.
+
 
 ---
 

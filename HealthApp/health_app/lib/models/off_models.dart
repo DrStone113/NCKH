@@ -1,5 +1,6 @@
 /// Models cho Open Food Facts API
 /// Docs: https://openfoodfacts.github.io/openfoodfacts-server/api/
+library;
 
 class OFFNutriments {
   final double? energyKcal100g;
@@ -21,7 +22,7 @@ class OFFNutriments {
   });
 
   factory OFFNutriments.fromJson(Map<String, dynamic> json) {
-    double? _d(String key) {
+    double? parseDouble(String key) {
       final v = json[key];
       if (v == null) return null;
       if (v is num) return v.toDouble();
@@ -30,13 +31,13 @@ class OFFNutriments {
     }
 
     return OFFNutriments(
-      energyKcal100g: _d('energy-kcal_100g') ?? _d('energy_100g'),
-      proteins100g: _d('proteins_100g'),
-      carbohydrates100g: _d('carbohydrates_100g'),
-      fat100g: _d('fat_100g'),
-      fiber100g: _d('fiber_100g'),
-      sugars100g: _d('sugars_100g'),
-      salt100g: _d('salt_100g'),
+      energyKcal100g: parseDouble('energy-kcal_100g') ?? parseDouble('energy_100g'),
+      proteins100g: parseDouble('proteins_100g'),
+      carbohydrates100g: parseDouble('carbohydrates_100g'),
+      fat100g: parseDouble('fat_100g'),
+      fiber100g: parseDouble('fiber_100g'),
+      sugars100g: parseDouble('sugars_100g'),
+      salt100g: parseDouble('salt_100g'),
     );
   }
 

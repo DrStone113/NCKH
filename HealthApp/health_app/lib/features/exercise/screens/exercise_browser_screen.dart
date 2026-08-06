@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/local_exercise_service.dart';
 import '../../../models/wger_models.dart';
@@ -6,7 +6,6 @@ import '../../../models/exercise_model.dart';
 import '../../../providers/exercise_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../theme/app_theme.dart';
-import '../../../widgets/muscle_group_widget.dart';
 import '../../../widgets/wger_image.dart';
 import 'exercise_detail_screen.dart';
 
@@ -110,7 +109,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.15),
+                    color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -230,9 +229,9 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.1),
+                        color: AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -264,10 +263,10 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withOpacity(0.15) : AppColors.surfaceLight,
+          color: isActive ? AppColors.primary.withValues(alpha: 0.15) : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? AppColors.primary.withOpacity(0.5) : AppColors.surfaceLight,
+            color: isActive ? AppColors.primary.withValues(alpha: 0.5) : AppColors.surfaceLight,
           ),
         ),
         child: Row(
@@ -304,7 +303,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
           if (_selectedCategory != null || _selectedMuscleId != null || _searchQuery.isNotEmpty)
             Text(
               ' (đã lọc)',
-              style: TextStyle(fontSize: 12, color: AppColors.primary.withOpacity(0.8)),
+              style: TextStyle(fontSize: 12, color: AppColors.primary.withValues(alpha: 0.8)),
             ),
         ],
       ),
@@ -377,7 +376,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.surfaceLight),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -407,7 +406,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.6)],
                         ),
                       ),
                     ),
@@ -418,7 +417,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.9),
+                          color: color.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -435,7 +434,7 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.55),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -485,9 +484,9 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
                             children: exercise.muscles.take(3).map((m) => Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: color.withOpacity(0.25)),
+                                border: Border.all(color: color.withValues(alpha: 0.25)),
                               ),
                               child: Text(
                                 m.nameEn,
@@ -526,11 +525,11 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color, color.withOpacity(0.6)],
+          colors: [color, color.withValues(alpha: 0.6)],
         ),
       ),
       child: Center(
-        child: Icon(Icons.fitness_center, size: 60, color: Colors.white.withOpacity(0.25)),
+        child: Icon(Icons.fitness_center, size: 60, color: Colors.white.withValues(alpha: 0.25)),
       ),
     );
   }
@@ -702,10 +701,14 @@ class _ExerciseBrowserScreenState extends State<ExerciseBrowserScreen> {
 
   String _mapCategory(String cat) {
     final c = cat.toLowerCase();
-    if (c.contains('cardio')) return 'cardio';
+    if (c.contains('cardio')) {
+      return 'cardio';
+    }
     if (c.contains('arms') || c.contains('chest') || c.contains('back') ||
         c.contains('legs') || c.contains('shoulders') || c.contains('abs') ||
-        c.contains('calves')) return 'strength';
+        c.contains('calves')) {
+      return 'strength';
+    }
     return 'sports';
   }
 }

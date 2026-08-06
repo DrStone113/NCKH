@@ -30,6 +30,6 @@ class AIChatbotConfig {
     return httpBase + wsEndpoint;
   }
 
-  static const Duration connectTimeout = Duration(seconds: 10);
-  static const Duration streamTimeout = Duration(seconds: 120);
+  static const Duration connectTimeout = Duration(seconds: 15);
+  static const Duration streamTimeout = Duration(seconds: 180);
 }

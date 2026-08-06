@@ -5,7 +5,7 @@ Thread-safe via threading.Lock.
 
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict
 from uuid import uuid4
 
@@ -26,7 +26,7 @@ class ChatTurn:
 class Session:
     session_id: str
     turns: list[ChatTurn] = field(default_factory=list)
-    last_active: datetime = field(default_factory=datetime.utcnow)
+    last_active: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class SessionStore:
@@ -36,7 +36,7 @@ class SessionStore:
         self._ttl = timedelta(minutes=ttl_minutes)
 
     def _is_expired(self, session: Session) -> bool:
-        return datetime.utcnow() - session.last_active > self._ttl
+        return datetime.now(timezone.utc) - session.last_active > self._ttl
 
     def get_or_create_session(self, session_id: str) -> Session:
         with self._lock:
@@ -67,7 +67,7 @@ class SessionStore:
                     tool_name=tool_name,
                 )
             )
-            session.last_active = datetime.utcnow()
+            session.last_active = datetime.now(timezone.utc)
 
     def appendTurn(
         self,
@@ -115,24 +115,34 @@ class DbSessionStore:
         tool_call_id: str | None = None,
         tool_name: str | None = None,
     ) -> str:
+        # Always record in memory cache so conversation history works in standalone mode
+        session_store.append_turn(session_id, role, content, tool_call_id, tool_name)
         msg_id = str(uuid4())
-        await self.db_session.execute(
-            text(
-                """
-                INSERT INTO chat_messages (
-                    id, session_id, role, content, tool_call_id, tool_name
-                ) VALUES (
-                    :id, :session_id, :role, :content, :tool_call_id, :tool_name
-                )
-                """
-            ),
-            {
-                "id": msg_id,
-                "session_id": session_id,
-                "role": role,
-                "content": content,
-                "tool_call_id": tool_call_id,
-                "tool_name": tool_name,
-            },
-        )
+        if self.db_session is None:
+            return msg_id
+        from db.db_status import is_db_offline, mark_db_offline
+        try:
+            await self.db_session.execute(
+                text(
+                    """
+                    INSERT INTO chat_messages (
+                        id, session_id, role, content, tool_call_id, tool_name
+                    ) VALUES (
+                        :id, :session_id, :role, :content, :tool_call_id, :tool_name
+                    )
+                    """
+                ),
+                {
+                    "id": msg_id,
+                    "session_id": session_id,
+                    "role": role,
+                    "content": content,
+                    "tool_call_id": tool_call_id,
+                    "tool_name": tool_name,
+                },
+            )
+        except Exception as e:
+            mark_db_offline(60.0)
+            import logging
+            logging.getLogger(__name__).warning("Database unavailable in DbSessionStore.appendTurn: %s", e)
         return msg_id

@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'dart:convert';
 import 'package:health_app/services/wger_service.dart';
-import 'package:health_app/models/wger_models.dart';
 
 void main() {
   group('WgerService', () {

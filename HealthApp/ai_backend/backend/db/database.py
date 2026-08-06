@@ -33,15 +33,24 @@ MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency that yields an async DB session — Requirements: 8.1"""
-    async with AsyncSessionLocal() as session:
+    session = AsyncSessionLocal()
+    try:
+        yield session
         try:
-            yield session
             await session.commit()
         except Exception:
+            pass
+    except Exception:
+        try:
             await session.rollback()
-            raise
-        finally:
+        except Exception:
+            pass
+        raise
+    finally:
+        try:
             await session.close()
+        except Exception:
+            pass
 
 
 async def _ensure_migrations_table(conn: AsyncConnection) -> None:

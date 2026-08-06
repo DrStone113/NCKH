@@ -48,18 +48,27 @@ Implementation notes
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, cast
 from uuid import uuid4
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from models.schemas import ChatTurn, Fact, KnowledgeChunk
+from db.db_status import is_db_offline, mark_db_offline
+from models.schemas import (
+    ChatTurn,
+    Fact,
+    KnowledgeChunk,
+    FactCategoryLiteral,
+    FactStatusLiteral,
+    ChatRoleLiteral,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - import only used for type hints
     from services.agent.rag_service import RAGService
@@ -109,6 +118,7 @@ class Context:
     rolling_summary: str = ""
     pinned_facts: list[Fact] = field(default_factory=list)
     rag_chunks: list[KnowledgeChunk] = field(default_factory=list)
+    relevant_history: list[ChatTurn] = field(default_factory=list)
 
 
 # Categories accepted on ``proposeFact``. Matches the design.md §6 description
@@ -158,21 +168,28 @@ class MemoryService:
         """
         if not isinstance(session_id, str) or not session_id:
             raise ValueError("INVALID_SESSION_ID")
-
-        result = await self._session.execute(
-            text(
-                """
-                SELECT rolling_summary
-                FROM chat_session_memory
-                WHERE session_id = :sid
-                """
-            ),
-            {"sid": session_id},
-        )
-        row = result.first()
-        if row is None:
+        if is_db_offline():
             return ""
-        return row[0] or ""
+
+        try:
+            result = await self._session.execute(
+                text(
+                    """
+                    SELECT rolling_summary
+                    FROM chat_session_memory
+                    WHERE session_id = :sid
+                    """
+                ),
+                {"sid": session_id},
+            )
+            row = result.first()
+            if row is None:
+                return ""
+            return row[0] or ""
+        except Exception as e:
+            mark_db_offline(60.0)
+            logger.warning("Database unavailable in getRollingSummary: %s", e)
+            return ""
 
     async def saveRollingSummary(self, session_id: str, summary: str) -> None:
         """Upsert ``summary`` for ``session_id``.
@@ -186,23 +203,21 @@ class MemoryService:
         if not isinstance(summary, str):
             raise ValueError("INVALID_SUMMARY")
 
-        await self._session.execute(
-            text(
-                """
-                INSERT INTO chat_session_memory (session_id, rolling_summary, updated_at)
-                VALUES (:sid, :summary, NOW())
-                ON CONFLICT (session_id) DO UPDATE
-                    SET rolling_summary = EXCLUDED.rolling_summary,
-                        updated_at      = NOW()
-                """
-            ),
-            {"sid": session_id, "summary": summary},
-        )
-        logger.debug(
-            "saveRollingSummary upserted summary len=%d for session=%s",
-            len(summary),
-            session_id,
-        )
+        try:
+            await self._session.execute(
+                text(
+                    """
+                    INSERT INTO chat_session_memory (session_id, rolling_summary, updated_at)
+                    VALUES (:sid, :summary, NOW())
+                    ON CONFLICT (session_id) DO UPDATE
+                        SET rolling_summary = EXCLUDED.rolling_summary,
+                            updated_at      = NOW()
+                    """
+                ),
+                {"sid": session_id, "summary": summary},
+            )
+        except Exception as e:
+            logger.warning("Database unavailable in saveRollingSummary: %s", e)
 
     # -------------------------------------------------------------------- facts
     async def getPinnedFacts(self, session_id: str) -> list[Fact]:
@@ -216,29 +231,36 @@ class MemoryService:
         """
         if not isinstance(session_id, str) or not session_id:
             raise ValueError("INVALID_SESSION_ID")
+        if is_db_offline():
+            return []
 
-        result = await self._session.execute(
-            text(
-                """
-                SELECT
-                    f.id,
-                    f.user_id,
-                    f.category,
-                    f.fact,
-                    f.status,
-                    f.source_msg_id,
-                    f.created_at
-                FROM user_facts AS f
-                JOIN chat_sessions AS s ON s.user_id = f.user_id
-                WHERE s.id = :sid
-                  AND f.status = 'confirmed'
-                ORDER BY f.created_at ASC
-                """
-            ),
-            {"sid": session_id},
-        )
-        rows = result.all()
-        return [self._row_to_fact(row) for row in rows]
+        try:
+            result = await self._session.execute(
+                text(
+                    """
+                    SELECT
+                        f.id,
+                        f.user_id,
+                        f.category,
+                        f.fact,
+                        f.status,
+                        f.source_msg_id,
+                        f.created_at
+                    FROM user_facts AS f
+                    JOIN chat_sessions AS s ON s.user_id = f.user_id
+                    WHERE s.id = :sid
+                      AND f.status = 'confirmed'
+                    ORDER BY f.created_at ASC
+                    """
+                ),
+                {"sid": session_id},
+            )
+            rows = result.all()
+            return [self._row_to_fact(row) for row in rows]
+        except Exception as e:
+            mark_db_offline(60.0)
+            logger.warning("Database unavailable in getPinnedFacts: %s", e)
+            return []
 
     async def proposeFact(
         self,
@@ -449,7 +471,8 @@ class MemoryService:
         #    that the user does not already have. Failures here are also
         #    best-effort — the rolling summary update is the primary goal.
         try:
-            fact_messages = buildFactExtractionPrompt(turns_text)
+            existing_facts = await self.getPinnedFacts(session_id)
+            fact_messages = buildFactExtractionPrompt(turns_text, existing_facts=existing_facts)
             response = await llm_client.chat(
                 fact_messages, tools=None, stream=False
             )
@@ -467,36 +490,97 @@ class MemoryService:
         if not candidates:
             return
 
-        existing = await self._load_existing_fact_texts(session_id)
+        existing_texts = {f.fact.strip().casefold() for f in existing_facts}
+
         for cand in candidates:
+            action = cand.get("action", "add")
             fact_text = cand.get("fact", "").strip()
+            target_fact = cand.get("target_fact", "").strip()
             category = cand.get("category", "").strip().lower()
-            if not fact_text:
-                continue
             if category not in _ALLOWED_CATEGORIES:
-                # Unknown / missing category → bucket as "other" so the
-                # moderation queue still sees the candidate.
                 category = "other"
-            normalised = fact_text.casefold()
-            if normalised in existing:
-                continue
-            status = self._fact_status_for(cand, category)
-            try:
-                await self.proposeFact(
-                    session_id=session_id,
-                    fact_text=fact_text,
-                    category=category,
-                    source_msg_id=None,
-                    status=status,
-                )
-                existing.add(normalised)
-            except ValueError as exc:
-                logger.debug(
-                    "updateRollingSummary: skipping invalid fact candidate "
-                    "(%s): %r",
-                    exc,
-                    cand,
-                )
+
+            if action == "add":
+                if not fact_text:
+                    continue
+                normalised = fact_text.casefold()
+                if normalised in existing_texts:
+                    continue
+                status = self._fact_status_for(cand, category)
+                try:
+                    await self.proposeFact(
+                        session_id=session_id,
+                        fact_text=fact_text,
+                        category=category,
+                        source_msg_id=None,
+                        status=status,
+                    )
+                    existing_texts.add(normalised)
+                except ValueError as exc:
+                    logger.debug(
+                        "updateRollingSummary: skipping invalid fact candidate "
+                        "(%s): %r",
+                        exc,
+                        cand,
+                    )
+
+            elif action == "update":
+                if not fact_text or not target_fact:
+                    continue
+                target_normalised = target_fact.casefold()
+                matching_fact = None
+                for f in existing_facts:
+                    f_text = f.fact.strip().casefold()
+                    if f_text == target_normalised or target_normalised in f_text or f_text in target_normalised:
+                        matching_fact = f
+                        break
+                
+                if matching_fact:
+                    try:
+                        await self._set_fact_status(matching_fact.id, status="rejected")
+                        existing_texts.discard(matching_fact.fact.strip().casefold())
+                        existing_facts.remove(matching_fact)
+                    except Exception as exc:
+                        logger.warning("Failed to deactivate fact %s: %s", matching_fact.id, exc)
+
+                normalised = fact_text.casefold()
+                if normalised not in existing_texts:
+                    status = self._fact_status_for(cand, category)
+                    try:
+                        await self.proposeFact(
+                            session_id=session_id,
+                            fact_text=fact_text,
+                            category=category,
+                            source_msg_id=None,
+                            status=status,
+                        )
+                        existing_texts.add(normalised)
+                    except ValueError as exc:
+                        logger.debug(
+                            "updateRollingSummary: skipping invalid fact candidate "
+                            "(%s): %r",
+                            exc,
+                            cand,
+                        )
+
+            elif action == "remove":
+                if not target_fact:
+                    continue
+                target_normalised = target_fact.casefold()
+                matching_fact = None
+                for f in existing_facts:
+                    f_text = f.fact.strip().casefold()
+                    if f_text == target_normalised or target_normalised in f_text or f_text in target_normalised:
+                        matching_fact = f
+                        break
+                
+                if matching_fact:
+                    try:
+                        await self._set_fact_status(matching_fact.id, status="rejected")
+                        existing_texts.discard(matching_fact.fact.strip().casefold())
+                        existing_facts.remove(matching_fact)
+                    except Exception as exc:
+                        logger.warning("Failed to deactivate fact %s: %s", matching_fact.id, exc)
 
     @staticmethod
     def _fact_status_for(candidate: dict[str, str], category: str) -> str:
@@ -616,9 +700,9 @@ class MemoryService:
         return Fact(
             id=str(row[0]),
             user_id=str(row[1]),
-            category=str(row[2]),
+            category=cast(FactCategoryLiteral, str(row[2])),
             fact=str(row[3]),
-            status=str(row[4]),
+            status=cast(FactStatusLiteral, str(row[4])),
             source_msg_id=str(row[5]) if row[5] is not None else None,
             created_at=row[6],
         )
@@ -644,12 +728,58 @@ class MemoryService:
         top_k:
             Strictly positive integer; same delegation applies.
         """
-        if self._rag_service is None:
-            logger.debug("queryRag: rag_service not configured, returning []")
+        if self._rag_service is None or is_db_offline():
+            logger.debug("queryRag: rag_service not configured or DB offline, returning []")
             return []
-        return await self._rag_service.query(query, top_k, db=self._session)
+        try:
+            return await self._rag_service.query(query, top_k, db=self._session)
+        except Exception as e:
+            mark_db_offline(60.0)
+            logger.warning("queryRag failed (DB unavailable?): %s", e)
+            return []
 
     # --------------------------------------------------------------- context
+    async def _search_contextual_history(
+        self, session_id: str, query: str, limit: int = 20
+    ) -> list[ChatTurn]:
+        """Search the database for dialogue windows matching the FTS query.
+
+        Uses PostgreSQL window functions to pull matches along with their
+        immediate preceding and succeeding turns, deduplicating and merging
+        overlapping ranges.
+        """
+        if not query.strip() or is_db_offline():
+            return []
+
+        sql = text(
+            """
+            WITH numbered AS (
+                SELECT id, session_id, role, content, tool_call_id, tool_name, created_at,
+                       ROW_NUMBER() OVER (ORDER BY created_at ASC, id ASC) as rn
+                FROM chat_messages
+                WHERE session_id = :sid
+            ),
+            matches AS (
+                SELECT rn 
+                FROM numbered 
+                WHERE to_tsvector('simple', content) @@ websearch_to_tsquery('simple', :query)
+            )
+            SELECT DISTINCT n.id, n.session_id, n.role, n.content, n.tool_call_id, n.tool_name, n.created_at, n.rn
+            FROM numbered n
+            JOIN matches m ON n.rn >= m.rn - 2 AND n.rn <= m.rn + 2
+            ORDER BY n.rn ASC
+            LIMIT :lim
+            """
+        )
+        try:
+            result = await self._session.execute(
+                sql, {"sid": session_id, "query": query, "lim": limit}
+            )
+            return [self._row_to_chat_turn(row) for row in result.all()]
+        except Exception as e:
+            logger.warning("Database search failed in _search_contextual_history: %s", e)
+            return []
+
     async def loadContext(
         self, session_id: str, user_text: str
     ) -> Context:
@@ -690,41 +820,56 @@ class MemoryService:
         pinned_facts = await self.getPinnedFacts(session_id)
 
         rag_chunks: list[KnowledgeChunk] = []
-        # Skip RAG when the message is blank or a simple greeting/chitchat
-        if user_text.strip() and not is_simple_greeting_or_chitchat(user_text) and self._rag_service is not None:
-            # Query expansion for reference/pronouns to improve pgvector search accuracy
-            rag_query = user_text
-            if history:
-                last_user_turn = None
-                for turn in reversed(history):
-                    if turn.role == "user":
-                        last_user_turn = turn
-                        break
-                if last_user_turn and last_user_turn.content:
-                    pronouns = ["nó", "đấy", "đó", "này", "thêm", "bổ sung", "món đó", "món này", "bài đó", "bài này", "ăn lúc"]
-                    if any(p in user_text.lower() for p in pronouns):
-                        rag_query = f"{last_user_turn.content} {user_text}"
-                        logger.info("Expanded RAG query: %r", rag_query)
+        relevant_history: list[ChatTurn] = []
 
-            try:
-                rag_chunks = await self.queryRag(
-                    rag_query, top_k=settings.rag_top_k
-                )
-            except ValueError as exc:
-                # Defensive: if RAGService rejects the query for any reason,
-                # log and degrade gracefully rather than failing the whole
-                # context load. Memory has already been gathered.
-                logger.warning(
-                    "queryRag rejected rag_query for session=%s: %s",
-                    session_id,
-                    exc,
-                )
+        # Skip FTS / RAG when the message is blank or a simple greeting/chitchat
+        if user_text.strip() and not is_simple_greeting_or_chitchat(user_text):
+            # Fetch contextual history matching user query
+            relevant_history = await self._search_contextual_history(
+                session_id, user_text, limit=20
+            )
+            # Filter out duplicates that are already inside history window
+            history_ids = {t.id for t in history}
+            relevant_history = [
+                t for t in relevant_history if t.id not in history_ids
+            ]
+
+            if self._rag_service is not None:
+                # Query expansion for reference/pronouns to improve pgvector search accuracy
+                rag_query = user_text
+                if history:
+                    last_user_turn = None
+                    for turn in reversed(history):
+                        if turn.role == "user":
+                            last_user_turn = turn
+                            break
+                    if last_user_turn and last_user_turn.content:
+                        pronouns = ["nó", "đấy", "đó", "này", "thêm", "bổ sung", "món đó", "món này", "bài đó", "bài này", "ăn lúc"]
+                        if any(p in user_text.lower() for p in pronouns):
+                            rag_query = f"{last_user_turn.content} {user_text}"
+                            logger.info("Expanded RAG query: %r", rag_query)
+
+                try:
+                    rag_chunks = await asyncio.wait_for(
+                        self.queryRag(rag_query, top_k=settings.rag_top_k),
+                        timeout=1.0,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("queryRag timed out (>1.0s) for session=%s, skipping RAG context", session_id)
+                    rag_chunks = []
+                except ValueError as exc:
+                    logger.warning(
+                        "queryRag rejected rag_query for session=%s: %s",
+                        session_id,
+                        exc,
+                    )
 
         return Context(
             history=history,
             rolling_summary=rolling_summary,
             pinned_facts=pinned_facts,
             rag_chunks=rag_chunks,
+            relevant_history=relevant_history,
         )
 
     async def _load_recent_turns(
@@ -745,23 +890,46 @@ class MemoryService:
         if limit <= 0:
             return []
 
-        result = await self._session.execute(
-            text(
-                """
-                SELECT id, session_id, role, content,
-                       tool_call_id, tool_name, created_at
-                FROM chat_messages
-                WHERE session_id = :sid
-                ORDER BY created_at DESC, id DESC
-                LIMIT :lim
-                """
-            ),
-            {"sid": session_id, "lim": limit},
-        )
-        rows = result.all()
-        # Reverse so the oldest turn comes first — matches how messages are
-        # appended into the LLM ``messages`` list in ``handleChatMessage``.
-        return [self._row_to_chat_turn(row) for row in reversed(rows)]
+        from db.session_store import session_store
+        from datetime import datetime, timezone
+        mem_turns = session_store.get_history(session_id, max_turns=limit)
+        converted_mem = [
+            ChatTurn(
+                id=str(uuid4()),
+                session_id=session_id,
+                role=cast(ChatRoleLiteral, t.role),
+                content=t.content,
+                tool_call_id=t.tool_call_id,
+                tool_name=t.tool_name,
+                created_at=datetime.now(timezone.utc),
+            )
+            for t in mem_turns
+        ]
+
+        if is_db_offline():
+            return converted_mem
+
+        try:
+            result = await self._session.execute(
+                text(
+                    """
+                    SELECT id, session_id, role, content,
+                           tool_call_id, tool_name, created_at
+                    FROM chat_messages
+                    WHERE session_id = :sid
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT :lim
+                    """
+                ),
+                {"sid": session_id, "lim": limit},
+            )
+            rows = result.all()
+            db_turns = [self._row_to_chat_turn(row) for row in reversed(rows)]
+            return db_turns if db_turns else converted_mem
+        except Exception as e:
+            mark_db_offline(60.0)
+            logger.warning("Database unavailable in _load_recent_turns: %s", e)
+            return converted_mem
 
     @staticmethod
     def _row_to_chat_turn(row: Any) -> ChatTurn:
@@ -769,7 +937,7 @@ class MemoryService:
         return ChatTurn(
             id=str(row[0]),
             session_id=str(row[1]),
-            role=str(row[2]),
+            role=cast(ChatRoleLiteral, str(row[2])),
             content=str(row[3]) if row[3] is not None else "",
             tool_call_id=str(row[4]) if row[4] is not None else None,
             tool_name=str(row[5]) if row[5] is not None else None,
@@ -782,17 +950,30 @@ def is_simple_greeting_or_chitchat(text: str) -> bool:
     if not isinstance(text, str):
         return False
     cleaned = text.strip().lower()
-    for ch in ".!?,:;~":
-        cleaned = cleaned.replace(ch, "")
+    cleaned = re.sub(r"[!?.,:;~\-_*#\"']+", " ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned)
     cleaned = cleaned.strip()
     if not cleaned:
         return True
-    greetings = {
+    no_rag_phrases = {
+        # Greetings & Chitchat
         "chào", "chào bạn", "chào em", "chào anh", "chào chị", "chào bô", "xin chào",
-        "hi", "hello", "hey", "cảm ơn", "cảm ơn bạn", "cảm ơn nhé", "cam on",
-        "tạm biệt", "bye", "goodbye", "bạn là ai", "bạn tên gì", "ok", "oke", "dạ", "vâng"
+        "hi", "hello", "hey", "alo", "hế lô", "helu",
+        "chào buổi sáng", "chào buổi tối", "good morning", "good night",
+        "cảm ơn", "cám ơn", "cảm ơn bạn", "cảm ơn nhé", "cảm ơn nha", "cam on",
+        "thanks", "thank you", "thanks bạn", "tks", "tnx",
+        "tạm biệt", "bye", "goodbye", "bai", "chào nhé", "hẹn gặp lại",
+        "bạn là ai", "bạn tên gì", "bạn làm được gì", "giúp gì được",
+        "test", "hello world",
+        # Affirmative responses
+        "có", "có chứ", "có nhé", "ừ", "ừm", "vâng", "dạ", "được", "được nhé",
+        "ok", "oke", "okay", "okie", "ghi đi", "ghi lại", "ghi nhé", "lưu lại", "lưu đi",
+        "đồng ý", "uh", "dạ có", "vâng ạ",
+        # Negative / Cancel responses
+        "không", "không cần", "không nhé", "không nha", "hủy", "thôi", "bỏ qua", "không đồng ý",
+        "no", "nop", "nope"
     }
-    return cleaned in greetings
+    return cleaned in no_rag_phrases
 
 
 __all__ = [
@@ -902,56 +1083,67 @@ def buildSummaryPrompt(
     ]
 
 
-def buildFactExtractionPrompt(turns_text: str) -> list[dict[str, Any]]:
+def buildFactExtractionPrompt(
+    turns_text: str, existing_facts: list[Any] | None = None
+) -> list[dict[str, Any]]:
     """Return the ``messages`` payload for the fact-extraction LLM call.
 
-    The LLM is instructed to emit a JSON array of
-    ``{"category": ..., "fact": ...}`` objects. ``category`` must be one of
-    the values accepted by :meth:`MemoryService.proposeFact`
-    (``preference``, ``allergy``, ``goal``, ``constraint``, ``other``).
-    Empty arrays are explicitly allowed to discourage the model from making
-    things up when no fact is present.
-
-    Output is parsed by :func:`_parse_fact_candidates`, which is tolerant of
-    markdown fences, leading prose, and extra whitespace.
+    The LLM is instructed to emit a JSON array of operations:
+    ``{"action": ..., "category": ..., "fact": ..., "target_fact": ..., "confidence": ...}``.
     """
     allowed = ", ".join(sorted(_ALLOWED_CATEGORIES))
     system = (
-        "Bạn là module trích xuất pinned facts về user từ hội thoại sức khỏe. "
-        "Đọc các turn dưới đây và trích các sự thật ổn định (sở thích ăn "
-        "uống, dị ứng, mục tiêu, ràng buộc lối sống, bệnh nền, thiết bị tập "
-        "sẵn có, lịch sinh hoạt). KHÔNG trích các sự kiện ngắn hạn (bữa ăn "
-        "hôm nay, cân nặng đo hôm nay, tâm trạng hôm nay).\n"
-        "Mỗi fact viết ở ngôi thứ ba, ngắn gọn, tự đứng độc lập được — người "
-        'đọc sau này không thấy hội thoại gốc. Vd: "Dị ứng hải sản", "Mục tiêu '
-        'giảm 5kg trong 3 tháng", "Tập tại nhà, chỉ có tạ đơn".\n'
-        '"confidence" = "high" khi người dùng nói thẳng ra điều đó; '
-        '"low" khi bạn đang suy diễn. Suy diễn thì thà bỏ qua còn hơn đoán sai.\n'
-        "Trả VỀ DUY NHẤT một mảng JSON, không kèm văn bản khác, theo schema: "
-        f'[{{"category": "<một trong: {allowed}>", "fact": "<câu mô tả '
-        'ngắn gọn bằng tiếng Việt>", "confidence": "high|low"}}, ...]. '
-        "Nếu không có fact phù hợp, trả về [] (mảng rỗng). Không bịa thông tin."
+        "Bạn là module trích xuất và cập nhật pinned facts về user từ hội thoại sức khỏe.\n"
+        "Đọc danh sách sự thật hiện tại đã biết (nếu có) và các turn hội thoại mới dưới đây. "
+        "Quyết định hành động cần thực hiện đối với bộ nhớ:\n"
+        "- \"add\": Thêm sự thật mới chưa từng có trước đây.\n"
+        "- \"update\": Cập nhật một sự thật cũ bằng nội dung mới (khi người dùng thay đổi thông tin cũ hoặc thông tin mới chính xác hơn). "
+        "Bạn phải chỉ định rõ nội dung sự thật cũ cần thay thế ở trường \"target_fact\".\n"
+        "- \"remove\": Xóa một sự thật cũ không còn đúng nữa. Bạn phải chỉ định rõ sự thật cũ cần xóa ở trường \"target_fact\".\n\n"
+        "Chỉ trích xuất các sự thật ổn định lâu dài (sở thích ăn uống, dị ứng, mục tiêu, ràng buộc lối sống, bệnh nền, thiết bị tập, lịch sinh hoạt). "
+        "KHÔNG trích xuất các sự kiện ngắn hạn (bữa ăn hôm nay, cân nặng hôm nay, tâm trạng hôm nay).\n"
+        "Viết nội dung sự thật ở ngôi thứ ba, ngắn gọn, tự đứng độc lập được (vd: \"Dị ứng hải sản\", \"Mục tiêu giảm 5kg trong 3 tháng\").\n"
+        "\"confidence\" = \"high\" khi người dùng khẳng định rõ ràng; \"low\" khi bạn đang tự suy diễn.\n\n"
+        "Trả về DUY NHẤT một mảng JSON (không kèm markdown khác) theo cấu trúc:\n"
+        "[\n"
+        "  {\n"
+        "    \"action\": \"add|update|remove\",\n"
+        "    \"category\": \"<một trong: " + allowed + ">\",\n"
+        "    \"fact\": \"<nội dung sự thật mới hoặc sự thật cần cập nhật>\",\n"
+        "    \"target_fact\": \"<nội dung sự thật cũ bị thay thế/xóa (chỉ dùng cho update/remove)>\",\n"
+        "    \"confidence\": \"high|low\"\n"
+        "  }, ...\n"
+        "]\n"
+        "Nếu không cần thay đổi gì, trả về [] (mảng rỗng)."
     )
-    user_content = f"Các turn cần phân tích:\n{turns_text}"
+    
+    existing_text = ""
+    if existing_facts:
+        existing_lines = []
+        for f in existing_facts:
+            cat = getattr(f, "category", "")
+            text_val = getattr(f, "fact", "")
+            existing_lines.append(f"- [{cat}] {text_val}")
+        existing_text = "\n\nCác sự thật hiện tại đã biết:\n" + "\n".join(existing_lines)
+
+    user_content = f"Các turn cần phân tích:\n{turns_text}{existing_text}"
     return [
         {"role": "system", "content": system},
         {"role": "user", "content": user_content},
     ]
 
 
-def _parse_fact_candidates(raw_text: str) -> list[dict[str, str]]:
+def _parse_fact_candidates(raw_text: str) -> list[dict[str, Any]]:
     """Best-effort parse the LLM's fact-extraction response.
 
-    Strategy:
-
-    1. If the response contains a fenced code block (``\\`\\`\\`json … \\`\\`\\```),
-       try parsing its body first.
-    2. Otherwise, scan for the first ``[`` and matching ``]`` and parse that
-       slice as JSON.
-    3. Anything that does not parse to a list of dicts becomes an empty list.
-
-    Each candidate is normalised to ``{"category": str, "fact": str}`` with
-    both fields trimmed; entries missing either field are dropped.
+    Each candidate is normalised to:
+    {
+      "action": "add|update|remove",
+      "category": str,
+      "fact": str,
+      "target_fact": str,
+      "confidence": "high|low"
+    }
     """
     if not isinstance(raw_text, str) or not raw_text.strip():
         return []
@@ -981,27 +1173,45 @@ def _parse_fact_candidates(raw_text: str) -> list[dict[str, str]]:
     if not isinstance(parsed, list):
         return []
 
-    results: list[dict[str, str]] = []
+    results: list[dict[str, Any]] = []
     for item in parsed:
         if not isinstance(item, dict):
             continue
+        
+        action = item.get("action", "add")
+        if not isinstance(action, str) or action.strip().lower() not in {"add", "update", "remove"}:
+            action = "add"
+        action = action.strip().lower()
+
         fact = item.get("fact")
-        category = item.get("category")
-        if not isinstance(fact, str) or not fact.strip():
+        fact = fact.strip() if isinstance(fact, str) else ""
+
+        target_fact = item.get("target_fact")
+        target_fact = target_fact.strip() if isinstance(target_fact, str) else ""
+
+        # Validate that we have the required fields based on action
+        if action == "add" and not fact:
             continue
+        if action == "update" and (not fact or not target_fact):
+            continue
+        if action == "remove" and not target_fact:
+            continue
+
+        category = item.get("category")
         if not isinstance(category, str):
             category = "other"
+        category = category.strip().lower()
+
         confidence = item.get("confidence")
-        if not isinstance(confidence, str) or confidence.strip().lower() not in {
-            "high",
-            "low",
-        }:
-            # Missing / malformed confidence is treated as low so an
-            # unverified guess never auto-promotes into the system prompt.
+        if not isinstance(confidence, str) or confidence.strip().lower() not in {"high", "low"}:
             confidence = "low"
+        confidence = confidence.strip().lower()
+
         results.append({
-            "category": category.strip(),
-            "fact": fact.strip(),
-            "confidence": confidence.strip().lower(),
+            "action": action,
+            "category": category,
+            "fact": fact,
+            "target_fact": target_fact,
+            "confidence": confidence
         })
     return results

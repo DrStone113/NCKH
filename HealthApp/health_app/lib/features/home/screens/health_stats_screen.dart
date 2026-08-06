@@ -79,7 +79,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
@@ -97,7 +97,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${user.age} tuổi • ${user.gender == "male" ? "Nam" : "Nữ"} • ${user.activityLevelText}',
-                  style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -152,7 +152,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
         decoration: BoxDecoration(
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,14 +161,14 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 if (onEdit != null)
-                  Icon(Icons.edit, size: 16, color: color.withOpacity(0.6)),
+                  Icon(Icons.edit, size: 16, color: color.withValues(alpha: 0.6)),
               ],
             ),
             const SizedBox(height: 4),
             Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-            Text(subtitle, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
+            Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textHint)),
           ],
         ),
       ),
@@ -215,7 +215,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (value) => FlLine(
+            getDrawingHorizontalLine: (value) => const FlLine(
               color: AppColors.surfaceLight,
               strokeWidth: 1,
             ),
@@ -226,7 +226,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
                 showTitles: true,
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) => Text(
-                  '${value.toStringAsFixed(0)}',
+                  value.toStringAsFixed(0),
                   style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
                 ),
               ),
@@ -259,7 +259,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
               ),
               belowBarData: BarAreaData(
                 show: true,
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
               ),
             ),
           ],
@@ -298,9 +298,9 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isActive ? color.withOpacity(0.15) : Colors.transparent,
+        color: isActive ? color.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-        border: isActive ? Border.all(color: color.withOpacity(0.4)) : null,
+        border: isActive ? Border.all(color: color.withValues(alpha: 0.4)) : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -312,7 +312,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
               Text(label, style: TextStyle(fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
             ],
           ),
-          Text(range, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(range, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
           if (isActive) Icon(Icons.check_circle, color: color, size: 18),
         ],
       ),
@@ -400,9 +400,12 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             onPressed: () async {
               final weight = double.tryParse(controller.text);
               if (weight != null && weight > 0) {
-                await Provider.of<UserProvider>(context, listen: false).updateWeight(weight);
-                await Provider.of<HealthProvider>(context, listen: false)
-                    .loadWeightHistory(Provider.of<UserProvider>(context, listen: false).currentUser!.id);
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                final healthProvider = Provider.of<HealthProvider>(context, listen: false);
+                await userProvider.updateWeight(weight);
+                if (userProvider.currentUser != null) {
+                  await healthProvider.loadWeightHistory(userProvider.currentUser!.id);
+                }
                 if (context.mounted) Navigator.pop(context);
               }
             },

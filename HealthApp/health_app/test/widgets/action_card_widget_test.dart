@@ -38,7 +38,7 @@ void main() {
       expect(find.text('Push-ups'), findsOneWidget);
       expect(find.text('30 phút'), findsOneWidget);
       expect(find.text('150 kcal'), findsOneWidget);
-      expect(find.text('strength'), findsOneWidget);
+      expect(find.text('Sức mạnh'), findsOneWidget);
       expect(find.byIcon(Icons.fitness_center), findsOneWidget);
       expect(find.text('Lưu vào nhật ký'), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);

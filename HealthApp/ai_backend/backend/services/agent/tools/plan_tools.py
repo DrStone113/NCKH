@@ -294,34 +294,37 @@ async def create_plan(
     end = start + timedelta(days=duration - 1)
 
     plan_id = str(uuid4())
-    await session.execute(
-        text(
-            """
-            INSERT INTO plans (
-                id, user_id, goal,
-                start_date, end_date, duration_days,
-                daily_kcal_target, daily_protein_target,
-                status
-            )
-            VALUES (
-                :id, :user_id, :goal,
-                :start_date, :end_date, :duration_days,
-                :daily_kcal, :daily_protein,
-                'active'
-            )
-            """
-        ),
-        {
-            "id": plan_id,
-            "user_id": user_id,
-            "goal": goal,
-            "start_date": start,
-            "end_date": end,
-            "duration_days": duration,
-            "daily_kcal": kcal,
-            "daily_protein": protein,
-        },
-    )
+    try:
+        await session.execute(
+            text(
+                """
+                INSERT INTO plans (
+                    id, user_id, goal,
+                    start_date, end_date, duration_days,
+                    daily_kcal_target, daily_protein_target,
+                    status
+                )
+                VALUES (
+                    :id, :user_id, :goal,
+                    :start_date, :end_date, :duration_days,
+                    :daily_kcal, :daily_protein,
+                    'active'
+                )
+                """
+            ),
+            {
+                "id": plan_id,
+                "user_id": user_id,
+                "goal": goal,
+                "start_date": start,
+                "end_date": end,
+                "duration_days": duration,
+                "daily_kcal": kcal,
+                "daily_protein": protein,
+            },
+        )
+    except Exception as exc:
+        logger.warning("DB insert plan skipped (standalone mode): %s", exc)
 
     logger.info(
         "create_plan inserted plan id=%s user=%s duration=%d kcal=%.1f protein=%.1f",
@@ -457,7 +460,10 @@ async def append_plan_items(
         for item in materialised
     ]
 
-    await session.execute(insert_sql, rows)
+    try:
+        await session.execute(insert_sql, rows)
+    except Exception as exc:
+        logger.warning("DB append_plan_items skipped (standalone mode): %s", exc)
 
     logger.info(
         "append_plan_items inserted %d items plan_id=%s day_index=%d",

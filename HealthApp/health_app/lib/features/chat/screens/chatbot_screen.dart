@@ -4,6 +4,8 @@ import '../../../providers/ai_chat_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../providers/exercise_provider.dart';
 import '../../../providers/nutrition_provider.dart';
+import '../../../providers/lifestyle_provider.dart';
+import '../../../providers/health_provider.dart';
 import '../../../models/chat_message.dart';
 import '../../../models/wger_models.dart';
 import '../../../models/meal_model.dart';
@@ -38,10 +40,16 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           Provider.of<ExerciseProvider>(context, listen: false);
       final nutritionProvider =
           Provider.of<NutritionProvider>(context, listen: false);
+      final lifestyleProvider =
+          Provider.of<LifestyleProvider>(context, listen: false);
+      final healthProvider =
+          Provider.of<HealthProvider>(context, listen: false);
 
       aiChatProvider.setProviders(
         exerciseProvider: exerciseProvider,
         nutritionProvider: nutritionProvider,
+        lifestyleProvider: lifestyleProvider,
+        healthProvider: healthProvider,
       );
 
       if (aiChatProvider.messages.isEmpty) {
@@ -114,7 +122,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -330,7 +338,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: isCurrent
-                                ? AppColors.primary.withOpacity(0.2)
+                                ? AppColors.primary.withValues(alpha: 0.2)
                                 : Colors.grey[200],
                             child: Icon(
                               Icons.chat_bubble_outline,
@@ -361,33 +369,39 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             icon: const Icon(Icons.delete_outline,
                                 color: Colors.redAccent, size: 20),
                             onPressed: () async {
+                              final messenger = ScaffoldMessenger.of(context);
                               try {
                                 await _backendApi.deleteChatSession(sessionId);
                                 if (isCurrent) {
                                   aiChatProvider.startNewSession();
                                 }
-                                Navigator.pop(modalContext);
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                if (modalContext.mounted) {
+                                  Navigator.pop(modalContext);
+                                }
+                                messenger.showSnackBar(
                                   const SnackBar(
                                       content: Text('Đã xóa cuộc trò chuyện')),
                                 );
                               } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                messenger.showSnackBar(
                                   SnackBar(content: Text('Lỗi xóa: $e')),
                                 );
                               }
                             },
                           ),
                           onTap: () async {
+                            final messenger = ScaffoldMessenger.of(context);
                             try {
                               final messages = await _backendApi
                                   .getSessionMessages(sessionId);
                               aiChatProvider.loadExistingSession(
                                   sessionId, messages);
-                              Navigator.pop(modalContext);
+                              if (modalContext.mounted) {
+                                Navigator.pop(modalContext);
+                              }
                               _scrollToBottom();
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              messenger.showSnackBar(
                                 SnackBar(
                                     content:
                                         Text('Không thể tải tin nhắn: $e')),
@@ -423,7 +437,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -493,9 +507,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildMessageBubble(AIChatMessage message) {
-    // Bot đang thinking/streaming → chỉ hiện indicator, ẩn hoàn toàn text
+    // Bot đang thinking → hiện indicator trạng thái kèm thoughts nếu có
     if (message.isThinking) {
-      return _buildThinkingBubble();
+      return _buildThinkingBubble(message);
     }
 
     // Nếu có structured response, dùng text từ đó
@@ -529,7 +543,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -557,30 +571,48 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   boxShadow: [
                     BoxShadow(
                       color: message.isUser
-                          ? AppColors.primary.withOpacity(0.2)
-                          : Colors.black.withOpacity(0.05),
+                          ? AppColors.primary.withValues(alpha: 0.2)
+                          : Colors.black.withValues(alpha: 0.05),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: message.isUser
-                    ? Text(
-                        displayText,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          height: 1.5,
-                        ),
-                      )
-                    : FormattedMarkdownText(
-                        text: displayText,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                          height: 1.5,
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!message.isUser && message.thoughts.isNotEmpty) ...[
+                      AIThoughtsPanel(
+                        thoughts: message.thoughts,
+                        isThinking: false,
                       ),
+                      const SizedBox(height: 10),
+                      Divider(
+                        height: 1,
+                        color: AppColors.textHint.withValues(alpha: 0.15),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    message.isUser
+                        ? Text(
+                            displayText,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              height: 1.5,
+                            ),
+                          )
+                        : FormattedMarkdownText(
+                            text: displayText,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                              height: 1.5,
+                            ),
+                          ),
+                  ],
+                ),
               ),
             ),
             if (message.isUser) const SizedBox(width: 10),
@@ -589,7 +621,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
         // Action cards
         if (!message.isUser && message.structuredResponse != null)
-          ..._buildActionCards(message.structuredResponse!),
+          ..._buildActionCards(message),
 
         // Suggestions / flow options
         if (!message.isUser &&
@@ -604,8 +636,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  /// Bubble "Đang suy nghĩ..." với animated dots + label trạng thái
-  Widget _buildThinkingBubble() {
+  /// Bubble "Đang suy nghĩ..." với animated dots + label trạng thái và thoughts panel nếu có
+  Widget _buildThinkingBubble(AIChatMessage message) {
+    final statusText = message.statusText.isNotEmpty ? message.statusText : 'Đang suy nghĩ...';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -619,7 +652,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -628,37 +661,54 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: const Icon(Icons.smart_toy, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.cardDark,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-                bottomLeft: Radius.circular(4),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _TypingDots(),
-                const SizedBox(width: 10),
-                Text(
-                  'Đang suy nghĩ...',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardDark,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(4),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _TypingDots(),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          statusText,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                if (message.thoughts.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  AIThoughtsPanel(
+                    thoughts: message.thoughts,
+                    isThinking: true,
+                  ),
+                ],
               ],
             ),
           ),
@@ -668,10 +718,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   /// Build action cards from structured response
-  List<Widget> _buildActionCards(StructuredResponse structuredResponse) {
+  List<Widget> _buildActionCards(AIChatMessage message) {
+    final structuredResponse = message.structuredResponse!;
     final widgets = <Widget>[];
     final foodActions = structuredResponse.foodActions;
     final exerciseActions = structuredResponse.exerciseActions;
+    final bool showSaveButton = !message.text.contains('✅');
 
     if (foodActions.isNotEmpty) {
       // Kiểm tra có phải weekly plan không (có field "day")
@@ -713,9 +765,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -757,10 +809,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 mealName: dishName,
                 mealType: mealType,
                 actions: actions,
-                onSaveAll: () => _handleSaveMealToJournal(
-                  mealName: dishName,
-                  actions: actions,
-                ),
+                onSaveAll: showSaveButton
+                    ? () => _handleSaveMealToJournal(
+                          mealName: dishName,
+                          actions: actions,
+                        )
+                    : null,
               ),
             ));
           }
@@ -788,10 +842,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               mealName: dishName,
               mealType: mealType,
               actions: actions,
-              onSaveAll: () => _handleSaveMealToJournal(
-                mealName: dishName,
-                actions: actions,
-              ),
+              onSaveAll: showSaveButton
+                  ? () => _handleSaveMealToJournal(
+                        mealName: dishName,
+                        actions: actions,
+                      )
+                  : null,
             ),
           ));
         }
@@ -803,7 +859,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
         child: ActionCardWidget(
           action: action,
-          onSaveToJournal: () => _handleSaveToJournal(action),
+          onSaveToJournal: showSaveButton ? () => _handleSaveToJournal(action) : null,
           onViewDetail: () => _handleViewDetail(action),
         ),
       ));
@@ -832,7 +888,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     required String mealName,
     required List<ActionItem> actions,
   }) async {
-    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    final messenger = ScaffoldMessenger.of(context);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final nutritionProvider = Provider.of<NutritionProvider>(context, listen: false);
+    final user = userProvider.currentUser;
     if (user == null || actions.isEmpty) return;
 
     // Hỏi người dùng muốn lưu vào bữa nào
@@ -872,12 +931,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         items: items,
       );
 
-      Provider.of<NutritionProvider>(context, listen: false).addMeal(meal);
+      nutritionProvider.addMeal(meal);
 
       if (mounted) {
         final totalCal = items.fold(0.0, (s, i) => s + i.calories);
         final mealLabel = _mealTypeLabel(mealType);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
                 '✅ Đã lưu "$mealName" vào $mealLabel (${totalCal.toStringAsFixed(0)} kcal)'),
@@ -934,12 +993,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isDefault
-              ? AppColors.primary.withOpacity(0.08)
+              ? AppColors.primary.withValues(alpha: 0.08)
               : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDefault
-                ? AppColors.primary.withOpacity(0.4)
+                ? AppColors.primary.withValues(alpha: 0.4)
                 : Colors.transparent,
             width: 1.5,
           ),
@@ -959,7 +1018,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text('Gợi ý',
@@ -1078,7 +1137,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Nhập khối lượng'),
+        title: const Text('Nhập khối lượng'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1134,10 +1193,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -1149,13 +1208,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Center(
                         child: Text(
                           '${i + 1}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
@@ -1175,7 +1234,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ),
                     ),
                     Icon(Icons.chevron_right,
-                        size: 18, color: AppColors.primary.withOpacity(0.5)),
+                        size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
                   ],
                 ),
               ),
@@ -1225,7 +1284,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.primary.withOpacity(0.08)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1253,7 +1312,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.08),
+                            color: AppColors.primary.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
@@ -1329,7 +1388,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 fontSize: 12, fontWeight: FontWeight.w500)),
                         backgroundColor: AppColors.surface,
                         side: BorderSide(
-                            color: AppColors.primary.withOpacity(0.25)),
+                            color: AppColors.primary.withValues(alpha: 0.25)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18)),
                         onPressed: () => _sendMessage(a.$3),
@@ -1344,9 +1403,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 fontSize: 12,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600)),
-                        backgroundColor: AppColors.primary.withOpacity(0.08),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.08),
                         side: BorderSide(
-                            color: AppColors.primary.withOpacity(0.35)),
+                            color: AppColors.primary.withValues(alpha: 0.35)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18)),
                         onPressed: () => _createPlanFromQuickAction(a.$3),
@@ -1401,7 +1460,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -1457,10 +1516,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -1469,11 +1528,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       children: [
                         Icon(Icons.add_circle_outline,
                             size: 14,
-                            color: AppColors.primary.withOpacity(0.8)),
+                            color: AppColors.primary.withValues(alpha: 0.8)),
                         const SizedBox(width: 5),
                         Text(
                           s,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.primary,
                             fontWeight: FontWeight.w500,
@@ -1507,7 +1566,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -1553,7 +1612,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ? null
                     : [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: AppColors.primary.withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -1561,7 +1620,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               ),
               child: IconButton(
                 icon: Icon(
-                    isStreaming ? Icons.hourglass_bottom : Icons.send_rounded,
+                    isStreaming ? Icons.hourglass_bottom : Icons.send,
                     color: isStreaming ? Colors.grey.shade600 : Colors.white,
                     size: 22),
                 onPressed: isStreaming ? null : _handleSubmit,
@@ -1674,7 +1733,7 @@ class _TypingDotsState extends State<_TypingDots>
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(opacity.clamp(0.3, 1.0)),
+                color: AppColors.primary.withValues(alpha: opacity.clamp(0.3, 1.0)),
                 shape: BoxShape.circle,
               ),
             );
@@ -1694,13 +1753,13 @@ class _MealActionCard extends StatelessWidget {
   final String mealName;
   final String mealType;
   final List<ActionItem> actions;
-  final VoidCallback onSaveAll;
+  final VoidCallback? onSaveAll;
 
   const _MealActionCard({
     required this.mealName,
     required this.mealType,
     required this.actions,
-    required this.onSaveAll,
+    this.onSaveAll,
   });
 
   /// Lấy nhãn bữa ăn từ meal_type
@@ -1751,10 +1810,10 @@ class _MealActionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFF4CAF50).withOpacity(0.25), width: 1.5),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withOpacity(0.08),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1767,7 +1826,7 @@ class _MealActionCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.06),
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.06),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(14),
                 topRight: Radius.circular(14),
@@ -1779,7 +1838,7 @@ class _MealActionCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.15),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.restaurant_menu,
@@ -1883,21 +1942,22 @@ class _MealActionCard extends StatelessWidget {
           const Divider(height: 1),
 
           // Nút lưu
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onSaveAll,
-                icon: const Icon(Icons.bookmark_add_outlined, size: 16),
-                label: Text('Lưu "$mealName" vào nhật ký'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+          if (onSaveAll != null)
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: onSaveAll,
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 16),
+                  label: Text('Lưu "$mealName" vào nhật ký'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -1915,6 +1975,110 @@ class _MealActionCard extends StatelessWidget {
             style:
                 const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
       ],
+    );
+  }
+}
+
+class AIThoughtsPanel extends StatefulWidget {
+  final String thoughts;
+  final bool isThinking;
+
+  const AIThoughtsPanel({
+    super.key,
+    required this.thoughts,
+    required this.isThinking,
+  });
+
+  @override
+  State<AIThoughtsPanel> createState() => _AIThoughtsPanelState();
+}
+
+class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
+  bool _isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.isThinking;
+  }
+
+  @override
+  void didUpdateWidget(AIThoughtsPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isThinking && !oldWidget.isThinking) {
+      _isExpanded = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.1),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: widget.isThinking
+                ? null
+                : () => setState(() => _isExpanded = !_isExpanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.psychology_outlined,
+                    size: 16,
+                    color: AppColors.primary.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.isThinking ? 'Đang suy nghĩ...' : 'Xem quá trình suy nghĩ',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (!widget.isThinking)
+                    Icon(
+                      _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+              child: Text(
+                widget.thoughts.trim(),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
     );
   }
 }

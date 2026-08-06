@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/nutrition_provider.dart';
 import '../../../providers/user_provider.dart';
@@ -6,7 +6,6 @@ import '../../../models/meal_model.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/animated_counter.dart';
-import '../../../widgets/off_food_search_widget.dart';
 import 'dart:math' as math;
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
@@ -17,7 +16,7 @@ class NutritionScreen extends StatefulWidget {
 
 class _NutritionScreenState extends State<NutritionScreen> {
   void _showDatePicker(BuildContext context, NutritionProvider provider, String userId) {
-    DateTime _viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month);
+    DateTime viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month);
 
     showModalBottomSheet(
       context: context,
@@ -26,8 +25,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
           final now = DateTime.now();
-          final daysInMonth = DateUtils.getDaysInMonth(_viewMonth.year, _viewMonth.month);
-          final firstWeekday = DateTime(_viewMonth.year, _viewMonth.month, 1).weekday % 7; // 0=Sun
+          final daysInMonth = DateUtils.getDaysInMonth(viewMonth.year, viewMonth.month);
+          final firstWeekday = DateTime(viewMonth.year, viewMonth.month, 1).weekday % 7; // 0=Sun
 
           return Container(
             decoration: const BoxDecoration(
@@ -49,19 +48,19 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () => setModalState(() {
-                        _viewMonth = DateTime(_viewMonth.year, _viewMonth.month - 1);
+                        viewMonth = DateTime(viewMonth.year, viewMonth.month - 1);
                       }),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                     Text(
-                      '${_monthLabel(_viewMonth.month)} ${_viewMonth.year}',
+                      '${_monthLabel(viewMonth.month)} ${viewMonth.year}',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
                       onPressed: () => setModalState(() {
-                        _viewMonth = DateTime(_viewMonth.year, _viewMonth.month + 1);
+                        viewMonth = DateTime(viewMonth.year, viewMonth.month + 1);
                       }),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -93,7 +92,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   itemBuilder: (_, index) {
                     if (index < firstWeekday) return const SizedBox();
                     final day = index - firstWeekday + 1;
-                    final date = DateTime(_viewMonth.year, _viewMonth.month, day);
+                    final date = DateTime(viewMonth.year, viewMonth.month, day);
                     final isFuture = date.isAfter(now);
                     final isSelected = date.year == provider.selectedDate.year &&
                         date.month == provider.selectedDate.month &&
@@ -110,7 +109,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           color: isSelected
                               ? AppColors.primary
                               : isToday
-                                  ? AppColors.primary.withOpacity(0.08)
+                                  ? AppColors.primary.withValues(alpha: 0.08)
                                   : Colors.transparent,
                           shape: BoxShape.circle,
                           border: isToday && !isSelected
@@ -280,7 +279,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.12),
+                            color: AppColors.success.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -299,7 +298,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withOpacity(0.12),
+                            color: AppColors.warning.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -527,10 +526,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: meal.isCompleted ? AppColors.success.withOpacity(0.05) : AppColors.cardDark,
+          color: meal.isCompleted ? AppColors.success.withValues(alpha: 0.05) : AppColors.cardDark,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: meal.isCompleted ? AppColors.success.withOpacity(0.3) : AppColors.surfaceLight,
+            color: meal.isCompleted ? AppColors.success.withValues(alpha: 0.3) : AppColors.surfaceLight,
             width: 1.5,
           ),
         ),
@@ -548,8 +547,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       width: 34, height: 34,
                       decoration: BoxDecoration(
                         color: meal.isCompleted
-                            ? AppColors.success.withOpacity(0.15)
-                            : _getMealColor(meal.mealType).withOpacity(0.12),
+                            ? AppColors.success.withValues(alpha: 0.15)
+                            : _getMealColor(meal.mealType).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -601,8 +600,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: meal.isCompleted
-                            ? AppColors.success.withOpacity(0.12)
-                            : AppColors.warning.withOpacity(0.12),
+                            ? AppColors.success.withValues(alpha: 0.12)
+                            : AppColors.warning.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -648,11 +647,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   padding: const EdgeInsets.fromLTRB(56, 4, 12, 8),
                   child: Row(
                     children: [
-                      Icon(Icons.add, size: 14, color: _getMealColor(meal.mealType).withOpacity(0.7)),
+                      Icon(Icons.add, size: 14, color: _getMealColor(meal.mealType).withValues(alpha: 0.7)),
                       const SizedBox(width: 4),
                       Text(
                         'Thêm thành phần',
-                        style: TextStyle(fontSize: 11, color: _getMealColor(meal.mealType).withOpacity(0.7)),
+                        style: TextStyle(fontSize: 11, color: _getMealColor(meal.mealType).withValues(alpha: 0.7)),
                       ),
                     ],
                   ),
@@ -819,8 +818,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: completedCount == meals.length
-                      ? AppColors.success.withOpacity(0.12)
-                      : AppColors.warning.withOpacity(0.12),
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : AppColors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -856,10 +855,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: _getMealColor(type).withOpacity(0.06),
+                color: _getMealColor(type).withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: _getMealColor(type).withOpacity(0.2),
+                  color: _getMealColor(type).withValues(alpha: 0.2),
                   style: BorderStyle.solid,
                 ),
               ),
@@ -899,14 +898,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(_getMealIcon(type), size: 20, color: _getMealColor(type).withOpacity(0.5)),
+                  Icon(_getMealIcon(type), size: 20, color: _getMealColor(type).withValues(alpha: 0.5)),
                   const SizedBox(width: 12),
                   Text(
                     groupLabels[type]!,
-                    style: TextStyle(fontSize: 13, color: AppColors.textHint),
+                    style: const TextStyle(fontSize: 13, color: AppColors.textHint),
                   ),
                   const Spacer(),
-                  Icon(Icons.add_circle_outline, size: 18, color: _getMealColor(type).withOpacity(0.5)),
+                  Icon(Icons.add_circle_outline, size: 18, color: _getMealColor(type).withValues(alpha: 0.5)),
                 ],
               ),
             ),
@@ -1082,7 +1081,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getMealTypeColor(_mealType).withOpacity(0.12),
+                            color: _getMealTypeColor(_mealType).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: DropdownButton<String>(
@@ -1165,7 +1164,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1219,7 +1218,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
       padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
       ),
       child: Row(
         children: [
@@ -1370,7 +1369,7 @@ class _TemplateCard extends StatelessWidget {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.08),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(child: Text(template.emoji, style: const TextStyle(fontSize: 22))),
@@ -1574,9 +1573,9 @@ class _FoodPickerListState extends State<_FoodPickerList> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.06),
+                color: AppColors.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1616,7 +1615,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                         return Column(
                           children: [
                             Text(
-                              '${_selected!.caloriesForGrams(g).toStringAsFixed(0)}',
+                              _selected!.caloriesForGrams(g).toStringAsFixed(0),
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.calories),
                             ),
                             const Text('kcal', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
@@ -1635,7 +1634,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: _gramsCtrl.text == g.toString()
-                              ? AppColors.primary : AppColors.primary.withOpacity(0.08),
+                              ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text('${g}g',
@@ -1680,7 +1679,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.cardDark,
+                    color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.cardDark,
                     borderRadius: BorderRadius.circular(10),
                     border: isSelected ? Border.all(color: AppColors.primary, width: 1.5) : null,
                   ),

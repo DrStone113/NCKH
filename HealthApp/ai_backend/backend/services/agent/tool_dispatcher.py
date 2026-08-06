@@ -252,32 +252,37 @@ class ToolDispatcher:
         call: ToolCall,
         descriptor: ToolDescriptor,
     ) -> str | None:
-        if self.db_session is None:
+        from db.db_status import is_db_offline, mark_db_offline
+        if self.db_session is None or is_db_offline():
             return None
         try:
-            await self.db_session.execute(
-                text(
-                    """
-                    INSERT INTO tool_invocations (
-                        session_id, correlation_id, tool_name, side, arguments,
-                        result, ok, error_code, duration_ms
-                    ) VALUES (
-                        :session_id, :correlation_id, :tool_name, :side, CAST(:arguments AS JSONB),
-                        NULL, NULL, NULL, NULL
-                    )
-                    """
+            await asyncio.wait_for(
+                self.db_session.execute(
+                    text(
+                        """
+                        INSERT INTO tool_invocations (
+                            session_id, correlation_id, tool_name, side, arguments,
+                            result, ok, error_code, duration_ms
+                        ) VALUES (
+                            :session_id, :correlation_id, :tool_name, :side, CAST(:arguments AS JSONB),
+                            NULL, NULL, NULL, NULL
+                        )
+                        """
+                    ),
+                    {
+                        "session_id": session_id,
+                        "correlation_id": call.id,
+                        "tool_name": call.name,
+                        "side": descriptor.side,
+                        "arguments": json.dumps(call.arguments),
+                    },
                 ),
-                {
-                    "session_id": session_id,
-                    "correlation_id": call.id,
-                    "tool_name": call.name,
-                    "side": descriptor.side,
-                    "arguments": json.dumps(call.arguments),
-                },
+                timeout=0.5,
             )
             return call.id
         except Exception:
-            logger.exception("Failed to insert tool invocation audit row")
+            mark_db_offline(60.0)
+            logger.warning("Failed to insert tool invocation audit row (DB unavailable)")
             return None
 
     async def _finalize_invocation(
@@ -289,24 +294,27 @@ class ToolDispatcher:
         if self.db_session is None or invocation_id is None:
             return
         try:
-            await self.db_session.execute(
-                text(
-                    """
-                    UPDATE tool_invocations
-                    SET result = CAST(:result AS JSONB),
-                        ok = :ok,
-                        error_code = :error_code,
-                        duration_ms = :duration_ms
-                    WHERE correlation_id = :correlation_id
-                    """
+            await asyncio.wait_for(
+                self.db_session.execute(
+                    text(
+                        """
+                        UPDATE tool_invocations
+                        SET result = CAST(:result AS JSONB),
+                            ok = :ok,
+                            error_code = :error_code,
+                            duration_ms = :duration_ms
+                        WHERE correlation_id = :correlation_id
+                        """
+                    ),
+                    {
+                        "correlation_id": invocation_id,
+                        "result": json.dumps(result.data if result.ok else None),
+                        "ok": result.ok,
+                        "error_code": result.error,
+                        "duration_ms": int((time.perf_counter() - started) * 1000),
+                    },
                 ),
-                {
-                    "correlation_id": invocation_id,
-                    "result": json.dumps(result.data if result.ok else None),
-                    "ok": result.ok,
-                    "error_code": result.error,
-                    "duration_ms": int((time.perf_counter() - started) * 1000),
-                },
+                timeout=0.5,
             )
         except Exception:
             logger.exception("Failed to finalize tool invocation audit row")
@@ -317,7 +325,8 @@ class ToolDispatcher:
         tool_name: str,
         request_id: str,
     ) -> ToolResult | None:
-        if self.db_session is None:
+        from db.db_status import is_db_offline
+        if self.db_session is None or is_db_offline():
             return None
         try:
             result = await self.db_session.execute(
@@ -397,6 +406,17 @@ class ToolDispatcher:
             # was cancelled. Cancellation is not "raising out" of dispatch
             # in the sense forbidden by the contract; it is cooperative.
             raise
+        except ValueError as exc:
+            msg = str(exc)
+            if msg in ("NO_DISH_FOUND", "INVALID_MEAL_TYPE", "INVALID_TARGET_KCAL", "INVALID_DIETARY_RESTRICTIONS", "INVALID_RECENT_DISH_IDS"):
+                return ToolResult(ok=False, error=msg)
+            logger.exception(
+                "Tool %s raised ValueError (session=%s, call_id=%s)",
+                call.name,
+                session_id,
+                call.id,
+            )
+            return ToolResult(ok=False, error="TOOL_INTERNAL_ERROR")
         except Exception:
             logger.exception(
                 "Tool %s raised (session=%s, call_id=%s)",

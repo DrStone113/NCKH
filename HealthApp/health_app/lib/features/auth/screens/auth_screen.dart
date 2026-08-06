@@ -4,7 +4,6 @@ import '../../../providers/user_provider.dart';
 import '../../../models/user_model.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/feature_carousel.dart';
-import '../../home/screens/home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -51,7 +50,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: const Icon(Icons.favorite, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
-                  Text(
+                  const Text(
                     'Health App',
                     style: TextStyle(
                       fontSize: 20,
@@ -82,7 +81,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     offset: const Offset(0, -4),
                     blurRadius: 24,
                   ),
@@ -94,7 +93,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
+                    const Text(
                       'Bắt đầu nào',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -105,7 +104,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    const Text(
                       'Đăng nhập để truy cập bảng điều khiển sức khỏe của bạn.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -151,7 +150,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                Text(
+                                const Text(
                                   'Tiếp tục với Google', 
                                   style: TextStyle(
                                     color: AppColors.textPrimary, 
@@ -181,7 +180,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
-                          side: BorderSide(color: AppColors.primary, width: 1.5),
+                          side: const BorderSide(color: AppColors.primary, width: 1.5),
                         ),
                       ),
                     ),
@@ -344,7 +343,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         await userProvider.signIn(email, password);
                       }
                     } catch (e) {
-                      if (mounted) {
+                      if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Lỗi Firebase Auth: $e'),

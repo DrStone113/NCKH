@@ -176,6 +176,11 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
                 "có id không thuộc danh sách này nếu tồn tại candidate khác."
             ),
         },
+        "query": {
+            "type": "string",
+            "default": "",
+            "description": "Từ khóa tìm kiếm tên món ăn (ví dụ: 'cơm', 'bún', 'phở', 'cháo', 'mì', 'miến', 'salad').",
+        },
     },
     "required": ["meal_type", "target_kcal"],
     "additionalProperties": False,
@@ -529,11 +534,38 @@ def _normalize_recent_ids(
         raise ValueError("INVALID_RECENT_DISH_IDS") from exc
 
 
+def _remove_accents(text: str) -> str:
+    accents_map = {
+        'a': 'áàảãạăắằẳẵặâấầẩẫậ',
+        'A': 'ÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬ',
+        'd': 'đ',
+        'D': 'Đ',
+        'e': 'éèẻẽẹêếềểễệ',
+        'E': 'ÉÈẺẼẸÊẾỀỂỄỆ',
+        'i': 'íìỉĩị',
+        'I': 'ÍÌỈĨỊ',
+        'o': 'óòỏõọôốồổỗộơớờởỡợ',
+        'O': 'ÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢ',
+        'u': 'úùủũụưứừửữự',
+        'U': 'ÚÙỦŨỤƯỨỪỬỮỰ',
+        'y': 'ýỳỷỹỵ',
+        'Y': 'ÝÝỲỶỸỴ'
+    }
+    res = list(text)
+    for i, char in enumerate(res):
+        for rep, chars in accents_map.items():
+            if char in chars:
+                res[i] = rep
+                break
+    return "".join(res)
+
+
 def suggest_dish(
     meal_type: str,
     target_kcal: float,
     dietary_restrictions: Sequence[str] | Iterable[str] = (),
     recent_dish_ids: Sequence[int] | Iterable[int] = (),
+    query: str = "",
 ) -> dict[str, Any]:
     """Pick a Vietnamese dish for ``meal_type`` near ``target_kcal``.
 
@@ -550,6 +582,8 @@ def suggest_dish(
         Optional iterable of dish ids recently chosen — the tool prefers a
         dish whose ``id`` is not in this set whenever another fitting
         candidate exists.
+    query:
+        Optional search query or keyword to match dish names.
 
     Returns
     -------
@@ -577,6 +611,8 @@ def suggest_dish(
     restrictions = _normalize_restrictions(dietary_restrictions)
     recent_ids = _normalize_recent_ids(recent_dish_ids)
 
+    clean_query = _remove_accents(query.strip().lower()) if isinstance(query, str) else ""
+
     # Filter and scale every catalog entry that is meal_type / restriction
     # compatible. We separate "preferred" (id ∉ recent) from "fallback".
     preferred: list[_ScaledDish] = []
@@ -585,6 +621,8 @@ def suggest_dish(
         if meal_type not in dish.meal_types:
             continue
         if not _passes_dietary_restrictions(dish, restrictions):
+            continue
+        if clean_query and clean_query not in _remove_accents(dish.name.lower()):
             continue
         scaled = _scale_dish(dish, target_kcal_f)
         if scaled is None:

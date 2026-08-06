@@ -118,22 +118,22 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    Center(
+                    const Center(
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             '🎯',
                             style: TextStyle(fontSize: 64),
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
+                          SizedBox(height: 16),
+                          Text(
                             'Mục tiêu sức khỏe',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
                             'Chọn mục tiêu phù hợp với bạn',
                             textAlign: TextAlign.center,
@@ -228,13 +228,13 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
@@ -242,7 +242,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                             color: AppColors.primary,
                             size: 20,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'Mục tiêu sẽ ảnh hưởng đến lượng calo khuyến nghị hàng ngày và các gợi ý dinh dưỡng, vận động.',
@@ -268,7 +268,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                 color: AppColors.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -325,7 +325,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
           ),
@@ -350,7 +350,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : AppColors.surfaceLight,
+          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -363,7 +363,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: isSelected ? color.withOpacity(0.2) : AppColors.surface,
+                color: isSelected ? color.withValues(alpha: 0.2) : AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -384,7 +384,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
@@ -397,7 +397,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

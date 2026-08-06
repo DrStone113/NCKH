@@ -82,7 +82,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -116,7 +116,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -164,10 +164,10 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _statItem(Icons.local_fire_department, '${calories.toStringAsFixed(0)}', 'kcal'),
-          Container(width: 1, height: 40, color: Colors.black.withOpacity(0.1)),
+          _statItem(Icons.local_fire_department, calories.toStringAsFixed(0), 'kcal'),
+          Container(width: 1, height: 40, color: Colors.black.withValues(alpha: 0.1)),
           _statItem(Icons.timer_outlined, '$duration', 'phút'),
-          Container(width: 1, height: 40, color: Colors.black.withOpacity(0.1)),
+          Container(width: 1, height: 40, color: Colors.black.withValues(alpha: 0.1)),
           _statItem(Icons.check_circle, '$completed', 'hoàn thành'),
         ],
       ),
@@ -191,7 +191,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.black.withOpacity(0.6),
+            color: Colors.black.withValues(alpha: 0.6),
           ),
         ),
       ],
@@ -207,7 +207,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.textHint.withOpacity(0.1),
+              color: AppColors.textHint.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -249,7 +249,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
         border: Border.all(color: AppColors.surfaceLight),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -267,7 +267,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(_getTypeIcon(exercise.type), color: color, size: 24),
@@ -291,7 +291,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.timer_outlined, size: 12, color: AppColors.textSecondary),
+                    const Icon(Icons.timer_outlined, size: 12, color: AppColors.textSecondary),
                     const SizedBox(width: 3),
                     Text(
                       '${exercise.duration} phút',
@@ -313,7 +313,7 @@ class _ExerciseHistoryScreenState extends State<ExerciseHistoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${exercise.caloriesBurned.toStringAsFixed(0)}',
+                exercise.caloriesBurned.toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

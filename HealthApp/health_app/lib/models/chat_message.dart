@@ -12,6 +12,8 @@ enum MessageStatus {
 class AIChatMessage {
   final String id;
   final String text;
+  final String thoughts;
+  final String statusText;
   final bool isUser;
   final bool isStreaming;
   final MessageStatus status;
@@ -30,6 +32,8 @@ class AIChatMessage {
     this.structuredResponse,
     this.suggestions = const [],
     this.isFlowQuestion = false,
+    this.thoughts = '',
+    this.statusText = '',
   })  : status = status ?? (isStreaming ? MessageStatus.thinking : MessageStatus.done),
         timestamp = timestamp ?? DateTime.now();
 
@@ -46,6 +50,8 @@ class AIChatMessage {
     StructuredResponse? structuredResponse,
     List<String>? suggestions,
     bool? isFlowQuestion,
+    String? thoughts,
+    String? statusText,
   }) {
     return AIChatMessage(
       id: id ?? this.id,
@@ -57,6 +63,8 @@ class AIChatMessage {
       structuredResponse: structuredResponse ?? this.structuredResponse,
       suggestions: suggestions ?? this.suggestions,
       isFlowQuestion: isFlowQuestion ?? this.isFlowQuestion,
+      thoughts: thoughts ?? this.thoughts,
+      statusText: statusText ?? this.statusText,
     );
   }
 }

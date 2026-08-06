@@ -1,4 +1,5 @@
 /// Models cho wger API Integration
+library;
 
 /// Model cho nhóm cơ từ wger API
 class WgerMuscle {

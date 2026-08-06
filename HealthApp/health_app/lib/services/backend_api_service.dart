@@ -188,14 +188,34 @@ class BackendApiService {
     throw Exception('Create plan failed: ${response.statusCode}');
   }
 
-  Future<Map<String, dynamic>> getActivePlan(String userId) async {
-    final response = await _client
-        .get(Uri.parse('$baseUrl/plans/$userId/active'))
-        .timeout(const Duration(seconds: 10));
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+  Future<Map<String, dynamic>?> getActivePlan(String userId) async {
+    try {
+      final response = await _client
+          .get(Uri.parse('$baseUrl/plans/$userId/active'))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ BackendAPI: Get active plan failed or empty: $e');
+      return null;
     }
-    throw Exception('Get active plan failed: ${response.statusCode}');
+  }
+
+  Future<Map<String, dynamic>?> getActivePlanDetail(String userId) async {
+    try {
+      final response = await _client
+          .get(Uri.parse('$baseUrl/plans/$userId/active/detail'))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ BackendAPI: Get active plan detail failed: $e');
+      return null;
+    }
   }
 
   Future<void> updatePlanItemCompletion({

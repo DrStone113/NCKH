@@ -103,14 +103,14 @@ class FormattedMarkdownText extends StatelessWidget {
           RegExp(r'^(\s*)([\*\-\+]|\d+[\.\)])\s+(.*)$').firstMatch(line);
 
       if (bulletMatch != null) {
-        final bulletSymbol = bulletMatch.group(2)!;
-        final contentText = bulletMatch.group(3)!;
+        final bulletSymbol = bulletMatch.group(2) ?? '';
+        final contentText = bulletMatch.group(3) ?? '';
         final isSubBullet = indentCount >= 2;
 
         final bulletIcon =
             (bulletSymbol == '*' || bulletSymbol == '-' || bulletSymbol == '+')
                 ? (isSubBullet ? '◦' : '•')
-                : '$bulletSymbol';
+                : bulletSymbol;
 
         widgets.add(Padding(
           padding: EdgeInsets.only(
@@ -200,7 +200,7 @@ class FormattedMarkdownText extends StatelessWidget {
         ));
       }
 
-      final textMatch = match.group(0)!;
+      final textMatch = match.group(0) ?? '';
       if (textMatch.startsWith('**') &&
           textMatch.endsWith('**') &&
           textMatch.length >= 4) {
@@ -218,7 +218,7 @@ class FormattedMarkdownText extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

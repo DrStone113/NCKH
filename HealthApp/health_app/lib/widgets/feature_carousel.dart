@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'feature_card.dart';
 import '../utils/responsive_utils.dart';
@@ -17,7 +16,6 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   late PageController _pageController;
   Timer? _autoRotateTimer;
   int _activeCard = 0;
-  int _previousCard = 0;
 
   @override
   void initState() {
@@ -77,7 +75,6 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   Widget build(BuildContext context) {
     final visibleCards = ResponsiveUtils.getCarouselVisibleCards(context);
     final cardWidth = ResponsiveUtils.getCarouselCardWidth(context);
-    final screenWidth = MediaQuery.of(context).size.width;
     
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -125,7 +122,6 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
           controller: _pageController,
           onPageChanged: (index) {
             setState(() {
-              _previousCard = _activeCard;
               _activeCard = index;
             });
           },
@@ -149,7 +145,6 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
           controller: _pageController,
           onPageChanged: (index) {
             setState(() {
-              _previousCard = _activeCard;
               _activeCard = index;
             });
           },
@@ -186,91 +181,11 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
     }
   }
 
-  Widget _buildAnimatedCard(int index, Widget card) {
-    final isActive = index == _activeCard;
-    final cardOrder = (index - _activeCard) % 3;
-    
-    return AnimatedBuilder(
-      animation: Listenable.merge([_rotationController, _floatController]),
-      builder: (context, child) {
-        // Tính toán vị trí và góc xoay dựa trên thứ tự
-        double xOffset = 0;
-        double yOffset = 0;
-        double rotation = 0;
-        double scale = 1.0;
-        double opacity = 1.0;
-        
-        // Float effect nhẹ nhàng
-        final floatValue = math.sin(_floatController.value * 2 * math.pi + index * 0.5);
-        final floatOffset = floatValue * 6;
-        
-        switch (cardOrder) {
-          case 0: // Card phía trước
-            xOffset = 0;
-            yOffset = 0 + floatOffset;
-            rotation = 0;
-            scale = 1.0;
-            opacity = 1.0;
-            break;
-          case 1: // Card ở giữa
-            xOffset = -30;
-            yOffset = -30 + floatOffset * 0.5;
-            rotation = -6; // Nghiêng trái
-            scale = 0.90;
-            opacity = 0.75;
-            break;
-          case 2: // Card phía sau
-            xOffset = 30;
-            yOffset = -60 + floatOffset * 0.3;
-            rotation = 6; // Nghiêng phải
-            scale = 0.80;
-            opacity = 0.5;
-            break;
-        }
-        
-        // Smooth transition khi xoay
-        final t = Curves.easeInOutCubic.transform(_rotationController.value);
-        xOffset = xOffset * (1 - t * 0.3);
-        yOffset = yOffset * (1 - t * 0.3);
-        
-        return Positioned(
-          left: 20 + xOffset,
-          top: 20 + yOffset,
-          child: Transform.rotate(
-            angle: rotation * math.pi / 180,
-            child: Transform.scale(
-              scale: scale,
-              child: Opacity(
-                opacity: opacity,
-                child: GestureDetector(
-                  onTap: () {
-                    if (!isActive) {
-                      setState(() {
-                        _activeCard = index;
-                      });
-                      _rotationController.forward(from: 0.0);
-                    }
-                  },
-                  child: SizedBox(
-                    width: 320,
-                    height: 420,
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      child: card,
-    );
-  }
-
   Widget _buildCard1() {
-    return FeatureCard(
+    return const FeatureCard(
       title: 'Theo dõi Hoạt động',
       description: 'Giám sát số bước chân, lượng calo đốt cháy và thời gian vận động hàng ngày.',
-      image: const _PlaceholderGraphic(
+      image: _PlaceholderGraphic(
         color: Color(0xFFE8F5E9),
         icon: Icons.directions_run,
         iconColor: Color(0xFF4CAF50),
@@ -280,10 +195,10 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   }
 
   Widget _buildCard2() {
-    return FeatureCard(
+    return const FeatureCard(
       title: 'Kế hoạch Tập luyện',
       description: 'Các bài tập được tùy chỉnh để giúp bạn đạt được mục tiêu thể hình.',
-      image: const _PlaceholderGraphic(
+      image: _PlaceholderGraphic(
         color: Color(0xFFFFF3E0),
         icon: Icons.fitness_center,
         iconColor: Color(0xFFFF9800),
@@ -294,10 +209,10 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   }
 
   Widget _buildCard3() {
-    return FeatureCard(
+    return const FeatureCard(
       title: 'Phân tích Dinh dưỡng',
       description: 'Theo dõi bữa ăn và nhận thông tin sức khỏe cá nhân hóa hàng ngày.',
-      image: const _PlaceholderGraphic(
+      image: _PlaceholderGraphic(
         color: Color(0xFFE0F2F1),
         icon: Icons.restaurant_menu,
         iconColor: Color(0xFF009688),
@@ -307,10 +222,10 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   }
 
   Widget _buildCard4() {
-    return FeatureCard(
+    return const FeatureCard(
       title: 'Theo dõi Nước uống',
       description: 'Duy trì đủ nước với nhắc nhở thông minh và mục tiêu uống nước hàng ngày.',
-      image: const _PlaceholderGraphic(
+      image: _PlaceholderGraphic(
         color: Color(0xFFE3F2FD),
         icon: Icons.water_drop,
         iconColor: Color(0xFF2196F3),
@@ -320,10 +235,10 @@ class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderSt
   }
 
   Widget _buildCard5() {
-    return FeatureCard(
+    return const FeatureCard(
       title: 'Phân tích Giấc ngủ',
       description: 'Giám sát chất lượng giấc ngủ và cải thiện sự nghỉ ngơi của bạn.',
-      image: const _PlaceholderGraphic(
+      image: _PlaceholderGraphic(
         color: Color(0xFFF3E5F5),
         icon: Icons.bedtime,
         iconColor: Color(0xFF9C27B0),

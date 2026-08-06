@@ -7,7 +7,6 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/animated_counter.dart';
 import '../../../widgets/smart_exercise_picker.dart';
-import 'exercise_detail_screen.dart';
 import 'exercise_browser_screen.dart';
 import 'exercise_history_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
@@ -76,9 +75,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             const SizedBox(height: 24),
             AnimatedCard(delay: 50, child: _buildAIBanner(context)),
             const SizedBox(height: 24),
-            AnimatedCard(
+            const AnimatedCard(
               delay: 100,
-              child: const Text('Danh mục bài tập', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text('Danh mục bài tập', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
             AnimatedCard(delay: 150, child: _buildCategoryGrid(context, exerciseProvider, user)),
@@ -95,7 +94,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -115,7 +114,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -170,7 +169,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(color: meta.$3.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: meta.$3.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
               child: Text('${group.length} bài', style: TextStyle(fontSize: 10, color: meta.$3, fontWeight: FontWeight.w600)),
             ),
           ]),
@@ -223,9 +222,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: textColor.withOpacity(0.8), size: 22),
+          Icon(icon, color: textColor.withValues(alpha: 0.8), size: 22),
           const SizedBox(height: 10),
-          Text(label, style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.7))),
+          Text(label, style: TextStyle(fontSize: 12, color: textColor.withValues(alpha: 0.7))),
           const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -234,7 +233,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               const SizedBox(width: 4),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(unit, style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.7))),
+                child: Text(unit, style: TextStyle(fontSize: 13, color: textColor.withValues(alpha: 0.7))),
               ),
             ],
           ),
@@ -262,7 +261,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.smart_toy, color: Colors.white, size: 26),
@@ -300,7 +299,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
         final crossAxisCount = width > 600 ? 4 : 2;
         // Giới hạn chiều cao card tối đa ~100px bất kể screen size
         final itemWidth = (width - 12 * (crossAxisCount - 1)) / crossAxisCount;
-        final itemHeight = 100.0;
+        const itemHeight = 100.0;
         final aspectRatio = itemWidth / itemHeight;
 
         return GridView.builder(
@@ -323,9 +322,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
+                  color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.2)),
+                  border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,7 +335,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
                           child: Icon(cat['icon'] as IconData, color: color, size: 20),
                         ),
                         Text('$count bài', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
@@ -346,7 +345,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(cat['label'] as String, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
-                        Text(cat['desc'] as String, style: TextStyle(fontSize: 10, color: color.withOpacity(0.7))),
+                        Text(cat['desc'] as String, style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7))),
                       ],
                     ),
                   ],
@@ -373,7 +372,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.fitness_center, size: 36, color: AppColors.success),
@@ -454,7 +453,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.surfaceLight),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Row(
           children: [
@@ -475,7 +474,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
               child: Icon(_getExerciseIcon(exercise.name, exercise.type), color: color, size: 24),
             ),
             const SizedBox(width: 14),
@@ -508,7 +507,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('${exercise.caloriesBurned.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.calories)),
+                Text(exercise.caloriesBurned.toStringAsFixed(0), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.calories)),
                 const Text('kcal', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
               ],
             ),
@@ -558,7 +557,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                   Container(
                     width: 60, height: 60,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+                      gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(_getExerciseIcon(exercise.name, exercise.type), color: Colors.white, size: 30),
@@ -584,7 +583,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 children: [
                   Expanded(child: _detailStat(Icons.timer_outlined, '${exercise.duration}', 'phút', color)),
                   const SizedBox(width: 12),
-                  Expanded(child: _detailStat(Icons.local_fire_department, '${exercise.caloriesBurned.toStringAsFixed(0)}', 'kcal', AppColors.calories)),
+                  Expanded(child: _detailStat(Icons.local_fire_department, exercise.caloriesBurned.toStringAsFixed(0), 'kcal', AppColors.calories)),
                   const SizedBox(width: 12),
                   Expanded(child: _detailStat(Icons.speed, exercise.intensityText, 'cường độ', color)),
                 ],
@@ -600,9 +599,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.08),
+                  color: color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withOpacity(0.2)),
+                  border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,7 +712,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                       Container(
                         width: 22, height: 22,
                         margin: const EdgeInsets.only(right: 10, top: 1),
-                        decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
                         child: Center(child: Text('${e.key + 1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color))),
                       ),
                       Expanded(child: Text(e.value, style: const TextStyle(fontSize: 13, height: 1.5))),
@@ -734,9 +733,9 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 ...wgerExercise.muscles.map((m) => Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: color.withOpacity(0.25)),
+                    border: Border.all(color: color.withValues(alpha: 0.25)),
                   ),
                   child: Text(m.nameEn, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
                 )),
@@ -845,66 +844,85 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
     final n = name.toLowerCase();
 
     // ── Kéo / xà / pull ──────────────────────────────────────────────
-    if (n.contains('pull') || n.contains('chin') || n.contains('xà'))
+    if (n.contains('pull') || n.contains('chin') || n.contains('xà')) {
       return Icons.airline_seat_flat;
+    }
     // ── Đẩy / push / press / hít đất ─────────────────────────────────
-    if (n.contains('push') || n.contains('press') || n.contains('hít đất') || n.contains('bench'))
+    if (n.contains('push') || n.contains('press') || n.contains('hít đất') || n.contains('bench')) {
       return Icons.arrow_upward;
+    }
     // ── Squat / lunge / chân ──────────────────────────────────────────
-    if (n.contains('squat') || n.contains('lunge') || n.contains('leg') || n.contains('chân') || n.contains('knee'))
+    if (n.contains('squat') || n.contains('lunge') || n.contains('leg') || n.contains('chân') || n.contains('knee')) {
       return Icons.accessibility_new;
+    }
     // ── Deadlift / hip hinge ──────────────────────────────────────────
-    if (n.contains('deadlift') || n.contains('hip') || n.contains('romanian') || n.contains('hinge'))
+    if (n.contains('deadlift') || n.contains('hip') || n.contains('romanian') || n.contains('hinge')) {
       return Icons.vertical_align_bottom;
+    }
     // ── Curl / bicep ──────────────────────────────────────────────────
-    if (n.contains('curl') || n.contains('bicep'))
+    if (n.contains('curl') || n.contains('bicep')) {
       return Icons.sports_handball;
+    }
     // ── Tricep / extension / dip ──────────────────────────────────────
-    if (n.contains('tricep') || n.contains('dip'))
+    if (n.contains('tricep') || n.contains('dip')) {
       return Icons.back_hand;
+    }
     // ── Wrist / forearm / grip / finger / hang ────────────────────────
     if (n.contains('wrist') || n.contains('forearm') || n.contains('grip') ||
-        n.contains('finger') || n.contains('hang') || n.contains('pinch'))
+        n.contains('finger') || n.contains('hang') || n.contains('pinch')) {
       return Icons.back_hand;
+    }
     // ── Row / lưng / lat ──────────────────────────────────────────────
-    if (n.contains('row') || n.contains('lat ') || n.contains('back') || n.contains('lưng'))
+    if (n.contains('row') || n.contains('lat ') || n.contains('back') || n.contains('lưng')) {
       return Icons.swap_vert;
+    }
     // ── Shoulder / vai / raise / lateral ─────────────────────────────
-    if (n.contains('shoulder') || n.contains('lateral') || n.contains('raise') || n.contains('vai'))
+    if (n.contains('shoulder') || n.contains('lateral') || n.contains('raise') || n.contains('vai')) {
       return Icons.expand;
+    }
     // ── Plank / core / bụng / ab / crunch / slide ────────────────────
     if (n.contains('plank') || n.contains('crunch') || n.contains('ab') ||
         n.contains('core') || n.contains('bụng') || n.contains('slide') ||
-        n.contains('hollow') || n.contains('l-sit'))
+        n.contains('hollow') || n.contains('l-sit')) {
       return Icons.crop_square;
+    }
     // ── Climb / leo / pillar / hercules ──────────────────────────────
     if (n.contains('climb') || n.contains('pillar') || n.contains('hercules') ||
-        n.contains('rope') || n.contains('leo'))
+        n.contains('rope') || n.contains('leo')) {
       return Icons.terrain;
+    }
     // ── Chạy / run / jog / sprint ────────────────────────────────────
-    if (n.contains('run') || n.contains('chạy') || n.contains('jog') || n.contains('sprint'))
+    if (n.contains('run') || n.contains('chạy') || n.contains('jog') || n.contains('sprint')) {
       return Icons.directions_run;
+    }
     // ── Đạp xe ───────────────────────────────────────────────────────
-    if (n.contains('bike') || n.contains('cycle') || n.contains('cycling'))
+    if (n.contains('bike') || n.contains('cycle') || n.contains('cycling')) {
       return Icons.directions_bike;
+    }
     // ── Bơi ──────────────────────────────────────────────────────────
-    if (n.contains('swim') || n.contains('bơi'))
+    if (n.contains('swim') || n.contains('bơi')) {
       return Icons.pool;
+    }
     // ── Nhảy / jump / box ────────────────────────────────────────────
-    if (n.contains('jump') || n.contains('box jump') || n.contains('nhảy'))
+    if (n.contains('jump') || n.contains('box jump') || n.contains('nhảy')) {
       return Icons.keyboard_double_arrow_up;
+    }
     // ── Yoga / stretch / giãn ────────────────────────────────────────
-    if (n.contains('yoga') || n.contains('stretch') || n.contains('flex') || n.contains('giãn'))
+    if (n.contains('yoga') || n.contains('stretch') || n.contains('flex') || n.contains('giãn')) {
       return Icons.self_improvement;
+    }
     // ── Commando / burpee / military ─────────────────────────────────
-    if (n.contains('commando') || n.contains('burpee') || n.contains('military'))
+    if (n.contains('commando') || n.contains('burpee') || n.contains('military')) {
       return Icons.sports_martial_arts;
+    }
     // ── Tạ / dumbbell / barbell / db ─────────────────────────────────
-    if (n.contains('dumbbell') || n.contains('barbell') || n.startsWith('db ') || n.contains(' db '))
+    if (n.contains('dumbbell') || n.contains('barbell') || n.startsWith('db ') || n.contains(' db ')) {
       return Icons.fitness_center;
+    }
     // ── Extension (chung — sau khi đã lọc tricep/wrist ở trên) ───────
-    if (n.contains('extension'))
+    if (n.contains('extension')) {
       return Icons.fitness_center;
+    }
 
     // ── Fallback theo type ────────────────────────────────────────────
     switch (type) {
@@ -917,7 +935,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   }
 
   void _openAIChat(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatbotScreen()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen()));
   }
 
   void _showCategorySheet(BuildContext context, String type, String label, Color color, ExerciseProvider provider, user) {
@@ -944,7 +962,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
                         child: Icon(_getTypeIcon(type), color: color, size: 22),
                       ),
                       const SizedBox(width: 12),
@@ -985,7 +1003,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                           Container(
                             width: 44,
                             height: 44,
-                            decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
                             child: Icon(_getTypeIcon(type), color: color, size: 22),
                           ),
                           const SizedBox(width: 12),
@@ -1010,7 +1028,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(color: color.withOpacity(0.12), shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
                             child: Icon(Icons.add, color: color, size: 18),
                           ),
                         ],
@@ -1057,7 +1075,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               ),
               const SizedBox(height: 16),
               // Chọn buổi tập
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Buổi tập', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
               ),
@@ -1073,7 +1091,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 3),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? color.withOpacity(0.15) : AppColors.surfaceLight,
+                          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected ? color : Colors.transparent,
@@ -1097,7 +1115,7 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.calorieGradient.colors.first.withOpacity(0.1),
+                    color: AppColors.calorieGradient.colors.first.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(

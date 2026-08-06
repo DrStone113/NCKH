@@ -192,10 +192,10 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _nutriStat('🔥', '${nutriments.energyKcal100g?.toStringAsFixed(0) ?? '?'}', 'kcal', AppColors.calories),
-                            _nutriStat('💪', '${nutriments.proteins100g?.toStringAsFixed(1) ?? '?'}', 'g P', AppColors.protein),
-                            _nutriStat('🌾', '${nutriments.carbohydrates100g?.toStringAsFixed(1) ?? '?'}', 'g C', AppColors.carbs),
-                            _nutriStat('🥑', '${nutriments.fat100g?.toStringAsFixed(1) ?? '?'}', 'g F', AppColors.fat),
+                            _nutriStat('🔥', nutriments.energyKcal100g?.toStringAsFixed(0) ?? '?', 'kcal', AppColors.calories),
+                            _nutriStat('💪', nutriments.proteins100g?.toStringAsFixed(1) ?? '?', 'g P', AppColors.protein),
+                            _nutriStat('🌾', nutriments.carbohydrates100g?.toStringAsFixed(1) ?? '?', 'g C', AppColors.carbs),
+                            _nutriStat('🥑', nutriments.fat100g?.toStringAsFixed(1) ?? '?', 'g F', AppColors.fat),
                           ],
                         ),
                       ],
@@ -228,9 +228,9 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.06),
+                        color: AppColors.primary.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,10 +335,10 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary : AppColors.primary.withOpacity(0.08),
+              color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.primary.withOpacity(isSelected ? 1 : 0.3),
+                color: AppColors.primary.withValues(alpha: isSelected ? 1 : 0.3),
               ),
             ),
             child: Text(
@@ -416,9 +416,9 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF00A651).withOpacity(0.1),
+                color: const Color(0xFF00A651).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFF00A651).withOpacity(0.3)),
+                border: Border.all(color: const Color(0xFF00A651).withValues(alpha: 0.3)),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
@@ -482,14 +482,14 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
         const SizedBox(height: 8),
 
         // Divider
-        Row(
+        const Row(
           children: [
-            const Expanded(child: Divider()),
+            Expanded(child: Divider()),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.symmetric(horizontal: 8),
               child: Text('hoặc tìm theo tên', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             ),
-            const Expanded(child: Divider()),
+            Expanded(child: Divider()),
           ],
         ),
         const SizedBox(height: 8),
@@ -533,9 +533,9 @@ class _OFFFoodSearchWidgetState extends State<OFFFoodSearchWidget> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.08),
+              color: AppColors.error.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

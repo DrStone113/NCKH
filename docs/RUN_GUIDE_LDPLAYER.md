@@ -2,15 +2,22 @@
 
 > **Dự án**: HealthApp - Hệ thống AI Chatbot Chăm sóc Sức khỏe & Giao tiếp chủ động (Proactive Engagement)  
 > **Tác giả / Nhóm nghiên cứu**: NCKH Healthcare AI Team  
-> **Cập nhật lần cuối**: 2026-07-26  
+> **Cập nhật lần cuối**: 2026-08-06  
 
 ---
 
 ## 📋 1. Môi trường & Chuẩn bị
 
-1. **Giả lập LDPlayer 9**: Đã bật sẵn trên máy (Port ADB mặc định: `emulator-5554`).
-2. **Đường dẫn ADB của LDPlayer**: `C:\LDPlayer\LDPlayer9\adb.exe`
-3. **Mã SHA-1 Debug của máy bạn** (Dùng để khai báo Google Sign-In trên Firebase Console):
+1. **Flutter SDK**: `3.44.8 (stable)` cài tại `C:\flutter`, đã thêm `C:\flutter\bin` vào biến môi trường `PATH` → gọi trực tiếp lệnh `flutter` ở mọi thư mục.
+   ```powershell
+   flutter --version   # Kỳ vọng: Flutter 3.44.8 • channel stable • Dart 3.12.2
+   ```
+2. **Thư mục gốc dự án**: `C:\Project\Chatbot\NCKH`
+3. **Android SDK**: `36.0.0` tại `C:\Users\ADMIN\AppData\Local\Android\sdk` (JDK 21 đi kèm Android Studio).
+   - Nếu `flutter doctor` báo thiếu license, chạy: `flutter doctor --android-licenses`
+4. **Giả lập LDPlayer 9**: Đã bật sẵn trên máy (Port ADB mặc định: `emulator-5554`).
+5. **Đường dẫn ADB của LDPlayer**: `C:\LDPlayer\LDPlayer9\adb.exe`
+6. **Mã SHA-1 Debug của máy bạn** (Dùng để khai báo Google Sign-In trên Firebase Console):
    ```text
    SHA1: 39:CB:76:D6:7F:72:9A:DE:47:42:33:D6:0F:19:C1:12:93:78:B5:AE
    ```
@@ -22,7 +29,7 @@
 Mở terminal PowerShell thứ nhất và chuyển vào thư mục backend:
 
 ```powershell
-cd C:\Users\ADMIN\Downloads\Project\Chatbot-NCKH\NCKH\NCKH\HealthApp\ai_backend\backend
+cd C:\Project\Chatbot\NCKH\HealthApp\ai_backend\backend
 ```
 
 Khởi chạy server uvicorn (Host `0.0.0.0` trên cổng `8080`):
@@ -43,19 +50,22 @@ Khởi chạy server uvicorn (Host `0.0.0.0` trên cổng `8080`):
 Mở terminal PowerShell thứ hai và chuyển vào thư mục ứng dụng Flutter:
 
 ```powershell
-cd C:\Users\ADMIN\Downloads\Project\Chatbot-NCKH\NCKH\NCKH\HealthApp\health_app
+cd C:\Project\Chatbot\NCKH\HealthApp\health_app
 ```
 
-Thêm đường dẫn ADB của LDPlayer vào biến môi trường PATH tạm thời:
+Thêm đường dẫn ADB của LDPlayer vào biến môi trường PATH tạm thời và kiểm tra thiết bị:
 
 ```powershell
 $env:PATH += ";C:\LDPlayer\LDPlayer9"
+flutter devices
 ```
+
+> Nếu LDPlayer chưa xuất hiện, chạy `adb connect 127.0.0.1:5555` rồi kiểm tra lại bằng `adb devices`.
 
 ### 🔹 Cách 1: Chạy Chế độ Live Debug / Hot Reload (Khuyên dùng khi lập trình)
 
 ```powershell
-..\..\flutter\bin\flutter.bat run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8080
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8080
 ```
 
 > **Lưu ý**: `10.0.2.2` là địa chỉ IP đặc biệt của giả lập Android để truy cập lại `localhost` của máy tính.
@@ -64,7 +74,7 @@ $env:PATH += ";C:\LDPlayer\LDPlayer9"
 
 #### B3.1: Build file APK
 ```powershell
-..\..\flutter\bin\flutter.bat build apk --debug --android-skip-build-dependency-validation --dart-define=API_BASE_URL=http://10.0.2.2:8080
+flutter build apk --debug --android-skip-build-dependency-validation --dart-define=API_BASE_URL=http://10.0.2.2:8080
 ```
 
 #### B3.2: Đẩy file APK vào LDPlayer 9

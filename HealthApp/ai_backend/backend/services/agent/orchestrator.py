@@ -94,7 +94,12 @@ class AgentOrchestrator:
         gateway = self.gateway
         performed_actions: list[dict[str, Any]] = []
         try:
+            if gateway is not None and hasattr(gateway, "send_status"):
+                await gateway.send_status("🔍 Đang tải ngữ cảnh và phân tích câu hỏi...")
             context = await self.memory.loadContext(session_id, user_text)
+            
+            if gateway is not None and hasattr(gateway, "send_status"):
+                await gateway.send_status("🧠 Đang lập kế hoạch phản hồi...")
             plan = classify_turn(user_text, history_len=len(context.history))
             llm = self._select_llm(plan)
             tool_schemas = self.tools.schemas() if plan.offer_tools else None
@@ -121,6 +126,11 @@ class AgentOrchestrator:
             user_profile: Any = None
 
             for step in range(step_budget):
+                if gateway is not None and hasattr(gateway, "send_status"):
+                    if step > 0:
+                        await gateway.send_status(f"💭 Đang suy nghĩ bước {step + 1}...")
+                    else:
+                        await gateway.send_status("🤖 Đang suy nghĩ câu trả lời...")
                 response = await llm.chat(messages, tools=tool_schemas)
                 full_response = await self._stream_final(gateway, response)
 
@@ -141,9 +151,16 @@ class AgentOrchestrator:
                 msg["tool_calls"] = [self._call_to_message(c) for c in response.tool_calls]
                 messages.append(msg)
 
+                tool_names = ", ".join([c.name for c in response.tool_calls])
+                if gateway is not None and hasattr(gateway, "send_status"):
+                    await gateway.send_status(f"🛠️ Đang chạy công cụ: {tool_names}...")
+
                 tool_results = await self._dispatch_all(
                     session_id, response.tool_calls, failure_counts
                 )
+
+                if gateway is not None and hasattr(gateway, "send_status"):
+                    await gateway.send_status("✅ Đã xử lý xong dữ liệu công cụ. Đang tổng hợp phản hồi...")
 
                 for call, result in tool_results:
                     serialized = self._serialize_result(call, result)
@@ -172,6 +189,7 @@ class AgentOrchestrator:
                         tool_catalog=self.tools if plan.offer_tools else None,
                         user_profile=user_profile,
                         mode=plan.prompt_mode,
+                        relevant_history=getattr(context, "relevant_history", None),
                     )
 
                 # Last permitted step: force a text answer instead of dying on
@@ -309,6 +327,7 @@ class AgentOrchestrator:
             context.rag_chunks,
             tool_catalog=self.tools if plan.offer_tools else None,
             mode=plan.prompt_mode,
+            relevant_history=getattr(context, "relevant_history", None),
         )
         messages: list[dict[str, Any]] = [{"role": "system", "content": prompt}]
 
@@ -330,9 +349,14 @@ class AgentOrchestrator:
         if response.content_stream is None:
             return response.full_text or ""
         async for token in response.content_stream:
-            chunks.append(token)
-            if gateway is not None:
-                await gateway.send_token(token)
+            token_type = getattr(token, "token_type", "token")
+            if token_type == "thought":
+                if gateway is not None and hasattr(gateway, "send_thought"):
+                    await gateway.send_thought(token)
+            else:
+                chunks.append(token)
+                if gateway is not None and hasattr(gateway, "send_token"):
+                    await gateway.send_token(token)
         return "".join(chunks) or response.full_text or ""
 
     async def _append_turn(

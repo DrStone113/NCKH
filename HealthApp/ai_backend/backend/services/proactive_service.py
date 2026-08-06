@@ -388,7 +388,7 @@ class ProactiveService:
         text = (req.response_text or "").strip()
 
         # Structured quick-option answers map to a logged action.
-        if "water" in opt_id:
+        if "water" in opt_id or opt_id.startswith("opt_w_"):
             amount = 250
             if "500" in opt_id:
                 amount = 500
@@ -399,6 +399,13 @@ class ProactiveService:
                 ai_reply=f"Đã ghi {amount}ml. Cứ rải đều trong ngày là tốt nhất.",
                 action_taken="water_logged",
                 logged_data={"water_ml": amount},
+            )
+
+        if "nut" in opt_id or "veggies" in opt_id:
+            return CheckinRespondResult(
+                status="success",
+                ai_reply="Ghi nhận bữa ăn. Bổ sung đủ rau xanh và chất xơ giúp tiêu hóa rất tốt.",
+                action_taken="nutrition_logged",
             )
 
         if "exercise" in opt_id or "workout" in opt_id or "walk" in opt_id:

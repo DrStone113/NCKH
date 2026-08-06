@@ -122,6 +122,70 @@ def _coerce_arguments(raw: Any) -> dict[str, Any]:
 def _new_call_id() -> str:
     return f"call_{uuid.uuid4().hex[:12]}"
 
+def _split_concatenated_tool_calls(name: str, arguments_str: str) -> list[tuple[str, str]]:
+    known_tools = [
+        "suggest_dish",
+        "suggest_workout",
+        "calculate_tdee",
+        "search_food_nutrition",
+        "create_plan",
+        "append_plan_items",
+        "query_rag",
+        "search_medical_knowledge",
+        "get_user_profile",
+        "get_today_meals",
+        "get_meal_log_range",
+        "log_meal",
+        "get_today_exercises",
+        "get_exercise_log_range",
+        "get_weight_history",
+        "log_exercise",
+        "log_weight",
+        "get_lifestyle_logs",
+        "log_lifestyle",
+        "set_lifestyle_reminder",
+        "get_active_plan",
+        "mark_plan_item_complete",
+        "navigate_to_screen",
+    ]
+    
+    # Try to find sequences of known tools in the concatenated name
+    detected_tools = []
+    temp_name = name
+    while temp_name:
+        matched = False
+        for tool in known_tools:
+            if temp_name.startswith(tool):
+                detected_tools.append(tool)
+                temp_name = temp_name[len(tool):]
+                matched = True
+                break
+        if not matched:
+            return []
+            
+    if not detected_tools or len(detected_tools) <= 1:
+        return []
+        
+    # Split concatenated JSON objects like {"user_id": "..."}{"user_id": "..."}
+    json_strs = []
+    brace_count = 0
+    start_idx = -1
+    for i, char in enumerate(arguments_str):
+        if char == '{':
+            if brace_count == 0:
+                start_idx = i
+            brace_count += 1
+        elif char == '}':
+            brace_count -= 1
+            if brace_count == 0 and start_idx != -1:
+                json_strs.append(arguments_str[start_idx:i+1])
+                start_idx = -1
+                
+    if len(json_strs) == len(detected_tools):
+        return list(zip(detected_tools, json_strs))
+        
+    return []
+
 def _parse_native_tool_calls(raw_calls: Iterable[Any]) -> list[ToolCall]:
     result: list[ToolCall] = []
     for raw in raw_calls:
@@ -131,7 +195,19 @@ def _parse_native_tool_calls(raw_calls: Iterable[Any]) -> list[ToolCall]:
         name = fn.get("name") if isinstance(fn, dict) else None
         if not isinstance(name, str) or not name:
             continue
-        args = _coerce_arguments(fn.get("arguments") if isinstance(fn, dict) else None)
+            
+        args_raw = fn.get("arguments") if isinstance(fn, dict) else None
+        args_str = args_raw if isinstance(args_raw, str) else json.dumps(args_raw) if args_raw else ""
+        
+        split_calls = _split_concatenated_tool_calls(name, args_str)
+        if split_calls:
+            for s_name, s_args_str in split_calls:
+                call_id = _new_call_id()
+                args = _coerce_arguments(s_args_str)
+                result.append(ToolCall(id=call_id, name=s_name, arguments=args))
+            continue
+            
+        args = _coerce_arguments(args_raw)
         raw_id = raw.get("id")
         call_id = raw_id if isinstance(raw_id, str) and raw_id else _new_call_id()
         result.append(ToolCall(id=call_id, name=name, arguments=args))
@@ -161,29 +237,99 @@ def _parse_json_mode_tool_calls(full_text: str) -> list[ToolCall]:
 # Streaming Content Iterator
 # ---------------------------------------------------------------------------- #
 
+class StreamingToken(str):
+    """A string subclass that carries a token type (e.g. 'token' or 'thought')."""
+    
+    def __new__(cls, value: str, token_type: str = "token") -> StreamingToken:
+        obj = str.__new__(cls, value)
+        obj.token_type = token_type
+        return obj
+
+
 class StreamingContent(AsyncIterator[str]):
     def __init__(self, buffer: list[str], response_stream: Any, response_obj: LLMResponse) -> None:
-        self.buffer = buffer
         self.response_stream = response_stream
         self.response_obj = response_obj
-        self.buffer_idx = 0
         self.garbled_buffer: list[str] = []
         self.garbled_checked = False
+        self._stream_finished = False
+        
+        # State machine variables for parsing <think>...</think> tags in the stream
+        self._in_think = False
+        self._tag_buffer = ""
+        self._emit_queue: list[StreamingToken] = []
+        
+        # Pre-process the initial buffer
+        for token in buffer:
+            self._process_content(token)
+
+    def _emit_char(self, t_type: str, char: str) -> None:
+        if self._emit_queue and self._emit_queue[-1].token_type == t_type:
+            # Combine consecutive tokens of the same type
+            new_val = self._emit_queue[-1] + char
+            self._emit_queue[-1] = StreamingToken(new_val, t_type)
+        else:
+            self._emit_queue.append(StreamingToken(char, t_type))
+
+    def _process_content(self, content: str) -> None:
+        if not self._tag_buffer and "<" not in content:
+            t_type = "thought" if self._in_think else "token"
+            self._emit_queue.append(StreamingToken(content, t_type))
+            return
+
+        for c in content:
+            if self._tag_buffer:
+                test_buffer = self._tag_buffer + c
+                is_prefix_think = "<think>".startswith(test_buffer)
+                is_prefix_unthink = "</think>".lower().startswith(test_buffer.lower())
+                
+                if test_buffer == "<think>":
+                    self._in_think = True
+                    self._tag_buffer = ""
+                elif test_buffer.lower() == "</think>":
+                    self._in_think = False
+                    self._tag_buffer = ""
+                elif is_prefix_think or is_prefix_unthink:
+                    self._tag_buffer = test_buffer
+                else:
+                    # Flush self._tag_buffer
+                    for bc in self._tag_buffer:
+                        self._emit_char("thought" if self._in_think else "token", bc)
+                    self._tag_buffer = ""
+                    # Process current character c
+                    if c == "<":
+                        self._tag_buffer = "<"
+                    else:
+                        self._emit_char("thought" if self._in_think else "token", c)
+            else:
+                if c == "<":
+                    self._tag_buffer = "<"
+                else:
+                    self._emit_char("thought" if self._in_think else "token", c)
+
+    def _flush_remaining(self) -> None:
+        if self._tag_buffer:
+            t_type = "thought" if self._in_think else "token"
+            for bc in self._tag_buffer:
+                self._emit_char(t_type, bc)
+            self._tag_buffer = ""
 
     def __aiter__(self) -> StreamingContent:
         return self
 
     async def __anext__(self) -> str:
-        if self.buffer_idx < len(self.buffer):
-            token = self.buffer[self.buffer_idx]
-            self.buffer_idx += 1
-            self.response_obj.full_text += token
+        if self._emit_queue:
+            val = self._emit_queue.pop(0)
+            self.response_obj.full_text += val
             if not self.garbled_checked:
-                self.garbled_buffer.append(token)
+                self.garbled_buffer.append(val)
                 if len(self.garbled_buffer) >= GARBLED_CHECK_TOKENS:
                     _check_garbled("".join(self.garbled_buffer))
                     self.garbled_checked = True
-            return token
+            return val
+
+        if self._stream_finished:
+            raise StopAsyncIteration
 
         try:
             while True:
@@ -192,6 +338,7 @@ class StreamingContent(AsyncIterator[str]):
                     continue
                 delta = chunk.choices[0].delta
                 
+                # Check for native tool calls
                 if delta.tool_calls:
                     if not hasattr(self, '_tool_calls_map'):
                         self._tool_calls_map = {}
@@ -208,16 +355,29 @@ class StreamingContent(AsyncIterator[str]):
                             if tc_chunk.function.arguments:
                                 self._tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
 
+                # Process reasoning_content
+                reasoning = getattr(delta, "reasoning_content", None)
+                if reasoning:
+                    self._emit_char("thought", reasoning)
+
+                # Process normal content
                 content = delta.content
                 if content:
-                    self.response_obj.full_text += content
+                    self._process_content(content)
+
+                if self._emit_queue:
+                    val = self._emit_queue.pop(0)
+                    self.response_obj.full_text += val
                     if not self.garbled_checked:
-                        self.garbled_buffer.append(content)
+                        self.garbled_buffer.append(val)
                         if len(self.garbled_buffer) >= GARBLED_CHECK_TOKENS:
                             _check_garbled("".join(self.garbled_buffer))
                             self.garbled_checked = True
-                    return content
+                    return val
         except StopAsyncIteration:
+            self._stream_finished = True
+            self._flush_remaining()
+            
             if hasattr(self, '_tool_calls_map') and self._tool_calls_map:
                 self.response_obj.tool_calls = _parse_native_tool_calls(self._tool_calls_map.values())
             elif not self.response_obj.tool_calls and "<tool_call>" in self.response_obj.full_text:
@@ -228,6 +388,12 @@ class StreamingContent(AsyncIterator[str]):
             if not self.garbled_checked and self.garbled_buffer:
                 _check_garbled("".join(self.garbled_buffer))
                 self.garbled_checked = True
+                
+            if self._emit_queue:
+                val = self._emit_queue.pop(0)
+                self.response_obj.full_text += val
+                return val
+                
             raise StopAsyncIteration
 
 
@@ -437,5 +603,6 @@ __all__ = [
     "LLMError",
     "LLMResponse",
     "LLMUnavailableError",
+    "StreamingToken",
     "ToolCall",
 ]

@@ -30,10 +30,11 @@ def test_tool_catalog_registers_all_22_tools():
         "create_plan",
         "append_plan_items",
         "query_rag",
+        "search_medical_knowledge",
     }
 
     assert set(registry.names()) == expected
-    assert len(registry.schemas()) == 22
+    assert len(registry.schemas()) == 23
 
 
 def test_client_write_tools_require_request_id():

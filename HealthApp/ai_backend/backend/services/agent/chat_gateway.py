@@ -23,7 +23,8 @@ class ChatGateway:
         self._session_ensured = False
 
     async def _ensure_session_exists(self) -> None:
-        if not self.db_session or self._session_ensured:
+        from db.db_status import is_db_offline, mark_db_offline
+        if not self.db_session or self._session_ensured or is_db_offline():
             return
         try:
             import uuid
@@ -47,6 +48,7 @@ class ChatGateway:
             await self.db_session.commit()
             self._session_ensured = True
         except Exception as e:
+            mark_db_offline(60.0)
             logger.error(f"Error ensuring session exists: {e}")
             await self.db_session.rollback()
 
@@ -68,7 +70,6 @@ class ChatGateway:
         try:
             import uuid
             uuid.UUID(self.session_id)
-            await self._ensure_session_exists()
         except ValueError:
             pass
         return True
@@ -109,12 +110,18 @@ class ChatGateway:
                         try:
                             await self.orchestrator.handleChatMessage(sess_id, msg)
                             if self.db_session:
-                                await self.db_session.commit()
+                                try:
+                                    await self.db_session.commit()
+                                except Exception as ce:
+                                    logger.warning("DB commit failed: %s", ce)
                         except Exception as e:
                             import traceback
                             traceback.print_exc()
                             if self.db_session:
-                                await self.db_session.rollback()
+                                try:
+                                    await self.db_session.rollback()
+                                except Exception:
+                                    pass
                             await self.send_error("INTERNAL_ERROR", str(e))
                             
                     import asyncio
@@ -138,6 +145,12 @@ class ChatGateway:
 
     async def send_token(self, content: str) -> None:
         await self.websocket.send_json({"type": "token", "content": content})
+
+    async def send_status(self, content: str) -> None:
+        await self.websocket.send_json({"type": "status", "content": content})
+
+    async def send_thought(self, content: str) -> None:
+        await self.websocket.send_json({"type": "thought", "content": content})
 
     async def send_tool_call(
         self, correlation_id: str, name: str, args: dict[str, Any], timeout_ms: int

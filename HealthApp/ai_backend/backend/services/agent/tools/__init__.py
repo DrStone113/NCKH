@@ -45,7 +45,7 @@ def register_server_tools(
     registry.register(
         _clone_descriptor(
             food.TOOL_DESCRIPTOR,
-            fn=partial(food.search_food_nutrition, rag_service=rag_service),
+            fn=partial(food.search_food_nutrition, rag_service=rag_service, db=db_session),
         )
     )
 

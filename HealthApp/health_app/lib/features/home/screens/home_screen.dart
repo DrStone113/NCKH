@@ -5,6 +5,7 @@ import '../../../providers/nutrition_provider.dart';
 import '../../../providers/exercise_provider.dart';
 import '../../../providers/health_provider.dart';
 import '../../../providers/chat_provider.dart';
+import '../../../providers/ai_chat_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/animated_counter.dart';
@@ -15,10 +16,9 @@ import '../../exercise/screens/exercise_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
 import '../../auth/screens/auth_screen.dart';
 import '../../settings/screens/goal_settings_screen.dart';
+import '../../settings/screens/account_settings_screen.dart';
 import '../../../widgets/bento_card.dart';
-import 'dart:math' as math;
 
-import '../../lifestyle/screens/lifestyle_screen.dart';
 import '../../../providers/proactive_provider.dart';
 import '../../../widgets/proactive_checkin_card.dart';
 
@@ -32,16 +32,49 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    _DashboardTab(),
-    NutritionScreen(),
-    ExerciseScreen(),
-    LifestyleScreen(),
-    ChatbotScreen(),
+  late final List<Widget> _screens = [
+    _DashboardTab(onOpenChat: () => _openChatModal(context)),
+    const NutritionScreen(),
+    const ExerciseScreen(),
+    const AccountSettingsScreen(),
   ];
 
   void _onTabChanged(int index) {
     setState(() => _currentIndex = index);
+  }
+
+  void _openChatModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.88,
+        minChildSize: 0.5,
+        maxChildSize: 0.96,
+        builder: (context, scrollController) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Container(
+            color: AppColors.background,
+            child: Column(
+              children: [
+                // Top Drag Handle
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const Expanded(child: ChatbotScreen()),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -62,9 +95,44 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       // Initialize ChatProvider
       Provider.of<ChatProvider>(context, listen: false).initialize();
+
+      // Bind AI Chat screen navigation handler
+      final aiChat = Provider.of<AIChatProvider>(context, listen: false);
+      aiChat.onNavigateToScreen = (screen) {
+        int targetIndex = 0;
+        switch (screen.toLowerCase()) {
+          case 'nutrition':
+          case 'diet':
+          case 'meal':
+            targetIndex = 1;
+            break;
+          case 'workout':
+          case 'exercise':
+          case 'fitness':
+            targetIndex = 2;
+            break;
+          case 'settings':
+          case 'account':
+          case 'profile':
+            targetIndex = 3;
+            break;
+          case 'chat':
+          case 'consult':
+          case 'chatbot':
+            _openChatModal(context);
+            return;
+          case 'dashboard':
+          case 'home':
+          default:
+            targetIndex = 0;
+            break;
+        }
+        if (mounted) {
+          setState(() => _currentIndex = targetIndex);
+        }
+      };
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -73,45 +141,129 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+      // ===== CENTER RAISED CHATBOT BUBBLE =====
+      floatingActionButton: GestureDetector(
+        onTap: () => _openChatModal(context),
+        child: Container(
+          width: 62,
+          height: 62,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF8C00), Color(0xFFFF5500)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF6F00).withValues(alpha: 0.5),
+                blurRadius: 16,
+                spreadRadius: 3,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.smart_toy,
+                color: Colors.white,
+                size: 32,
+              ),
+              Positioned(
+                right: 4,
+                top: 4,
+                child: CircleAvatar(
+                  radius: 5,
+                  backgroundColor: Color(0xFF00C853),
+                ),
+              ),
+            ],
+          ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Tổng quan',
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      // ===== CURVED NOTCHED BOTTOM BAR =====
+      bottomNavigationBar: BottomAppBar(
+        padding: EdgeInsets.zero,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        clipBehavior: Clip.antiAlias,
+        color: AppColors.surface,
+        elevation: 12,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Tab 0: Tổng quan
+              _buildNavItem(
+                index: 0,
+                activeIcon: Icons.dashboard,
+                inactiveIcon: Icons.dashboard_outlined,
+                label: 'Tổng quan',
+              ),
+              // Tab 1: Dinh dưỡng
+              _buildNavItem(
+                index: 1,
+                activeIcon: Icons.restaurant,
+                inactiveIcon: Icons.restaurant_outlined,
+                label: 'Dinh dưỡng',
+              ),
+              // Center Notch Gap
+              const SizedBox(width: 48),
+              // Tab 2: Vận động
+              _buildNavItem(
+                index: 2,
+                activeIcon: Icons.fitness_center,
+                inactiveIcon: Icons.fitness_center_outlined,
+                label: 'Vận động',
+              ),
+              // Tab 3: Cài đặt
+              _buildNavItem(
+                index: 3,
+                activeIcon: Icons.person,
+                inactiveIcon: Icons.person_outlined,
+                label: 'Cài đặt',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData activeIcon,
+    required IconData inactiveIcon,
+    required String label,
+  }) {
+    final bool isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () => _onTabChanged(index),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              size: 24,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_outlined),
-              activeIcon: Icon(Icons.restaurant),
-              label: 'Dinh dưỡng',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center_outlined),
-              activeIcon: Icon(Icons.fitness_center),
-              label: 'Vận động',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.spa_outlined),
-              activeIcon: Icon(Icons.spa),
-              label: 'Lifestyle',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_outlined),
-              activeIcon: Icon(Icons.chat),
-              label: 'Tư vấn',
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -122,7 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ===== DASHBOARD TAB =====
 class _DashboardTab extends StatelessWidget {
-  const _DashboardTab();
+  final VoidCallback? onOpenChat;
+  const _DashboardTab({this.onOpenChat});
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +305,7 @@ class _DashboardTab extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Proactive Check-in Card (Giao tiếp chủ động)
-                const ProactiveCheckinCard(),
+                ProactiveCheckinCard(onOpenChat: onOpenChat),
                 const SizedBox(height: 16),
 
                 // BMI Card
@@ -196,6 +349,7 @@ class _DashboardTab extends StatelessWidget {
                   delay: 500,
                   child: _buildHealthTip(context, user),
                 ),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -424,7 +578,7 @@ class _DashboardTab extends StatelessWidget {
                     horizontal: cardPadding * 0.5,
                     vertical: cardPadding * 0.25),
                 decoration: BoxDecoration(
-                  color: bmiColor.withOpacity(0.15),
+                  color: bmiColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -540,7 +694,6 @@ class _DashboardTab extends StatelessWidget {
 
   Widget _buildExerciseCard(
       BuildContext context, ExerciseProvider exerciseProvider) {
-    final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final titleSize = ResponsiveUtils.getTitleSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
@@ -577,7 +730,7 @@ class _DashboardTab extends StatelessWidget {
             padding: EdgeInsets.symmetric(
                 horizontal: cardPadding * 0.5, vertical: cardPadding * 0.25),
             decoration: BoxDecoration(
-              color: AppColors.calories.withOpacity(0.1),
+              color: AppColors.calories.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -600,7 +753,6 @@ class _DashboardTab extends StatelessWidget {
   }
 
   Widget _buildTdeeCard(BuildContext context, dynamic user) {
-    final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final titleSize = ResponsiveUtils.getTitleSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
@@ -649,7 +801,6 @@ class _DashboardTab extends StatelessWidget {
     final isOverLimit = current > 5000;
     final isNearLimit = current > 4000 && current <= 5000;
 
-    final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final titleSize = ResponsiveUtils.getTitleSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
@@ -699,7 +850,7 @@ class _DashboardTab extends StatelessWidget {
           Text(
             '$glassesDone / $glassesTarget ly',
             style: TextStyle(
-                fontSize: smallSize, color: AppColors.info.withOpacity(0.7)),
+                fontSize: smallSize, color: AppColors.info.withValues(alpha: 0.7)),
           ),
           if (isOverLimit)
             Padding(
@@ -790,7 +941,7 @@ class _DashboardTab extends StatelessWidget {
                     width: iconSize * 2,
                     height: iconSize * 2,
                     decoration: BoxDecoration(
-                      color: (action['color'] as Color).withOpacity(0.12),
+                      color: (action['color'] as Color).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(action['icon'] as IconData,
@@ -826,7 +977,6 @@ class _DashboardTab extends StatelessWidget {
 
     final tipIndex = DateTime.now().day % tips.length;
     final bodySize = ResponsiveUtils.getBodySize(context);
-    final smallSize = ResponsiveUtils.getSmallSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
 
     return Container(
@@ -835,12 +985,12 @@ class _DashboardTab extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.15),
-            AppColors.accent.withOpacity(0.1)
+            AppColors.primary.withValues(alpha: 0.15),
+            AppColors.accent.withValues(alpha: 0.1)
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,12 +1062,12 @@ class _DashboardTab extends StatelessWidget {
                             context: context,
                             builder: (context) => AlertDialog(
                               backgroundColor: AppColors.surface,
-                              title: Row(
+                              title: const Row(
                                 children: [
                                   Icon(Icons.warning_amber,
                                       color: AppColors.warning, size: 28),
-                                  const SizedBox(width: 10),
-                                  const Text('Cảnh báo sức khỏe'),
+                                  SizedBox(width: 10),
+                                  Text('Cảnh báo sức khỏe'),
                                 ],
                               ),
                               content: Text(warning),
@@ -937,10 +1087,10 @@ class _DashboardTab extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.info.withOpacity(0.1),
+                        color: AppColors.info.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border:
-                            Border.all(color: AppColors.info.withOpacity(0.3)),
+                            Border.all(color: AppColors.info.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         children: [
@@ -992,48 +1142,4 @@ class _DashboardTab extends StatelessWidget {
       ),
     );
   }
-}
-
-// === Custom Circular Progress Painter ===
-class _CircularProgressPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final Color bgColor;
-
-  _CircularProgressPainter({
-    required this.progress,
-    required this.color,
-    required this.bgColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2 - 4;
-
-    // Background circle
-    final bgPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..color = bgColor;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Progress arc
-    final progressPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      2 * math.pi * progress.clamp(0.0, 1.0),
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

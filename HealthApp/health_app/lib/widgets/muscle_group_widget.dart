@@ -1,4 +1,3 @@
-﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/wger_models.dart';
@@ -60,9 +59,9 @@ class MuscleGroupWidget extends StatelessWidget {
             padding: EdgeInsets.symmetric(
                 horizontal: compact ? 8 : 12, vertical: compact ? 4 : 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: color.withOpacity(0.3)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(m.isFront ? Icons.accessibility_new : Icons.accessibility,
@@ -151,10 +150,10 @@ class _MuscleBodyDiagramState extends State<MuscleBodyDiagram> {
           ],
         ),
         const SizedBox(height: 14),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          _Legend(color: const Color(0xFFFF4444), label: 'Cơ chính'),
-          const SizedBox(width: 20),
-          _Legend(color: const Color(0xFFFF9800), label: 'Cơ phụ'),
+        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          _Legend(color: Color(0xFFFF4444), label: 'Cơ chính'),
+          SizedBox(width: 20),
+          _Legend(color: Color(0xFFFF9800), label: 'Cơ phụ'),
         ]),
       ]),
     );
@@ -196,7 +195,7 @@ class _BodySideSvg extends StatelessWidget {
               SvgProxy.resolve(bodyUrl),
               fit: BoxFit.contain,
               colorFilter: ColorFilter.mode(
-                Colors.grey.withOpacity(0.3),
+                Colors.grey.withValues(alpha: 0.3),
                 BlendMode.srcIn,
               ),
               placeholderBuilder: (_) => const Center(
@@ -213,7 +212,7 @@ class _BodySideSvg extends StatelessWidget {
                 'https://wger.de/static/images/muscles/main/muscle-${m.id}.svg'),
               fit: BoxFit.contain,
               colorFilter: ColorFilter.mode(
-                const Color(0xFFFF9800).withOpacity(0.6),
+                const Color(0xFFFF9800).withValues(alpha: 0.6),
                 BlendMode.srcIn,
               ),
               placeholderBuilder: (_) => const SizedBox.shrink(),
@@ -224,7 +223,7 @@ class _BodySideSvg extends StatelessWidget {
                 'https://wger.de/static/images/muscles/main/muscle-${m.id}.svg'),
               fit: BoxFit.contain,
               colorFilter: ColorFilter.mode(
-                const Color(0xFFFF4444).withOpacity(0.8),
+                const Color(0xFFFF4444).withValues(alpha: 0.8),
                 BlendMode.srcIn,
               ),
               placeholderBuilder: (_) => const SizedBox.shrink(),
@@ -249,7 +248,7 @@ class _Legend extends StatelessWidget {
       Container(
         width: 12, height: 12,
         decoration: BoxDecoration(color: color, shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 4)]),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4)]),
       ),
       const SizedBox(width: 6),
       Text(label,

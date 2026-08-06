@@ -93,7 +93,7 @@ class _DetailSheetState extends State<_DetailSheet> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -253,9 +253,9 @@ class _DetailSheetState extends State<_DetailSheet> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.04),
+            color: color.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.15)),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
           ),
           child: Text(
             ex.description,
@@ -297,9 +297,9 @@ class _DetailSheetState extends State<_DetailSheet> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,9 +354,9 @@ class _DetailSheetState extends State<_DetailSheet> {
       Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.amber.withOpacity(0.1),
+          color: Colors.amber.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.withOpacity(0.3)),
+          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
         ),
         child: const Row(
           children: [
@@ -506,9 +506,9 @@ class _DetailSheetState extends State<_DetailSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.15),
+        color: c.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: c.withOpacity(0.4)),
+        border: Border.all(color: c.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -563,9 +563,9 @@ class _DetailSheetState extends State<_DetailSheet> {
       Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.amber.withOpacity(0.1),
+          color: Colors.amber.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.withOpacity(0.3)),
+          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
         ),
         child: const Row(
           children: [
@@ -594,9 +594,9 @@ class _DetailSheetState extends State<_DetailSheet> {
   Widget _chip(String label, IconData icon, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -609,31 +609,6 @@ class _DetailSheetState extends State<_DetailSheet> {
           ],
         ),
       );
-
-  Widget _muscleRow(MuscleDetail m, Color color, {required bool isPrimary}) {
-    final name = m.nameEn.isNotEmpty ? m.nameEn : m.name;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          if (m.imageUrlMain != null)
-            WgerImage(m.imageUrlMain!,
-                width: 32,
-                height: 32,
-                errorBuilder: (_, __, ___) =>
-                    Icon(Icons.circle, size: 10, color: color))
-          else
-            Icon(Icons.circle, size: 10, color: color),
-          const SizedBox(width: 10),
-          Text(name,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: const Color(0xFF333333),
-                  fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal)),
-        ],
-      ),
-    );
-  }
 
   Widget _infoCard(List<Widget> rows, Color color) => Container(
         decoration: BoxDecoration(
@@ -680,9 +655,9 @@ class _DetailSheetState extends State<_DetailSheet> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
+            color: color.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.2)),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
           child: Column(
             children: [
@@ -691,7 +666,7 @@ class _DetailSheetState extends State<_DetailSheet> {
                       fontSize: 18, fontWeight: FontWeight.w800, color: color)),
               Text(unit,
                   style:
-                      TextStyle(fontSize: 11, color: color.withOpacity(0.8))),
+                      TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
               const SizedBox(height: 2),
               Text(label,
                   style: const TextStyle(

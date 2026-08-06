@@ -1,0 +1,9 @@
+{
+  "venvPath": "HealthApp/ai_backend/backend",
+  "venv": "venv",
+  "extraPaths": [
+    "HealthApp/ai_backend/backend",
+    "HealthApp/ai_backend/backend/services",
+    "HealthApp/ai_backend/backend/venv/Lib/site-packages"
+  ]
+}

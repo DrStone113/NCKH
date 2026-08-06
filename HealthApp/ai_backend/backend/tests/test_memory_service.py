@@ -21,7 +21,7 @@ spinning up Postgres. Behaviour exercised:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -178,9 +178,9 @@ class _FakeAsyncSession:
                     "user_id": params["user_id"],
                     "category": params["category"],
                     "fact": params["fact"],
-                    "status": "pending",
+                    "status": params.get("status", "pending"),
                     "source_msg_id": params.get("source"),
-                    "created_at": datetime.utcnow(),
+                    "created_at": datetime.now(timezone.utc),
                 }
             )
             return _FakeResult(rowcount=1)
@@ -429,7 +429,7 @@ async def test_confirm_fact_flips_status_to_confirmed():
                 "fact": "f",
                 "status": "pending",
                 "source_msg_id": None,
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
             }
         ],
     )
@@ -451,7 +451,7 @@ async def test_reject_fact_flips_status_to_rejected():
                 "fact": "f",
                 "status": "pending",
                 "source_msg_id": None,
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
             }
         ],
     )
@@ -649,6 +649,91 @@ async def test_update_rolling_summary_skips_existing_facts_case_insensitive():
     ]
     assert len(facts_with_status_pending) == 1
     assert facts_with_status_pending[0]["fact"] == "thích phở bò"
+
+
+@pytest.mark.asyncio
+async def test_update_rolling_summary_performs_fact_updates():
+    sid = str(uuid4())
+    n_turns = settings.summary_threshold + 5
+    db = _FakeAsyncSession(
+        chat_sessions={sid: "user-1"},
+        chat_messages=_make_chat_messages(sid, n_turns),
+        user_facts=[
+            {
+                "id": "fact-1",
+                "user_id": "user-1",
+                "category": "allergy",
+                "fact": "Dị ứng lạc",
+                "status": "confirmed",
+                "source_msg_id": None,
+                "created_at": datetime(2024, 12, 1),
+            }
+        ],
+    )
+    llm = _ScriptedLLM(
+        responses=[
+            _FakeLLMResponse(full_text="summary"),
+            _FakeLLMResponse(
+                full_text=(
+                    '[{"action": "update", "category": "allergy", "fact": "Dị ứng hạt điều", '
+                    '"target_fact": "Dị ứng lạc", "confidence": "high"}]'
+                )
+            ),
+        ]
+    )
+
+    svc = MemoryService(db)  # type: ignore[arg-type]
+    await svc.updateRollingSummary(sid, llm)
+
+    # The old fact is now rejected
+    old_fact = next(f for f in db.user_facts if f["id"] == "fact-1")
+    assert old_fact["status"] == "rejected"
+
+    # The new fact is proposed and confirmed (high confidence allergy)
+    new_fact = next(f for f in db.user_facts if f["id"] != "fact-1")
+    assert new_fact["fact"] == "Dị ứng hạt điều"
+    assert new_fact["status"] == "confirmed"
+
+
+@pytest.mark.asyncio
+async def test_update_rolling_summary_performs_fact_removals():
+    sid = str(uuid4())
+    n_turns = settings.summary_threshold + 5
+    db = _FakeAsyncSession(
+        chat_sessions={sid: "user-1"},
+        chat_messages=_make_chat_messages(sid, n_turns),
+        user_facts=[
+            {
+                "id": "fact-2",
+                "user_id": "user-1",
+                "category": "goal",
+                "fact": "Mục tiêu giảm 5kg",
+                "status": "confirmed",
+                "source_msg_id": None,
+                "created_at": datetime(2024, 12, 1),
+            }
+        ],
+    )
+    llm = _ScriptedLLM(
+        responses=[
+            _FakeLLMResponse(full_text="summary"),
+            _FakeLLMResponse(
+                full_text=(
+                    '[{"action": "remove", "category": "goal", '
+                    '"target_fact": "Mục tiêu giảm 5kg", "confidence": "high"}]'
+                )
+            ),
+        ]
+    )
+
+    svc = MemoryService(db)  # type: ignore[arg-type]
+    await svc.updateRollingSummary(sid, llm)
+
+    # The fact is now rejected
+    fact = next(f for f in db.user_facts if f["id"] == "fact-2")
+    assert fact["status"] == "rejected"
+    # No new facts were added
+    assert len(db.user_facts) == 1
 
 
 @pytest.mark.asyncio

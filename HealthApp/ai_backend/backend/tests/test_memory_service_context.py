@@ -79,12 +79,30 @@ class _FakeAsyncSession:
         if "FROM chat_messages" in sql:
             sid = params["sid"]
             limit = params["lim"]
-            matched = [
+            matched_all = [
                 m for m in self.chat_messages if m["session_id"] == sid
             ]
-            # ``ORDER BY created_at DESC, id DESC LIMIT :lim``
-            matched.sort(key=lambda m: (m["created_at"], m["id"]), reverse=True)
-            matched = matched[:limit]
+            # Ensure they are in chronological order for index-based neighboring retrieval
+            matched_all.sort(key=lambda m: (m["created_at"], m["id"]))
+
+            if "query" in params:
+                q = params["query"].lower()
+                matched_indices = [
+                    i for i, m in enumerate(matched_all) if q in m["content"].lower()
+                ]
+                neighbor_indices = set()
+                for idx in matched_indices:
+                    for offset in range(-2, 3):
+                        n_idx = idx + offset
+                        if 0 <= n_idx < len(matched_all):
+                            neighbor_indices.add(n_idx)
+                matched = [matched_all[idx] for idx in sorted(neighbor_indices)]
+                matched = matched[:limit]
+            else:
+                # Normal history load: latest DESC limit
+                matched_all.reverse()
+                matched = matched_all[:limit]
+
             return _FakeResult(
                 rows=[
                     (
@@ -390,6 +408,19 @@ async def test_load_context_skips_rag_when_user_text_is_blank():
 
 
 @pytest.mark.asyncio
+async def test_load_context_skips_rag_on_conversational_keywords():
+    """Conversational short responses like 'có', 'không', 'ok' must not trigger RAG."""
+    rag = _StubRAGService(return_chunks=[_make_chunk(0.9)])
+    db = _FakeAsyncSession(chat_sessions={"s": "u"})
+    svc = MemoryService(db, rag_service=rag)  # type: ignore[arg-type]
+
+    for word in ["có", "không", "ok", "dạ", "ừ", "hủy", "thôi"]:
+        ctx = await svc.loadContext("s", word)
+        assert ctx.rag_chunks == []
+        assert rag.calls == []
+
+
+@pytest.mark.asyncio
 async def test_load_context_skips_rag_when_no_rag_service():
     """5.8: missing RAGService → rag_chunks == []. Other pieces still load."""
     db = _FakeAsyncSession(
@@ -428,3 +459,44 @@ async def test_load_context_rejects_non_string_user_text():
     svc = MemoryService(_FakeAsyncSession())  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="INVALID_USER_TEXT"):
         await svc.loadContext("s", 123)  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_load_context_retrieves_contextual_history():
+    """loadContext retrieves contextual history matching the user query (outside the sliding history window)."""
+    base = datetime(2025, 1, 1, 12, 0, 0)
+    session_id = "sess-long"
+    user_id = "user-1"
+
+    # Create 30 messages, so the first 6 are outside the history window of 24
+    chat_messages = []
+    for i in range(30):
+        role = "user" if i % 2 == 0 else "assistant"
+        content = f"tin-nhan-cũ-{i}" if i < 6 else f"tin-nhan-moi-{i}"
+        chat_messages.append(
+            _make_message(
+                session_id=session_id,
+                role=role,
+                content=content,
+                created_at=base + timedelta(seconds=i),
+            )
+        )
+
+    db = _FakeAsyncSession(
+        chat_sessions={session_id: user_id},
+        chat_messages=chat_messages,
+    )
+    rag = _StubRAGService(return_chunks=[])
+    svc = MemoryService(db, rag_service=rag)  # type: ignore[arg-type]
+
+    # Query for one of the old messages (e.g. "tin-nhan-cũ-0")
+    ctx = await svc.loadContext(session_id, "tin-nhan-cũ-0")
+
+    # History contains the last 24 messages
+    assert len(ctx.history) == 24
+    assert all("tin-nhan-moi" in m.content for m in ctx.history)
+
+    # Contextual search (relevant_history) contains the messages outside the sliding window
+    assert len(ctx.relevant_history) > 0
+    # They should be from the first 6 old messages
+    assert any("tin-nhan-cũ" in m.content for m in ctx.relevant_history)

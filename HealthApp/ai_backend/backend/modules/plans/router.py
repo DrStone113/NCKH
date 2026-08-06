@@ -52,20 +52,26 @@ async def create_plan(request: Request, req: CreatePlanRequest, db: AsyncSession
 
 @router.get("/{user_id}/active", response_model=PlanSummary)
 async def get_active_plan(user_id: str, db: AsyncSession = Depends(get_db)):
-    row = (
-        await db.execute(
-            text(
-                """
-                SELECT id, user_id, goal, start_date, end_date, duration_days, daily_kcal_target, daily_protein_target, status, created_at
-                FROM plans
-                WHERE user_id = :user_id AND status = 'active'
-                ORDER BY created_at DESC
-                LIMIT 1
-                """
-            ),
-            {"user_id": user_id},
-        )
-    ).mappings().first()
+    from db.db_status import is_db_offline
+    if is_db_offline():
+        raise HTTPException(status_code=404, detail="No active plan found")
+    try:
+        row = (
+            await db.execute(
+                text(
+                    """
+                    SELECT id, user_id, goal, start_date, end_date, duration_days, daily_kcal_target, daily_protein_target, status, created_at
+                    FROM plans
+                    WHERE user_id = :user_id AND status = 'active'
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """
+                ),
+                {"user_id": user_id},
+            )
+        ).mappings().first()
+    except Exception:
+        raise HTTPException(status_code=404, detail="No active plan found")
 
     if not row:
         raise HTTPException(status_code=404, detail="No active plan found")
@@ -75,20 +81,26 @@ async def get_active_plan(user_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/{user_id}/active/detail", response_model=PlanDetail)
 async def get_active_plan_detail(user_id: str, db: AsyncSession = Depends(get_db)):
-    plan_row = (
-        await db.execute(
-            text(
-                """
-                SELECT id, user_id, goal, start_date, end_date, duration_days, daily_kcal_target, daily_protein_target, status, created_at
-                FROM plans
-                WHERE user_id = :user_id AND status = 'active'
-                ORDER BY created_at DESC
-                LIMIT 1
-                """
-            ),
-            {"user_id": user_id},
-        )
-    ).mappings().first()
+    from db.db_status import is_db_offline
+    if is_db_offline():
+        raise HTTPException(status_code=404, detail="No active plan found")
+    try:
+        plan_row = (
+            await db.execute(
+                text(
+                    """
+                    SELECT id, user_id, goal, start_date, end_date, duration_days, daily_kcal_target, daily_protein_target, status, created_at
+                    FROM plans
+                    WHERE user_id = :user_id AND status = 'active'
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """
+                ),
+                {"user_id": user_id},
+            )
+        ).mappings().first()
+    except Exception:
+        raise HTTPException(status_code=404, detail="No active plan found")
 
     if not plan_row:
         raise HTTPException(status_code=404, detail="No active plan found")

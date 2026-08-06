@@ -1,32 +1,14 @@
-﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import '../config/svg_proxy.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/exercise_model.dart';
 import '../models/wger_models.dart';
 import '../services/local_exercise_service.dart';
 import '../theme/app_theme.dart';
-import '../config/svg_proxy.dart';
 import '../widgets/wger_image.dart';
-
-/// Helper widget — load SVG qua proxy trên Web, URL gốc trên native
-class _SvgW extends StatelessWidget {
-  final String url;
-  final ColorFilter? colorFilter;
-  final BoxFit fit;
-
-  const _SvgW(this.url, {this.colorFilter, this.fit = BoxFit.contain});
-
-  @override
-  Widget build(BuildContext context) => SvgPicture.network(
-        SvgProxy.resolve(url),
-        fit: fit,
-        colorFilter: colorFilter,
-        placeholderBuilder: (_) => const SizedBox.shrink(),
-      );
-}
 
 /// Data nhóm cơ hardcode từ wger (id, tên, SVG URL, body side)
 class _MuscleGroup {
@@ -142,7 +124,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _selectedMuscle!.color.withOpacity(0.15),
+                color: _selectedMuscle!.color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -187,9 +169,9 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
         decoration: BoxDecoration(
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: muscle.color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: muscle.color.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
-            BoxShadow(color: muscle.color.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(color: muscle.color.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(children: [
@@ -198,7 +180,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
               child: Container(
-                color: muscle.color.withOpacity(0.06),
+                color: muscle.color.withValues(alpha: 0.06),
                 child: _AnimatedMuscleCard(muscle: muscle),
               ),
             ),
@@ -256,7 +238,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
 
   Widget _buildMuscleDiagramHeader(_MuscleGroup muscle) {
     return Container(
-      color: muscle.color.withOpacity(0.05),
+      color: muscle.color.withValues(alpha: 0.05),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(children: [
         // Cartoon diagram nhỏ
@@ -298,7 +280,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isPrimary ? muscle.color.withOpacity(0.4) : AppColors.surfaceLight,
+            color: isPrimary ? muscle.color.withValues(alpha: 0.4) : AppColors.surfaceLight,
             width: isPrimary ? 1.5 : 1,
           ),
         ),
@@ -326,7 +308,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: muscle.color.withOpacity(0.12),
+                    color: muscle.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(exercise.categoryName,
@@ -337,7 +319,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.12),
+                      color: AppColors.success.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text('Chính',
@@ -358,7 +340,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
           Container(
             width: 32, height: 32,
             decoration: BoxDecoration(
-              color: muscle.color.withOpacity(0.15),
+              color: muscle.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.add, size: 18, color: muscle.color),
@@ -371,7 +353,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
   Widget _iconBox(Color color) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withOpacity(0.6)]),
+        gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.6)]),
       ),
       child: const Icon(Icons.fitness_center, color: Colors.white, size: 26),
     );
@@ -433,7 +415,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
               ),
               const SizedBox(height: 14),
               // Chọn buổi tập
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Buổi tập', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
               ),
@@ -449,7 +431,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
                         margin: const EdgeInsets.symmetric(horizontal: 3),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? color.withOpacity(0.15) : AppColors.surfaceLight,
+                          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: isSelected ? color : Colors.transparent,
@@ -558,7 +540,7 @@ class _AnimatedMuscleCardState extends State<_AnimatedMuscleCard> {
     final muscleUrl = widget.muscle.svgUrl;
 
     return Container(
-      color: widget.muscle.color.withOpacity(0.05),
+      color: widget.muscle.color.withValues(alpha: 0.05),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -567,7 +549,7 @@ class _AnimatedMuscleCardState extends State<_AnimatedMuscleCard> {
             SvgProxy.resolve(bodyUrl),
             fit: BoxFit.contain,
             colorFilter: ColorFilter.mode(
-              Colors.grey.withOpacity(0.25),
+              Colors.grey.withValues(alpha: 0.25),
               BlendMode.srcIn,
             ),
             placeholderBuilder: (_) => const Center(
@@ -579,7 +561,7 @@ class _AnimatedMuscleCardState extends State<_AnimatedMuscleCard> {
             SvgProxy.resolve(muscleUrl),
             fit: BoxFit.contain,
             colorFilter: ColorFilter.mode(
-              widget.muscle.color.withOpacity(0.9),
+              widget.muscle.color.withValues(alpha: 0.9),
               BlendMode.srcIn,
             ),
             placeholderBuilder: (_) => const SizedBox.shrink(),

@@ -131,10 +131,18 @@ venv\Scripts\python.exe -m uvicorn main:app --reload
 ```
 
 ### Flutter lỗi?
-```bash
-# Chạy với logs chi tiết
+```powershell
+# Kiểm tra SDK & PATH (Flutter 3.44.8 cài tại C:\flutter)
+flutter --version
+flutter doctor -v
+
+# Chạy với logs chi tiết (máy chưa có Chrome → dùng edge)
 cd HealthApp\health_app
-flutter run -d chrome --web-port 3000 -v
+flutter run -d edge --web-port 3000 -v
+
+# Nếu lỗi dependency / cache
+flutter clean
+flutter pub get
 ```
 
 ---

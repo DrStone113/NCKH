@@ -24,10 +24,10 @@ class NutritionProvider with ChangeNotifier {
     return _selectedDate.year == now.year && _selectedDate.month == now.month && _selectedDate.day == now.day;
   }
 
-  double get totalCalories => _todayMeals.fold(0, (sum, m) => sum + m.calories);
-  double get totalProtein => _todayMeals.fold(0, (sum, m) => sum + m.protein);
-  double get totalCarbs => _todayMeals.fold(0, (sum, m) => sum + m.carbs);
-  double get totalFat => _todayMeals.fold(0, (sum, m) => sum + m.fat);
+  double get totalCalories => _todayMeals.fold(0, (acc, m) => acc + m.calories);
+  double get totalProtein => _todayMeals.fold(0, (acc, m) => acc + m.protein);
+  double get totalCarbs => _todayMeals.fold(0, (acc, m) => acc + m.carbs);
+  double get totalFat => _todayMeals.fold(0, (acc, m) => acc + m.fat);
 
   void _filterByDate(DateTime date) {
     _selectedDate = date;
@@ -108,7 +108,7 @@ class NutritionProvider with ChangeNotifier {
           .where('userId', isEqualTo: userId)
           .get();
       _allMeals = snapshot.docs
-          .map((doc) => MealModel.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) => MealModel.fromMap(doc.data()))
           .toList();
       _allMealsLoaded = true;
       _filterByDate(DateTime.now());

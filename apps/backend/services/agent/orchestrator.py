@@ -211,7 +211,7 @@ class AgentOrchestrator:
             self._schedule_memory_update(session_id)
 
         except LLMUnavailableError:
-            logger.warning("LLM unavailable for session=%s", session_id)
+            logger.warning("LLM unavailable for session=%s", session_id, exc_info=True)
             if gateway is not None:
                 await gateway.send_error(
                     "LLM_UNAVAILABLE",
@@ -379,7 +379,25 @@ class AgentOrchestrator:
 
     @staticmethod
     def _call_to_message(call: ToolCall) -> dict[str, Any]:
-        return {"id": call.id, "function": {"name": call.name, "arguments": call.arguments}}
+        """Render a ToolCall as an OpenAI ``assistant.tool_calls`` entry.
+
+        Two details matter and were previously wrong:
+
+        - ``type`` is required by the API schema.
+        - ``arguments`` must be a JSON *string*, not an object. Sending a dict
+          makes strict providers reject the whole request with HTTP 400
+          (``BAD_REQUEST``), which surfaced to users as LLM_UNAVAILABLE on the
+          second agent step — i.e. every turn that actually used a tool.
+          Lenient providers accepted it, which is why this went unnoticed.
+        """
+        arguments = call.arguments
+        if not isinstance(arguments, str):
+            arguments = json.dumps(arguments or {}, ensure_ascii=False)
+        return {
+            "id": call.id,
+            "type": "function",
+            "function": {"name": call.name, "arguments": arguments},
+        }
 
     @staticmethod
     def _serialize_result(call: ToolCall, result: ToolResult) -> str:

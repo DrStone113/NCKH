@@ -280,7 +280,7 @@ class ToolDispatcher:
 
     # ------------------------------------------------------- diversity helpers
     def _apply_recent_ids(self, session_id: str, call: ToolCall) -> None:
-        """Inject this session's recently returned ids into ``call.arguments``.
+        """Merge this session's recently returned ids into ``call.arguments``.
 
         Without this, ``suggest_dish`` returns the same dish on every turn of a
         conversation: it ranks candidates by ``|total_calories - target_kcal|``,
@@ -288,20 +288,37 @@ class ToolDispatcher:
         effectively zero for all of them and the ``id`` tiebreak always picks
         the same winner.
 
-        An explicit value supplied by the LLM is never overwritten.
+        Caller-supplied ids are preserved and *extended*, not replaced. The LLM
+        reconstructs ``recent_dish_ids`` from conversation history, so it silently
+        loses entries whenever history is trimmed or a DB write fails — and an
+        incomplete list makes the tool hand back a dish the user just saw. The
+        dispatcher's own record is authoritative about what this session already
+        received, so the union is what we want.
         """
         if call.name not in _RECENT_IDS_TOOLS:
-            return
-        if call.arguments.get(_RECENT_IDS_ARG):
-            # Caller (e.g. the planner) is managing the window itself.
             return
         seen = self._recent_ids.get(session_id, {}).get(call.name)
         if not seen:
             return
+
+        supplied = call.arguments.get(_RECENT_IDS_ARG)
+        merged: list[int] = []
+        if isinstance(supplied, (list, tuple)):
+            for raw in supplied:
+                try:
+                    value = int(raw)
+                except (TypeError, ValueError):
+                    continue
+                if value not in merged:
+                    merged.append(value)
+        for value in seen:
+            if value not in merged:
+                merged.append(value)
+
         # ``ToolCall.arguments`` is a plain dict owned by this call; mutating it
         # here keeps the tool signature untouched and preserves idempotency of
         # ``suggest_dish`` itself (same arguments still yield the same dish).
-        call.arguments[_RECENT_IDS_ARG] = list(seen)
+        call.arguments[_RECENT_IDS_ARG] = merged
 
     def _remember_result_id(
         self, session_id: str, call: ToolCall, result: ToolResult

@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     # into git history.
     openai_api_key: str = ""
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
-    llm_model: str = "mn/ag/gemini-3.6-flash-high"
-    heavy_llm_model: str = "op/deepseek/deepseek-v4-pro"
+    llm_model: str = "op/MiniMax-M3"
+    heavy_llm_model: str = "clx/claude-opus-5"
     embedding_model: str = "BAAI/bge-m3"
     cloudflare_tunnel_token: Optional[str] = None
     # NOTE: a "turn" here is one row in ``chat_messages``, which includes tool

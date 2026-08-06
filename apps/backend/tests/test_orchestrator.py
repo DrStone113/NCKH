@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -318,3 +319,88 @@ async def test_failed_tool_result_carries_recovery_guidance():
     tool_turn = [turn for turn in store.turns if turn[1] == "tool"][0]
     assert "huong_dan" in tool_turn[2]
     assert "INVALID_ARGS" in tool_turn[2]
+
+# ---------------------------------------------------------------------------
+# assistant.tool_calls must match the OpenAI wire format
+#
+# Regression guard: the orchestrator used to emit tool_calls without
+# ``type: "function"`` and with ``arguments`` as a dict instead of a JSON
+# string. Lenient providers tolerated it; strict ones rejected the entire
+# request with HTTP 400, which reached users as LLM_UNAVAILABLE on every turn
+# that invoked a tool.
+# ---------------------------------------------------------------------------
+
+
+class RecordingLLM:
+    """Scripted LLM that keeps the exact messages it was handed."""
+
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.seen_messages: list[list[dict[str, Any]]] = []
+
+    async def chat(self, messages, tools=None):
+        import copy
+
+        self.seen_messages.append(copy.deepcopy(messages))
+        return self.responses.pop(0)
+
+
+def test_call_to_message_matches_openai_schema():
+    call = ToolCall(
+        id="call_1",
+        name="suggest_dish",
+        arguments={"meal_type": "lunch", "target_kcal": 700},
+    )
+
+    msg = AgentOrchestrator._call_to_message(call)
+
+    assert msg["id"] == "call_1"
+    assert msg["type"] == "function"
+    assert msg["function"]["name"] == "suggest_dish"
+    # Must be a JSON string, not a dict.
+    assert isinstance(msg["function"]["arguments"], str)
+    assert json.loads(msg["function"]["arguments"]) == {
+        "meal_type": "lunch",
+        "target_kcal": 700,
+    }
+
+
+def test_call_to_message_handles_empty_and_string_arguments():
+    empty = AgentOrchestrator._call_to_message(
+        ToolCall(id="c", name="get_user_profile", arguments={})
+    )
+    assert empty["function"]["arguments"] == "{}"
+
+    # Already-serialised arguments must not be double-encoded.
+    passthrough = AgentOrchestrator._call_to_message(
+        ToolCall(id="c", name="get_user_profile", arguments='{"a": 1}')
+    )
+    assert passthrough["function"]["arguments"] == '{"a": 1}'
+
+
+@pytest.mark.asyncio
+async def test_tool_call_sent_to_llm_is_wire_compatible():
+    store = FakeStore()
+    call = ToolCall(id="c1", name="suggest_dish", arguments={"meal_type": "lunch"})
+    llm = RecordingLLM([
+        LLMResponse(tool_calls=[call]),
+        LLMResponse(content_stream=_stream(["xong"]), full_text="xong"),
+    ])
+    orchestrator = AgentOrchestrator(
+        llm, FakeTools(), FakeMemory(), store, FakeDispatcher(), FakeGateway(),
+        max_steps=3,
+    )
+
+    await orchestrator.handleChatMessage("s1", "goi y mon trua")
+
+    # Second call carries the assistant turn that replays the tool call.
+    assert len(llm.seen_messages) >= 2
+    assistant_msgs = [
+        m for m in llm.seen_messages[1]
+        if m.get("role") == "assistant" and m.get("tool_calls")
+    ]
+    assert assistant_msgs, "assistant turn with tool_calls was not replayed"
+    for tc in assistant_msgs[0]["tool_calls"]:
+        assert tc["type"] == "function"
+        assert isinstance(tc["function"]["arguments"], str)
+        json.loads(tc["function"]["arguments"])

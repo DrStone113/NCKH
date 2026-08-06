@@ -211,20 +211,40 @@ async def test_suggest_dish_diversity_is_scoped_per_session():
 
 
 @pytest.mark.asyncio
-async def test_suggest_dish_keeps_caller_supplied_recent_ids():
+async def test_suggest_dish_honours_caller_supplied_recent_ids():
     dispatcher = ToolDispatcher(_dish_registry())
 
     baseline = await dispatcher.dispatch("session-1", _dish_call(0), 5000)
     excluded = baseline.data["id"]
 
-    # The planner manages its own FIFO window; the dispatcher must not clobber
-    # an explicit value.
     result = await dispatcher.dispatch(
         "session-2", _dish_call(1, recent_dish_ids=[excluded]), 5000
     )
 
     assert result.ok, result.error
     assert result.data["id"] != excluded
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_merges_caller_ids_with_session_history():
+    """An incomplete caller list must not undo the session's own record.
+
+    The LLM rebuilds ``recent_dish_ids`` from conversation history, so it drops
+    entries whenever history is trimmed or a DB write fails. Replacing our
+    record with that stale list would hand the user a dish they just saw.
+    """
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    first = await dispatcher.dispatch("session-1", _dish_call(0), 5000)
+    second = await dispatcher.dispatch("session-1", _dish_call(1), 5000)
+
+    # Caller only remembers the first dish; the dispatcher knows about both.
+    third = await dispatcher.dispatch(
+        "session-1", _dish_call(2, recent_dish_ids=[first.data["id"]]), 5000
+    )
+
+    assert third.ok, third.error
+    assert third.data["id"] not in {first.data["id"], second.data["id"]}
 
 
 @pytest.mark.asyncio

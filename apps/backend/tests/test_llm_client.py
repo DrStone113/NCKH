@@ -195,3 +195,154 @@ async def test_chat_rejects_empty_messages() -> None:
     client = _make_llm_client()
     with pytest.raises(ValueError):
         await client.chat(messages=[], tools=None)
+
+
+# ---------------------------------------------------------------------------
+# Tool calls emitted as prose instead of via the native tool_calls channel
+#
+# Observed in production at ~1 in 70 assistant turns: instead of using the
+# native channel the model writes the call as pseudo-XML in ordinary content.
+# Before this was handled, the raw markup streamed straight to the user, who
+# saw "<tool_call><function=suggest_dish><parameter=meal_type>dinner..." in the
+# chat bubble, and the tool never ran.
+# ---------------------------------------------------------------------------
+
+XML_TOOL_CALL = (
+    "<tool_call>\n"
+    "<function=suggest_dish>\n"
+    "<parameter=meal_type>dinner</parameter>\n"
+    "<parameter=target_kcal>750</parameter>\n"
+    "</function>\n"
+    "</tool_call>"
+)
+
+
+def test_parse_xml_mode_tool_calls_extracts_name_and_typed_args() -> None:
+    from services.agent.llm_client import _parse_xml_mode_tool_calls
+
+    calls = _parse_xml_mode_tool_calls(XML_TOOL_CALL)
+
+    assert len(calls) == 1
+    assert calls[0].name == "suggest_dish"
+    # target_kcal must be numeric, not the string "750".
+    assert calls[0].arguments == {"meal_type": "dinner", "target_kcal": 750}
+
+
+def test_parse_xml_mode_handles_lists_and_booleans() -> None:
+    from services.agent.llm_client import _parse_xml_mode_tool_calls
+
+    calls = _parse_xml_mode_tool_calls(
+        "<function=suggest_dish>"
+        '<parameter=dietary_restrictions>["vegetarian"]</parameter>'
+        "<parameter=strict>true</parameter>"
+        "</function>"
+    )
+
+    assert calls[0].arguments == {
+        "dietary_restrictions": ["vegetarian"],
+        "strict": True,
+    }
+
+
+def test_json_mode_parser_falls_back_to_xml() -> None:
+    """<tool_call> wrapping XML (not JSON) must still resolve."""
+    from services.agent.llm_client import _parse_json_mode_tool_calls
+
+    calls = _parse_json_mode_tool_calls(XML_TOOL_CALL)
+
+    assert [c.name for c in calls] == ["suggest_dish"]
+
+
+def test_strip_tool_call_markup_removes_all_variants() -> None:
+    from services.agent.llm_client import _strip_tool_call_markup
+
+    text = f"Gợi ý cho bạn một bữa tối:{XML_TOOL_CALL}"
+    cleaned = _strip_tool_call_markup(text)
+
+    assert cleaned == "Gợi ý cho bạn một bữa tối:"
+    for marker in ("<tool_call>", "<function=", "<parameter=", "</function>"):
+        assert marker not in cleaned
+
+
+def test_strip_tool_call_markup_handles_truncated_stream() -> None:
+    """A cut-off stream leaves dangling tags; none may reach the user."""
+    from services.agent.llm_client import _strip_tool_call_markup
+
+    cleaned = _strip_tool_call_markup(
+        "Bữa tối nhé:<tool_call>\n<function=suggest_dish>\n<parameter=meal_type>din"
+    )
+
+    assert "<" not in cleaned
+    assert cleaned.startswith("Bữa tối nhé:")
+
+
+@pytest.mark.asyncio
+async def test_streaming_withholds_xml_tool_markup_from_user() -> None:
+    """The user must see the prose, never the markup, and the call must run.
+
+    Chunking matters here: the model writes several tokens of ordinary prose
+    first, which makes ``chat`` stop buffering and switch to live streaming.
+    The markup then arrives mid-stream, which is exactly the case that used to
+    put ``<tool_call><function=...>`` into the chat bubble.
+    """
+    client = _make_llm_client()
+
+    stream = MockStream([
+        {"content": "Gợi ý "},
+        {"content": "cho bạn "},
+        {"content": "một bữa tối:"},
+        {"content": "<tool_call>\n<function=suggest_dish>\n"},
+        {"content": "<parameter=meal_type>dinner</parameter>\n"},
+        {"content": "<parameter=target_kcal>750</parameter>\n"},
+        {"content": "</function>\n</tool_call>"},
+    ])
+    client.openai.chat.completions.create = AsyncMock(return_value=stream)
+
+    response = await client.chat(
+        messages=[{"role": "user", "content": "goi y bua toi"}],
+        tools=[{"type": "function", "function": {"name": "suggest_dish"}}],
+    )
+
+    emitted = []
+    if response.content_stream is not None:
+        async for token in response.content_stream:
+            if getattr(token, "token_type", "token") != "thought":
+                emitted.append(str(token))
+    shown = "".join(emitted) or response.full_text
+
+    for marker in ("<tool_call>", "<function=", "<parameter="):
+        assert marker not in shown, f"{marker} leaked to the user: {shown!r}"
+    assert shown.strip() == "Gợi ý cho bạn một bữa tối:"
+    assert [c.name for c in response.tool_calls] == ["suggest_dish"]
+    assert response.tool_calls[0].arguments == {
+        "meal_type": "dinner",
+        "target_kcal": 750,
+    }
+
+
+
+
+@pytest.mark.asyncio
+async def test_streaming_still_emits_ordinary_angle_brackets() -> None:
+    """Guard against over-eager filtering of legitimate '<' in prose."""
+    client = _make_llm_client()
+
+    stream = MockStream([
+        {"content": "BMI "},
+        {"content": "< 18.5 "},
+        {"content": "là thiếu cân"},
+    ])
+    client.openai.chat.completions.create = AsyncMock(return_value=stream)
+
+    response = await client.chat(
+        messages=[{"role": "user", "content": "bmi bao nhieu la thieu can"}],
+        tools=[{"type": "function", "function": {"name": "suggest_dish"}}],
+    )
+
+    emitted = []
+    if response.content_stream is not None:
+        async for token in response.content_stream:
+            if getattr(token, "token_type", "token") != "thought":
+                emitted.append(str(token))
+
+    assert "< 18.5" in "".join(emitted)

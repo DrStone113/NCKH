@@ -224,7 +224,7 @@ def _parse_json_mode_tool_calls(full_text: str) -> list[ToolCall]:
         parsed = json.loads(payload)
     except json.JSONDecodeError:
         logger.debug("JSON-mode fallback: failed to parse tool_call payload: %r", payload[:120])
-        return []
+        return _parse_xml_mode_tool_calls(full_text)
     if isinstance(parsed, list):
         items: list[Any] = parsed
     elif isinstance(parsed, dict):
@@ -232,6 +232,85 @@ def _parse_json_mode_tool_calls(full_text: str) -> list[ToolCall]:
     else:
         return []
     return _parse_native_tool_calls(items)
+
+
+#: Some models occasionally emit a tool call as *prose* instead of using the
+#: native tool_calls channel, in a pseudo-XML dialect:
+#:
+#:     <tool_call>
+#:     <function=suggest_dish>
+#:     <parameter=meal_type>dinner</parameter>
+#:     <parameter=target_kcal>750</parameter>
+#:     </function>
+#:     </tool_call>
+#:
+#: Observed at roughly 1-in-70 assistant turns. Without a parser the raw markup
+#: is streamed straight to the user as chat text, which is what they see.
+_XML_FUNCTION_RE = re.compile(
+    r"<function\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*>(.*?)</function\s*>",
+    re.DOTALL | re.IGNORECASE,
+)
+_XML_PARAMETER_RE = re.compile(
+    r"<parameter\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*>(.*?)</parameter\s*>",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _coerce_scalar(raw: str) -> Any:
+    """Best-effort typing for XML parameter values, which are all strings."""
+    text = raw.strip()
+    if not text:
+        return ""
+    lowered = text.casefold()
+    if lowered in ("true", "false"):
+        return lowered == "true"
+    if lowered in ("null", "none"):
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        return float(text)
+    except ValueError:
+        pass
+    # JSON arrays/objects written inline, e.g. ["vegetarian"].
+    if text[0] in "[{":
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+    return text
+
+
+def _parse_xml_mode_tool_calls(full_text: str) -> list[ToolCall]:
+    """Recover tool calls a model wrote as pseudo-XML prose."""
+    calls: list[ToolCall] = []
+    for name, body in _XML_FUNCTION_RE.findall(full_text):
+        arguments = {
+            param: _coerce_scalar(value)
+            for param, value in _XML_PARAMETER_RE.findall(body)
+        }
+        calls.append(ToolCall(id=_new_call_id(), name=name, arguments=arguments))
+    if calls:
+        logger.info(
+            "Recovered %d tool call(s) emitted as XML prose instead of native "
+            "tool_calls: %s",
+            len(calls),
+            [c.name for c in calls],
+        )
+    return calls
+
+
+def _strip_tool_call_markup(text: str) -> str:
+    """Remove tool-call markup so it never reaches the user as chat text."""
+    cleaned = _TOOL_CALL_BLOCK_RE.sub("", text)
+    cleaned = _XML_FUNCTION_RE.sub("", cleaned)
+    # Drop stray opening/closing markers left behind by a truncated stream.
+    cleaned = re.sub(r"</?tool_call\s*>", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"</?function[^>]*>", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"</?parameter[^>]*>", "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
 
 # ---------------------------------------------------------------------------- #
 # Streaming Content Iterator
@@ -258,6 +337,12 @@ class StreamingContent(AsyncIterator[str]):
         self._in_think = False
         self._tag_buffer = ""
         self._emit_queue: list[StreamingToken] = []
+        # Set once the model starts writing a tool call as prose instead of
+        # using the native tool_calls channel. Everything from that point on is
+        # markup, not something the user should read, so it is captured here
+        # and parsed at end-of-stream rather than emitted.
+        self._in_tool_markup = False
+        self._tool_markup = ""
         
         # Pre-process the initial buffer
         for token in buffer:
@@ -271,25 +356,51 @@ class StreamingContent(AsyncIterator[str]):
         else:
             self._emit_queue.append(StreamingToken(char, t_type))
 
+    #: Openings that mean "the rest of this message is a tool call written as
+    #: prose". Matching is done on a growing prefix so a tag split across
+    #: several stream chunks is still caught.
+    _TOOL_MARKUP_OPENERS = ("<tool_call>", "<function=")
+
     def _process_content(self, content: str) -> None:
+        if self._in_tool_markup:
+            self._tool_markup += content
+            return
+
         if not self._tag_buffer and "<" not in content:
             t_type = "thought" if self._in_think else "token"
             self._emit_queue.append(StreamingToken(content, t_type))
             return
 
         for c in content:
+            if self._in_tool_markup:
+                self._tool_markup += c
+                continue
+
             if self._tag_buffer:
                 test_buffer = self._tag_buffer + c
                 is_prefix_think = "<think>".startswith(test_buffer)
                 is_prefix_unthink = "</think>".lower().startswith(test_buffer.lower())
-                
-                if test_buffer == "<think>":
+                lowered = test_buffer.casefold()
+                is_prefix_tool = any(
+                    opener.startswith(lowered) for opener in self._TOOL_MARKUP_OPENERS
+                )
+                is_tool_open = any(
+                    lowered == opener or lowered.startswith(opener)
+                    for opener in self._TOOL_MARKUP_OPENERS
+                )
+
+                if is_tool_open:
+                    # Stop emitting: the remainder of this message is markup.
+                    self._in_tool_markup = True
+                    self._tool_markup = test_buffer
+                    self._tag_buffer = ""
+                elif test_buffer == "<think>":
                     self._in_think = True
                     self._tag_buffer = ""
-                elif test_buffer.lower() == "</think>":
+                elif test_buffer.casefold() == "</think>":
                     self._in_think = False
                     self._tag_buffer = ""
-                elif is_prefix_think or is_prefix_unthink:
+                elif is_prefix_think or is_prefix_unthink or is_prefix_tool:
                     self._tag_buffer = test_buffer
                 else:
                     # Flush self._tag_buffer
@@ -308,6 +419,9 @@ class StreamingContent(AsyncIterator[str]):
                     self._emit_char("thought" if self._in_think else "token", c)
 
     def _flush_remaining(self) -> None:
+        if self._in_tool_markup:
+            # Markup is never shown to the user; __anext__ parses it instead.
+            return
         if self._tag_buffer:
             t_type = "thought" if self._in_think else "token"
             for bc in self._tag_buffer:
@@ -380,10 +494,22 @@ class StreamingContent(AsyncIterator[str]):
             
             if hasattr(self, '_tool_calls_map') and self._tool_calls_map:
                 self.response_obj.tool_calls = _parse_native_tool_calls(self._tool_calls_map.values())
-            elif not self.response_obj.tool_calls and "<tool_call>" in self.response_obj.full_text:
-                fallback = _parse_json_mode_tool_calls(self.response_obj.full_text)
-                if fallback:
-                    self.response_obj.tool_calls = fallback
+            elif not self.response_obj.tool_calls:
+                # The model wrote the call as prose instead of using the native
+                # channel. It was withheld from the user during streaming; parse
+                # it here so the turn still performs the action.
+                markup = self._tool_markup
+                if markup:
+                    fallback = _parse_json_mode_tool_calls(markup)
+                    if fallback:
+                        self.response_obj.tool_calls = fallback
+                elif "<tool_call>" in self.response_obj.full_text or \
+                        "<function=" in self.response_obj.full_text:
+                    text = self.response_obj.full_text
+                    fallback = _parse_json_mode_tool_calls(text)
+                    if fallback:
+                        self.response_obj.tool_calls = fallback
+                    self.response_obj.full_text = _strip_tool_call_markup(text)
 
             if not self.garbled_checked and self.garbled_buffer:
                 _check_garbled("".join(self.garbled_buffer))
@@ -468,7 +594,12 @@ class LLMClient:
                     fallback = _parse_json_mode_tool_calls(content)
                     if fallback:
                         return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
-                return LLMResponse(tool_calls=[], content_stream=None, full_text=content)
+                # Strip any leftover markup so it never reaches the user, even
+                # when the call could not be parsed back out.
+                return LLMResponse(
+                    tool_calls=[], content_stream=None,
+                    full_text=_strip_tool_call_markup(content),
+                )
 
             # Streaming mode (stream=True)
             raw_stream = await self.openai.chat.completions.create(**kwargs)
@@ -522,7 +653,7 @@ class LLMClient:
 
             # Determine if this is a tool call response
             is_tool_call = native_tool_calls_detected
-            if tools and "<tool_call>" in buffered_text:
+            if tools and ("<tool_call>" in buffered_text or "<function=" in buffered_text):
                 is_tool_call = True
 
             if is_tool_call:
@@ -558,7 +689,10 @@ class LLMClient:
                         return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
                 
                 # Fallback if somehow it didn't match tool calls
-                return LLMResponse(tool_calls=[], content_stream=None, full_text=full_text)
+                return LLMResponse(
+                    tool_calls=[], content_stream=None,
+                    full_text=_strip_tool_call_markup(full_text),
+                )
 
             # Normal text response - return real-time stream
             llm_response = LLMResponse(tool_calls=[], content_stream=None, full_text="")

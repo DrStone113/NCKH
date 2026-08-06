@@ -60,10 +60,13 @@ class MockStream:
             yield MockChunk([MockChoice(MockDelta(**c))])
 
 def _make_llm_client() -> LLMClient:
+    # These tests drive the client with mocked streams and never reach the
+    # network, so a placeholder key is enough — a real one would just leak
+    # into git history.
     return LLMClient(
         model="hpx/hpx_minimax_3_free",
         base_url="https://api.vilao.ai/v1",
-        api_key="sk-63fa6e22f6cbd26d2ec0209fed6af4c6d49eab748908bca235c539e5f2e81be6"
+        api_key="sk-test-not-a-real-key"
     )
 
 # --------------------------------------------------------------------------- #

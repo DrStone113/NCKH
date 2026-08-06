@@ -6,9 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     openai_base_url: str = "https://api.vilao.ai/v1"
-    openai_api_key: str = "sk-63fa6e22f6cbd26d2ec0209fed6af4c6d49eab748908bca235c539e5f2e81be6"
+    # Secrets have no in-code default: they must come from ``.env`` (which is
+    # gitignored) or the process environment. Hardcoding a key here leaks it
+    # into git history.
+    openai_api_key: str = ""
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
-    llm_model: str = "ts/gemini-3.1-flash-lite"
+    llm_model: str = "mn/ag/gemini-3.6-flash-high"
     heavy_llm_model: str = "op/deepseek/deepseek-v4-pro"
     embedding_model: str = "BAAI/bge-m3"
     cloudflare_tunnel_token: Optional[str] = None
@@ -36,9 +39,12 @@ class Settings(BaseSettings):
     max_agent_steps: int = 3
     tool_timeout_ms: int = 5000
 
-    # Always load the project-level .env regardless of current working directory.
+    # Always load the backend's .env regardless of current working directory.
+    # ``parents[0]`` is the backend package root (where .env lives); using
+    # ``parents[1]`` pointed at a directory with no .env, so the file was
+    # silently ignored and only the in-code defaults ever applied.
     model_config = SettingsConfigDict(
-        env_file=str(Path(__file__).resolve().parents[1] / ".env"),
+        env_file=str(Path(__file__).resolve().parents[0] / ".env"),
         extra="ignore",
     )
 

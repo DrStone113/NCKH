@@ -134,10 +134,21 @@ class ToolDispatcher:
         This coroutine MUST NEVER raise. Any unexpected exception is logged
         and surfaced as ``ToolResult(ok=False, error="TOOL_INTERNAL_ERROR")``.
         """
-        # Top-level guard: nothing below this try block is permitted to
-        # surface an exception. The agent loop must always receive a
-        # ToolResult so it can append a tool turn to the conversation.
         try:
+            if self.gateway is not None:
+                if call.name == "suggest_dish":
+                    lat = getattr(self.gateway, "latitude", None)
+                    lng = getattr(self.gateway, "longitude", None)
+                    if lat is not None and "latitude" not in call.arguments:
+                        call.arguments["latitude"] = lat
+                    if lng is not None and "longitude" not in call.arguments:
+                        call.arguments["longitude"] = lng
+
+                gateway_user = getattr(self.gateway, "user_id", None)
+                if gateway_user and gateway_user not in ("anonymous", ""):
+                    if "user_id" in call.arguments or call.name in ("create_plan", "get_active_plan", "get_lifestyle_logs", "log_lifestyle"):
+                        call.arguments["user_id"] = gateway_user
+
             ok, err = self.registry.validate(call.name, call.arguments)
             if not ok:
                 # ``err`` is one of "UNKNOWN_TOOL" / "INVALID_ARGS" per the

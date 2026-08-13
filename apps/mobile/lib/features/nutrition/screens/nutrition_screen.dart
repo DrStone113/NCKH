@@ -15,6 +15,17 @@ class NutritionScreen extends StatefulWidget {
 }
 
 class _NutritionScreenState extends State<NutritionScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+      if (user != null) {
+        Provider.of<NutritionProvider>(context, listen: false).loadTodayMeals(user.id);
+      }
+    });
+  }
+
   void _showDatePicker(BuildContext context, NutritionProvider provider, String userId) {
     DateTime viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month);
 
@@ -955,6 +966,10 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
     super.initState();
     _mealType = widget.initialMealType;
     _tabController = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NutritionProvider>(context, listen: false)
+          .loadVietnameseDatabase();
+    });
   }
 
   @override
@@ -973,7 +988,8 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
   void _removeItem(int index) => setState(() => _items.removeAt(index));
 
   void _save() {
-    final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+    final userId =
+        Provider.of<UserProvider>(context, listen: false).currentUser?.id;
     if (userId == null || _items.isEmpty) return;
 
     final mealName = _mealNameController.text.trim().isNotEmpty
@@ -1000,42 +1016,109 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
     if (_items.isEmpty) return;
     final mealName = _mealNameController.text.trim().isNotEmpty
         ? _mealNameController.text.trim()
-        : _items.length == 1 ? _items.first.name : '${_items.first.name} + ${_items.length - 1} món';
+        : _items.length == 1
+            ? _items.first.name
+            : '${_items.first.name} + ${_items.length - 1} món';
 
     final template = SavedMealTemplate(
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
       name: mealName,
       emoji: '⭐',
-      items: _items.map((i) => SavedMealItemTemplate(
-        foodId: i.foodId,
-        name: i.name,
-        defaultGrams: i.weightGrams,
-      )).toList(),
+      items: _items
+          .map((i) => SavedMealItemTemplate(
+                foodId: i.foodId,
+                name: i.name,
+                defaultGrams: i.weightGrams,
+              ))
+          .toList(),
     );
-    Provider.of<NutritionProvider>(context, listen: false).saveMealTemplate(template);
+    Provider.of<NutritionProvider>(context, listen: false)
+        .saveMealTemplate(template);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Đã lưu "$mealName" vào danh sách yêu thích'), backgroundColor: AppColors.success),
+      SnackBar(
+          content: Text('Đã lưu "$mealName" vào danh sách yêu thích'),
+          backgroundColor: AppColors.success),
+    );
+  }
+
+  void _loadFromDish(Map<String, dynamic> dish) {
+    final dishName = dish['name']?.toString() ?? 'Món ăn';
+    final rawIngredients = dish['ingredients'] as List<dynamic>? ?? [];
+    final foodsDb =
+        Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
+
+    final newItems = <MealItem>[];
+    for (final ing in rawIngredients) {
+      if (ing is Map<String, dynamic>) {
+        final ingName = ing['name']?.toString() ?? '';
+        final grams = (ing['grams'] as num?)?.toDouble() ?? 100.0;
+
+        final cleanIngName = ingName.toLowerCase().trim();
+        FoodItem? matchedFood = foodsDb
+            .where((f) => f.name.toLowerCase().trim() == cleanIngName)
+            .firstOrNull;
+        matchedFood ??= foodsDb
+            .where((f) =>
+                f.name.toLowerCase().contains(cleanIngName) ||
+                cleanIngName.contains(f.name.toLowerCase()))
+            .firstOrNull;
+
+        if (matchedFood != null) {
+          newItems.add(matchedFood.toMealItem(
+            itemId:
+                '${matchedFood.id}_${DateTime.now().millisecondsSinceEpoch}_${newItems.length}',
+            grams: grams,
+          ));
+        } else {
+          newItems.add(MealItem(
+            id: 'ing_${DateTime.now().millisecondsSinceEpoch}_${newItems.length}',
+            foodId: '',
+            name: ingName,
+            weightGrams: grams,
+            calories: (grams * 1.5),
+            protein: (grams * 0.1),
+            carbs: (grams * 0.2),
+            fat: (grams * 0.05),
+          ));
+        }
+      }
+    }
+
+    setState(() {
+      _items.clear();
+      _items.addAll(newItems);
+      _mealNameController.text = dishName;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã chọn món "$dishName" (${newItems.length} thành phần)'),
+        backgroundColor: AppColors.success,
+        duration: const Duration(seconds: 1),
+      ),
     );
   }
 
   void _loadFromTemplate(SavedMealTemplate template) {
-    final db = NutritionProvider.vietnameseFoodDatabase;
+    final db = Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
     final newItems = <MealItem>[];
     for (final t in template.items) {
-      final food = db.where((f) => f.id == t.foodId).firstOrNull;
+      final food = db.where((f) => f.id == t.foodId || f.name.toLowerCase() == t.name.toLowerCase()).firstOrNull;
       if (food != null) {
         newItems.add(food.toMealItem(
           itemId: '${t.foodId}_${DateTime.now().millisecondsSinceEpoch}',
           grams: t.defaultGrams,
         ));
       } else {
-        // Fallback nếu không tìm thấy trong db
         newItems.add(MealItem(
           id: '${t.foodId}_${DateTime.now().millisecondsSinceEpoch}',
           foodId: t.foodId,
           name: t.name,
           weightGrams: t.defaultGrams,
-          calories: 0, protein: 0, carbs: 0, fat: 0,
+          calories: (t.defaultGrams * 1.5),
+          protein: (t.defaultGrams * 0.1),
+          carbs: (t.defaultGrams * 0.2),
+          fat: (t.defaultGrams * 0.05),
         ));
       }
     }
@@ -1046,8 +1129,6 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
         _mealNameController.text = template.name;
       }
     });
-    // Switch to ingredient tab to review/edit
-    _tabController.animateTo(2);
   }
 
   @override
@@ -1070,18 +1151,27 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                 child: Column(
                   children: [
-                    Center(child: Container(width: 40, height: 4,
-                        decoration: BoxDecoration(color: AppColors.textHint, borderRadius: BorderRadius.circular(2)))),
+                    Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: AppColors.textHint,
+                                borderRadius: BorderRadius.circular(2)))),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Text('Thêm món ăn', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text('Thêm món ăn',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                         const Spacer(),
                         // Meal type pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getMealTypeColor(_mealType).withValues(alpha: 0.12),
+                            color: _getMealTypeColor(_mealType)
+                                .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: DropdownButton<String>(
@@ -1089,12 +1179,19 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
                             underline: const SizedBox(),
                             isDense: true,
                             dropdownColor: AppColors.surface,
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _getMealTypeColor(_mealType)),
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _getMealTypeColor(_mealType)),
                             items: const [
-                              DropdownMenuItem(value: 'sang', child: Text('🌅 Sáng')),
-                              DropdownMenuItem(value: 'trua', child: Text('☀️ Trưa')),
-                              DropdownMenuItem(value: 'toi', child: Text('🌙 Tối')),
-                              DropdownMenuItem(value: 'phu', child: Text('🍎 Phụ')),
+                              DropdownMenuItem(
+                                  value: 'sang', child: Text('🌅 Sáng')),
+                              DropdownMenuItem(
+                                  value: 'trua', child: Text('☀️ Trưa')),
+                              DropdownMenuItem(
+                                  value: 'toi', child: Text('🌙 Tối')),
+                              DropdownMenuItem(
+                                  value: 'phu', child: Text('🍎 Phụ')),
                             ],
                             onChanged: (v) => setState(() => _mealType = v!),
                           ),
@@ -1106,7 +1203,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
                     TextField(
                       controller: _mealNameController,
                       decoration: const InputDecoration(
-                        hintText: 'Tên món ăn (vd: Cơm heo quay)',
+                        hintText: 'Tên món ăn (vd: Phở bò, Cơm tấm...)',
                         hintStyle: TextStyle(fontSize: 13),
                         prefixIcon: Icon(Icons.restaurant, size: 18),
                         contentPadding: EdgeInsets.symmetric(vertical: 10),
@@ -1116,13 +1213,24 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
                     // Tab bar
                     TabBar(
                       controller: _tabController,
-                      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      unselectedLabelStyle: const TextStyle(fontSize: 12),
-                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: AppColors.primary,
+                      indicatorWeight: 3,
+                      labelStyle: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.normal),
                       tabs: const [
-                        Tab(text: '⭐ Gợi ý'),
-                        Tab(text: '❤️ Đã lưu'),
-                        Tab(text: '🔍 Tìm kiếm'),
+                        Tab(
+                            icon: Icon(Icons.restaurant_menu_rounded, size: 18),
+                            text: 'Món Việt'),
+                        Tab(
+                            icon: Icon(Icons.favorite_rounded, size: 18),
+                            text: 'Đã lưu'),
+                        Tab(
+                            icon: Icon(Icons.tune_rounded, size: 18),
+                            text: 'Nguyên liệu'),
                       ],
                     ),
                   ],
@@ -1130,16 +1238,18 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
               ),
 
               // ── Thành phần đã thêm (hiện khi có items) ──
-              if (_items.isNotEmpty)
-                _buildItemsSummary(),
+              if (_items.isNotEmpty) _buildItemsSummary(),
 
               // ── Tab content ──
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    // Tab 0: Gợi ý mẫu
-                    _SampleMealsTab(onLoad: _loadFromTemplate),
+                    // Tab 0: Danh sách món Việt chuẩn từ database
+                    _SampleMealsTab(
+                      mealType: _mealType,
+                      onSelectDish: _loadFromDish,
+                    ),
                     // Tab 1: Đã lưu
                     _SavedMealsTab(onLoad: _loadFromTemplate),
                     // Tab 2: Tìm kiếm nguyên liệu
@@ -1171,43 +1281,59 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
         children: [
           Row(
             children: [
-              const Icon(Icons.receipt_long, size: 14, color: AppColors.textSecondary),
+              const Icon(Icons.receipt_long,
+                  size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text('${_items.length} thành phần',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600)),
               const Spacer(),
               Text('${_totalCal.toStringAsFixed(0)} kcal',
-                  style: const TextStyle(fontSize: 13, color: AppColors.calories, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.calories,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 6),
           Wrap(
             spacing: 6,
             runSpacing: 4,
-            children: _items.asMap().entries.map((e) => GestureDetector(
-              onTap: () => _removeItem(e.key),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.surfaceLight),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('${e.value.name} ${e.value.weightGrams.toStringAsFixed(0)}g',
-                        style: const TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.close, size: 12, color: AppColors.error),
-                  ],
-                ),
-              ),
-            )).toList(),
+            children: _items
+                .asMap()
+                .entries
+                .map((e) => GestureDetector(
+                      onTap: () => _removeItem(e.key),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.surfaceLight),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                                '${e.value.name} ${e.value.weightGrams.toStringAsFixed(0)}g',
+                                style: const TextStyle(fontSize: 11)),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.close,
+                                size: 12, color: AppColors.error),
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
           ),
           const SizedBox(height: 4),
-          Text('P:${_totalProtein.toStringAsFixed(0)}g  C:${_totalCarbs.toStringAsFixed(0)}g  F:${_totalFat.toStringAsFixed(0)}g',
-              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+          Text(
+              'P: ${_totalProtein.toStringAsFixed(1)}g   C: ${_totalCarbs.toStringAsFixed(1)}g   F: ${_totalFat.toStringAsFixed(1)}g',
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -1215,10 +1341,16 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
 
   Widget _buildBottomBar() {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.fromLTRB(
+          20, 8, 20, 16 + MediaQuery.of(context).viewInsets.bottom),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, -2))
+        ],
       ),
       child: Row(
         children: [
@@ -1230,7 +1362,8 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
               tooltip: 'Lưu vào yêu thích',
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.surfaceLight,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(width: 8),
@@ -1247,7 +1380,9 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
             child: ElevatedButton.icon(
               onPressed: _items.isEmpty ? null : _save,
               icon: const Icon(Icons.check, size: 16),
-              label: Text(_items.isEmpty ? 'Chọn thành phần' : 'Lưu món ăn (${_items.length})'),
+              label: Text(_items.isEmpty
+                  ? 'Chọn thành phần'
+                  : 'Lưu món ăn (${_items.length})'),
             ),
           ),
         ],
@@ -1257,35 +1392,342 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
 
   Color _getMealTypeColor(String type) {
     switch (type) {
-      case 'sang': return const Color(0xFFFF9800);
-      case 'trua': return const Color(0xFF4CAF50);
-      case 'toi': return const Color(0xFF3F51B5);
-      default: return const Color(0xFF9C27B0);
+      case 'sang':
+        return const Color(0xFFFF9800);
+      case 'trua':
+        return const Color(0xFF4CAF50);
+      case 'toi':
+        return const Color(0xFF3F51B5);
+      default:
+        return const Color(0xFF9C27B0);
     }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Tab Gợi ý — món mẫu phổ biến
+// Tab Món Việt Chuẩn — nạp từ 90 món ăn database backend
 // ═══════════════════════════════════════════════════════════════
-class _SampleMealsTab extends StatelessWidget {
-  final void Function(SavedMealTemplate) onLoad;
-  const _SampleMealsTab({required this.onLoad});
+class _SampleMealsTab extends StatefulWidget {
+  final String mealType;
+  final void Function(Map<String, dynamic>) onSelectDish;
+  const _SampleMealsTab(
+      {required this.mealType, required this.onSelectDish});
+
+  @override
+  State<_SampleMealsTab> createState() => _SampleMealsTabState();
+}
+
+class _SampleMealsTabState extends State<_SampleMealsTab> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  static (String emoji, Color bg, Color border) _getDishVisuals(String name) {
+    final lower = name.toLowerCase().trim();
+    if (lower.contains('phở') ||
+        lower.contains('bún') ||
+        lower.contains('mì') ||
+        lower.contains('miến') ||
+        lower.contains('hủ tiếu') ||
+        lower.contains('bánh canh')) {
+      return (
+        '🍜',
+        const Color(0xFFFF5722).withValues(alpha: 0.15),
+        const Color(0xFFFF5722).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('cơm') || lower.contains('xôi') || lower.contains('gạo')) {
+      return (
+        '🍚',
+        const Color(0xFFFF9800).withValues(alpha: 0.15),
+        const Color(0xFFFF9800).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('cháo') || lower.contains('súp') || lower.contains('canh')) {
+      return (
+        '🥣',
+        const Color(0xFF009688).withValues(alpha: 0.15),
+        const Color(0xFF009688).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('bánh mì') || lower.contains('sandwich')) {
+      return (
+        '🥖',
+        const Color(0xFF8D6E63).withValues(alpha: 0.15),
+        const Color(0xFF8D6E63).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('bánh bao') ||
+        lower.contains('bánh cuốn') ||
+        lower.contains('há cảo') ||
+        lower.contains('bánh xèo') ||
+        lower.contains('bánh tráng')) {
+      return (
+        '🥟',
+        const Color(0xFFAB47BC).withValues(alpha: 0.15),
+        const Color(0xFFAB47BC).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('gà') || lower.contains('vịt') || lower.contains('chim')) {
+      return (
+        '🍗',
+        const Color(0xFFFF7043).withValues(alpha: 0.15),
+        const Color(0xFFFF7043).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('bò') ||
+        lower.contains('heo') ||
+        lower.contains('thịt') ||
+        lower.contains('sườn') ||
+        lower.contains('chả')) {
+      return (
+        '🥩',
+        const Color(0xFFE91E63).withValues(alpha: 0.15),
+        const Color(0xFFE91E63).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('tôm') ||
+        lower.contains('cua') ||
+        lower.contains('mực') ||
+        lower.contains('hải sản') ||
+        lower.contains('nghêu') ||
+        lower.contains('sò') ||
+        lower.contains('ốc')) {
+      return (
+        '🦐',
+        const Color(0xFF00BCD4).withValues(alpha: 0.15),
+        const Color(0xFF00BCD4).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('cá') || lower.contains('lươn')) {
+      return (
+        '🐟',
+        const Color(0xFF03A9F4).withValues(alpha: 0.15),
+        const Color(0xFF03A9F4).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('trứng') || lower.contains('ốp la')) {
+      return (
+        '🍳',
+        const Color(0xFFFFC107).withValues(alpha: 0.18),
+        const Color(0xFFFFC107).withValues(alpha: 0.4)
+      );
+    }
+    if (lower.contains('salad') ||
+        lower.contains('rau') ||
+        lower.contains('gỏi') ||
+        lower.contains('nộm') ||
+        lower.contains('cuốn')) {
+      return (
+        '🥗',
+        const Color(0xFF4CAF50).withValues(alpha: 0.15),
+        const Color(0xFF4CAF50).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('lẩu') || lower.contains('xào') || lower.contains('kho')) {
+      return (
+        '🥘',
+        const Color(0xFFFF6F00).withValues(alpha: 0.15),
+        const Color(0xFFFF6F00).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('sữa') ||
+        lower.contains('sữa chua') ||
+        lower.contains('sinh tố') ||
+        lower.contains('nước ép') ||
+        lower.contains('trà') ||
+        lower.contains('cà phê')) {
+      return (
+        '🥤',
+        const Color(0xFF9C27B0).withValues(alpha: 0.15),
+        const Color(0xFF9C27B0).withValues(alpha: 0.35)
+      );
+    }
+    if (lower.contains('chuối') ||
+        lower.contains('táo') ||
+        lower.contains('cam') ||
+        lower.contains('dưa') ||
+        lower.contains('bơ') ||
+        lower.contains('trái') ||
+        lower.contains('hoa quả')) {
+      return (
+        '🍎',
+        const Color(0xFFE91E63).withValues(alpha: 0.15),
+        const Color(0xFFE91E63).withValues(alpha: 0.35)
+      );
+    }
+    return (
+      '🍽️',
+      const Color(0xFFFF9800).withValues(alpha: 0.15),
+      const Color(0xFFFF9800).withValues(alpha: 0.35)
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final db = NutritionProvider.vietnameseFoodDatabase;
-    final samples = NutritionProvider.sampleMeals;
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      itemCount: samples.length,
-      itemBuilder: (ctx, i) => _TemplateCard(
-        template: samples[i],
-        db: db,
-        onTap: () => onLoad(samples[i]),
-        canDelete: false,
-        onDelete: null,
-      ),
+    final provider = Provider.of<NutritionProvider>(context);
+    final dishes = provider.vietnameseDishes;
+
+    final mealTypeMap = {
+      'sang': 'breakfast',
+      'trua': 'lunch',
+      'toi': 'dinner',
+      'phu': 'snack',
+    };
+    final targetType = mealTypeMap[widget.mealType] ?? 'lunch';
+
+    final filtered = dishes.where((d) {
+      final name = (d['name'] ?? '').toString().toLowerCase();
+      final types = (d['meal_types'] as List<dynamic>? ?? [])
+          .map((e) => e.toString().toLowerCase())
+          .toList();
+      final matchType =
+          types.isEmpty || types.contains(targetType) || widget.mealType == 'phu';
+      final matchQuery = _query.isEmpty || name.contains(_query.toLowerCase());
+      return matchType && matchQuery;
+    }).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: const InputDecoration(
+              hintText: 'Tìm món Việt (Phở, Cơm, Bún, Cháo, Cá...)...',
+              hintStyle: TextStyle(fontSize: 13),
+              prefixIcon: Icon(Icons.search, size: 18),
+              contentPadding: EdgeInsets.symmetric(vertical: 10),
+            ),
+            onChanged: (v) => setState(() => _query = v),
+          ),
+        ),
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Text(
+                    dishes.isEmpty
+                        ? 'Đang nạp danh mục món Việt...'
+                        : 'Không tìm thấy món phù hợp',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                  itemCount: filtered.length,
+                  itemBuilder: (ctx, i) {
+                    final d = filtered[i];
+                    final name = d['name']?.toString() ?? '';
+                    final cal = (d['estimated_calories'] as num?)?.toDouble() ??
+                        0.0;
+                    final ingredients =
+                        (d['ingredients'] as List<dynamic>? ?? []);
+                    final ingSummary = ingredients
+                        .map((ing) =>
+                            '${ing['name']} ${(ing['grams'] ?? 100)}g')
+                        .join(' · ');
+
+                    final visuals = _getDishVisuals(name);
+
+                    return GestureDetector(
+                      onTap: () => widget.onSelectDish(d),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.surfaceLight),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: visuals.$2,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: visuals.$3),
+                              ),
+                              child: Center(
+                                  child: Text(visuals.$1,
+                                      style: const TextStyle(fontSize: 22))),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(name,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    ingSummary,
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('~${cal.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.calories)),
+                                const Text('kcal',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.textSecondary)),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 5),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add_rounded,
+                                      size: 14, color: AppColors.primary),
+                                  SizedBox(width: 2),
+                                  Text('Chọn',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primary)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }
@@ -1508,17 +1950,19 @@ class _FoodPickerListState extends State<_FoodPickerList> {
   }
 
   List<FoodItem> _sorted(String q) {
+    final foodsDb =
+        Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
     final all = q.isEmpty
-        ? List<FoodItem>.from(NutritionProvider.vietnameseFoodDatabase)
-        : NutritionProvider.vietnameseFoodDatabase
+        ? List<FoodItem>.from(foodsDb)
+        : foodsDb
             .where((f) => f.name.toLowerCase().contains(q.toLowerCase()))
             .toList();
     // Ưu tiên theo bữa ăn
     final mealKeywords = {
       'sang': ['bánh', 'trứng', 'sữa', 'phở', 'bún', 'cháo'],
-      'trua': ['cơm', 'thịt', 'cá', 'gà', 'rau'],
-      'toi':  ['cơm', 'cá', 'gà', 'rau', 'đậu'],
-      'phu':  ['sữa', 'trái', 'chuối', 'táo', 'cam', 'bánh'],
+      'trua': ['cơm', 'thịt', 'cá', 'gà', 'rau', 'tôm'],
+      'toi': ['cơm', 'cá', 'gà', 'rau', 'đậu', 'mì', 'cháo'],
+      'phu': ['sữa', 'trái', 'chuối', 'táo', 'cam', 'bánh', 'sữa chua'],
     };
     final keys = mealKeywords[widget.mealType] ?? [];
     all.sort((a, b) {
@@ -1542,6 +1986,79 @@ class _FoodPickerListState extends State<_FoodPickerList> {
       _selected = null;
       _gramsCtrl.text = '100';
     });
+  }
+
+  static (String emoji, Color bg) _getFoodVisuals(
+      String name, String category) {
+    final lower = name.toLowerCase().trim();
+    final cat = category.toLowerCase().trim();
+    if (cat.contains('ngũ cốc') ||
+        cat.contains('tinh bột') ||
+        lower.contains('gạo') ||
+        lower.contains('bún') ||
+        lower.contains('phở') ||
+        lower.contains('bánh') ||
+        lower.contains('mì')) {
+      return ('🌾', const Color(0xFFFF9800).withValues(alpha: 0.12));
+    }
+    if (cat.contains('thịt') ||
+        lower.contains('bò') ||
+        lower.contains('heo') ||
+        lower.contains('gà') ||
+        lower.contains('vịt') ||
+        lower.contains('sườn') ||
+        lower.contains('chả')) {
+      return ('🥩', const Color(0xFFE91E63).withValues(alpha: 0.12));
+    }
+    if (cat.contains('hải sản') ||
+        cat.contains('thủy sản') ||
+        lower.contains('cá') ||
+        lower.contains('tôm') ||
+        lower.contains('mực') ||
+        lower.contains('cua') ||
+        lower.contains('nghêu') ||
+        lower.contains('sò')) {
+      return ('🐟', const Color(0xFF03A9F4).withValues(alpha: 0.12));
+    }
+    if (cat.contains('rau') ||
+        lower.contains('rau') ||
+        lower.contains('cải') ||
+        lower.contains('muống') ||
+        lower.contains('xà lách') ||
+        lower.contains('cà rốt') ||
+        lower.contains('cà chua')) {
+      return ('🥬', const Color(0xFF4CAF50).withValues(alpha: 0.12));
+    }
+    if (cat.contains('khoai') ||
+        lower.contains('khoai') ||
+        lower.contains('sắn') ||
+        lower.contains('ngô') ||
+        lower.contains('bắp')) {
+      return ('🥔', const Color(0xFF8D6E63).withValues(alpha: 0.12));
+    }
+    if (cat.contains('hạt') ||
+        cat.contains('đậu') ||
+        lower.contains('đậu') ||
+        lower.contains('hạt') ||
+        lower.contains('lạc')) {
+      return ('🥜', const Color(0xFF795548).withValues(alpha: 0.12));
+    }
+    if (cat.contains('trái') ||
+        cat.contains('quả') ||
+        lower.contains('chuối') ||
+        lower.contains('táo') ||
+        lower.contains('cam') ||
+        lower.contains('dưa') ||
+        lower.contains('bơ')) {
+      return ('🍎', const Color(0xFFFF4081).withValues(alpha: 0.12));
+    }
+    if (cat.contains('sữa') ||
+        lower.contains('sữa') ||
+        lower.contains('trứng') ||
+        lower.contains('bơ sữa')) {
+      return ('🥚', const Color(0xFFFFC107).withValues(alpha: 0.15));
+    }
+    return ('🥗', const Color(0xFF4CAF50).withValues(alpha: 0.12));
   }
 
   @override
@@ -1575,7 +2092,8 @@ class _FoodPickerListState extends State<_FoodPickerList> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1584,11 +2102,13 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                     children: [
                       Expanded(
                         child: Text(_selected!.name,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14)),
                       ),
                       GestureDetector(
                         onTap: () => setState(() => _selected = null),
-                        child: const Icon(Icons.close, size: 16, color: AppColors.textHint),
+                        child: const Icon(Icons.close,
+                            size: 16, color: AppColors.textHint),
                       ),
                     ],
                   ),
@@ -1603,7 +2123,8 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                           decoration: const InputDecoration(
                             labelText: 'Khối lượng',
                             suffixText: 'g',
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                           ),
                           onChanged: (_) => setState(() {}),
                         ),
@@ -1615,10 +2136,18 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                         return Column(
                           children: [
                             Text(
-                              _selected!.caloriesForGrams(g).toStringAsFixed(0),
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.calories),
+                              _selected!
+                                  .caloriesForGrams(g)
+                                  .toStringAsFixed(0),
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.calories),
                             ),
-                            const Text('kcal', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                            const Text('kcal',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.textSecondary)),
                           ],
                         );
                       }),
@@ -1628,22 +2157,30 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                   // Quick gram options
                   Wrap(
                     spacing: 6,
-                    children: [50, 100, 150, 200].map((g) => GestureDetector(
-                      onTap: () => setState(() => _gramsCtrl.text = g.toString()),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _gramsCtrl.text == g.toString()
-                              ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text('${g}g',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: _gramsCtrl.text == g.toString() ? Colors.white : AppColors.primary,
-                            )),
-                      ),
-                    )).toList(),
+                    children: [50, 100, 150, 200]
+                        .map((g) => GestureDetector(
+                              onTap: () => setState(
+                                  () => _gramsCtrl.text = g.toString()),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _gramsCtrl.text == g.toString()
+                                      ? AppColors.primary
+                                      : AppColors.primary
+                                          .withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('${g}g',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: _gramsCtrl.text == g.toString()
+                                          ? Colors.white
+                                          : AppColors.primary,
+                                    )),
+                              ),
+                            ))
+                        .toList(),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -1663,6 +2200,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
           ),
 
         // Food list
+
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -1670,6 +2208,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
             itemBuilder: (ctx, i) {
               final food = _results[i];
               final isSelected = _selected?.id == food.id;
+              final visual = _getFoodVisuals(food.name, food.category);
               return GestureDetector(
                 onTap: () => setState(() {
                   _selected = food;
@@ -1680,22 +2219,37 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.cardDark,
-                    borderRadius: BorderRadius.circular(10),
-                    border: isSelected ? Border.all(color: AppColors.primary, width: 1.5) : null,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? Border.all(color: AppColors.primary, width: 1.5)
+                        : Border.all(color: AppColors.surfaceLight),
                   ),
                   child: Row(
                     children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: visual.$2,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                            child: Text(visual.$1,
+                                style: const TextStyle(fontSize: 18))),
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(food.name,
                                 style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                                   fontSize: 13,
                                 )),
+                            const SizedBox(height: 2),
                             Text(
-                              '${food.caloriesPer100g.toStringAsFixed(0)} kcal  P:${food.proteinPer100g.toStringAsFixed(0)}g  C:${food.carbsPer100g.toStringAsFixed(0)}g  F:${food.fatPer100g.toStringAsFixed(0)}g  /100g',
+                              '${food.caloriesPer100g.toStringAsFixed(0)} kcal  P:${food.proteinPer100g.toStringAsFixed(0)}g  C:${food.carbsPer100g.toStringAsFixed(0)}g  F:${food.fatPer100g.toStringAsFixed(0)}g /100g',
                               style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
                             ),
                           ],
@@ -1705,7 +2259,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(food.category, style: const TextStyle(fontSize: 9, color: AppColors.textHint)),
                       ),

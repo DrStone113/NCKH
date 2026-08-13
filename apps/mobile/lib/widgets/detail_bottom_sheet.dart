@@ -339,18 +339,46 @@ class _DetailSheetState extends State<_DetailSheet> {
 
   List<Widget> _buildExerciseFallback(Color color) {
     final d = widget.action.details;
+    final nameLower = widget.action.name.toLowerCase();
+    final isWorkoutRoutine = nameLower.contains('workout') ||
+        nameLower.contains('luyện tập') ||
+        nameLower.contains('tập luyện') ||
+        nameLower.contains('kế hoạch') ||
+        d['description'] != null;
+
     return [
       _sectionTitle('⏱ Thông tin bài tập', color),
       const SizedBox(height: 8),
       _infoCard([
         if (d['duration'] != null)
-          _infoRow('Thời gian', '${d['duration']} phút'),
+          _infoRow('Thời gian', '${d['duration']} phút')
+        else if (d['duration_min'] != null)
+          _infoRow('Thời gian', '${d['duration_min']} phút'),
         if (d['calories_burned'] != null)
           _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
         if (d['type'] != null)
           _infoRow('Loại', _translateType(d['type'].toString())),
       ], color),
       const SizedBox(height: 16),
+      if (d['description'] != null && d['description'].toString().isNotEmpty) ...[
+        _sectionTitle('📋 Chi tiết động tác', color),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(16),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+          ),
+          child: Text(
+            d['description'].toString(),
+            style: const TextStyle(
+                fontSize: 14, height: 1.7, color: Color(0xFF333333)),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
       Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -358,14 +386,16 @@ class _DetailSheetState extends State<_DetailSheet> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.amber, size: 18),
-            SizedBox(width: 8),
+            const Icon(Icons.info_outline, color: Colors.amber, size: 18),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Bài tập này chưa có trong cơ sở dữ liệu wger. Thông tin được cung cấp bởi AI.',
-                style: TextStyle(fontSize: 13, color: Color(0xFF666666)),
+                isWorkoutRoutine
+                    ? 'Đây là chuỗi bài tập kết hợp. Chi tiết thông tin được cung cấp bởi AI.'
+                    : 'Bài tập này chưa có trong cơ sở dữ liệu wger. Thông tin được cung cấp bởi AI.',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
               ),
             ),
           ],

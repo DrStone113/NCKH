@@ -181,6 +181,14 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
             "default": "",
             "description": "Từ khóa tìm kiếm tên món ăn (ví dụ: 'cơm', 'bún', 'phở', 'cháo', 'mì', 'miến', 'salad').",
         },
+        "latitude": {
+            "type": "number",
+            "description": "Vĩ độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn theo vùng miền).",
+        },
+        "longitude": {
+            "type": "number",
+            "description": "Kinh độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn theo vùng miền).",
+        },
     },
     "required": ["meal_type", "target_kcal"],
     "additionalProperties": False,
@@ -560,12 +568,36 @@ def _remove_accents(text: str) -> str:
     return "".join(res)
 
 
+def _get_dish_region(dish_name: str) -> str:
+    normalized = _remove_accents(dish_name.lower().strip())
+    if any(k in normalized for k in ["pho bo", "bun cha", "bun rieu", "banh cuon", "pho ga"]):
+        return "North"
+    if any(k in normalized for k in ["bun bo hue", "mi quang", "cao lau"]):
+        return "Central"
+    if any(k in normalized for k in ["com tam suon", "hu tieu", "canh chua ca", "ca kho to", "bun thit nuong"]):
+        return "South"
+    return "National"
+
+
+def _get_region_from_gps(lat: float, lng: float) -> str | None:
+    if not (8.0 <= lat <= 24.0 and 100.0 <= lng <= 110.0):
+        return None
+    if lat >= 20.0:
+        return "North"
+    elif lat >= 15.0:
+        return "Central"
+    else:
+        return "South"
+
+
 def suggest_dish(
     meal_type: str,
     target_kcal: float,
     dietary_restrictions: Sequence[str] | Iterable[str] = (),
     recent_dish_ids: Sequence[int] | Iterable[int] = (),
     query: str = "",
+    latitude: float | None = None,
+    longitude: float | None = None,
 ) -> dict[str, Any]:
     """Pick a Vietnamese dish for ``meal_type`` near ``target_kcal``.
 
@@ -584,6 +616,10 @@ def suggest_dish(
         candidate exists.
     query:
         Optional search query or keyword to match dish names.
+    latitude:
+        Optional user latitude coordinate for regional suggestions.
+    longitude:
+        Optional user longitude coordinate for regional suggestions.
 
     Returns
     -------
@@ -613,6 +649,13 @@ def suggest_dish(
 
     clean_query = _remove_accents(query.strip().lower()) if isinstance(query, str) else ""
 
+    user_region = None
+    if latitude is not None and longitude is not None:
+        try:
+            user_region = _get_region_from_gps(float(latitude), float(longitude))
+        except (ValueError, TypeError):
+            pass
+
     # Filter and scale every catalog entry that is meal_type / restriction
     # compatible. We separate "preferred" (id ∉ recent) from "fallback".
     preferred: list[_ScaledDish] = []
@@ -624,6 +667,13 @@ def suggest_dish(
             continue
         if clean_query and clean_query not in _remove_accents(dish.name.lower()):
             continue
+
+        # Region filter: only apply if the user did NOT type an explicit query
+        if user_region and not clean_query:
+            dish_region = _get_dish_region(dish.name)
+            if dish_region != "National" and dish_region != user_region:
+                continue
+
         scaled = _scale_dish(dish, target_kcal_f)
         if scaled is None:
             continue
@@ -651,6 +701,7 @@ def suggest_dish(
         "total_protein": best.total_protein,
         "total_carbs": best.total_carbs,
         "total_fat": best.total_fat,
+        "region": _get_dish_region(rec.name),
     }
 
 

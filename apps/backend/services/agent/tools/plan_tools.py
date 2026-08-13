@@ -397,18 +397,42 @@ async def append_plan_items(
     if isinstance(day_index, bool) or not isinstance(day_index, int):
         raise ValueError("INVALID_DAY_INDEX")
 
-    plan_row = (
-        await session.execute(
-            text(
-                "SELECT start_date, duration_days FROM plans WHERE id = :id"
-            ),
-            {"id": plan_id},
-        )
-    ).first()
-    if plan_row is None:
-        raise ValueError("PLAN_NOT_FOUND")
-    plan_start: date = plan_row[0]
-    plan_duration: int = int(plan_row[1])
+    import uuid
+    valid_uuid = False
+    try:
+        uuid.UUID(plan_id)
+        valid_uuid = True
+    except (ValueError, TypeError):
+        valid_uuid = False
+
+    plan_row = None
+    actual_plan_id = plan_id
+    if valid_uuid:
+        plan_row = (
+            await session.execute(
+                text(
+                    "SELECT start_date, duration_days FROM plans WHERE id = :id"
+                ),
+                {"id": plan_id},
+            )
+        ).first()
+
+    if plan_row is not None:
+        plan_start: date = plan_row[0]
+        plan_duration: int = int(plan_row[1])
+    else:
+        active_row = (
+            await session.execute(
+                text(
+                    "SELECT id, start_date, duration_days FROM plans WHERE status = 'active' ORDER BY created_at DESC LIMIT 1"
+                )
+            )
+        ).first()
+        if active_row is None:
+            raise ValueError("PLAN_NOT_FOUND")
+        actual_plan_id = str(active_row[0])
+        plan_start = active_row[1]
+        plan_duration = int(active_row[2])
 
     if not (1 <= day_index <= plan_duration):
         raise ValueError("INVALID_DAY_INDEX")
@@ -447,7 +471,7 @@ async def append_plan_items(
     rows = [
         {
             "id": item.id or str(uuid4()),
-            "plan_id": plan_id,
+            "plan_id": actual_plan_id,
             "day_index": item.day_index,
             "plan_date": item.plan_date,
             "item_type": item.item_type,

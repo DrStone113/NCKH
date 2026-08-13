@@ -21,6 +21,8 @@ class ChatGateway:
         self.user_id: str | None = None
         self.tool_dispatcher: Any | None = getattr(orchestrator, "dispatcher", None)
         self._session_ensured = False
+        self.latitude: float | None = None
+        self.longitude: float | None = None
 
     async def _ensure_session_exists(self) -> None:
         from db.db_status import is_db_offline, mark_db_offline
@@ -98,8 +100,23 @@ class ChatGateway:
                         except ValueError:
                             pass
 
+                    # Extract user_id from JSON payload if present and valid
+                    user_id_from_data = data.get("user_id") if isinstance(data, dict) else None
+                    if user_id_from_data and isinstance(user_id_from_data, str) and user_id_from_data.strip():
+                        new_user_id = str(user_id_from_data).strip()
+                        if self.user_id != new_user_id:
+                            self.user_id = new_user_id
+                            self._session_ensured = False
+
                     # Ensure the session exists in the database
                     await self._ensure_session_exists()
+
+                    try:
+                        self.latitude = float(data["latitude"]) if data.get("latitude") is not None else None
+                        self.longitude = float(data["longitude"]) if data.get("longitude") is not None else None
+                    except (ValueError, TypeError):
+                        self.latitude = None
+                        self.longitude = None
 
                     message = data.get("message")
                     if not isinstance(message, str) or not message.strip():

@@ -8,7 +8,17 @@ echo.
 
 REM 1. Deploy Database Docker
 echo [1/3] Kiem tra va khoi dong Database Postgres (pgvector)...
-docker compose up -d postgres
+
+REM Detect Docker Desktop path
+set DOCKER_CMD=docker
+if exist "%USERPROFILE%\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe" (
+    set DOCKER_CMD="%USERPROFILE%\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
+)
+if exist "C:\Program Files\Docker\Docker\resources\bin\docker.exe" (
+    set DOCKER_CMD="C:\Program Files\Docker\Docker\resources\bin\docker.exe"
+)
+
+%DOCKER_CMD% compose up -d postgres
 if %ERRORLEVEL% NEQ 0 (
     echo [!] Kiem tra Docker Desktop xem da mo chua!
     pause

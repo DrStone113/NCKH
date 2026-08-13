@@ -57,7 +57,7 @@ class ScriptedLLM:
         self.responses = list(responses)
         self.calls = 0
 
-    async def chat(self, messages, tools):
+    async def chat(self, messages, tools, *args, **kwargs):
         self.calls += 1
         return self.responses.pop(0)
 
@@ -72,13 +72,13 @@ class FakeDispatcher:
 
 
 class CapturingLLM(ScriptedLLM):
-    async def chat(self, messages, tools):
+    async def chat(self, messages, tools, *args, **kwargs):
         self.last_messages = messages
-        return await super().chat(messages, tools)
+        return await super().chat(messages, tools, *args, **kwargs)
 
 
 class UnavailableLLM:
-    async def chat(self, messages, tools):
+    async def chat(self, messages, tools, *args, **kwargs):
         from services.agent.llm_client import LLMUnavailableError
 
         raise LLMUnavailableError("down")
@@ -161,15 +161,18 @@ async def test_loop_fallback_uses_canned_reply_when_llm_gives_nothing():
 
 
 @pytest.mark.asyncio
-async def test_llm_unavailable_sends_error_and_appends_assistant_turn():
+async def test_llm_unavailable_sends_error_and_does_not_append_assistant_turn():
+    from services.agent.llm_client import LLMUnavailableError
+
     gateway = FakeGateway()
     store = FakeStore()
     orchestrator = AgentOrchestrator(UnavailableLLM(), FakeTools(), FakeMemory(), store, FakeDispatcher(), gateway, max_steps=2)
 
-    await orchestrator.handleChatMessage("s1", "hi")
+    with pytest.raises(LLMUnavailableError):
+        await orchestrator.handleChatMessage("s1", "hi")
 
     assert gateway.errors[0][0] == "LLM_UNAVAILABLE"
-    assert store.turns[-1][:3] == ("s1", "assistant", "LLM_UNAVAILABLE")
+    assert not any(t[1] == "assistant" for t in store.turns)
 
 
 @pytest.mark.asyncio
@@ -269,10 +272,10 @@ async def test_chitchat_turn_skips_the_tool_catalog():
             }]
 
     class ToolCapturingLLM(ScriptedLLM):
-        async def chat(self, messages, tools):
+        async def chat(self, messages, tools, *args, **kwargs):
             self.last_messages = messages
             self.last_tools = tools
-            return await super().chat(messages, tools)
+            return await super().chat(messages, tools, *args, **kwargs)
 
     llm = ToolCapturingLLM([LLMResponse(content_stream=_stream(["Chào bạn!"]), full_text="Chào bạn!")])
     orchestrator = AgentOrchestrator(llm, Registry(), FakeMemory(), FakeStore(), FakeDispatcher(), FakeGateway(), max_steps=3)
@@ -333,14 +336,12 @@ async def test_failed_tool_result_carries_recovery_guidance():
 
 class RecordingLLM:
     """Scripted LLM that keeps the exact messages it was handed."""
-
     def __init__(self, responses):
         self.responses = list(responses)
         self.seen_messages: list[list[dict[str, Any]]] = []
 
-    async def chat(self, messages, tools=None):
+    async def chat(self, messages, tools=None, *args, **kwargs):
         import copy
-
         self.seen_messages.append(copy.deepcopy(messages))
         return self.responses.pop(0)
 

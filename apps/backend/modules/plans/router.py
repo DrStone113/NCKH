@@ -42,10 +42,10 @@ async def create_plan(request: Request, req: CreatePlanRequest, db: AsyncSession
     item_rows = (await db.execute(text("SELECT id, plan_id, day_index, plan_date, item_type, title, payload, target_kcal, target_protein, completed FROM plan_items WHERE plan_id = :plan_id ORDER BY day_index ASC, item_type ASC"), {"plan_id": plan_id})).mappings().all()
     if not plan_row:
         raise HTTPException(status_code=500, detail="Planner did not create plan")
-    items = [PlanItem(**dict(r)) for r in item_rows]
+    items = [PlanItem(**{**dict(r), "id": str(r["id"]), "plan_id": str(r["plan_id"])}) for r in item_rows]
 
     return PlanDetail(
-        **dict(plan_row),
+        **{**dict(plan_row), "id": str(plan_row["id"])},
         items=items,
     )
 
@@ -76,7 +76,7 @@ async def get_active_plan(user_id: str, db: AsyncSession = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="No active plan found")
 
-    return PlanSummary(**row)
+    return PlanSummary(**{**dict(row), "id": str(row["id"])})
 
 
 @router.get("/{user_id}/active/detail", response_model=PlanDetail)
@@ -119,8 +119,8 @@ async def get_active_plan_detail(user_id: str, db: AsyncSession = Depends(get_db
         )
     ).mappings().all()
 
-    items = [PlanItem(**dict(r)) for r in item_rows]
-    return PlanDetail(**dict(plan_row), items=items)
+    items = [PlanItem(**{**dict(r), "id": str(r["id"]), "plan_id": str(r["plan_id"])}) for r in item_rows]
+    return PlanDetail(**{**dict(plan_row), "id": str(plan_row["id"])}, items=items)
 
 
 @router.patch("/items/{item_id}")

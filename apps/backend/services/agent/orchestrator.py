@@ -37,26 +37,36 @@ logger = logging.getLogger(__name__)
 # Guidance handed to the model when a tool call fails, keyed by the stable
 # error codes from ``ToolDispatcher``. Without this the model sees an opaque
 # code and falls back on "hệ thống đang lỗi", which is exactly the behaviour
-# the system prompt forbids.
 _ERROR_GUIDANCE: dict[str, str] = {
+    "NO_DISH_FOUND": (
+        "Không tìm thấy món ăn nào trong cơ sở dữ liệu phù hợp với yêu cầu này. "
+        "Hãy thông báo trung thực, rõ ràng cho người dùng rằng trong database chưa có món ăn khớp tiêu chí "
+        "và đề xuất họ thử tìm món khác hoặc đổi tiêu chí. TUYỆT ĐỐI KHÔNG tự bịa ra tên món ăn hay số liệu calo ảo."
+    ),
+    "NO_WORKOUT_FOUND": (
+        "Không tìm thấy bài tập phù hợp trong thư viện ứng dụng. "
+        "Hãy thông báo trung thực rằng hiện chưa có bài tập khớp tiêu chí này trong ứng dụng."
+    ),
+    "NO_FOOD_FOUND": (
+        "Không tìm thấy thực phẩm này trong cơ sở dữ liệu dinh dưỡng. "
+        "Hãy thông báo rõ ràng cho người dùng biết là chưa có dữ liệu dinh dưỡng cho món/nguyên liệu này."
+    ),
     "UNKNOWN_TOOL": (
-        "Tool này không tồn tại. Chỉ dùng đúng các tool trong danh sách đã cho, "
-        "hoặc trả lời trực tiếp bằng kiến thức của bạn."
+        "Tool này không tồn tại trong danh sách. Chỉ sử dụng các tool thực tế đã được cung cấp."
     ),
     "INVALID_ARGS": (
-        "Tham số sai định dạng. Đọc lại schema của tool và gọi lại đúng một lần "
-        "với tham số hợp lệ."
+        "Tham số sai định dạng. Đọc lại schema của tool và gọi lại đúng một lần với tham số hợp lệ."
     ),
     "TIMEOUT": (
-        "Tool quá hạn. Đừng gọi lại tool này. Tiếp tục tư vấn với dữ liệu đang có "
-        "và nói ngắn gọn rằng phần này chưa lấy được."
+        "Không thể tải dữ liệu do quá thời gian chờ. Hãy thông báo rõ ràng là chưa lấy được thông tin này, "
+        "tuyệt đối không tự suy diễn số liệu."
     ),
     "DISCONNECTED": (
-        "Ứng dụng không phản hồi. Trả lời bằng kiến thức chung, đừng nhắc tới lỗi kỹ thuật."
+        "Ứng dụng tạm thời không phản hồi. Hãy thông báo chưa lấy được dữ liệu này."
     ),
     "TOOL_INTERNAL_ERROR": (
-        "Tool gặp sự cố. Thử một cách khác một lần, nếu vẫn hỏng thì tiếp tục tư vấn "
-        "với phần dữ liệu đang có."
+        "Công cụ gặp sự cố khi xử lý dữ liệu. Thông báo trung thực rằng chưa xử lý được mục này, "
+        "tuyệt đối không bịa đặt thông tin."
     ),
 }
 
@@ -130,8 +140,10 @@ class AgentOrchestrator:
                     if step > 0:
                         await gateway.send_status(f"💭 Đang suy nghĩ bước {step + 1}...")
                     else:
-                        await gateway.send_status("🤖 Đang suy nghĩ câu trả lời...")
-                response = await llm.chat(messages, tools=tool_schemas)
+                        if plan.use_heavy_model:
+                            await gateway.send_status("🤖 Đang suy nghĩ câu trả lời...")
+                prefill = " " if not plan.use_heavy_model else None
+                response = await llm.chat(messages, tools=tool_schemas, prefill=prefill)
                 full_response = await self._stream_final(gateway, response)
 
                 if not response.tool_calls:
@@ -196,10 +208,10 @@ class AgentOrchestrator:
                 # AGENT_LOOP_EXCEEDED, which the user reads as a crash.
                 if step == step_budget - 2:
                     messages.append({
-                        "role": "system",
+                        "role": "user",
                         "content": (
-                            "Đã đủ dữ liệu. Trả lời người dùng bằng lời ngay bây giờ, "
-                            "không gọi thêm tool nào nữa."
+                            "[HỆ THỐNG: Đã đủ dữ liệu. Trả lời người dùng bằng lời ngay bây giờ, "
+                            "không gọi thêm tool nào nữa.]"
                         ),
                     })
 
@@ -217,7 +229,7 @@ class AgentOrchestrator:
                     "LLM_UNAVAILABLE",
                     "Mình chưa kết nối được tới máy chủ AI. Bạn thử lại sau ít phút nhé.",
                 )
-            await self._append_turn(session_id, "assistant", "LLM_UNAVAILABLE")
+            raise
         except GarbledOutputError:
             logger.warning("Garbled LLM output for session=%s", session_id)
             if gateway is not None:
@@ -225,7 +237,7 @@ class AgentOrchestrator:
                     "LLM_ERROR",
                     "Phản hồi bị lỗi ký tự. Bạn nhắn lại giúp mình nhé.",
                 )
-            await self._append_turn(session_id, "assistant", "LLM_ERROR")
+            raise
 
     # ------------------------------------------------------------- internals
     def _select_llm(self, plan: TurnPlan) -> Any:
@@ -271,10 +283,10 @@ class AgentOrchestrator:
     ) -> None:
         """One tool-free completion so an exhausted loop still answers."""
         messages.append({
-            "role": "system",
+            "role": "user",
             "content": (
-                "Bạn đã dùng hết số bước cho phép. Trả lời người dùng ngay bằng lời, "
-                "dựa trên dữ liệu đã thu thập. Không gọi tool."
+                "[HỆ THỐNG: Bạn đã dùng hết số bước cho phép. Trả lời người dùng ngay bằng lời, "
+                "dựa trên dữ liệu đã thu thập. Không gọi tool.]"
             ),
         })
         try:
@@ -329,6 +341,17 @@ class AgentOrchestrator:
             mode=plan.prompt_mode,
             relevant_history=getattr(context, "relevant_history", None),
         )
+
+        # Append instructions for XML tool calling if prefilling is used and tools are offered
+        if not plan.use_heavy_model and plan.offer_tools:
+            prompt += (
+                "\n\n=== QUY TẮC GỌI TOOL BẮT BUỘC KHI KHÔNG SUY NGHĨ ===\n"
+                "Vì bạn đang trả lời trực tiếp mà không qua bước suy nghĩ, nếu cần gọi công cụ (tool), "
+                "bạn BẮT BUỘC phải viết lệnh gọi công cụ bằng định dạng JSON trong cặp thẻ <tool_call>...</tool_call>.\n"
+                "Ví dụ: <tool_call>{\"name\": \"log_meal\", \"arguments\": {\"food_name\": \"cơm trắng\", \"weight_g\": 150}}</tool_call>.\n"
+                "Không được trả lời suông hoặc giải thích trước khi gọi tool."
+            )
+
         messages: list[dict[str, Any]] = [{"role": "system", "content": prompt}]
 
         # Chit-chat does not need the tool transcript; dropping it keeps the

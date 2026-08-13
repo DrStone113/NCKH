@@ -113,13 +113,52 @@ def register_client_tools(registry: ToolRegistry) -> None:
         ToolDescriptor("get_user_profile", "Đọc hồ sơ người dùng (tuổi, giới tính, chiều cao, cân nặng, mục tiêu, mức vận động). GỌI ĐẦU TIÊN trước mọi lời khuyên cá nhân hóa, tính TDEE hay lập kế hoạch. Không hỏi người dùng những thông tin này — ứng dụng đã lưu sẵn.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_today_meals", "Đọc các bữa ăn đã ghi trong ngày hôm nay kèm calo và macro. Gọi khi cần biết người dùng đã nạp bao nhiêu, còn dư bao nhiêu, hoặc trước khi gợi ý bữa tiếp theo.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_meal_log_range", "Đọc nhật ký ăn uống trong một khoảng ngày (định dạng YYYY-MM-DD). Gọi khi người dùng hỏi về tuần này, tháng qua, hoặc khi cần phân tích xu hướng ăn uống nhiều ngày.", _schema({"from_date": _DATE, "to_date": _DATE}, ["from_date", "to_date"]), "client", idempotent=True),
-        ToolDescriptor("log_meal", "Ghi một bữa ăn vào nhật ký. Gọi ngay khi người dùng kể đã ăn gì (vd 'trưa nay mình ăn phở bò'). request_id là chuỗi ngẫu nhiên duy nhất do bạn tự sinh cho mỗi lần ghi.", _schema({"meal_type": {"type": "string", "enum": ["breakfast", "lunch", "dinner", "snack"], "description": "breakfast=sáng, lunch=trưa, dinner=tối, snack=bữa phụ"}, "dish_name": {"type": "string", "minLength": 1, "description": "Tên món tiếng Việt, vd 'phở bò tái'"}, "request_id": _REQUEST_ID}, ["meal_type", "dish_name", "request_id"]), "client", idempotent=False),
+        ToolDescriptor(
+            "log_meal",
+            "Ghi một bữa ăn vào nhật ký. Gọi ngay khi người dùng kể đã ăn gì (vd 'trưa nay mình ăn phở bò') hoặc khi họ muốn lưu thực đơn gợi ý. request_id là chuỗi ngẫu nhiên duy nhất do bạn tự sinh cho mỗi lần ghi.",
+            _schema({
+                "meal_type": {
+                    "type": "string",
+                    "enum": ["breakfast", "lunch", "dinner", "snack"],
+                    "description": "breakfast=sáng, lunch=trưa, dinner=tối, snack=bữa phụ"
+                },
+                "dish_name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Tên món tiếng Việt, vd 'phở bò tái'"
+                },
+                "serving_grams": {
+                    "type": "number",
+                    "description": "Tổng khối lượng món ăn tính bằng gram (nếu có)"
+                },
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string", "description": "Tên nguyên liệu"},
+                            "serving_grams": {"type": "number", "description": "Khối lượng nguyên liệu (g)"},
+                            "calories": {"type": "number", "description": "Lượng calo (kcal)"},
+                            "protein": {"type": "number", "description": "Đạm (g)"},
+                            "carbs": {"type": "number", "description": "Tinh bột (g)"},
+                            "fat": {"type": "number", "description": "Chất béo (g)"}
+                        },
+                        "required": ["name", "serving_grams", "calories", "protein", "carbs", "fat"],
+                        "additionalProperties": False
+                    },
+                    "description": "Danh sách các nguyên liệu/thành phần dinh dưỡng chi tiết của món ăn (lấy từ kết quả tool suggest_dish hoặc search_food_nutrition)."
+                },
+                "request_id": _REQUEST_ID
+            }, ["meal_type", "dish_name", "request_id"]),
+            "client",
+            idempotent=False
+        ),
 
         # Domain 2: Thể chất (Physical Fitness)
         ToolDescriptor("get_today_exercises", "Đọc các bài tập đã ghi hôm nay kèm thời lượng và calo đốt. Gọi khi cần đối chiếu calo nạp vào / đốt ra, hoặc trước khi gợi ý buổi tập tiếp theo.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_exercise_log_range", "Đọc nhật ký tập luyện trong khoảng ngày (YYYY-MM-DD). Gọi khi phân tích tần suất tập, khối lượng tập nhiều ngày, hoặc khi người dùng hỏi 'tuần này mình tập thế nào'.", _schema({"from_date": _DATE, "to_date": _DATE}, ["from_date", "to_date"]), "client", idempotent=True),
         ToolDescriptor("get_weight_history", "Đọc lịch sử cân nặng N ngày gần nhất. BẮT BUỘC gọi khi người dùng nói cân không giảm / không tăng / bị chững, để xem xu hướng thật thay vì đoán.", _schema({"days": {"type": "integer", "minimum": 1, "maximum": 365, "description": "Số ngày cần xem, vd 30 cho một tháng"}}, ["days"]), "client", idempotent=True),
-        ToolDescriptor("log_exercise", "Ghi một buổi tập vào nhật ký. Gọi ngay khi người dùng kể vừa tập gì (vd 'sáng nay chạy 30 phút'). request_id là chuỗi ngẫu nhiên duy nhất bạn tự sinh.", _schema({"exercise_name": {"type": "string", "minLength": 1, "description": "Tên bài tập, vd 'chạy bộ', 'squat'"}, "duration_min": {"type": "integer", "minimum": 1, "description": "Thời lượng tính bằng phút"}, "request_id": _REQUEST_ID}, ["exercise_name", "duration_min", "request_id"]), "client", idempotent=False),
+        ToolDescriptor("log_exercise", "Ghi một buổi tập vào nhật ký. Gọi ngay khi người dùng kể vừa tập gì (vd 'sáng nay chạy 30 phút'). request_id là chuỗi ngẫu nhiên duy nhất bạn tự sinh.", _schema({"exercise_name": {"type": "string", "minLength": 1, "description": "Tên bài tập, vd 'chạy bộ', 'squat'"}, "duration_min": {"type": "integer", "minimum": 1, "description": "Thời lượng tính bằng phút"}, "description": {"type": "string", "description": "Mô tả chi tiết hoặc danh sách các động tác trong buổi tập"}, "request_id": _REQUEST_ID}, ["exercise_name", "duration_min", "request_id"]), "client", idempotent=False),
         ToolDescriptor("log_weight", "Ghi số cân nặng mới. Gọi khi người dùng báo cân nặng hiện tại (vd 'sáng nay mình 68kg'). date theo định dạng YYYY-MM-DD, mặc định là hôm nay.", _schema({"value_kg": {"type": "number", "minimum": 30, "maximum": 300}, "date": _DATE, "request_id": _REQUEST_ID}, ["value_kg", "date", "request_id"]), "client", idempotent=False),
 
         # Domain 3: Sức khỏe tinh thần & Lifestyle (Mental & Lifestyle)

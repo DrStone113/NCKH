@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../models/meal_model.dart';
 import '../constants/firestore_collections.dart';
 import '../services/nutrition_cache_service.dart';
+import '../services/backend_api_service.dart';
 
 class NutritionProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
@@ -24,16 +25,64 @@ class NutritionProvider with ChangeNotifier {
     return _selectedDate.year == now.year && _selectedDate.month == now.month && _selectedDate.day == now.day;
   }
 
+  List<Map<String, dynamic>> _vietnameseDishes = [];
+  List<FoodItem> _vietnameseFoods = [];
+
+  List<Map<String, dynamic>> get vietnameseDishes => _vietnameseDishes;
+  List<FoodItem> get vietnameseFoods =>
+      _vietnameseFoods.isNotEmpty ? _vietnameseFoods : vietnameseFoodDatabase;
+
   double get totalCalories => _todayMeals.fold(0, (acc, m) => acc + m.calories);
   double get totalProtein => _todayMeals.fold(0, (acc, m) => acc + m.protein);
   double get totalCarbs => _todayMeals.fold(0, (acc, m) => acc + m.carbs);
   double get totalFat => _todayMeals.fold(0, (acc, m) => acc + m.fat);
 
+  /// Nạp danh mục món ăn & thực phẩm chuẩn từ backend API
+  Future<void> loadVietnameseDatabase() async {
+    try {
+      final dishes = await BackendApiService().getVietnameseDishes();
+      if (dishes.isNotEmpty) {
+        _vietnameseDishes = dishes;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error loading vietnamese dishes: $e');
+    }
+
+    try {
+      final rawFoods = await BackendApiService().getVietnameseFoods();
+      if (rawFoods.isNotEmpty) {
+        _vietnameseFoods = rawFoods.map((f) {
+          final id = f['ma_so']?.toString() ??
+              f['stt']?.toString() ??
+              'vn_${f['name']}';
+          final name = f['name']?.toString() ?? '';
+          final cal = (f['energy_kcal'] as num?)?.toDouble() ?? 0.0;
+          final pro = (f['protein'] as num?)?.toDouble() ?? 0.0;
+          final fat = (f['fat'] as num?)?.toDouble() ?? 0.0;
+          final carbs = (f['carbohydrates'] as num?)?.toDouble() ?? 0.0;
+          final cat = f['category']?.toString() ?? 'Thực phẩm';
+          return FoodItem(
+            id: id,
+            name: name,
+            caloriesPer100g: cal,
+            proteinPer100g: pro,
+            fatPer100g: fat,
+            carbsPer100g: carbs,
+            category: cat,
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error loading vietnamese foods: $e');
+    }
+    notifyListeners();
+  }
+
   void _filterByDate(DateTime date) {
     _selectedDate = date;
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
-    _todayMeals = _allMeals.where((m) => m.date.isAfter(start) && m.date.isBefore(end)).toList();
+    _todayMeals = _allMeals.where((m) => !m.date.isBefore(start) && m.date.isBefore(end)).toList();
     notifyListeners();
   }
 
@@ -80,28 +129,113 @@ class NutritionProvider with ChangeNotifier {
     }
   }
   
-  Future<void> loadTodayMeals(String userId) async {
-    // Check cache first
-    final cached = _cacheService.getCachedMeals(userId, DateTime.now());
-    if (cached != null) {
-      debugPrint('📦 Using cached meals for today');
-      _todayMeals = cached;
-      _allMealsLoaded = true;
-      notifyListeners();
-      
-      // Pre-fetch nearby dates in background
-      _preFetchNearbyDates(userId, DateTime.now());
-      return;
+  String _mapMealType(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'breakfast':
+      case 'sang':
+        return 'sang';
+      case 'lunch':
+      case 'trua':
+        return 'trua';
+      case 'dinner':
+      case 'toi':
+        return 'toi';
+      case 'snack':
+      case 'phu':
+        return 'phu';
+      default:
+        return 'trua';
     }
+  }
 
-    if (_allMealsLoaded) {
-      _filterByDate(DateTime.now());
-      return;
+  Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
+    try {
+      final detail = await BackendApiService().getActivePlanDetail(userId);
+      if (detail == null) return;
+      final items = detail['items'] as List<dynamic>? ?? [];
+      final dateStr =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+      for (final item in items) {
+        if (item is! Map<String, dynamic>) continue;
+        if (item['item_type'] != 'meal') continue;
+        final planDate = item['plan_date']?.toString();
+        if (planDate != null && planDate != dateStr) continue;
+
+        final planItemId = item['id']?.toString() ?? '';
+        if (planItemId.isEmpty) continue;
+
+        final existingIdx = _allMeals.indexWhere((m) => m.id == planItemId);
+        final title = item['title']?.toString() ?? 'Món ăn';
+        final targetKcal = (item['target_kcal'] as num?)?.toDouble() ?? 0.0;
+        final targetProtein = (item['target_protein'] as num?)?.toDouble() ?? 0.0;
+        final isCompleted = item['completed'] == true;
+        final payload = item['payload'] as Map<String, dynamic>? ?? {};
+        final mealTypeRaw = payload['meal_type']?.toString() ?? 'lunch';
+        final mealType = _mapMealType(mealTypeRaw);
+        final components = (payload['components'] as List<dynamic>?) ?? [];
+
+        List<MealItem> mealItems = [];
+        if (components.isNotEmpty) {
+          for (final comp in components) {
+            if (comp is Map<String, dynamic>) {
+              final compName = comp['name']?.toString() ?? 'Thành phần';
+              final compGrams = (comp['serving_grams'] as num?)?.toDouble() ?? 100.0;
+              final compCal = (comp['calories'] as num?)?.toDouble() ?? 0.0;
+              final compPro = (comp['protein'] as num?)?.toDouble() ?? 0.0;
+              final compCarbs = (comp['carbs'] as num?)?.toDouble() ?? 0.0;
+              final compFat = (comp['fat'] as num?)?.toDouble() ?? 0.0;
+
+              mealItems.add(MealItem(
+                id: '${planItemId}_$compName',
+                foodId: '',
+                name: compName,
+                weightGrams: compGrams,
+                calories: compCal,
+                protein: compPro,
+                carbs: compCarbs,
+                fat: compFat,
+              ));
+            }
+          }
+        } else {
+          mealItems.add(MealItem(
+            id: '${planItemId}_item',
+            foodId: '',
+            name: title,
+            weightGrams: 100.0,
+            calories: targetKcal,
+            protein: targetProtein,
+            carbs: 0.0,
+            fat: 0.0,
+          ));
+        }
+
+        final planMeal = MealModel(
+          id: planItemId,
+          userId: userId,
+          name: title,
+          date: date,
+          mealType: mealType,
+          items: mealItems,
+          isCompleted: isCompleted,
+        );
+
+        if (existingIdx != -1) {
+          _allMeals[existingIdx] = planMeal;
+        } else {
+          _allMeals.add(planMeal);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Sync meals from backend plan error: $e');
     }
-    
+  }
+
+  Future<void> loadTodayMeals(String userId) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       final snapshot = await _firestore
           .collection(FirestoreCollections.mealDiary)
@@ -110,46 +244,41 @@ class NutritionProvider with ChangeNotifier {
       _allMeals = snapshot.docs
           .map((doc) => MealModel.fromMap(doc.data()))
           .toList();
-      _allMealsLoaded = true;
-      _filterByDate(DateTime.now());
-      
-      // Cache the result
-      _cacheService.cacheMeals(userId, DateTime.now(), _todayMeals);
-      
-      // Pre-fetch nearby dates in background
-      _preFetchNearbyDates(userId, DateTime.now());
     } catch (e) {
-      debugPrint('❌ Error loading meals: $e');
-      _todayMeals = [];
-      notifyListeners();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      debugPrint('⚠️ Firestore load error (offline/web): $e');
+      if (!_allMealsLoaded) _allMeals = [];
     }
+
+    // Luôn đồng bộ món ăn từ kế hoạch sống của backend
+    await _syncMealsFromBackendPlan(userId, DateTime.now());
+    _allMealsLoaded = true;
+    _filterByDate(DateTime.now());
+    _cacheService.cacheMeals(userId, DateTime.now(), _todayMeals);
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> loadMealsForDate(String userId, DateTime date) async {
-    // Check cache first
-    final cached = _cacheService.getCachedMeals(userId, date);
-    if (cached != null) {
-      debugPrint('📦 Using cached meals for ${date.day}/${date.month}');
-      _selectedDate = date;
-      _todayMeals = cached;
-      notifyListeners();
-      return;
-    }
-
-    if (_allMealsLoaded) {
-      _filterByDate(date);
-      return;
-    }
-    
+    _selectedDate = date;
     _isLoading = true;
     notifyListeners();
-    
-    await loadTodayMeals(userId);
+
+    try {
+      final snapshot = await _firestore
+          .collection(FirestoreCollections.mealDiary)
+          .where('userId', isEqualTo: userId)
+          .get();
+      _allMeals = snapshot.docs
+          .map((doc) => MealModel.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('⚠️ Firestore load error: $e');
+    }
+
+    await _syncMealsFromBackendPlan(userId, date);
+    _allMealsLoaded = true;
     _filterByDate(date);
-    
+    _cacheService.cacheMeals(userId, date, _todayMeals);
     _isLoading = false;
     notifyListeners();
   }
@@ -162,7 +291,7 @@ class NutritionProvider with ChangeNotifier {
       (date) async {
         final start = DateTime(date.year, date.month, date.day);
         final end = start.add(const Duration(days: 1));
-        final meals = _allMeals.where((m) => m.date.isAfter(start) && m.date.isBefore(end)).toList();
+        final meals = _allMeals.where((m) => !m.date.isBefore(start) && m.date.isBefore(end)).toList();
         return meals;
       },
     );
@@ -374,10 +503,20 @@ class NutritionProvider with ChangeNotifier {
         notifyListeners();
 
         // Update Firestore in background
-        await _firestore
-            .collection(FirestoreCollections.mealDiary)
-            .doc(mealId)
-            .update({'isCompleted': updated.isCompleted});
+        try {
+          await _firestore
+              .collection(FirestoreCollections.mealDiary)
+              .doc(mealId)
+              .update({'isCompleted': updated.isCompleted});
+        } catch (_) {}
+
+        // Update backend plan item if it belongs to plan
+        try {
+          await BackendApiService().updatePlanItemCompletion(
+            itemId: mealId,
+            completed: updated.isCompleted,
+          );
+        } catch (_) {}
 
         debugPrint('✅ Meal completed status updated: ${updated.isCompleted}');
       }

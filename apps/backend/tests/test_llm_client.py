@@ -346,3 +346,31 @@ async def test_streaming_still_emits_ordinary_angle_brackets() -> None:
                 emitted.append(str(token))
 
     assert "< 18.5" in "".join(emitted)
+
+
+@pytest.mark.asyncio
+async def test_non_first_system_messages_sanitized_to_user() -> None:
+    """Non-first system messages must be converted to user role for Jinja template compatibility."""
+    client = _make_llm_client()
+    stream = MockStream([{"content": "ok"}])
+    client.openai.chat.completions.create = AsyncMock(return_value=stream)
+
+    messages = [
+        {"role": "system", "content": "System prompt"},
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hi"},
+        {"role": "system", "content": "Secondary instruction"},
+    ]
+
+    await client.chat(messages=messages)
+
+    call_kwargs = client.openai.chat.completions.create.call_args.kwargs
+    api_messages = call_kwargs["messages"]
+
+    assert api_messages[0]["role"] == "system"
+    assert api_messages[0]["content"] == "System prompt"
+    assert api_messages[1]["role"] == "user"
+    assert api_messages[2]["role"] == "assistant"
+    assert api_messages[3]["role"] == "user"
+    assert "Secondary instruction" in api_messages[3]["content"]
+

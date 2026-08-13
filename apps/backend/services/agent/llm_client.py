@@ -22,6 +22,7 @@ Contract (see design §9.1):
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import logging
@@ -448,9 +449,12 @@ class StreamingContent(AsyncIterator[str]):
         try:
             while True:
                 chunk = await self.response_stream.__anext__()
-                if not chunk.choices:
+                if not chunk or not getattr(chunk, "choices", None):
                     continue
-                delta = chunk.choices[0].delta
+                choice = chunk.choices[0] if chunk.choices else None
+                if not choice or not getattr(choice, "delta", None):
+                    continue
+                delta = choice.delta
                 
                 # Check for native tool calls
                 if delta.tool_calls:
@@ -556,162 +560,203 @@ class LLMClient:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
         stream: bool = True,
+        prefill: str | None = None,
     ) -> LLMResponse:
         if not messages:
             raise ValueError("messages must be non-empty (precondition §9.1)")
 
-        kwargs: dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
-            "stream": bool(stream),
-        }
-        if tools:
-            kwargs["tools"] = tools
+        api_messages: list[dict[str, Any]] = []
+        for i, msg in enumerate(messages):
+            if msg.get("role") == "system" and i > 0:
+                # Many Jinja chat templates (e.g. Qwen 3.5, Llama 3) disallow non-first system messages.
+                api_messages.append({
+                    "role": "user",
+                    "content": f"[Chỉ dẫn hệ thống: {msg.get('content', '')}]",
+                })
+            else:
+                api_messages.append(dict(msg))
 
-        try:
-            if not stream:
-                # Non-streaming fallback
-                response = await self.openai.chat.completions.create(**kwargs)
-                choice = response.choices[0].message
-                content = choice.content or ""
-                _check_garbled(content)
-                native_tool_calls = []
-                if choice.tool_calls:
-                    raw_calls = []
-                    for tc in choice.tool_calls:
-                        raw_calls.append({
-                            "id": tc.id,
-                            "function": {
-                                "name": tc.function.name,
-                                "arguments": tc.function.arguments
-                            }
-                        })
-                    native_tool_calls = _parse_native_tool_calls(raw_calls)
-                
-                if native_tool_calls:
-                    return LLMResponse(tool_calls=native_tool_calls, content_stream=None, full_text="")
-                if tools:
-                    fallback = _parse_json_mode_tool_calls(content)
-                    if fallback:
-                        return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
-                # Strip any leftover markup so it never reaches the user, even
-                # when the call could not be parsed back out.
-                return LLMResponse(
-                    tool_calls=[], content_stream=None,
-                    full_text=_strip_tool_call_markup(content),
-                )
+        if prefill:
+            api_messages.append({"role": "assistant", "content": prefill})
 
-            # Streaming mode (stream=True)
-            raw_stream = await self.openai.chat.completions.create(**kwargs)
-            response_stream = raw_stream.__aiter__()
-            
-            # Read first few chunks to determine if it is a tool call
-            buffered_chunks = []
-            buffered_tokens = []
-            buffered_text = ""
-            native_tool_calls_detected = False
-            tool_calls_map = {}
-            
-            # Iterate through response_stream to fill the buffer
-            async for chunk in response_stream:
-                buffered_chunks.append(chunk)
-                if not chunk.choices:
-                    continue
-                delta = chunk.choices[0].delta
-                
-                # Check for native tool calls
-                if delta.tool_calls:
-                    native_tool_calls_detected = True
-                    for tc_chunk in delta.tool_calls:
-                        idx = tc_chunk.index
-                        if idx not in tool_calls_map:
-                            tool_calls_map[idx] = {
-                                "id": tc_chunk.id or _new_call_id(),
-                                "function": {"name": "", "arguments": ""}
-                            }
-                        if tc_chunk.function:
-                            if tc_chunk.function.name:
-                                tool_calls_map[idx]["function"]["name"] += tc_chunk.function.name
-                            if tc_chunk.function.arguments:
-                                tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
-                
-                content = delta.content
-                if content:
-                    buffered_tokens.append(content)
-                    buffered_text += content
-                
-                # Stop buffering if native tool call detected, non-tool text started (≥2 tokens, ≥5 chars), or buffer full
-                if native_tool_calls_detected:
-                    break
-                if len(buffered_tokens) >= 2 and len(buffered_text) >= 5 and not buffered_text.strip().startswith("<"):
-                    break
-                if len(buffered_tokens) >= 8 and len(buffered_text) >= 20:
-                    break
-            
-            # Run early garbled check on the buffer
-            _check_garbled("".join(buffered_tokens))
+        # Determine candidate models (primary + fallback)
+        from config import settings
+        candidate_models = [self.model]
+        fallback_model = settings.heavy_llm_model if self.model != settings.heavy_llm_model else settings.llm_model
+        if fallback_model and fallback_model not in candidate_models:
+            candidate_models.append(fallback_model)
 
-            # Determine if this is a tool call response
-            is_tool_call = native_tool_calls_detected
-            if tools and ("<tool_call>" in buffered_text or "<function=" in buffered_text):
-                is_tool_call = True
+        last_exc: Exception | None = None
+        for model_idx, model_name in enumerate(candidate_models):
+            for attempt in range(2):
+                try:
+                    kwargs: dict[str, Any] = {
+                        "model": model_name,
+                        "messages": api_messages,
+                        "stream": bool(stream),
+                    }
+                    if tools:
+                        kwargs["tools"] = tools
 
-            if is_tool_call:
-                # Consume all remaining chunks
-                async for chunk in response_stream:
-                    if not chunk.choices:
-                        continue
-                    delta = chunk.choices[0].delta
-                    if delta.tool_calls:
-                        for tc_chunk in delta.tool_calls:
-                            idx = tc_chunk.index
-                            if idx not in tool_calls_map:
-                                tool_calls_map[idx] = {
-                                    "id": tc_chunk.id or _new_call_id(),
-                                    "function": {"name": "", "arguments": ""}
-                                }
-                            if tc_chunk.function:
-                                if tc_chunk.function.name:
-                                    tool_calls_map[idx]["function"]["name"] += tc_chunk.function.name
-                                if tc_chunk.function.arguments:
-                                    tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
-                    content = delta.content
-                    if content:
-                        buffered_tokens.append(content)
-                
-                full_text = "".join(buffered_tokens)
-                if tool_calls_map:
-                    native_tool_calls = _parse_native_tool_calls(tool_calls_map.values())
-                    return LLMResponse(tool_calls=native_tool_calls, content_stream=None, full_text="")
-                if tools:
-                    fallback = _parse_json_mode_tool_calls(full_text)
-                    if fallback:
-                        return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
-                
-                # Fallback if somehow it didn't match tool calls
-                return LLMResponse(
-                    tool_calls=[], content_stream=None,
-                    full_text=_strip_tool_call_markup(full_text),
-                )
+                    if not stream:
+                        # Non-streaming fallback
+                        response = await self.openai.chat.completions.create(**kwargs)
+                        choice = response.choices[0].message
+                        content = choice.content or ""
+                        _check_garbled(content)
+                        native_tool_calls = []
+                        if choice.tool_calls:
+                            raw_calls = []
+                            for tc in choice.tool_calls:
+                                raw_calls.append({
+                                    "id": tc.id,
+                                    "function": {
+                                        "name": tc.function.name,
+                                        "arguments": tc.function.arguments
+                                    }
+                                })
+                            native_tool_calls = _parse_native_tool_calls(raw_calls)
+                        
+                        if native_tool_calls:
+                            return LLMResponse(tool_calls=native_tool_calls, content_stream=None, full_text="")
+                        if tools:
+                            fallback = _parse_json_mode_tool_calls(content)
+                            if fallback:
+                                return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
+                        # Strip any leftover markup so it never reaches the user, even
+                        # when the call could not be parsed back out.
+                        return LLMResponse(
+                            tool_calls=[], content_stream=None,
+                            full_text=_strip_tool_call_markup(content),
+                        )
 
-            # Normal text response - return real-time stream
-            llm_response = LLMResponse(tool_calls=[], content_stream=None, full_text="")
-            llm_response.content_stream = StreamingContent(buffered_tokens, response_stream, llm_response)
-            return llm_response
+                    # Streaming mode (stream=True)
+                    raw_stream = await self.openai.chat.completions.create(**kwargs)
+                    response_stream = raw_stream.__aiter__()
+                    
+                    # Read first few chunks to determine if it is a tool call
+                    buffered_chunks = []
+                    buffered_tokens = []
+                    buffered_text = ""
+                    native_tool_calls_detected = False
+                    tool_calls_map = {}
+                    
+                    # Iterate through response_stream to fill the buffer
+                    async for chunk in response_stream:
+                        buffered_chunks.append(chunk)
+                        if not chunk or not getattr(chunk, "choices", None):
+                            continue
+                        choice = chunk.choices[0] if chunk.choices else None
+                        if not choice or not getattr(choice, "delta", None):
+                            continue
+                        delta = choice.delta
+                        
+                        # Check for native tool calls
+                        if delta.tool_calls:
+                            native_tool_calls_detected = True
+                            for tc_chunk in delta.tool_calls:
+                                idx = tc_chunk.index
+                                if idx not in tool_calls_map:
+                                    tool_calls_map[idx] = {
+                                        "id": tc_chunk.id or _new_call_id(),
+                                        "function": {"name": "", "arguments": ""}
+                                    }
+                                if tc_chunk.function:
+                                    if tc_chunk.function.name:
+                                        tool_calls_map[idx]["function"]["name"] += tc_chunk.function.name
+                                    if tc_chunk.function.arguments:
+                                        tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
+                        
+                        content = delta.content
+                        if content:
+                            buffered_tokens.append(content)
+                            buffered_text += content
+                        
+                        # Stop buffering if native tool call detected, non-tool text started (≥2 tokens, ≥5 chars), or buffer full
+                        if native_tool_calls_detected:
+                            break
+                        if len(buffered_tokens) >= 2 and len(buffered_text) >= 5 and not buffered_text.strip().startswith("<"):
+                            break
+                        if len(buffered_tokens) >= 8 and len(buffered_text) >= 20:
+                            break
+                    
+                    # Run early garbled check on the buffer
+                    _check_garbled("".join(buffered_tokens))
 
-        except (APIConnectionError, APITimeoutError) as exc:
-            logger.warning("LLM API unavailable: %s", exc)
-            raise LLMUnavailableError(f"LLM API not reachable: {exc!s}") from exc
-        except APIError as exc:
-            status_code = getattr(exc, "status_code", None)
+                    # Determine if this is a tool call response
+                    is_tool_call = native_tool_calls_detected
+                    if tools and ("<tool_call>" in buffered_text or "<function=" in buffered_text):
+                        is_tool_call = True
+
+                    if is_tool_call:
+                        # Consume all remaining chunks
+                        async for chunk in response_stream:
+                            if not chunk or not getattr(chunk, "choices", None):
+                                continue
+                            choice = chunk.choices[0] if chunk.choices else None
+                            if not choice or not getattr(choice, "delta", None):
+                                continue
+                            delta = choice.delta
+                            if delta.tool_calls:
+                                for tc_chunk in delta.tool_calls:
+                                    idx = tc_chunk.index
+                                    if idx not in tool_calls_map:
+                                        tool_calls_map[idx] = {
+                                            "id": tc_chunk.id or _new_call_id(),
+                                            "function": {"name": "", "arguments": ""}
+                                        }
+                                    if tc_chunk.function:
+                                        if tc_chunk.function.name:
+                                            tool_calls_map[idx]["function"]["name"] += tc_chunk.function.name
+                                        if tc_chunk.function.arguments:
+                                            tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
+                            content = delta.content
+                            if content:
+                                buffered_tokens.append(content)
+                        
+                        full_text = "".join(buffered_tokens)
+                        if tool_calls_map:
+                            native_tool_calls = _parse_native_tool_calls(tool_calls_map.values())
+                            return LLMResponse(tool_calls=native_tool_calls, content_stream=None, full_text="")
+                        if tools:
+                            fallback = _parse_json_mode_tool_calls(full_text)
+                            if fallback:
+                                return LLMResponse(tool_calls=fallback, content_stream=None, full_text="")
+                        
+                        # Fallback if somehow it didn't match tool calls
+                        return LLMResponse(
+                            tool_calls=[], content_stream=None,
+                            full_text=_strip_tool_call_markup(full_text),
+                        )
+
+                    # Normal text response - return real-time stream
+                    llm_response = LLMResponse(tool_calls=[], content_stream=None, full_text="")
+                    llm_response.content_stream = StreamingContent(buffered_tokens, response_stream, llm_response)
+                    return llm_response
+
+                except GarbledOutputError:
+                    raise
+                except (APIConnectionError, APITimeoutError, APIError, Exception) as exc:
+                    last_exc = exc
+                    logger.warning(
+                        "LLM API error on model %s (attempt %d/2): %s",
+                        model_name,
+                        attempt + 1,
+                        exc,
+                    )
+                    await asyncio.sleep(0.5 * (attempt + 1))
+
+        if isinstance(last_exc, (APIConnectionError, APITimeoutError)):
+            logger.warning("LLM API unavailable: %s", last_exc)
+            raise LLMUnavailableError(f"LLM API not reachable: {last_exc!s}") from last_exc
+        if isinstance(last_exc, APIError):
+            status_code = getattr(last_exc, "status_code", None)
             if status_code and status_code >= 500:
-                raise LLMUnavailableError(f"LLM API returned {status_code}") from exc
-            raise LLMUnavailableError(f"LLM API error: {exc!s}") from exc
-        except Exception as exc:
-            if isinstance(exc, GarbledOutputError):
-                raise
-            logger.warning("Unexpected error: %s", exc)
-            raise LLMUnavailableError(f"LLM API unexpected error: {exc!s}") from exc
+                raise LLMUnavailableError(f"LLM API returned {status_code}") from last_exc
+            raise LLMUnavailableError(f"LLM API error: {last_exc!s}") from last_exc
+        if last_exc:
+            raise LLMUnavailableError(f"LLM API unexpected error: {last_exc!s}") from last_exc
+        raise LLMUnavailableError("LLM API call failed")
 
     async def health_check(self) -> bool:
         try:

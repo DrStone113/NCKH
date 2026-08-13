@@ -13,11 +13,14 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/action_card_widget.dart';
 import '../../../widgets/detail_bottom_sheet.dart';
+import '../../../widgets/plan_detail_bottom_sheet.dart';
 import '../../../services/backend_api_service.dart';
 import '../../../widgets/formatted_markdown_text.dart';
 
 class ChatbotScreen extends StatefulWidget {
-  const ChatbotScreen({super.key});
+  const ChatbotScreen({super.key, this.showBackButton = true});
+
+  final bool showBackButton;
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -86,8 +89,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     super.dispose();
   }
 
+  bool _wasStreaming = false;
+
   void _onMessagesChanged() {
     _scrollToBottom();
+    final aiChatProvider = Provider.of<AIChatProvider>(context, listen: false);
+    if (_wasStreaming && !aiChatProvider.isStreaming) {
+      _loadActivePlan();
+    }
+    _wasStreaming = aiChatProvider.isStreaming;
   }
 
   void _scrollToBottom() {
@@ -111,6 +121,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: widget.showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Quay lại',
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -173,7 +190,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
           ],
         ),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBackButton,
         actions: [
           IconButton(
             icon: const Icon(Icons.add_comment_outlined),
@@ -421,6 +438,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
+  void _openPlanDetailSheet() {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null || _activePlan == null) return;
+
+    showPlanDetailBottomSheet(
+      context,
+      userId: user.id,
+      initialPlan: _activePlan!,
+      backendApi: _backendApi,
+      onAskAI: (prompt) => _sendMessage(prompt),
+    );
+  }
+
   Widget _buildActivePlanCard() {
     if (_isLoadingPlan) {
       return const Padding(
@@ -432,29 +462,36 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (plan == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
+      child: Material(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.event_note, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Kế hoạch active: ${plan['duration_days']} ngày • ${plan['goal']}',
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
+          onTap: _openPlanDetailSheet,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
             ),
-            TextButton(
-              onPressed: () => _sendMessage('Xem kế hoạch hiện tại của tôi'),
-              child: const Text('Xem'),
+            child: Row(
+              children: [
+                const Icon(Icons.event_note, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Kế hoạch active: ${plan['duration_days']} ngày • ${plan['goal']}',
+                    style:
+                        const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _openPlanDetailSheet,
+                  child: const Text('Xem'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -723,7 +760,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final widgets = <Widget>[];
     final foodActions = structuredResponse.foodActions;
     final exerciseActions = structuredResponse.exerciseActions;
-    final bool showSaveButton = !message.text.contains('✅');
+    final bool showSaveButton = !message.text.contains('✅') &&
+        !message.text.toLowerCase().contains('đã lưu') &&
+        !message.text.toLowerCase().contains('đã ghi nhận');
 
     if (foodActions.isNotEmpty) {
       // Kiểm tra có phải weekly plan không (có field "day")

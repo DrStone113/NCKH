@@ -935,7 +935,12 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
   }
 
   void _openAIChat(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatbotScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ChatbotScreen(showBackButton: true),
+      ),
+    );
   }
 
   void _showCategorySheet(BuildContext context, String type, String label, Color color, ExerciseProvider provider, user) {

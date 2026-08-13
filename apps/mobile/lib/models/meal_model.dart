@@ -113,14 +113,30 @@ class MealModel {
       ];
     }
 
+    DateTime parsedDate;
+    final rawDate = map['date'];
+    if (rawDate != null) {
+      if (rawDate is DateTime) {
+        parsedDate = rawDate;
+      } else {
+        try {
+          parsedDate = DateTime.parse(rawDate.toString());
+        } catch (_) {
+          parsedDate = DateTime.now();
+        }
+      }
+    } else {
+      parsedDate = DateTime.now();
+    }
+
     return MealModel(
-      id: map['id'] ?? '',
-      userId: map['userId'] ?? '',
-      name: map['name'] ?? '',
-      date: DateTime.parse(map['date']),
-      mealType: map['mealType'] ?? 'sang',
+      id: map['id']?.toString() ?? '',
+      userId: map['userId']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      date: parsedDate,
+      mealType: map['mealType']?.toString() ?? 'sang',
       items: items,
-      isCompleted: map['isCompleted'] ?? false,
+      isCompleted: map['isCompleted'] == true,
     );
   }
 

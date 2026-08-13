@@ -15,6 +15,7 @@ import 'exercise_provider.dart';
 import 'nutrition_provider.dart';
 import 'lifestyle_provider.dart';
 import 'health_provider.dart';
+import '../utils/location_helper.dart';
 
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
@@ -27,6 +28,25 @@ class AIChatProvider extends ChangeNotifier {
   final _uuid = const Uuid();
   String? _sessionId;
   final BackendApiService _backendApi = BackendApiService();
+  double? _latitude;
+  double? _longitude;
+
+  AIChatProvider() {
+    initLocation();
+  }
+
+  Future<void> initLocation() async {
+    try {
+      final loc = await LocationHelper.getUserLocation();
+      if (loc != null) {
+        _latitude = loc['latitude'];
+        _longitude = loc['longitude'];
+        debugPrint('📍 [AIChatProvider] Location cached: $_latitude, $_longitude');
+      }
+    } catch (e) {
+      debugPrint('📍 [AIChatProvider] Error initializing location: $e');
+    }
+  }
 
   // Lưu lại context của lần gửi cuối để retry
   String? _lastMessageText;
@@ -123,6 +143,69 @@ class AIChatProvider extends ChangeNotifier {
         ts = DateTime.tryParse(timeStr.toString()) ?? DateTime.now();
       }
 
+      StructuredResponse? structuredResponse;
+      if (!isUser) {
+        // Tự động khôi phục cấu trúc bài tập khi tải lịch sử
+        final exMatch = RegExp(
+          r'(?:lưu bài tập|ghi nhận bài tập|lưu) \*\*?(.*?)\*\*? vào nhật ký vận động',
+          caseSensitive: false,
+        ).firstMatch(text);
+        if (exMatch != null) {
+          final exName = exMatch.group(1)!.trim().replaceAll('*', '');
+          if (exName.isNotEmpty) {
+            structuredResponse = StructuredResponse(
+              type: 'structured',
+              text: '',
+              actions: [
+                ActionItem(
+                  kind: 'exercise',
+                  wgerId: 0,
+                  name: exName,
+                  details: {
+                    'duration': 30,
+                    'duration_min': 30,
+                    'calories_burned': 180.0,
+                  },
+                ),
+              ],
+            );
+          }
+        } else {
+          // Tự động khôi phục cấu trúc món ăn khi tải lịch sử
+          final mealMatch = RegExp(
+            r'(?:lưu món ăn|ghi nhận món|lưu món) \*\*?(.*?)\*\*? vào nhật ký',
+            caseSensitive: false,
+          ).firstMatch(text);
+          if (mealMatch != null) {
+            final dishName = mealMatch.group(1)!.trim().replaceAll('*', '');
+            if (dishName.isNotEmpty) {
+              final lookup = ActionItem.lookupFoodNutrition(dishName);
+              structuredResponse = StructuredResponse(
+                type: 'structured',
+                text: '',
+                mealName: dishName,
+                actions: [
+                  ActionItem(
+                    kind: 'food',
+                    wgerId: 0,
+                    name: dishName,
+                    details: {
+                      'dish_name': dishName,
+                      'meal_type': 'lunch',
+                      'serving_grams': 100.0,
+                      'calories': lookup['calories'],
+                      'protein': lookup['protein'],
+                      'carbs': lookup['carbs'],
+                      'fat': lookup['fat'],
+                    },
+                  ),
+                ],
+              );
+            }
+          }
+        }
+      }
+
       _messages.add(AIChatMessage(
         id: raw['id'] ?? _uuid.v4(),
         text: text,
@@ -130,6 +213,7 @@ class AIChatProvider extends ChangeNotifier {
         isStreaming: false,
         timestamp: ts,
         status: MessageStatus.done,
+        structuredResponse: structuredResponse,
       ));
     }
     debugPrint(
@@ -275,11 +359,16 @@ class AIChatProvider extends ChangeNotifier {
     });
 
     // 3. Gửi ChatRequest JSON qua WebSocket
-    final request = {
+    final Map<String, dynamic> request = {
       'type': 'chat',
       'session_id': _sessionId,
+      'user_id': user.id,
       'message': text,
     };
+    if (_latitude != null && _longitude != null) {
+      request['latitude'] = _latitude;
+      request['longitude'] = _longitude;
+    }
 
     try {
       debugPrint('📡 [AIChatProvider] Sending request: ${jsonEncode(request)}');
@@ -354,6 +443,9 @@ class AIChatProvider extends ChangeNotifier {
       case 'get_user_profile':
         if (_lastUser != null) {
           resultData = {
+            'user_id': _lastUser!.id,
+            'id': _lastUser!.id,
+            'name': _lastUser!.name,
             'age': _lastUser!.age,
             'gender': _lastUser!.gender,
             'height': _lastUser!.height,
@@ -389,51 +481,87 @@ class AIChatProvider extends ChangeNotifier {
             : 100.0;
 
         final List<ActionItem> actions = [];
-        final cleanName = dishName.toLowerCase().trim();
+        if (args['components'] != null) {
+          final List<dynamic> comps = args['args']?['components'] ?? args['components'] as List<dynamic>;
+          for (final comp in comps) {
+            if (comp is Map<String, dynamic>) {
+              final compName = comp['name'] as String? ?? 'Thành phần';
+              final compGrams = (comp['serving_grams'] ?? 100.0) as num;
+              final compCal = (comp['calories'] ?? 0.0) as num;
+              final compPro = (comp['protein'] ?? 0.0) as num;
+              final compCarbs = (comp['carbs'] ?? 0.0) as num;
+              final compFat = (comp['fat'] ?? 0.0) as num;
 
-        String? matchedRecipeKey;
-        for (final key in ActionItem.compoundRecipes.keys) {
-          if (cleanName.contains(key)) {
-            matchedRecipeKey = key;
-            break;
-          }
-        }
+              final double gramsDouble = compGrams.toDouble();
+              final double cal100g = gramsDouble > 0 ? (compCal.toDouble() * 100.0 / gramsDouble) : 0.0;
+              final double pro100g = gramsDouble > 0 ? (compPro.toDouble() * 100.0 / gramsDouble) : 0.0;
+              final double carb100g = gramsDouble > 0 ? (compCarbs.toDouble() * 100.0 / gramsDouble) : 0.0;
+              final double fat100g = gramsDouble > 0 ? (compFat.toDouble() * 100.0 / gramsDouble) : 0.0;
 
-        if (matchedRecipeKey != null) {
-          final recipe = ActionItem.compoundRecipes[matchedRecipeKey]!;
-          recipe.forEach((ingredientName, ratio) {
-            final ingredientGrams = grams * ratio;
-            final lookup = ActionItem.lookupFoodNutrition(ingredientName);
-
-            actions.add(ActionItem(
+              actions.add(ActionItem(
                 kind: 'food',
                 wgerId: 0,
-                name: ingredientName,
+                name: compName,
                 details: {
                   'dish_name': dishName,
                   'meal_type': mealType,
-                  'serving_grams': ingredientGrams,
+                  'serving_grams': gramsDouble,
+                  'calories': cal100g,
+                  'protein': pro100g,
+                  'carbs': carb100g,
+                  'fat': fat100g,
+                },
+              ));
+            }
+          }
+        }
+
+        if (actions.isEmpty) {
+          final cleanName = dishName.toLowerCase().trim();
+          String? matchedRecipeKey;
+          for (final key in ActionItem.compoundRecipes.keys) {
+            if (cleanName.contains(key)) {
+              matchedRecipeKey = key;
+              break;
+            }
+          }
+
+          if (matchedRecipeKey != null) {
+            final recipe = ActionItem.compoundRecipes[matchedRecipeKey]!;
+            recipe.forEach((ingredientName, ratio) {
+              final ingredientGrams = grams * ratio;
+              final lookup = ActionItem.lookupFoodNutrition(ingredientName);
+
+              actions.add(ActionItem(
+                  kind: 'food',
+                  wgerId: 0,
+                  name: ingredientName,
+                  details: {
+                    'dish_name': dishName,
+                    'meal_type': mealType,
+                    'serving_grams': ingredientGrams,
+                    'calories': lookup['calories'],
+                    'protein': lookup['protein'],
+                    'carbs': lookup['carbs'],
+                    'fat': lookup['fat'],
+                  }));
+            });
+          } else {
+            final lookup = ActionItem.lookupFoodNutrition(dishName);
+            actions.add(ActionItem(
+                kind: 'food',
+                wgerId: 0,
+                name: dishName,
+                details: {
+                  'dish_name': dishName,
+                  'meal_type': mealType,
+                  'serving_grams': grams,
                   'calories': lookup['calories'],
                   'protein': lookup['protein'],
                   'carbs': lookup['carbs'],
                   'fat': lookup['fat'],
                 }));
-          });
-        } else {
-          final lookup = ActionItem.lookupFoodNutrition(dishName);
-          actions.add(ActionItem(
-              kind: 'food',
-              wgerId: 0,
-              name: dishName,
-              details: {
-                'dish_name': dishName,
-                'meal_type': mealType,
-                'serving_grams': grams,
-                'calories': lookup['calories'],
-                'protein': lookup['protein'],
-                'carbs': lookup['carbs'],
-                'fat': lookup['fat'],
-              }));
+          }
         }
 
         final items = actions.map((action) {
@@ -503,6 +631,8 @@ class AIChatProvider extends ChangeNotifier {
       case 'log_exercise':
         final exName = args['exercise_name'] as String? ?? 'Bài tập';
         final duration = (args['duration_min'] as num? ?? 30).toInt();
+        final description = args['description'] as String? ?? '';
+        final wgerId = (args['wger_id'] as num? ?? 0).toInt();
         final calBurned = (duration * 6.0);
 
         if (_exerciseProvider != null && _lastUser != null) {
@@ -511,7 +641,7 @@ class AIChatProvider extends ChangeNotifier {
               id: _uuid.v4(),
               userId: _lastUser!.id,
               name: exName,
-              exerciseTemplateId: null,
+              exerciseTemplateId: wgerId > 0 ? wgerId.toString() : null,
               date: DateTime.now(),
               duration: duration,
               caloriesBurned: calBurned.toDouble(),
@@ -531,11 +661,13 @@ class AIChatProvider extends ChangeNotifier {
           actions: [
             ActionItem(
                 kind: 'exercise',
-                wgerId: 0,
+                wgerId: wgerId,
                 name: exName,
                 details: {
+                  'duration': duration,
                   'duration_min': duration,
                   'calories_burned': calBurned,
+                  'description': description,
                 })
           ],
         );

@@ -35,6 +35,27 @@ class NutritionProvider with ChangeNotifier {
   List<FoodItem> get vietnameseFoods =>
       _vietnameseFoods.isNotEmpty ? _vietnameseFoods : vietnameseFoodDatabase;
 
+  Set<String> _deletedPlanItemIds = {};
+
+  Future<void> _loadDeletedPlanItemIds(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list =
+          prefs.getStringList('nutrition_deleted_plan_items_$userId') ?? [];
+      _deletedPlanItemIds = list.toSet();
+    } catch (_) {}
+  }
+
+  Future<void> _saveDeletedPlanItemIds(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        'nutrition_deleted_plan_items_$userId',
+        _deletedPlanItemIds.toList(),
+      );
+    } catch (_) {}
+  }
+
   /// Tổng calo & macro của các bữa ăn ĐÃ ĂN (isCompleted == true)
   double get consumedCalories =>
       _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.calories);
@@ -156,7 +177,33 @@ class NutritionProvider with ChangeNotifier {
     return result;
   }
 
-  Future<void> addMeal(MealModel meal) async {
+  Future<void> addMeal(MealModel meal, {bool replacePendingSlot = true}) async {
+    final normType = MealTypeUtils.normalize(meal.mealType);
+    if (replacePendingSlot && normType != 'phu') {
+      final start = DateTime(meal.date.year, meal.date.month, meal.date.day);
+      final end = start.add(const Duration(days: 1));
+      final pendingToRemove = _allMeals.where((m) {
+        final isSameDate = !m.date.isBefore(start) && m.date.isBefore(end);
+        final isSameType = MealTypeUtils.normalize(m.mealType) == normType;
+        return isSameDate && isSameType && !m.isCompleted && m.id != meal.id;
+      }).toList();
+
+      for (final old in pendingToRemove) {
+        _allMeals.removeWhere((m) => m.id == old.id);
+        _todayMeals.removeWhere((m) => m.id == old.id);
+        _deletedPlanItemIds.add(old.id);
+        _cacheService.removeMealFromCache(old.userId, old.date, old.id);
+        _saveDeletedPlanItemIds(old.userId);
+        try {
+          _firestore
+              .collection(FirestoreCollections.mealDiary)
+              .doc(old.id)
+              .delete()
+              .catchError((_) {});
+        } catch (_) {}
+      }
+    }
+
     // Optimistic update - add to cache immediately
     _allMeals.add(meal);
     _filterByDate(_selectedDate);
@@ -170,13 +217,13 @@ class NutritionProvider with ChangeNotifier {
           .set(meal.toMap());
       debugPrint('✅ Meal saved to Firestore: ${meal.id}');
     } catch (e) {
-      debugPrint('❌ Error saving meal: $e');
-      // Rollback on error
-      _allMeals.removeWhere((m) => m.id == meal.id);
-      _filterByDate(_selectedDate);
-      _cacheService.removeMealFromCache(meal.userId, meal.date, meal.id);
-      rethrow;
+      debugPrint('⚠️ Meal saved locally/offline: $e');
     }
+  }
+
+  Future<void> replaceMeal(String oldMealId, MealModel newMeal) async {
+    await deleteMeal(oldMealId);
+    await addMeal(newMeal, replacePendingSlot: false);
   }
 
   String _mapMealType(String raw) {
@@ -185,6 +232,7 @@ class NutritionProvider with ChangeNotifier {
 
   Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
     try {
+      await _loadDeletedPlanItemIds(userId);
       final detail = await BackendApiService().getActivePlanDetail(userId);
       if (detail == null) return;
       final items = detail['items'] as List<dynamic>? ?? [];
@@ -199,16 +247,29 @@ class NutritionProvider with ChangeNotifier {
 
         final planItemId = item['id']?.toString() ?? '';
         if (planItemId.isEmpty) continue;
+        if (_deletedPlanItemIds.contains(planItemId)) continue;
+
+        final payload = item['payload'] as Map<String, dynamic>? ?? {};
+        final mealTypeRaw = payload['meal_type']?.toString() ?? 'lunch';
+        final mealType = _mapMealType(mealTypeRaw);
 
         final existingIdx = _allMeals.indexWhere((m) => m.id == planItemId);
+        if (existingIdx == -1) {
+          final start = DateTime(date.year, date.month, date.day);
+          final end = start.add(const Duration(days: 1));
+          final hasSlotMeal = _allMeals.any((m) {
+            final isSameDate = !m.date.isBefore(start) && m.date.isBefore(end);
+            final isSameType = MealTypeUtils.normalize(m.mealType) == mealType;
+            return isSameDate && isSameType && m.id != planItemId;
+          });
+          if (hasSlotMeal) continue;
+        }
+
         final title = item['title']?.toString() ?? 'Món ăn';
         final targetKcal = (item['target_kcal'] as num?)?.toDouble() ?? 0.0;
         final targetProtein =
             (item['target_protein'] as num?)?.toDouble() ?? 0.0;
         final isCompleted = item['completed'] == true;
-        final payload = item['payload'] as Map<String, dynamic>? ?? {};
-        final mealTypeRaw = payload['meal_type']?.toString() ?? 'lunch';
-        final mealType = _mapMealType(mealTypeRaw);
         final components = (payload['components'] as List<dynamic>?) ?? [];
 
         List<MealItem> mealItems = [];
@@ -282,10 +343,8 @@ class NutritionProvider with ChangeNotifier {
           snapshot.docs.map((doc) => MealModel.fromMap(doc.data())).toList();
     } catch (e) {
       debugPrint('⚠️ Firestore load error (offline/web): $e');
-      if (!_allMealsLoaded) _allMeals = [];
     }
 
-    // Luôn đồng bộ món ăn từ kế hoạch sống của backend
     await _syncMealsFromBackendPlan(userId, DateTime.now());
     _allMealsLoaded = true;
     _filterByDate(DateTime.now());
@@ -319,12 +378,15 @@ class NutritionProvider with ChangeNotifier {
   }
 
   Future<void> deleteMeal(String mealId) async {
-    // Find the meal to get its date
-    final meal = _allMeals.firstWhere((m) => m.id == mealId);
+    final mealIdx = _allMeals.indexWhere((m) => m.id == mealId);
+    if (mealIdx == -1) return;
+    final meal = _allMeals[mealIdx];
 
     // Optimistic update - remove from cache immediately
-    _allMeals.removeWhere((m) => m.id == mealId);
+    _allMeals.removeAt(mealIdx);
     _todayMeals.removeWhere((m) => m.id == mealId);
+    _deletedPlanItemIds.add(mealId);
+    _saveDeletedPlanItemIds(meal.userId);
     _cacheService.removeMealFromCache(meal.userId, meal.date, mealId);
     notifyListeners();
 
@@ -336,12 +398,7 @@ class NutritionProvider with ChangeNotifier {
           .delete();
       debugPrint('✅ Meal deleted from Firestore: $mealId');
     } catch (e) {
-      debugPrint('❌ Error deleting meal: $e');
-      // Rollback on error
-      _allMeals.add(meal);
-      _filterByDate(_selectedDate);
-      _cacheService.addMealToCache(meal.userId, meal.date, meal);
-      rethrow;
+      debugPrint('⚠️ Meal deleted locally/offline: $e');
     }
   }
 

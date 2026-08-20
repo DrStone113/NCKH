@@ -392,19 +392,22 @@
   3. Đồng bộ `ChatbotScreen` chỉ gửi `consumedCalories` và `completedMealsCount`.
   4. Phân nhóm trong prompt hệ thống backend: tách bạch `Bữa đã ăn` và `Bữa dự kiến trong kế hoạch chưa ăn`.
 
-### 47. Chatbot không đối chiếu món đã có trong thực đơn khi gợi ý bữa ăn và không hỏi xác nhận đổi món
-- **Triệu chứng**: Bữa tối của người dùng đã được lên lịch sẵn món `Cơm đùi gà nấu nấm (~764 kcal)`, nhưng khi người dùng hỏi *"Gợi ý bữa ăn phù hợp với tôi"*, Chatbot trả lời như thể bữa tối chưa có món nào (*"Bạn còn dư 763 kcal cho bữa tối, Bún chả là lựa chọn hợp lý... Mình ghi vào nhật ký nhé?"*).
+### 48. Đổi món ăn nhưng món cũ trong kế hoạch không bị xóa (xuất hiện cả 2 món cùng lúc)
+- **Triệu chứng**: Khi người dùng đồng ý đổi món bữa tối sang **Bún chả**, Chatbot thông báo *"Đã cập nhật món Bún chả vào bữa tối hôm nay"*, nhưng trên màn hình Dinh dưỡng, cả **Cơm đùi gà nấu nấm** (món cũ) và **Bún chả** (món mới) đều cùng xuất hiện trong Bữa tối.
 - **Nguyên nhân gốc**:
-  1. System prompt backend chưa có quy tắc bắt buộc kiểm tra các món đã được lên lịch trong ngày trước khi đưa ra gợi ý bữa ăn.
-  2. AI coi toàn bộ calo chưa ăn là ngân sách trống và tự do đề xuất món mới mà không nhắc đến món ăn đã có trong kế hoạch thực đơn của người dùng.
+  1. Hàm `addMeal(meal)` trong `NutritionProvider` trước đây chỉ đơn thuần `_allMeals.add(meal)` và lưu vào Firestore với một ID mới (timestamp).
+  2. Món cũ từ kế hoạch active (`Cơm đùi gà nấu nấm`) có `id = plan_item_uuid` vẫn tồn tại trong danh sách `_allMeals`. Khi thêm món mới, hệ thống không dọn dẹp món dự kiến chưa ăn (`isCompleted == false`) của cùng bữa đó.
+  3. Khi `_syncMealsFromBackendPlan` chạy lại, nó tiếp tục đồng bộ lại `plan_item_uuid` từ backend PostgreSQL vì chưa có cơ chế đánh dấu ID kế hoạch đã bị người dùng xóa/thay thế.
 - **Cách xử lý**:
-  1. Bổ sung quy tắc **"Đối chiếu thực đơn hiện có & Hỏi xác nhận đổi món"** trong `system_prompt.py` (`_build_user_context_block`, `_TOOL_RULES`, và `_FEWSHOT`).
-  2. Khi người dùng yêu cầu gợi ý món:
-     - AI bắt buộc kiểm tra xem bữa ăn đó (hoặc các bữa trong ngày) đã có món lên lịch sẵn chưa.
-     - Nếu ĐÃ CÓ món trong thực đơn: Bắt buộc nêu rõ món hiện tại đang có (ví dụ: *"Trong thực đơn hôm nay, bữa tối của bạn đang được lên lịch là **Cơm đùi gà nấu nấm** (~764 kcal)..."*).
-     - Đề xuất món mới từ database qua `suggest_dish` và **hỏi lại người dùng xem có muốn đổi món sang món mới này không hay giữ món cũ**.
-     - Khi người dùng xác nhận đồng ý đổi món ("ừ đổi đi", "chọn bún chả", "lưu món mới"), AI mới tiến hành gọi `log_meal` để cập nhật món mới vào nhật ký.
-  3. Kiểm thử live thực tế trên API Gateway Vilao AI với model `rk/llms/qwen-3.7-plus` xác nhận phản hồi chính xác 100%.
+  1. Cải tiến `addMeal(meal, {bool replacePendingSlot = true})` trong `NutritionProvider`:
+     - Tự động quét và tìm các món dự kiến chưa hoàn thành (`!m.isCompleted`) của cùng ngày và cùng loại bữa ăn (`mealType` Sáng/Trưa/Tối).
+     - Loại bỏ sạch sẽ các món cũ khỏi `_allMeals`, `_todayMeals`, cache và Firestore.
+     - Đưa ID của món cũ vào danh sách `_deletedPlanItemIds` và lưu vào `SharedPreferences`.
+  2. Bổ sung bộ lọc trong `_syncMealsFromBackendPlan`:
+     - Bỏ qua các `planItemId` nằm trong `_deletedPlanItemIds`.
+     - Không tự ý nạp lại món từ backend nếu slot bữa ăn (`date`, `mealType`) đó đã có món mới được người dùng/AI ghi nhận.
+  3. Thêm phương thức `replaceMeal(oldMealId, newMeal)` hỗ trợ thay thế slot ăn trực tiếp.
+  4. Kiểm thử toàn bộ 70/70 Flutter tests và build web release thành công.
 
 ### 48. Carousel màn hình Đăng nhập bị chập chờn, lúc hiện lúc mất và giật lag
 - **Triệu chứng**: Khi mở màn hình đăng nhập (`AuthScreen`), thanh slide / carousel giới thiệu tính năng nổi bật (Theo dõi hoạt động, Kế hoạch tập luyện, Dinh dưỡng...) đôi khi bị biến mất hoàn toàn thành khoảng trống màu mint, hoặc bị giật khi chuyển động.

@@ -1,3 +1,9 @@
+## [2026-08-20] — Xử lý dứt điểm cơ chế xóa món cũ khi đổi món trong kế hoạch thực đơn
+- **Fixed:** Cải tiến `addMeal(meal, replacePendingSlot: true)` trong `NutritionProvider`: Tự động tìm và xóa sạch món dự kiến chưa ăn (`isCompleted == false`) của cùng bữa ăn (Sáng/Trưa/Tối) khi đổi món mới, không còn tình trạng xuất hiện cả 2 món cùng lúc.
+- **Fixed:** Lưu danh sách `_deletedPlanItemIds` vào `SharedPreferences` và chặn `_syncMealsFromBackendPlan` nạp lại món từ backend nếu slot bữa ăn đã có món mới được người dùng/AI cập nhật.
+- **Added:** Bổ sung phương thức `replaceMeal(oldMealId, newMeal)` cho phép thay thế trực tiếp món ăn trong ngày.
+- **Verified:** 70/70 Flutter tests passed; Flutter Web release build thành công (`build/web`).
+
 ## [2026-08-20] — Chuẩn hóa tính Calo Đã Ăn và bổ sung cơ chế đối chiếu thực đơn & xác nhận đổi món
 - **Fixed:** Tách biệt hoàn toàn `consumedCalories` (chỉ tính các bữa thực tế đã hoàn thành) và `plannedCalories` (tổng calo kế hoạch cả ngày) trong `NutritionProvider`. Giao diện màn Dinh dưỡng & Trang chủ không còn hiển thị nhầm calo kế hoạch thành calo "Đã ăn".
 - **Fixed:** Chatbot chỉ nhận `consumedCalories` thực tế đã nạp, không còn hiểu nhầm là người dùng đã ăn hết calo cả ngày khi các bữa vẫn ở trạng thái "sắp ăn".

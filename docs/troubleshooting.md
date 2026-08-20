@@ -435,3 +435,19 @@
   3. Nhờ đó, khi đăng xuất hoặc đăng nhập lại ở bất kỳ thời điểm nào, `AuthWrapper` luôn quản trị trạng thái `isAuthenticated` tự động chuyển đổi giữa `AuthScreen` và `HomeScreen` mượt mà ngay lập tức mà không cần reload trang.
   4. Đạt 100% kiểm thử: 70/70 Flutter tests pass, `flutter analyze` 0 issues.
 
+### 50. Lỗi Google Sign-In / Firebase khi clone project sang máy mới
+- **Triệu chứng**: Khi clone dự án sang máy tính khác hoặc cài đặt môi trường mới, người dùng bấm "Đăng nhập bằng Google" thì ứng dụng báo lỗi từ Firebase (`ApiException: 10`, `12500` hoặc không đăng nhập được).
+- **Nguyên nhân gốc**:
+  1. Google Sign-In trên Android bảo mật dựa vào mã băm chứng chỉ **SHA-1** của file signing key (`debug.keystore`).
+  2. Mặc định Android SDK trên mỗi máy tính cá nhân tự sinh một file `debug.keystore` riêng biệt tại `~/.android/debug.keystore` với mã SHA-1 khác nhau.
+  3. Khi clone sang máy mới, ứng dụng khi build debug sẽ ký bằng keystore riêng của máy đó chưa được đăng ký trong Firebase Console -> Google Auth chặn truy cập.
+- **Cách xử lý**:
+  1. Tạo file keystore dùng chung cho môi trường debug đặt tại [apps/mobile/android/app/debug.keystore](../apps/mobile/android/app/debug.keystore).
+  2. Cấu hình `signingConfigs.debug` trong cả [build.gradle](../apps/mobile/android/app/build.gradle) và [build.gradle.kts](../apps/mobile/android/app/build.gradle.kts) để Gradle luôn sử dụng file keystore chung này.
+  3. Trích xuất mã vân tay SHA-1 và SHA-256 của file keystore chung:
+     - **SHA-1**: `DC:60:5D:E3:F6:70:EF:D5:BA:32:B8:1F:F0:91:B1:2F:FB:5B:E9:80`
+     - **SHA-256**: `01:78:8F:DF:20:A3:C5:B8:40:53:EC:38:51:64:2E:6C:BC:15:94:70:17:5B:0E:35:26:CA:27:00:8C:A0:71:82`
+  4. Đăng ký mã SHA-1 / SHA-256 này vào Firebase Console (Project Settings -> Your Apps -> Android) và commit keystore + config lên Git.
+  5. Cập nhật `.gitignore` để giữ lại file `debug.keystore` cho toàn team (`!**/debug.keystore`).
+  6. Kết quả: Mọi thành viên clone repo về máy mới đều dùng chung 1 mã ký debug -> Đăng nhập Google hoạt động 100% không cần cấu hình lại.
+

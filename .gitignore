@@ -37,6 +37,8 @@ apps/mobile/lib/firebase_options.dart
 **/android/key.properties
 *.jks
 *.keystore
+!**/debug.keystore
+
 
 # Windows / desktop generated
 **/windows/flutter/generated_plugin_registrant.cc

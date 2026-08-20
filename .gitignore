@@ -2,11 +2,7 @@
 # SECRETS — KHÔNG BAO GIỜ COMMIT
 # Sao chép từ .env.example và điền thông tin thực
 # =============================================================
-.env
-.env.local
-**/.env
-!**/.env.example
-!**/.env.docker
+
 
 # Firebase — chứa API keys, mỗi người tự cấu hình
 # Xem: apps/mobile/lib/firebase_options.dart.example

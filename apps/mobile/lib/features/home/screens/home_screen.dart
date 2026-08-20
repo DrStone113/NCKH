@@ -645,7 +645,7 @@ class _DashboardTab extends StatelessWidget {
   Widget _buildCalorieCard(
       BuildContext context, NutritionProvider nutritionProvider, dynamic user) {
     final target = user.recommendedCalories;
-    final consumed = nutritionProvider.totalCalories;
+    final consumed = nutritionProvider.consumedCalories;
     final progress = target > 0 ? (consumed / target).clamp(0.0, 1.5) : 0.0;
     final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);

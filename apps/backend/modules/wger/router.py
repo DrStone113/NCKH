@@ -3,9 +3,14 @@ Wger detail endpoints — fetch chi tiết exercise/ingredient từ wger API
 """
 import logging
 import re
+from collections import OrderedDict
+from html import unescape
+
 import httpx
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
+from pydantic import BaseModel, Field
+
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -35,7 +40,7 @@ class ExerciseDetail(BaseModel):
     muscles_secondary: list[MuscleDetail]
     equipment: list[str]
     image_url: str | None = None
-    aliases: list[str] = []
+    aliases: list[str] = Field(default_factory=list)
 
 
 class WeightUnit(BaseModel):
@@ -60,7 +65,7 @@ class IngredientDetail(BaseModel):
     is_vegan: bool | None = None
     is_vegetarian: bool | None = None
     nutriscore: str | None = None
-    weight_units: list[WeightUnit] = []
+    weight_units: list[WeightUnit] = Field(default_factory=list)
     image_url: str | None = None
 
 
@@ -78,9 +83,20 @@ def _strip_html(text: str) -> str:
     text = re.sub(r'<ul[^>]*>', '', text, flags=re.IGNORECASE)
     # Remove remaining tags
     text = re.sub(r'<[^>]+>', '', text)
+    text = unescape(text).replace("\xa0", " ")
     # Clean up whitespace
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
+
+
+def _main_image_url(images: object) -> str | None:
+    if not isinstance(images, list):
+        return None
+    valid = [image for image in images if isinstance(image, dict)]
+    selected = next((image for image in valid if image.get("is_main") is True), None)
+    selected = selected or (valid[0] if valid else None)
+    url = selected.get("image") if selected else None
+    return str(url) if url else None
 
 
 # ─── Endpoints ──────────────────────────────────────────────────────────────
@@ -144,8 +160,7 @@ async def get_exercise_detail(exercise_id: int):
             equipment = [e.get("name", "") for e in data.get("equipment", [])]
 
             # Image (từ images array)
-            images = data.get("images", [])
-            image_url = images[0].get("image") if images else None
+            image_url = _main_image_url(data.get("images"))
 
             return ExerciseDetail(
                 id=exercise_id,
@@ -232,13 +247,19 @@ async def get_ingredient_detail(ingredient_id: int):
 
 
 @router.get("/search/exercise")
-async def search_exercise(name: str, limit: int = 5):
+async def search_exercise(
+    name: str = Query(min_length=1, max_length=120),
+    limit: int = Query(default=5, ge=1, le=25),
+):
     """Tìm kiếm bài tập theo tên từ wger"""
-    url = f"{WGER_BASE}/exercise/search/?term={name}&language=english&format=json"
+    url = f"{WGER_BASE}/exercise/search/"
 
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         try:
-            resp = await client.get(url)
+            resp = await client.get(
+                url,
+                params={"term": name, "language": "english", "format": "json"},
+            )
             if resp.status_code != 200:
                 return {"suggestions": []}
             data = resp.json()
@@ -250,7 +271,7 @@ async def search_exercise(name: str, limit: int = 5):
 
 @router.get("/exercises", response_model=dict)
 async def list_exercises(
-    page: int = 1,
+    page: int = Query(default=1, ge=1),
     category: int | None = None,
     muscles: int | None = None,
 ):
@@ -298,11 +319,23 @@ async def list_exercises(
 
                 # Muscles
                 muscles_list = [
-                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    {
+                        "id": m["id"],
+                        "name_en": m.get("name_en", m.get("name", "")),
+                        "is_front": m.get("is_front", True),
+                        "image_url_main": m.get("image_url_main"),
+                        "image_url_secondary": m.get("image_url_secondary"),
+                    }
                     for m in item.get("muscles", [])
                 ]
                 muscles_secondary_list = [
-                    {"id": m["id"], "name_en": m.get("name_en", m.get("name", "")), "is_front": m.get("is_front", True)}
+                    {
+                        "id": m["id"],
+                        "name_en": m.get("name_en", m.get("name", "")),
+                        "is_front": m.get("is_front", True),
+                        "image_url_main": m.get("image_url_main"),
+                        "image_url_secondary": m.get("image_url_secondary"),
+                    }
                     for m in item.get("muscles_secondary", [])
                 ]
 
@@ -313,8 +346,7 @@ async def list_exercises(
                 ]
 
                 # Image
-                images = item.get("images", [])
-                image_url = images[0].get("image") if images else None
+                image_url = _main_image_url(item.get("images"))
 
                 results.append({
                     "id": item["id"],
@@ -400,8 +432,6 @@ async def list_equipment():
 
 # ─── SVG Proxy — giải quyết CORS khi Flutter Web fetch SVG từ wger.de ────────
 
-from fastapi.responses import Response
-
 # Whitelist path patterns được phép proxy
 _SVG_ALLOWED = re.compile(
     r'^/static/images/muscles/(muscular_system_(front|back)\.svg'
@@ -409,8 +439,27 @@ _SVG_ALLOWED = re.compile(
     r'|secondary/muscle-\d+\.[a-f0-9]+\.svg)$'
 )
 
-# Cache in-memory đơn giản (SVG không đổi, cache vĩnh viễn trong session)
-_svg_cache: dict[str, bytes] = {}
+# Cache LRU có giới hạn để proxy lâu ngày không tăng RAM vô hạn.
+_svg_cache: OrderedDict[str, bytes] = OrderedDict()
+_img_cache: OrderedDict[str, bytes] = OrderedDict()
+_SVG_CACHE_LIMIT = 128
+_IMG_CACHE_LIMIT = 96
+
+
+def _cache_get(cache: OrderedDict[str, bytes], key: str) -> bytes | None:
+    value = cache.get(key)
+    if value is not None:
+        cache.move_to_end(key)
+    return value
+
+
+def _cache_put(
+    cache: OrderedDict[str, bytes], key: str, value: bytes, limit: int
+) -> None:
+    cache[key] = value
+    cache.move_to_end(key)
+    while len(cache) > limit:
+        cache.popitem(last=False)
 
 
 @router.get("/svg")
@@ -426,9 +475,10 @@ async def proxy_wger_svg(path: str):
         raise HTTPException(status_code=400, detail="Invalid SVG path")
 
     # Trả từ cache nếu có
-    if path in _svg_cache:
+    cached = _cache_get(_svg_cache, path)
+    if cached is not None:
         return Response(
-            content=_svg_cache[path],
+            content=cached,
             media_type="image/svg+xml",
             headers={"Cache-Control": "public, max-age=86400"},
         )
@@ -446,7 +496,10 @@ async def proxy_wger_svg(path: str):
             raise HTTPException(status_code=502, detail=f"wger SVG error: {resp.status_code}")
 
         content = resp.content
-        _svg_cache[path] = content  # cache lại
+        content_type = resp.headers.get("content-type", "").lower()
+        if "svg" not in content_type or len(content) > 1_000_000:
+            raise HTTPException(status_code=502, detail="Invalid wger SVG response")
+        _cache_put(_svg_cache, path, content, _SVG_CACHE_LIMIT)
 
         return Response(
             content=content,
@@ -467,8 +520,6 @@ async def proxy_wger_svg(path: str):
 # Whitelist: chỉ cho phép /media/exercise-images/
 _IMG_ALLOWED = re.compile(r'^/media/exercise-images/\d+/[\w\-\.]+\.(jpg|jpeg|png|webp)$', re.IGNORECASE)
 
-_img_cache: dict[str, bytes] = {}
-
 _MIME = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
 
 
@@ -481,10 +532,11 @@ async def proxy_wger_image(path: str):
     if not _IMG_ALLOWED.match(path):
         raise HTTPException(status_code=400, detail="Invalid image path")
 
-    if path in _img_cache:
+    cached = _cache_get(_img_cache, path)
+    if cached is not None:
         ext = path.rsplit(".", 1)[-1].lower()
         return Response(
-            content=_img_cache[path],
+            content=cached,
             media_type=_MIME.get(ext, "image/jpeg"),
             headers={"Cache-Control": "public, max-age=86400"},
         )
@@ -503,7 +555,10 @@ async def proxy_wger_image(path: str):
 
         ext = path.rsplit(".", 1)[-1].lower()
         content = resp.content
-        _img_cache[path] = content
+        content_type = resp.headers.get("content-type", "").lower()
+        if not content_type.startswith("image/") or len(content) > 8_000_000:
+            raise HTTPException(status_code=502, detail="Invalid wger image response")
+        _cache_put(_img_cache, path, content, _IMG_CACHE_LIMIT)
 
         return Response(
             content=content,

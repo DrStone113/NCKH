@@ -202,5 +202,207 @@
      - **Tính toán Macro thời gian thực**: Tự động tổng hợp và hiển thị trực quan Calo, Đạm, Tinh bột, Chất béo khi thêm/bớt nguyên liệu.
   3. Biên dịch lại bản dựng Flutter Web Release.
 
+### 29. Khắc phục triệt để luồng hiển thị suy nghĩ thực tế của Chatbot (Live AI Reasoning / Chain of Thought)
+- **Nguyên nhân**:
+  1. Kỹ thuật Assistant Prefilling (`prefill = " "` trong `orchestrator.py`) chèn sẵn 1 khoảng trắng vào role assistant khiến các mô hình lý luận (như `ds/qwen3.5-397b-a17b`) lập tức bỏ qua giai đoạn sinh token suy nghĩ (`reasoning_content` / `<think>`).
+  2. Các chỉ dẫn prompt cũ trong `system_prompt.py` và `orchestrator.py` chứa câu cấm suy nghĩ ("Vì bạn đang trả lời trực tiếp mà không qua bước suy nghĩ...", "Gọi tool ngay, im lặng..."), làm triệt tiêu token tư duy của LLM.
+  3. `llm_client.py` không ghi nhận `reasoning_content` trong vòng lặp buffer 8 chunk đầu tiên, đồng thời nuốt chửng stream khi phát hiện tool call (`content_stream = None`), khiến toàn bộ lập luận trước khi gọi tool bị biến mất.
+  4. Giao diện Chatbot Flutter (`AIThoughtsPanel` & `_buildThinkingBubble`) chỉ hiển thị placeholder tĩnh ("Đang suy nghĩ...") khi không nhận được thought tokens từ backend.
+- **Cách xử lý**:
+  1. Loại bỏ `prefill = " "` trong `orchestrator.py` để mô hình tự do thực hiện lập luận từng bước (Chain-of-Thought).
+  2. Bổ sung mục `=== QUY TRÌNH TƯ DUY & SUY NGHĨ (CHAIN OF THOUGHT) ===` vào `system_prompt.py`, hướng dẫn mô hình tư duy phân tích chi tiết trước khi gọi tool hoặc trả lời.
+  3. Cập nhật `llm_client.py`: Lưu trữ an toàn `reasoning_content` trong buffer đầu và tiếp tục phát luồng `StreamingToken(..., "thought")` qua `content_stream` song song với việc trích xuất `tool_calls`.
+  4. Nâng cấp `AIThoughtsPanel` trong `chatbot_screen.dart`: Thiết kế giao diện tư duy mượt mà, hiển thị live spinner và icon não bộ phát sáng, định dạng Markdown rõ ràng, tự động mở rộng theo thời gian thực và cho phép đóng/mở linh hoạt khi hoàn tất.
+  5. Cập nhật tên mô hình chuẩn xác: `LLM_MODEL=ds/qwen3.5-397b-a17b` trong `config.py` and `.env`.
 
+### 30. Lỗi biên dịch hàng loạt do thiếu từ khóa `async` trong hàm xử lý Tool Call và các cảnh báo linter trong dự án Flutter
+- **Nguyên nhân**:
+  1. Trong `AIChatProvider`, hàm `_handleToolCall` chứa rất nhiều lệnh gọi bất đồng bộ bằng `await` (như `await _nutritionProvider!.addMeal(...)`, `await _exerciseProvider!.addExercise(...)`, `await _lifestyleProvider!...`, và các API call). Tuy nhiên, hàm này không được khai báo với từ khóa `async`. Lỗi này làm phát sinh hàng loạt lỗi phân tích cú pháp (parser error) do trình biên dịch Dart coi `await` là một định danh/kiểu dữ liệu biến thay vì từ khóa, dẫn đến các lỗi cascading khó hiểu khác.
+  2. Phương thức `_preFetchNearbyDates` trong `NutritionProvider` được khai báo nhưng không bao giờ được gọi hoặc sử dụng trong mã nguồn.
+  3. Thuộc tính `_error` trong `_PlanDetailSheetState` lưu trữ lỗi chi tiết của kế hoạch nhưng không được sử dụng ở giao diện, làm phát sinh cảnh báo linter. Ngoài ra, widget `Row` chứa các phần tử static không sử dụng từ khóa `const`.
+  4. Sử dụng phương thức đã bị deprecated `.withOpacity(opacity)` thay vì `.withValues(alpha: opacity)` cho các giá trị màu sắc trong `main.dart` trên Flutter phiên bản mới.
+  5. Cảnh báo sử dụng thư viện web-only `dart:html` trong `location_helper_web.dart` khi build Flutter ngoài môi trường web plugin.
+- **Cách xử lý**:
+  1. Cập nhật chữ ký hàm `_handleToolCall` trong [ai_chat_provider.dart](../apps/mobile/lib/providers/ai_chat_provider.dart) thành `Future<void> _handleToolCall(Map<String, dynamic> data) async`.
+  2. Loại bỏ hoàn toàn phương thức `_preFetchNearbyDates` thừa trong [nutrition_provider.dart](../apps/mobile/lib/providers/nutrition_provider.dart).
+  3. Xóa thuộc tính `_error` không dùng đến trong [plan_detail_bottom_sheet.dart](../apps/mobile/lib/widgets/plan_detail_bottom_sheet.dart), log lỗi qua `debugPrint` và tối ưu `Row` thành `const Row(...)`.
+  4. Thay thế toàn bộ 22 lệnh gọi `.withOpacity(opacity)` bằng `.withValues(alpha: opacity)` trong [main.dart](../apps/mobile/lib/main.dart).
+  5. Bổ sung chú thích `// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter` lên đầu file [location_helper_web.dart](../apps/mobile/lib/utils/location_helper_web.dart).
+
+### 31. Nâng cấp toàn diện giao diện bài tập, phân tách 3 giai đoạn chuẩn thể thao, hướng dẫn kỹ thuật chi tiết, chế độ mô phỏng luyện tập tương tác và theo dõi tiến độ
+- **Nguyên nhân**:
+  1. Trước đây, khi AI gợi ý các chuỗi bài tập phức hợp (như *Full Body workout (intermediate)*, *Cardio đốt mỡ*, *Upper Body Strength*), hệ thống chỉ gom toàn bộ chuỗi động tác thành một đoạn văn bản thô không cấu trúc (`details['description']`), khiến giao diện `DetailBottomSheet` hiển thị sơ sài và đơn điệu.
+  2. Người dùng không thấy được các động tác cụ thể, thiếu số hiệp x số lần cho từng bài, thiếu thông tin nhóm cơ tác động, thiết bị cần dùng, hướng dẫn tư thế (form cues), và kỹ thuật hít thở chuẩn.
+  3. Thiếu chế độ mô phỏng luyện tập trực quan và trình phát bài tập theo thời gian thực (Interactive Workout Player) với đồng hồ đếm giờ, đếm hiệp, thời gian nghỉ ngơi (rest interval timer) và thanh theo dõi tiến độ hoàn thành.
+- **Cách xử lý**:
+  1. Tạo model `WorkoutRoutinePlan`, `WorkoutPhase`, `WorkoutExerciseStep` và bộ parser thông minh `WorkoutRoutineParser` trong [workout_routine_model.dart](../apps/mobile/lib/models/workout_routine_model.dart) tích hợp sẵn từ điển tra cứu kỹ thuật, nhóm cơ, thiết bị và nhịp thở của hơn 30 bài tập phổ biến.
+  2. Xây dựng CustomPainter & Widget hoạt ảnh chuyển động mô phỏng [workout_simulation_painter.dart](../apps/mobile/lib/widgets/workout_simulation_painter.dart) mô phỏng chân thực nhịp phát lực, cơ bắp co thắt và chu kỳ hít thở theo từng động tác.
+  3. Phát triển màn hình trình phát tương tác [workout_simulation_screen.dart](../apps/mobile/lib/features/exercise/screens/workout_simulation_screen.dart) hỗ trợ đếm giờ, đếm hiệp, đếm thời gian nghỉ ngơi, thanh tiến độ % thời gian thực và màn hình chúc mừng hoàn thành để lưu trực tiếp vào nhật ký vận động.
+  4. Nâng cấp giao diện [detail_bottom_sheet.dart](../apps/mobile/lib/widgets/detail_bottom_sheet.dart) theo phong cách Glassmorphism với 3 giai đoạn chuẩn (Khởi động ➔ Thân bài chính ➔ Giãn cơ & Hạ nhiệt), thẻ động tác mở rộng và nút CTA **"Bắt đầu luyện tập"** nổi bật.
+  5. Cập nhật [action_card_widget.dart](../apps/mobile/lib/widgets/action_card_widget.dart) hiển thị badge số lượng bài tập và nút mở chi tiết / luyện tập tiện lợi.
+  6. Viết bộ kiểm thử unit test và widget test đầy đủ đạt 100% pass (`workout_routine_model_test.dart`, `workout_simulation_test.dart`).
+
+### 33. Lỗi hiển thị chuỗi HTML thô (`<p>...</p>`) và trùng lặp calo tiêu thụ giống hệt nhau (`~284 kcal/30p`) ở mọi bài tập
+- **Nguyên nhân**:
+  1. Dữ liệu bài tập trích xuất từ wger API (`wger.description`) chứa các thẻ HTML gốc như `<p>`, `</p>`, `&nbsp;`, `<br/>`. Khi nạp vào `ExerciseTemplate` hoặc hiển thị danh mục bài tập (`_showCategorySheet`), hệ thống gán trực tiếp chuỗi này lên widget `Text` mà không loại bỏ thẻ HTML, dẫn đến lỗi hiển thị thô `<p>Zone two Cardio for ...</p>` như người dùng phản ánh.
+  2. Hàm tính toán chỉ số chuyển hóa tương đương `_estimateMET` trong `ExerciseProvider` chỉ kiểm tra chuỗi phân loại lớn (ví dụ: `if (cat.contains('cardio')) return 8.0`). Vì toàn bộ 42 bài tập trong mục Cardio đều có `cat == 'cardio'`, tất cả đều bị gán cứng `MET = 8.0`.
+  3. Khi tính lượng calo tiêu hao 30 phút theo công thức khoa học `MET * weight(kg) * (30/60)` với người dùng nặng 71kg: `8.0 * 71 * 0.5 = 284 kcal`, dẫn đến hiện tượng mọi bài tập (chạy chậm Zone 2, bơi nước rút 50m, nhảy dây, máy elip, treo người) đều ra đúng số calo `~284 kcal/30p` giống hệt nhau một cách phi thực tế.
+- **Cách xử lý**:
+  1. Thêm bộ lọc tĩnh `cleanHtml(String html)` trong [exercise_provider.dart](../apps/mobile/lib/providers/exercise_provider.dart) loại bỏ triệt để toàn bộ regex HTML tags và ký tự đặc biệt trước khi đưa lên UI.
+  2. Thiết kế hàm đánh giá MET chuẩn thể thao `estimateMETForExercise(name, categoryName, muscleCount)` dựa trên Compendium of Physical Activities:
+     - Nước rút / Bơi tốc độ / HIIT / Burpee: `MET 10.0 - 11.5` (~355-408 kcal/30p).
+     - Nhảy dây / High Knees / Chạy nhanh: `MET 8.0 - 10.0` (~284-355 kcal/30p).
+     - Chạy chậm Zone 2 / Đạp xe vừa: `MET 6.5 - 7.0` (~230-248 kcal/30p).
+     - Máy Elliptical / Treo dây TRX: `MET 5.5 - 6.0` (~195-213 kcal/30p).
+     - Kháng lực phức hợp (Squat, Deadlift, Bench Press): `MET 5.5 - 7.0`.
+     - Kháng lực cô lập (Curl, Extension, Plank, Crunch): `MET 3.8 - 4.5`.
+     - Dẻo dai / Yoga / Giãn cơ: `MET 2.5 - 3.5`.
+  3. Áp dụng đồng bộ `ExerciseProvider.estimateMETForExercise` trên toàn bộ [exercise_screen.dart](../apps/mobile/lib/features/exercise/screens/exercise_screen.dart), [exercise_detail_screen.dart](../apps/mobile/lib/features/exercise/screens/exercise_detail_screen.dart), [exercise_browser_screen.dart](../apps/mobile/lib/features/exercise/screens/exercise_browser_screen.dart) và [smart_exercise_picker.dart](../apps/mobile/lib/widgets/smart_exercise_picker.dart).
+  4. Bổ sung unit test kiểm tra `cleanHtml` và `estimateMETForExercise` trong [workout_routine_model_test.dart](../apps/mobile/test/workout_routine_model_test.dart) (100% pass).
+
+### 34. `start-all.bat` phục vụ bản Flutter Web cũ sau khi mã nguồn đã thay đổi
+- **Nguyên nhân gốc**: `start-all.bat` trước đây chỉ mở `serve_web.py`. Server này phục vụ thư mục tĩnh `apps/mobile/build/web` nhưng không gọi `flutter build web`, nên mọi thay đổi mới trong mã Dart, tài nguyên, cấu hình web hoặc dependency chưa được biên dịch vẫn không xuất hiện trên `http://localhost:3000`.
+- **Cách xử lý**:
+  1. Thêm [web_build_fingerprint.ps1](../apps/mobile/tool/web_build_fingerprint.ps1) để tạo dấu vân tay SHA-256 ổn định từ `lib/`, `web/`, `assets/`, `pubspec.yaml`, `pubspec.lock` và chính quy tắc tính dấu vân tay.
+  2. Trước khi mở Web Server, [start-all.bat](../start-all.bat) so sánh dấu vân tay hiện tại với `build/web/.source_hash`. Nếu bản build chưa tồn tại hoặc nội dung đầu vào đã đổi, script chạy `flutter build web --release --no-tree-shake-icons`.
+  3. Chỉ ghi dấu vân tay mới sau khi build thành công. Nếu build thất bại, Web Server không khởi động bằng bản cũ và lần chạy sau vẫn tự thử build lại.
+
+### 35. Chatbot hiển thị các trạng thái trung gian dư thừa thay vì chỉ hiện quá trình suy nghĩ
+- **Nguyên nhân gốc**: Backend gửi riêng sự kiện `status` (tiến độ kỹ thuật như tải ngữ cảnh, gọi tool) và `thought` (reasoning thực tế), nhưng `AIChatProvider` lưu cả `statusText` vào message và `_buildThinkingBubble` luôn render một bong bóng animated dots/status trước `AIThoughtsPanel`. Vì vậy người dùng thấy các câu trạng thái ngắn, lặp lại và không có giá trị nội dung.
+- **Cách xử lý**:
+  1. Loại bỏ `statusText` khỏi `AIChatMessage` và bỏ toàn bộ bong bóng `_TypingDots`/status trong `chatbot_screen.dart`.
+  2. `_buildThinkingBubble` trả widget rỗng khi chưa có `thought`; khi reasoning bắt đầu truyền về, chỉ render avatar cùng `AIThoughtsPanel` đang cập nhật trực tiếp.
+  3. Tiếp tục nhận sự kiện `status` trong `AIChatProvider` nhưng chỉ dùng để reset timeout, không lưu vào state và không gọi `notifyListeners()`.
+
+### 36. Card món ăn khi xem lịch sử khác card lúc đang chat trực tiếp
+- **Nguyên nhân gốc**: Card trực tiếp được tạo từ `StructuredResponse` đầy đủ của client tool, nhưng `chat_messages` và API lịch sử trước đây chỉ lưu/trả `content` cùng `thoughts`. Khi mở lịch sử, `AIChatProvider` phải dùng regex đoán tên món từ câu trả lời rồi tự tạo một action 100g với macro fallback; danh sách nguyên liệu và khẩu phần gốc đã mất nên cùng một message cho ra card khác.
+- **Cách xử lý**:
+  1. Migration `005_chat_message_structured_data.sql` bổ sung cột `structured_data JSONB` cho `chat_messages`.
+  2. Client tool `log_meal`/`log_exercise` gửi `ui_message` chứa đúng text và `StructuredResponse.toJson()` đã dùng để render trực tiếp. Payload trình bày này nằm ngoài `data` để không làm phình transcript gửi cho LLM.
+  3. `AgentOrchestrator` ghi `ui_message` thành assistant turn kèm `structured_data`; API `/chat/sessions/{session_id}/messages` trả payload dưới trường `structured`.
+  4. `AIChatProvider.loadExistingSession` ưu tiên parse payload cấu trúc gốc và chỉ dùng regex fallback cho dữ liệu cũ trước migration.
+
+### 37. Màn Cài đặt chỉ hiển thị thông tin nhưng thiếu chức năng quản lý thực tế
+- **Nguyên nhân gốc**:
+  1. `AccountSettingsScreen` là trang tĩnh dài, chỉ cho đổi mục tiêu và đăng xuất; mức vận động, chỉ số cá nhân, cấu hình check-in và lịch sử chat không có luồng chỉnh sửa/quản lý.
+  2. Nút Trợ lý AI chỉ hiện snackbar hướng dẫn thay vì điều hướng; phiên bản hiển thị bị hardcode không khớp `pubspec.yaml`.
+  3. `UserProvider.updateProfile` luôn gọi Firestore, kể cả tài khoản `demo`, nên cập nhật hồ sơ thất bại khi Firebase không khả dụng.
+  4. API check-in settings đã tồn tại nhưng mobile không sử dụng; cấu hình backend là cache runtime nên lựa chọn có thể mất sau khi backend restart.
+- **Cách xử lý**:
+  1. Thiết kế lại `AccountSettingsScreen` theo nhóm và nối các action tới màn hình thật.
+  2. Thêm `ProfileSettingsScreen` với validation cho toàn bộ dữ liệu ảnh hưởng BMI/BMR/TDEE và chuẩn hóa các mã mức vận động cũ.
+  3. Thêm `CheckinSettingsScreen`; `ProactiveProvider` lưu lựa chọn theo `userId` bằng `SharedPreferences`, đồng bộ backend khi mở app và chặn tải nudge ngay tại client nếu master switch bị tắt.
+  4. Thêm `ChatHistorySettingsScreen` để mở/xóa từng phiên hoặc xóa toàn bộ, luôn yêu cầu xác nhận trước thao tác phá hủy.
+  5. Cho phép `UserProvider.updateProfile` cập nhật in-memory đối với tài khoản demo, còn tài khoản thật vẫn ghi Firestore như trước.
+  6. Siết `GET /chat/sessions`: tài khoản đã xác định chỉ nhận session có cùng `user_id`; khi không truyền user mới chỉ đọc session `anonymous`.
+
+### 38. Nút “Thêm bài tập” nổi che nội dung và trùng chức năng
+- **Nguyên nhân gốc**: `ExerciseScreen` khai báo thêm một `FloatingActionButton.extended` trong khi `HomeScreen` đã có nút AI `centerDocked`; đồng thời trạng thái lịch tập trống đã có nút “Thêm bài tập ngay”. Hai FAB chồng vùng hiển thị ở cạnh dưới và tạo thao tác trùng lặp.
+- **Cách xử lý**: Gỡ FAB “Thêm bài tập” khỏi `ExerciseScreen`, giữ nút thêm nằm trong nội dung trang và các lối vào từ danh mục bài tập.
+
+### 39. Chatbot không còn nhả chữ liên tục dù WebSocket vẫn dùng streaming
+- **Nguyên nhân gốc**: Nhà cung cấp OpenAI-compatible có thể buffer các SSE event ở upstream rồi xả hàng trăm `reasoning_content`/`content` chunk gần như cùng lúc. Backend và `AIChatProvider` vẫn xử lý từng token đúng giao thức, nhưng nhiều lần cập nhật UI xảy ra trong cùng một frame nên người dùng thấy cả câu trả lời xuất hiện tức thì.
+- **Cách xử lý**:
+  1. Thêm `StreamingTypewriter` phía Flutter để gom các token đang dồn và phát chúng theo nhịp ngắn.
+  2. Dùng batch thích ứng theo độ dài backlog: câu ngắn chạy từng grapheme, câu dài tăng dần số grapheme mỗi nhịp để giới hạn thời gian chờ bổ sung.
+  3. Trì hoãn xử lý `done` và card/gợi ý cho tới khi hàng đợi typewriter rỗng; đối chiếu `full_response` để bổ sung an toàn phần suffix bị thiếu trong delta.
+  4. Xóa timer và backlog khi ngắt kết nối, retry, chuyển session hoặc dispose provider; thought đến muộn không được chuyển message đang trả lời về trạng thái thinking.
+
+### 40. Kế hoạch 7 ngày chỉ hiện Ngày 1, không thấy Ngày 2–7
+- **Nguyên nhân gốc**: `PlanDetailBottomSheet` tạo `itemsByDay` trực tiếp từ các bản ghi `plan_items`, rồi lặp qua `itemsByDay.entries`. Nếu database mới có item của Ngày 1 thì map chỉ có key `1`; những ngày chưa được planner/AI ghi dữ liệu không có key nên biến mất hoàn toàn khỏi giao diện. Chỉ số `3/3 xong` cũng chỉ đếm item đang tồn tại, không phản ánh độ phủ 7 ngày của kế hoạch.
+- **Cách xử lý**:
+  1. Khởi tạo trước toàn bộ `day_index` trong khoảng tuần đang xem rồi mới phân nhóm item thật vào từng ngày.
+  2. Ngày không có item vẫn render card với thông báo “Chưa có thực đơn hoặc bài tập cho ngày này” và action nhờ AI bổ sung.
+  3. Hiển thị đồng thời số ngày có lịch và số mục hoàn thành; dữ liệu thiếu được báo trung thực, không tự tạo món ăn/bài tập giả ở client.
+  4. Bổ sung unit test xác nhận tuần có item ở Ngày 1 vẫn giữ đủ key Ngày 1–7 và bỏ qua item ngoài tuần.
+
+### 41. Panel “AI đang suy nghĩ...” vẫn hiện cả khối, không có hiệu ứng typing
+- **Nguyên nhân gốc**: Typewriter trước đó chỉ được nối vào sự kiện `token` của câu trả lời cuối. Sự kiện `thought` vẫn được `_onThoughtReceived` cộng trực tiếp vào chuỗi rồi gọi `notifyListeners()`. Khi upstream buffer reasoning và xả hàng trăm chunk trong cùng một frame, Flutter chỉ kịp vẽ trạng thái cuối nên toàn bộ quá trình suy nghĩ xuất hiện như một khối. Token câu trả lời đến ngay sau đó còn chuyển message sang `streaming`, làm panel reasoning trực tiếp bị ẩn trước khi người dùng quan sát được.
+- **Cách xử lý**:
+  1. Tạo một `StreamingTypewriter` riêng cho token `thought`, phát reasoning theo grapheme cluster và cập nhật `AIThoughtsPanel` theo từng nhịp.
+  2. Giữ token câu trả lời trong bộ đệm trong lúc reasoning còn backlog; khi thought typewriter idle mới bắt đầu phát câu trả lời theo đúng thứ tự.
+  3. Sự kiện `done` chờ cả hai typewriter và phần câu trả lời đang giữ chạy hết rồi mới hoàn tất message, gắn card và suggestions.
+  4. Reasoning dùng hệ số batch `2` để xử lý nhanh hơn câu trả lời nhưng vẫn giữ chuyển động typing rõ ràng; toàn bộ timer/backlog được dọn ở đầu lượt mới và khi disconnect/dispose.
+
+### 42. Yêu cầu tạo kế hoạch dài hạn nhưng chatbot chỉ làm 1–2 ngày rồi hỏi đi hỏi lại
+- **Nguyên nhân gốc**:
+  1. Model được giao các tool cấp thấp: tạo header bằng `create_plan`, tự gọi gợi ý cho từng bữa/bài tập, rồi `append_plan_items` theo từng ngày. Một kế hoạch 7 ngày cần hàng chục thao tác nhưng agent chỉ có một số hữu hạn vòng suy luận, nên nó bị buộc chuyển sang trả lời chữ khi mới lưu được Ngày 1–2.
+  2. Prompt còn hướng dẫn chỉ điền cuốn chiếu và xin lựa chọn “tự động hay tự chọn”, khiến một yêu cầu đã rõ vẫn phát sinh nhiều lượt xác nhận.
+  3. Quick action đã gọi REST planner nhưng sau đó lại gửi cùng yêu cầu vào chat, tạo thêm một luồng plan trùng lặp.
+  4. `PlannerAgent` được khởi tạo bằng `ToolRegistry` trong production nhưng `_call_tool` chỉ tìm method trực tiếp, không lấy `descriptor.fn`; endpoint planner vì vậy không thực sự dùng được catalog production một cách ổn định.
+- **Cách xử lý**:
+  1. Thêm `create_long_term_plan` làm thao tác cấp cao duy nhất: nhận mục tiêu, thời lượng và hồ sơ rồi tạo đủ mọi ngày trong một lần chạy server-side.
+  2. `ToolDispatcher` tự chuẩn hóa `user_context` Flutter thành `UserProfile` và dùng mục tiêu của yêu cầu hiện tại, nên model không phải hỏi lại tuổi/cân nặng/chiều cao đã có.
+  3. Sửa adapter của `PlannerAgent` để gọi được cả method test và implementation trong `ToolRegistry`; kiểm thử end-to-end bằng catalog món ăn/bài tập thật xác nhận 3 ngày tạo đủ 12 mục.
+  4. Plan mới hoàn tất sẽ chuyển các plan active cũ sang `cancelled` nhưng vẫn giữ lịch sử; quick action chỉ tải lại card “Kế hoạch active”, không nhắn chatbot tạo lần hai.
+  5. Prompt yêu cầu thực hiện ngay khi dữ liệu đủ, không dừng giữa chừng, và rút reasoning xuống vài câu dễ hiểu thay vì hiển thị nhật ký tool nội bộ.
+
+### 43. Lộ trình 60 ngày bị trình bày như 60 ngày rời rạc thay vì lịch sinh hoạt theo tuần
+- **Nguyên nhân gốc**:
+  1. Planner trước đây áp dụng một mức calo/protein cho toàn bộ thời lượng và xoay nhóm cơ theo `day_index`; ngày nghỉ chỉ được suy ra bằng phép chia 7 nên không gắn với Thứ Hai–Chủ Nhật thực tế.
+  2. Flutter có bộ chọn tuần nhưng chia giai đoạn bằng các mốc tuần hardcode. Với thời lượng khác mẫu ban đầu, giai đoạn không co giãn tương ứng và tuần cuối của 60 ngày bị gọi chung là “Tuần 9” mà không nói đó chỉ là 4 ngày.
+  3. `plan_items.payload` không chứa metadata lịch tuần, khiến client chỉ có thể đoán giai đoạn và loại ngày từ số thứ tự.
+- **Cách xử lý**:
+  1. Chuẩn hóa lộ trình thành các block 7 ngày; `60 ngày = 8 tuần + 4 ngày`, tổng cộng 9 tuần hiển thị và Tuần 9 là tuần rút gọn.
+  2. Phân tỷ lệ toàn bộ số tuần vào 4 giai đoạn thích nghi → xây nền → tăng tiến → củng cố. Planner điều chỉnh mục tiêu năng lượng, protein, cấp độ và thời lượng bài tập theo từng giai đoạn.
+  3. Chọn buổi tập theo thứ thật của `plan_date`; Chủ Nhật là ngày nghỉ hoàn toàn và các ngày không có buổi tập chính được ghi rõ là phục hồi chủ động.
+  4. Ghi `schedule` vào payload của từng món ăn/bài tập, gồm tuần, ngày trong tuần, tên thứ, giai đoạn, loại ngày, mục tiêu dinh dưỡng và cờ tuần rút gọn/refeed.
+  5. Flutter ưu tiên metadata do planner sinh ra, nhưng vẫn có fallback cho plan cũ; giao diện hiển thị tuần rút gọn, ngày lịch thực và nhãn buổi tập/phục hồi/nghỉ.
+
+### 44. Chatbot báo đã tạo đủ kế hoạch nhưng màn chi tiết hiện `0/7 ngày có lịch`
+- **Triệu chứng**: Bảng `plans` có một plan active và chatbot khẳng định đã tạo xong, nhưng `plan_items` bằng 0; màn kế hoạch hiện “Chưa có thực đơn hoặc bài tập” cho mọi ngày và màn Dinh dưỡng cũng không đồng bộ được món nào.
+- **Nguyên nhân gốc**:
+  1. Planner tạo item ID bằng cách ghép chuỗi như `<plan-uuid>-1-breakfast`, trong khi `plan_items.id` là cột PostgreSQL `UUID`. Asyncpg từ chối lệnh insert vì ID dài 48 ký tự không phải UUID.
+  2. `append_plan_items` bắt mọi exception của database, chỉ ghi warning rồi tiếp tục log “inserted”; `create_plan` cũng có cùng hành vi. Do không có exception truyền lên, planner hoàn tất vòng lặp và tool trả `ok=true`/`days_generated=7` dù database không ghi được item nào.
+  3. Khi `plan_id` không hợp lệ hoặc không tồn tại, hàm append còn tự chọn plan active mới nhất toàn hệ thống, có nguy cơ ghi nhầm dữ liệu giữa người dùng.
+- **Cách xử lý**:
+  1. Sinh UUID v5 xác định từ `plan_id + day_index + item_type`, vừa hợp lệ với schema vừa ổn định khi retry.
+  2. Bỏ toàn bộ `try/except` nuốt lỗi ở hai hàm ghi plan. Lỗi database nay làm `PlannerAgent` rollback header và các item đã ghi trước đó, sau đó ToolDispatcher trả lỗi thay vì cho chatbot tuyên bố thành công.
+  3. Kiểm tra hậu điều kiện trực tiếp trên `plan_items` trước khi công bố thành công: số ngày có meal phải bằng `duration_days` và số meal phải bằng `duration_days × 3`. Nếu không đủ, trả `PLAN_INCOMPLETE`, rollback plan mới và chưa chuyển plan cũ sang `cancelled`.
+  4. Chỉ append vào đúng UUID plan được truyền; UUID sai trả `INVALID_PLAN_ID`, UUID không tồn tại trả `PLAN_NOT_FOUND`.
+  5. Bổ sung kiểm thử xác thực UUID của mọi item, lỗi ghi database phải được propagate và coverage thiếu phải rollback.
+  6. Tái tạo plan bị ảnh hưởng bằng đúng profile đã lưu trong tool invocation; xác minh REST trả đủ 21 meal + 4 exercise trên Ngày 1–7.
+
+### 36. Giao diện lịch sử Chatbot mất bảng “Xem quá trình suy nghĩ”
+- **Nguyên nhân gốc**: Token `thought` chỉ được truyền trực tiếp qua WebSocket và giữ trong `AIChatMessage` ở bộ nhớ Flutter. Bảng `chat_messages` chỉ có `content`, còn API lịch sử chỉ trả `role/content/created_at`; khi mở lại session, `loadExistingSession` không có reasoning để dựng `AIThoughtsPanel`, khiến cùng một câu trả lời có giao diện khác lúc vừa chat.
+- **Cách xử lý**:
+  1. Thêm cột `chat_messages.thoughts` bằng migration `004_chat_message_thoughts.sql` và đồng bộ schema khởi tạo mới.
+  2. `AgentOrchestrator` gom token có `token_type == "thought"` qua mọi bước gọi tool của một lượt và lưu cùng assistant turn cuối; reasoning vẫn không được đưa ngược vào prompt hội thoại.
+  3. Endpoint lịch sử trả trường `thoughts`; Flutter nạp trường này vào `AIChatMessage`, vì vậy nhánh render hoàn tất dùng lại đúng `AIThoughtsPanel` hiện có.
+  4. `AIThoughtsPanel` mặc định mở cả khi đã hoàn tất hoặc vừa được nạp từ lịch sử, thay vì tự đóng ngay khi stream kết thúc.
+  5. Các message cũ có `thoughts = ''` vì dữ liệu đó không tồn tại trước migration; hệ thống không tự bịa hoặc tái tạo reasoning giả.
+
+### 45. Cập nhật Endpoint và Model Vilao AI (`rk/llms/qwen-3.7-plus` & `spd/deepseek-v4-pro`)
+- **Tình huống / Yêu cầu**: Chuyển đổi provider sang API gateway `https://api.vilao.ai/v1` sử dụng API key mới và danh mục model OpenAI-compatible.
+- **Nguyên nhân & Cách xử lý**:
+  1. Cấu hình `LLM_MODEL=rk/llms/qwen-3.7-plus` làm mô hình chính (nhẹ, nhanh, hỗ trợ native function calling & streaming token trực tiếp).
+  2. Cấu hình `HEAVY_LLM_MODEL=spd/deepseek-v4-pro` làm mô hình suy luận sâu cho các ca xử lý phức tạp hoặc dự phòng (fallback) tự động khi mô hình chính gặp sự cố upstream.
+  3. Cập nhật `OPENAI_BASE_URL=https://api.vilao.ai/v1` và `OPENAI_API_KEY=sk-a23e051...` trong `apps/backend/.env`, `apps/backend/config.py`, root `.env`, `apps/backend/.env.docker`, `apps/backend/.env.example`.
+  4. Kiểm thử trực tiếp với live endpoint: Xác thực health check (`GET /v1/models`), streaming response, non-streaming heavy model và nhận diện tool call chính xác 100%.
+
+### 46. Nhầm lẫn Calo "Đã ăn" vs Calo Kế hoạch dự kiến trên giao diện và Chatbot Prompt
+- **Triệu chứng**: Kế hoạch hôm nay có 3 bữa (2544 kcal) ở trạng thái `3 sắp ăn` (chưa ăn bữa nào), nhưng màn Dinh dưỡng hiện `Đã ăn: 2544 kcal, Còn lại: 0 kcal`, và Chatbot cảnh báo `Hôm nay bạn đã nạp 3165 kcal, vượt hơn 600 kcal`.
+- **Nguyên nhân gốc**:
+  1. `NutritionProvider` trước đây chỉ có `totalCalories` tính tổng toàn bộ các bữa ăn trong ngày bất kể `isCompleted`.
+  2. UI màn hình Dinh dưỡng & Trang chủ dùng `totalCalories` hiển thị vào mục "Đã ăn" thay vì chỉ tính các bữa đã hoàn thành.
+  3. Mobile Chatbot gửi `todayCalories = totalCalories` (2544 kcal) sang Chatbot và prompt hệ thống cộng dồn món mới đề xuất (~621 kcal) thành `3165 kcal`.
+- **Cách xử lý**:
+  1. Tách biệt rõ `consumedCalories` (chỉ tính `isCompleted == true`) và `plannedCalories` (tổng calo toàn bộ kế hoạch trong ngày) trong `NutritionProvider`.
+  2. Cập nhật `NutritionScreen` và `HomeScreen`: hiển thị "Đã ăn: 0 kcal", "Còn lại: 2544 kcal" khi chưa ăn, và hiển thị rõ "Kế hoạch: 2544 kcal (3 sắp ăn)".
+  3. Đồng bộ `ChatbotScreen` chỉ gửi `consumedCalories` và `completedMealsCount`.
+  4. Phân nhóm trong prompt hệ thống backend: tách bạch `Bữa đã ăn` và `Bữa dự kiến trong kế hoạch chưa ăn`.
+
+### 47. Chatbot không đối chiếu món đã có trong thực đơn khi gợi ý bữa ăn và không hỏi xác nhận đổi món
+- **Triệu chứng**: Bữa tối của người dùng đã được lên lịch sẵn món `Cơm đùi gà nấu nấm (~764 kcal)`, nhưng khi người dùng hỏi *"Gợi ý bữa ăn phù hợp với tôi"*, Chatbot trả lời như thể bữa tối chưa có món nào (*"Bạn còn dư 763 kcal cho bữa tối, Bún chả là lựa chọn hợp lý... Mình ghi vào nhật ký nhé?"*).
+- **Nguyên nhân gốc**:
+  1. System prompt backend chưa có quy tắc bắt buộc kiểm tra các món đã được lên lịch trong ngày trước khi đưa ra gợi ý bữa ăn.
+  2. AI coi toàn bộ calo chưa ăn là ngân sách trống và tự do đề xuất món mới mà không nhắc đến món ăn đã có trong kế hoạch thực đơn của người dùng.
+- **Cách xử lý**:
+  1. Bổ sung quy tắc **"Đối chiếu thực đơn hiện có & Hỏi xác nhận đổi món"** trong `system_prompt.py` (`_build_user_context_block`, `_TOOL_RULES`, và `_FEWSHOT`).
+  2. Khi người dùng yêu cầu gợi ý món:
+     - AI bắt buộc kiểm tra xem bữa ăn đó (hoặc các bữa trong ngày) đã có món lên lịch sẵn chưa.
+     - Nếu ĐÃ CÓ món trong thực đơn: Bắt buộc nêu rõ món hiện tại đang có (ví dụ: *"Trong thực đơn hôm nay, bữa tối của bạn đang được lên lịch là **Cơm đùi gà nấu nấm** (~764 kcal)..."*).
+     - Đề xuất món mới từ database qua `suggest_dish` và **hỏi lại người dùng xem có muốn đổi món sang món mới này không hay giữ món cũ**.
+     - Khi người dùng xác nhận đồng ý đổi món ("ừ đổi đi", "chọn bún chả", "lưu món mới"), AI mới tiến hành gọi `log_meal` để cập nhật món mới vào nhật ký.
+  3. Kiểm thử live thực tế trên API Gateway Vilao AI với model `rk/llms/qwen-3.7-plus` xác nhận phản hồi chính xác 100%.
 

@@ -67,6 +67,34 @@ _RECENT_IDS_MAXLEN = 40
 _RECENT_IDS_MAX_SESSIONS = 512
 
 
+def _normalise_plan_profile(
+    raw: Any, *, user_id: str | None, goal: str | None
+) -> dict[str, Any]:
+    """Reduce Flutter's rich user context to the planner profile schema."""
+    source = raw if isinstance(raw, dict) else {}
+    restrictions = source.get("dietary_restrictions") or source.get(
+        "dietaryRestrictions"
+    )
+    if isinstance(restrictions, str):
+        restrictions = [restrictions] if restrictions.strip() else []
+    elif not isinstance(restrictions, list):
+        restrictions = []
+
+    return {
+        "user_id": user_id or source.get("user_id") or source.get("id"),
+        "age": source.get("age"),
+        "gender": source.get("gender"),
+        "height_cm": source.get("height_cm") or source.get("height"),
+        "weight_kg": source.get("weight_kg") or source.get("weight"),
+        "activity_level": source.get("activity_level")
+        or source.get("activityLevel"),
+        "health_goal": goal
+        or source.get("health_goal")
+        or source.get("healthGoal"),
+        "dietary_restrictions": restrictions,
+    }
+
+
 # ---------------------------------------------------------------------------- #
 # Result type
 # ---------------------------------------------------------------------------- #
@@ -88,11 +116,16 @@ class ToolResult:
         ``None`` on success.
     data:
         Tool-specific payload on success; ``None`` on failure.
+    ui_message:
+        Optional presentation payload produced by a client tool. It is kept
+        outside ``data`` so it can be persisted for history without being sent
+        back into the LLM tool transcript.
     """
 
     ok: bool
     error: str | None = None
     data: Any = None
+    ui_message: dict[str, Any] | None = None
 
 
 # ---------------------------------------------------------------------------- #
@@ -146,8 +179,42 @@ class ToolDispatcher:
 
                 gateway_user = getattr(self.gateway, "user_id", None)
                 if gateway_user and gateway_user not in ("anonymous", ""):
-                    if "user_id" in call.arguments or call.name in ("create_plan", "get_active_plan", "get_lifestyle_logs", "log_lifestyle"):
+                    if "user_id" in call.arguments or call.name in (
+                        "create_plan",
+                        "create_long_term_plan",
+                        "get_active_plan",
+                        "get_lifestyle_logs",
+                        "log_lifestyle",
+                    ):
                         call.arguments["user_id"] = gateway_user
+
+                if call.name == "create_long_term_plan":
+                    context = getattr(self.gateway, "user_context", None)
+                    supplied_profile = call.arguments.get("profile")
+                    profile = _normalise_plan_profile(
+                        context,
+                        user_id=call.arguments.get("user_id"),
+                        goal=call.arguments.get("goal"),
+                    )
+                    if isinstance(supplied_profile, dict):
+                        supplied = _normalise_plan_profile(
+                            supplied_profile,
+                            user_id=call.arguments.get("user_id"),
+                            goal=call.arguments.get("goal"),
+                        )
+                        for key, value in supplied.items():
+                            if key == "dietary_restrictions":
+                                profile[key] = list(
+                                    dict.fromkeys(
+                                        [
+                                            *profile.get(key, []),
+                                            *value,
+                                        ]
+                                    )
+                                )
+                            elif profile.get(key) is None:
+                                profile[key] = value
+                    call.arguments["profile"] = profile
 
             ok, err = self.registry.validate(call.name, call.arguments)
             if not ok:
@@ -273,7 +340,15 @@ class ToolDispatcher:
         if future.done():
             return
         if payload.get("ok") is True:
-            future.set_result(ToolResult(ok=True, data=payload.get("data")))
+            raw_ui_message = payload.get("ui_message")
+            ui_message = raw_ui_message if isinstance(raw_ui_message, dict) else None
+            future.set_result(
+                ToolResult(
+                    ok=True,
+                    data=payload.get("data"),
+                    ui_message=ui_message,
+                )
+            )
             return
         error = payload.get("error")
         if isinstance(error, dict):

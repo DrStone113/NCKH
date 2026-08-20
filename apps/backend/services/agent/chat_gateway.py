@@ -23,6 +23,7 @@ class ChatGateway:
         self._session_ensured = False
         self.latitude: float | None = None
         self.longitude: float | None = None
+        self.user_context: Any | None = None
 
     async def _ensure_session_exists(self) -> None:
         from db.db_status import is_db_offline, mark_db_offline
@@ -108,6 +109,14 @@ class ChatGateway:
                             self.user_id = new_user_id
                             self._session_ensured = False
 
+                    # Extract dynamic user_context / user_profile if provided by client
+                    incoming_context = data.get("user_context") or data.get("user_profile") if isinstance(data, dict) else None
+                    if incoming_context is not None:
+                        if isinstance(self.user_context, dict) and isinstance(incoming_context, dict):
+                            self.user_context = {**self.user_context, **incoming_context}
+                        else:
+                            self.user_context = incoming_context
+
                     # Ensure the session exists in the database
                     await self._ensure_session_exists()
 
@@ -123,9 +132,12 @@ class ChatGateway:
                         await self.send_error("BAD_MESSAGE", "message is required.")
                         continue
                     
-                    async def _handle_chat_task(sess_id: str, msg: str) -> None:
+                    async def _handle_chat_task(sess_id: str, msg: str, ctx: Any = None) -> None:
                         try:
-                            await self.orchestrator.handleChatMessage(sess_id, msg)
+                            try:
+                                await self.orchestrator.handleChatMessage(sess_id, msg, user_context=ctx)
+                            except TypeError:
+                                await self.orchestrator.handleChatMessage(sess_id, msg)
                             if self.db_session:
                                 try:
                                     await self.db_session.commit()
@@ -142,7 +154,7 @@ class ChatGateway:
                             await self.send_error("INTERNAL_ERROR", str(e))
                             
                     import asyncio
-                    asyncio.create_task(_handle_chat_task(self.session_id, message))
+                    asyncio.create_task(_handle_chat_task(self.session_id, message, self.user_context))
                 elif msg_type == "tool_result":
                     correlation_id = data.get("correlation_id")
                     if not isinstance(correlation_id, str) or not correlation_id:

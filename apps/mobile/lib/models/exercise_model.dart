@@ -1,4 +1,27 @@
 import 'package:flutter/material.dart';
+import '../utils/exercise_utils.dart';
+
+DateTime _parseExerciseDate(Object? value) {
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+  try {
+    final converted = (value as dynamic).toDate();
+    if (converted is DateTime) return converted;
+  } catch (_) {
+    // Dữ liệu cũ hoặc hỏng sẽ dùng thời điểm hiện tại thay vì làm vỡ màn hình.
+  }
+  return DateTime.now();
+}
+
+int _parseExerciseInt(Object? value, [int fallback = 0]) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+double _parseExerciseDouble(Object? value, [double fallback = 0]) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? fallback;
+}
 
 /// Model cho bảng bai_tap - Bài tập (template)
 class ExerciseTemplate {
@@ -16,9 +39,15 @@ class ExerciseTemplate {
     required this.type,
   });
 
+  int get wgerId => ExerciseUtils.parseWgerId(id);
+
   // Tính calo tiêu thụ: MET * weight(kg) * time(hours)
   double calculateCalories(double weightKg, int durationMinutes) {
-    return metValue * weightKg * (durationMinutes / 60.0);
+    return ExerciseUtils.calculateCalories(
+      met: metValue,
+      weightKg: weightKg,
+      durationMinutes: durationMinutes,
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -35,7 +64,7 @@ class ExerciseTemplate {
     return ExerciseTemplate(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      metValue: (map['metValue'] ?? 0).toDouble(),
+      metValue: _parseExerciseDouble(map['metValue']),
       description: map['description'] ?? '',
       type: map['type'] ?? 'cardio',
     );
@@ -70,6 +99,8 @@ class ExerciseModel {
     this.timeOfDay = 'morning',
   });
 
+  int get wgerId => ExerciseUtils.parseWgerId(exerciseTemplateId);
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -92,9 +123,11 @@ class ExerciseModel {
       userId: map['userId'] ?? '',
       name: map['name'] ?? '',
       exerciseTemplateId: map['exerciseTemplateId'],
-      date: DateTime.parse(map['date']),
-      duration: map['duration'] ?? 0,
-      caloriesBurned: (map['caloriesBurned'] ?? 0).toDouble(),
+      date: _parseExerciseDate(map['date']),
+      duration: _parseExerciseInt(map['duration'])
+          .clamp(0, ExerciseUtils.maxDurationMinutes),
+      caloriesBurned: _parseExerciseDouble(map['caloriesBurned'])
+          .clamp(0, double.maxFinite),
       type: map['type'] ?? 'cardio',
       intensity: map['intensity'] ?? 'medium',
       isCompleted: map['isCompleted'] ?? false,
@@ -132,40 +165,59 @@ class ExerciseModel {
 
   String get typeText {
     switch (type) {
-      case 'cardio': return 'Cardio';
-      case 'strength': return 'Sức mạnh';
-      case 'flexibility': return 'Linh hoạt';
-      case 'sports': return 'Thể thao';
-      default: return 'Khác';
+      case 'cardio':
+        return 'Cardio';
+      case 'strength':
+        return 'Sức mạnh';
+      case 'flexibility':
+        return 'Linh hoạt';
+      case 'sports':
+        return 'Thể thao';
+      default:
+        return 'Khác';
     }
   }
 
   String get intensityText {
     switch (intensity) {
-      case 'low': return 'Nhẹ';
-      case 'medium': return 'Vừa';
-      case 'high': return 'Cao';
-      default: return 'Vừa';
+      case 'low':
+        return 'Nhẹ';
+      case 'medium':
+        return 'Vừa';
+      case 'high':
+        return 'Cao';
+      default:
+        return 'Vừa';
     }
   }
 
   String get timeOfDayText {
     switch (timeOfDay) {
-      case 'morning': return 'Buổi sáng';
-      case 'afternoon': return 'Buổi chiều';
-      case 'evening': return 'Buổi tối';
-      case 'night': return 'Ban đêm';
-      default: return 'Buổi sáng';
+      case 'morning':
+        return 'Buổi sáng';
+      case 'afternoon':
+        return 'Buổi chiều';
+      case 'evening':
+        return 'Buổi tối';
+      case 'night':
+        return 'Ban đêm';
+      default:
+        return 'Buổi sáng';
     }
   }
 
   IconData get timeOfDayIcon {
     switch (timeOfDay) {
-      case 'morning': return Icons.wb_sunny_outlined;
-      case 'afternoon': return Icons.wb_cloudy_outlined;
-      case 'evening': return Icons.nights_stay_outlined;
-      case 'night': return Icons.bedtime_outlined;
-      default: return Icons.wb_sunny_outlined;
+      case 'morning':
+        return Icons.wb_sunny_outlined;
+      case 'afternoon':
+        return Icons.wb_cloudy_outlined;
+      case 'evening':
+        return Icons.nights_stay_outlined;
+      case 'night':
+        return Icons.bedtime_outlined;
+      default:
+        return Icons.wb_sunny_outlined;
     }
   }
 }

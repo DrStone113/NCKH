@@ -293,12 +293,15 @@ class Plan(BaseModel):
 class ExerciseItem(BaseModel):
     """Một bài tập trong `ExercisePlanPayload`."""
 
+    wger_id: int | None = Field(default=None, gt=0)
     name: str
     category: str
     duration_minutes: int = Field(ge=0)
     sets: int = Field(ge=0)
     reps: str
+    met: float | None = Field(default=None, gt=0)
     calories_burned: float = Field(ge=0)
+    calories_estimated: bool = True
 
 
 class MealPlanPayload(BaseModel):
@@ -347,6 +350,7 @@ class ChatTurn(BaseModel):
     content: str
     tool_call_id: str | None = None
     tool_name: str | None = None
+    thoughts: str = ""
     created_at: datetime
 
 

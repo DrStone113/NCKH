@@ -1,0 +1,17 @@
+{
+  "test_case_id": "phase1-smoke-001",
+  "user_query": "Tôi nên ăn bao nhiêu calo mỗi ngày để duy trì cân nặng?",
+  "profile": {
+    "profile_id": "fixture-adult-001",
+    "age": 25,
+    "sex": "male",
+    "height_cm": 170,
+    "weight_kg": 70,
+    "activity_level": "moderate",
+    "goal": "maintain",
+    "target_weight_kg": 70,
+    "dietary_restrictions": [],
+    "allergies": [],
+    "food_preferences": ["Vietnamese food"]
+  }
+}

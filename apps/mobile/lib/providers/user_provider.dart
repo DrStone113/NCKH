@@ -82,7 +82,10 @@ class UserProvider with ChangeNotifier {
         createdAt: DateTime.now(),
       );
 
-      await firestore.collection(FirestoreCollections.users).doc(user.id).set(user.toMap());
+      await firestore
+          .collection(FirestoreCollections.users)
+          .doc(user.id)
+          .set(user.toMap());
       _currentUser = user;
       notifyListeners();
     } catch (e) {
@@ -106,7 +109,6 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Future<void> signInWithGoogle() async {
@@ -128,7 +130,8 @@ class UserProvider with ChangeNotifier {
           debugPrint('⚠️ Google Sign in cancelled by user');
           return;
         }
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         final OAuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
@@ -181,9 +184,6 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-
-
-
   Future<void> signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -194,11 +194,14 @@ class UserProvider with ChangeNotifier {
 
   Future<void> updateProfile(UserModel updatedUser) async {
     try {
-      // Dùng set với merge: true để tạo mới hoặc cập nhật
-      await FirebaseFirestore.instance
-          .collection(FirestoreCollections.users)
-          .doc(updatedUser.id)
-          .set(updatedUser.toMap(), SetOptions(merge: true));
+      // Demo mode không có Firebase app/document thật. Vẫn cập nhật state để
+      // toàn bộ màn hình có thể kiểm thử và dùng đầy đủ chức năng cài đặt.
+      if (updatedUser.id != 'demo') {
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(updatedUser.id)
+            .set(updatedUser.toMap(), SetOptions(merge: true));
+      }
       _currentUser = updatedUser;
       notifyListeners();
     } catch (e) {
@@ -217,7 +220,9 @@ class UserProvider with ChangeNotifier {
             .doc(updated.id)
             .update({'weight': newWeight});
 
-        await FirebaseFirestore.instance.collection(FirestoreCollections.bodyMetrics).add({
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.bodyMetrics)
+            .add({
           'userId': updated.id,
           'weight': newWeight,
           'bmi': updated.bmi,

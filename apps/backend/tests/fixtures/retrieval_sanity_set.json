@@ -1,0 +1,74 @@
+[
+  {
+    "query_id": "food-rice-01",
+    "query": "100 g gạo nếp cái có bao nhiêu calo và carbohydrate?",
+    "relevant_records": [{"dataset_file": "vietnamese_foods.json", "source_record_id": "ma_so:1001"}]
+  },
+  {
+    "query_id": "food-orange-02",
+    "query": "Cam có bao nhiêu vitamin C trong 100 g?",
+    "relevant_records": [{"dataset_file": "vietnamese_foods.json", "source_record_id": "ma_so:5002"}]
+  },
+  {
+    "query_id": "food-beef-03",
+    "query": "Thịt bò loại I có bao nhiêu protein và chất béo?",
+    "relevant_records": [{"dataset_file": "vietnamese_foods.json", "source_record_id": "ma_so:7003"}]
+  },
+  {
+    "query_id": "food-egg-04",
+    "query": "Trứng gà có bao nhiêu cholesterol trong 100 g?",
+    "relevant_records": [{"dataset_file": "vietnamese_foods.json", "source_record_id": "ma_so:9001"}]
+  },
+  {
+    "query_id": "food-coconut-05",
+    "query": "Cùi dừa già có nhiều chất béo không?",
+    "relevant_records": [{"dataset_file": "vietnamese_foods.json", "source_record_id": "ma_so:3001"}]
+  },
+  {
+    "query_id": "dish-chicken-rice-06",
+    "query": "Một phần cơm gà có bao nhiêu calo?",
+    "relevant_records": [
+      {"dataset_file": "vietnamese_dishes.json", "source_record_id": "id:1"},
+      {"dataset_file": "nutrition.json", "source_record_id": "id:nut_002"}
+    ]
+  },
+  {
+    "query_id": "dish-pho-07",
+    "query": "Một tô phở bò có năng lượng và protein thế nào?",
+    "relevant_records": [
+      {"dataset_file": "vietnamese_dishes.json", "source_record_id": "id:2"},
+      {"dataset_file": "nutrition.json", "source_record_id": "id:nut_001"}
+    ]
+  },
+  {
+    "query_id": "dish-bun-bo-08",
+    "query": "Bún bò Huế có bao nhiêu calo và chất đạm?",
+    "relevant_records": [
+      {"dataset_file": "vietnamese_dishes.json", "source_record_id": "id:12"},
+      {"dataset_file": "nutrition.json", "source_record_id": "id:nut_008"}
+    ]
+  },
+  {
+    "query_id": "dish-spring-roll-09",
+    "query": "Gỏi cuốn tôm thịt có bao nhiêu protein và carbohydrate?",
+    "relevant_records": [{"dataset_file": "nutrition.json", "source_record_id": "id:nut_010"}]
+  },
+  {
+    "query_id": "dish-bun-rieu-10",
+    "query": "Bún riêu có bao nhiêu calo và chất béo?",
+    "relevant_records": [
+      {"dataset_file": "vietnamese_dishes.json", "source_record_id": "id:18"},
+      {"dataset_file": "nutrition.json", "source_record_id": "id:nut_011"}
+    ]
+  },
+  {
+    "query_id": "concept-high-protein-11",
+    "query": "Salad ức gà có phải là món giàu protein không?",
+    "relevant_records": [{"dataset_file": "nutrition.json", "source_record_id": "id:nut_003"}]
+  },
+  {
+    "query_id": "concept-oats-12",
+    "query": "Cháo yến mạch chuối có bao nhiêu chất xơ và calo?",
+    "relevant_records": [{"dataset_file": "nutrition.json", "source_record_id": "id:nut_005"}]
+  }
+]

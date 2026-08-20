@@ -6,8 +6,11 @@ import '../providers/exercise_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/exercise_model.dart';
 import '../models/wger_models.dart';
+import '../models/workout_routine_model.dart';
+import '../features/exercise/screens/workout_simulation_screen.dart';
 import '../services/local_exercise_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/exercise_utils.dart';
 import '../widgets/wger_image.dart';
 
 /// Data nhóm cơ hardcode từ wger (id, tên, SVG URL, body side)
@@ -28,25 +31,112 @@ class _MuscleGroup {
     required this.color,
   });
 }
-const _bodyFront = 'https://wger.de/static/images/muscles/muscular_system_front.svg';
-const _bodyBack  = 'https://wger.de/static/images/muscles/muscular_system_back.svg';
+
+const _bodyFront =
+    'https://wger.de/static/images/muscles/muscular_system_front.svg';
+const _bodyBack =
+    'https://wger.de/static/images/muscles/muscular_system_back.svg';
 
 const _muscleGroups = <_MuscleGroup>[
-  _MuscleGroup(id: 4,  nameVi: 'Ngực',       nameEn: 'Chest',      isFront: true,  color: Color(0xFFfa709a), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg'),
-  _MuscleGroup(id: 1,  nameVi: 'Tay trước',  nameEn: 'Biceps',     isFront: true,  color: Color(0xFF667eea), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-1.8790f8a0b3b9.svg'),
-  _MuscleGroup(id: 5,  nameVi: 'Tay sau',    nameEn: 'Triceps',    isFront: false, color: Color(0xFF764ba2), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-5.8a2b934b5486.svg'),
-  _MuscleGroup(id: 2,  nameVi: 'Vai',        nameEn: 'Shoulders',  isFront: true,  color: Color(0xFF43e97b), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-2.e1e1205a3202.svg'),
-  _MuscleGroup(id: 6,  nameVi: 'Bụng',       nameEn: 'Abs',        isFront: true,  color: Color(0xFF4facfe), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-6.592f938fa8c7.svg'),
-  _MuscleGroup(id: 12, nameVi: 'Lưng xô',    nameEn: 'Lats',       isFront: false, color: Color(0xFF30cfd0), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-12.6a5de7a0e373.svg'),
-  _MuscleGroup(id: 9,  nameVi: 'Cơ thang',   nameEn: 'Trapezius',  isFront: false, color: Color(0xFFa18cd1), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-9.b491050a7108.svg'),
-  _MuscleGroup(id: 8,  nameVi: 'Mông',       nameEn: 'Glutes',     isFront: false, color: Color(0xFFf5576c), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-8.fbdfb46f3bc0.svg'),
-  _MuscleGroup(id: 10, nameVi: 'Đùi trước',  nameEn: 'Quads',      isFront: true,  color: Color(0xFFff9a56), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-10.b1445ea1acf6.svg'),
-  _MuscleGroup(id: 11, nameVi: 'Đùi sau',    nameEn: 'Hamstrings', isFront: false, color: Color(0xFFfee140), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-11.54ef31755917.svg'),
-  _MuscleGroup(id: 7,  nameVi: 'Bắp chân',   nameEn: 'Calves',     isFront: false, color: Color(0xFF56ab2f), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-7.edbd8c381b0c.svg'),
-  _MuscleGroup(id: 14, nameVi: 'Cơ chéo',    nameEn: 'Obliques',   isFront: true,  color: Color(0xFFf093fb), svgUrl: 'https://wger.de/static/images/muscles/main/muscle-14.153978038d0b.svg'),
+  _MuscleGroup(
+      id: 4,
+      nameVi: 'Ngực',
+      nameEn: 'Chest',
+      isFront: true,
+      color: Color(0xFFfa709a),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg'),
+  _MuscleGroup(
+      id: 1,
+      nameVi: 'Tay trước',
+      nameEn: 'Biceps',
+      isFront: true,
+      color: Color(0xFF667eea),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-1.8790f8a0b3b9.svg'),
+  _MuscleGroup(
+      id: 5,
+      nameVi: 'Tay sau',
+      nameEn: 'Triceps',
+      isFront: false,
+      color: Color(0xFF764ba2),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-5.8a2b934b5486.svg'),
+  _MuscleGroup(
+      id: 2,
+      nameVi: 'Vai',
+      nameEn: 'Shoulders',
+      isFront: true,
+      color: Color(0xFF43e97b),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-2.e1e1205a3202.svg'),
+  _MuscleGroup(
+      id: 6,
+      nameVi: 'Bụng',
+      nameEn: 'Abs',
+      isFront: true,
+      color: Color(0xFF4facfe),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-6.592f938fa8c7.svg'),
+  _MuscleGroup(
+      id: 12,
+      nameVi: 'Lưng xô',
+      nameEn: 'Lats',
+      isFront: false,
+      color: Color(0xFF30cfd0),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-12.6a5de7a0e373.svg'),
+  _MuscleGroup(
+      id: 9,
+      nameVi: 'Cơ thang',
+      nameEn: 'Trapezius',
+      isFront: false,
+      color: Color(0xFFa18cd1),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-9.b491050a7108.svg'),
+  _MuscleGroup(
+      id: 8,
+      nameVi: 'Mông',
+      nameEn: 'Glutes',
+      isFront: false,
+      color: Color(0xFFf5576c),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-8.fbdfb46f3bc0.svg'),
+  _MuscleGroup(
+      id: 10,
+      nameVi: 'Đùi trước',
+      nameEn: 'Quads',
+      isFront: true,
+      color: Color(0xFFff9a56),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-10.b1445ea1acf6.svg'),
+  _MuscleGroup(
+      id: 11,
+      nameVi: 'Đùi sau',
+      nameEn: 'Hamstrings',
+      isFront: false,
+      color: Color(0xFFfee140),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-11.54ef31755917.svg'),
+  _MuscleGroup(
+      id: 7,
+      nameVi: 'Bắp chân',
+      nameEn: 'Calves',
+      isFront: false,
+      color: Color(0xFF56ab2f),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-7.edbd8c381b0c.svg'),
+  _MuscleGroup(
+      id: 14,
+      nameVi: 'Cơ chéo',
+      nameEn: 'Obliques',
+      isFront: true,
+      color: Color(0xFFf093fb),
+      svgUrl:
+          'https://wger.de/static/images/muscles/main/muscle-14.153978038d0b.svg'),
 ];
 
-//  Main widget 
+//  Main widget
 
 class SmartExercisePicker extends StatefulWidget {
   const SmartExercisePicker({super.key});
@@ -63,7 +153,9 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
   @override
   void initState() {
     super.initState();
-    _local.loadExercises().then((_) => setState(() => _loading = false));
+    _local.loadExercises().then((_) {
+      if (mounted) setState(() => _loading = false);
+    });
   }
 
   @override
@@ -95,9 +187,11 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
       child: Column(children: [
         Center(
           child: Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textHint, borderRadius: BorderRadius.circular(2)),
+                color: AppColors.textHint,
+                borderRadius: BorderRadius.circular(2)),
           ),
         ),
         const SizedBox(height: 14),
@@ -129,7 +223,10 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
               ),
               child: Text(
                 '${_local.getByMuscle(_selectedMuscle!.id).length} bài',
-                style: TextStyle(fontSize: 11, color: _selectedMuscle!.color, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 11,
+                    color: _selectedMuscle!.color,
+                    fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -139,7 +236,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
     );
   }
 
-  //  Trang 1: Grid nhóm cơ 
+  //  Trang 1: Grid nhóm cơ
 
   Widget _buildMuscleGrid(ScrollController sc) {
     return Expanded(
@@ -169,16 +266,21 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
         decoration: BoxDecoration(
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: muscle.color.withValues(alpha: 0.3), width: 1.5),
+          border: Border.all(
+              color: muscle.color.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
-            BoxShadow(color: muscle.color.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: muscle.color.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
           ],
         ),
         child: Column(children: [
           // Cartoon body diagram
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
               child: Container(
                 color: muscle.color.withValues(alpha: 0.06),
                 child: _AnimatedMuscleCard(muscle: muscle),
@@ -191,7 +293,8 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
             child: Column(children: [
               Text(
                 muscle.nameVi,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -199,7 +302,10 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
               const SizedBox(height: 2),
               Text(
                 '$count bài',
-                style: TextStyle(fontSize: 10, color: muscle.color, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 10,
+                    color: muscle.color,
+                    fontWeight: FontWeight.w600),
               ),
             ]),
           ),
@@ -208,7 +314,7 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
     );
   }
 
-  //  Trang 2: Danh sách bài tập của nhóm cơ 
+  //  Trang 2: Danh sách bài tập của nhóm cơ
 
   Widget _buildExerciseList(ScrollController sc) {
     final muscle = _selectedMuscle!;
@@ -223,13 +329,15 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
         Expanded(
           child: exercises.isEmpty
               ? const Center(
-                  child: Text('Không có bài tập', style: TextStyle(color: AppColors.textSecondary)),
+                  child: Text('Không có bài tập',
+                      style: TextStyle(color: AppColors.textSecondary)),
                 )
               : ListView.builder(
                   controller: sc,
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   itemCount: exercises.length,
-                  itemBuilder: (_, i) => _buildExerciseCard(exercises[i], muscle),
+                  itemBuilder: (_, i) =>
+                      _buildExerciseCard(exercises[i], muscle),
                 ),
         ),
       ]),
@@ -243,26 +351,35 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
       child: Row(children: [
         // Cartoon diagram nhỏ
         SizedBox(
-          width: 80, height: 80,
+          width: 80,
+          height: 80,
           child: _AnimatedMuscleCard(muscle: muscle),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(muscle.nameVi,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             Text(muscle.nameEn,
-                style: TextStyle(fontSize: 13, color: muscle.color, fontWeight: FontWeight.w500)),
+                style: TextStyle(
+                    fontSize: 13,
+                    color: muscle.color,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
             Text(
               '${_local.getByMuscle(muscle.id).length} bài tập',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style:
+                  const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ]),
         ),
         Container(
-          width: 10, height: 10,
-          decoration: BoxDecoration(color: muscle.color, shape: BoxShape.circle),
+          width: 10,
+          height: 10,
+          decoration:
+              BoxDecoration(color: muscle.color, shape: BoxShape.circle),
         ),
       ]),
     );
@@ -280,7 +397,9 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isPrimary ? muscle.color.withValues(alpha: 0.4) : AppColors.surfaceLight,
+            color: isPrimary
+                ? muscle.color.withValues(alpha: 0.4)
+                : AppColors.surfaceLight,
             width: isPrimary ? 1.5 : 1,
           ),
         ),
@@ -289,56 +408,72 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
-              width: 52, height: 52,
+              width: 52,
+              height: 52,
               child: exercise.imageUrl != null
-                  ? WgerImage(exercise.imageUrl!, fit: BoxFit.cover,
+                  ? WgerImage(exercise.imageUrl!,
+                      fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _iconBox(muscle.color))
                   : _iconBox(muscle.color),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(exercise.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Row(children: [
                 // Category badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: muscle.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(exercise.categoryName,
-                      style: TextStyle(fontSize: 9, color: muscle.color, fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          fontSize: 9,
+                          color: muscle.color,
+                          fontWeight: FontWeight.w700)),
                 ),
                 if (isPrimary) ...[
                   const SizedBox(width: 5),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.success.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text('Chính',
-                        style: TextStyle(fontSize: 9, color: AppColors.success, fontWeight: FontWeight.w700)),
+                        style: TextStyle(
+                            fontSize: 9,
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w700)),
                   ),
                 ],
                 if (exercise.equipment.isNotEmpty) ...[
                   const SizedBox(width: 5),
                   Flexible(
                     child: Text(exercise.equipment.first.name,
-                        style: const TextStyle(fontSize: 10, color: AppColors.textHint),
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                        style: const TextStyle(
+                            fontSize: 10, color: AppColors.textHint),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                   ),
                 ],
               ]),
             ]),
           ),
           Container(
-            width: 32, height: 32,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: muscle.color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
@@ -359,127 +494,236 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
     );
   }
 
-  void _showAddDialog(WgerExercise exercise, _MuscleGroup muscle) {
+  Future<void> _showAddDialog(
+      WgerExercise exercise, _MuscleGroup muscle) async {
     final ctrl = TextEditingController(text: '30');
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     String selectedTimeOfDay = _defaultTimeOfDay();
 
     final timeSlots = [
-      {'value': 'morning',   'label': 'Sáng',  'icon': Icons.wb_sunny_outlined,    'color': const Color(0xFFFF9800)},
-      {'value': 'afternoon', 'label': 'Chiều', 'icon': Icons.wb_cloudy_outlined,   'color': const Color(0xFF2196F3)},
-      {'value': 'evening',   'label': 'Tối',   'icon': Icons.nights_stay_outlined, 'color': const Color(0xFF9C27B0)},
-      {'value': 'night',     'label': 'Đêm',   'icon': Icons.bedtime_outlined,     'color': const Color(0xFF3F51B5)},
+      {
+        'value': 'morning',
+        'label': 'Sáng',
+        'icon': Icons.wb_sunny_outlined,
+        'color': const Color(0xFFFF9800)
+      },
+      {
+        'value': 'afternoon',
+        'label': 'Chiều',
+        'icon': Icons.wb_cloudy_outlined,
+        'color': const Color(0xFF2196F3)
+      },
+      {
+        'value': 'evening',
+        'label': 'Tối',
+        'icon': Icons.nights_stay_outlined,
+        'color': const Color(0xFF9C27B0)
+      },
+      {
+        'value': 'night',
+        'label': 'Đêm',
+        'icon': Icons.bedtime_outlined,
+        'color': const Color(0xFF3F51B5)
+      },
     ];
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, ss) {
-          final dur = int.tryParse(ctrl.text) ?? 30;
-          final cal = user != null ? 5.0 * user.weight * (dur / 60.0) : 0.0;
-          return AlertDialog(
-            backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(exercise.name, style: const TextStyle(fontSize: 15)),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              // Muscle diagram mini
-              SizedBox(
-                height: 80,
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  SizedBox(
-                    width: 70, height: 80,
-                    child: _AnimatedMuscleCard(muscle: muscle),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(muscle.nameVi,
-                          style: TextStyle(fontSize: 13, color: muscle.color, fontWeight: FontWeight.bold)),
-                      if (exercise.equipment.isNotEmpty)
-                        Text(exercise.equipment.first.name,
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    ],
-                  ),
-                ]),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: ctrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Thời gian (phút)', suffixText: 'phút'),
-                onChanged: (_) => ss(() {}),
-                autofocus: true,
-              ),
-              const SizedBox(height: 14),
-              // Chọn buổi tập
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Buổi tập', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: timeSlots.map((slot) {
-                  final isSelected = selectedTimeOfDay == slot['value'];
-                  final color = slot['color'] as Color;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => ss(() => selectedTimeOfDay = slot['value'] as String),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isSelected ? color : Colors.transparent,
-                            width: 1.5,
-                          ),
+    try {
+      await showDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, ss) {
+            final dur = ExerciseUtils.parseDuration(ctrl.text);
+            final cal = ExerciseProvider.estimateCaloriesForExercise(
+              name: exercise.name,
+              categoryName: exercise.categoryName,
+              muscleCount: exercise.muscleCount,
+              weightKg: user?.weight ?? 70,
+              durationMinutes: dur,
+            );
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(exercise.name, style: const TextStyle(fontSize: 15)),
+              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                // Muscle diagram mini
+                SizedBox(
+                  height: 80,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 70,
+                          height: 80,
+                          child: _AnimatedMuscleCard(muscle: muscle),
                         ),
-                        child: Column(
+                        const SizedBox(width: 12),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(slot['icon'] as IconData, size: 18, color: isSelected ? color : AppColors.textHint),
-                            const SizedBox(height: 3),
-                            Text(slot['label'] as String, style: TextStyle(fontSize: 10, color: isSelected ? color : AppColors.textHint, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                            Text(muscle.nameVi,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: muscle.color,
+                                    fontWeight: FontWeight.bold)),
+                            if (exercise.equipment.isNotEmpty)
+                              Text(exercise.equipment.first.name,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary)),
                           ],
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: AppColors.calorieGradient,
-                  borderRadius: BorderRadius.circular(12),
+                      ]),
                 ),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.local_fire_department, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text('~${cal.toStringAsFixed(0)} kcal',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                ]),
-              ),
-            ]),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
-              ElevatedButton(
-                onPressed: () {
-                  _addExercise(exercise, int.tryParse(ctrl.text) ?? 30, cal, selectedTimeOfDay);
-                  Navigator.pop(ctx);
-                  Navigator.pop(context);
-                },
-                child: const Text('Thêm vào nhật ký'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                const SizedBox(height: 14),
+                TextField(
+                  controller: ctrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      labelText: 'Thời gian (phút)', suffixText: 'phút'),
+                  onChanged: (_) => ss(() {}),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 14),
+                // Chọn buổi tập
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Buổi tập',
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500)),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: timeSlots.map((slot) {
+                    final isSelected = selectedTimeOfDay == slot['value'];
+                    final color = slot['color'] as Color;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => ss(
+                            () => selectedTimeOfDay = slot['value'] as String),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? color.withValues(alpha: 0.15)
+                                : AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected ? color : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(slot['icon'] as IconData,
+                                  size: 18,
+                                  color:
+                                      isSelected ? color : AppColors.textHint),
+                              const SizedBox(height: 3),
+                              Text(slot['label'] as String,
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      color: isSelected
+                                          ? color
+                                          : AppColors.textHint,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.calorieGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.local_fire_department,
+                            color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text('~${cal.toStringAsFixed(0)} kcal',
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
+                      ]),
+                ),
+              ]),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Hủy')),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final dur = ExerciseUtils.parseDuration(ctrl.text);
+                    final action = ActionItem(
+                      kind: 'exercise',
+                      wgerId: exercise.id,
+                      name: exercise.name,
+                      details: {
+                        'duration': dur,
+                        'calories_burned': cal,
+                        'description': exercise.description,
+                      },
+                    );
+                    final routine =
+                        WorkoutRoutineParser.parseFromAction(action);
+                    Navigator.pop(ctx);
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => WorkoutSimulationScreen(
+                          routine: routine,
+                          onSaveToJournal: user == null
+                              ? null
+                              : () async => _addExercise(
+                                  exercise, dur, cal, selectedTimeOfDay),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.play_circle_filled_rounded, size: 16),
+                  label: const Text('Luyện tập ngay'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _addExercise(
+                          exercise,
+                          ExerciseUtils.parseDuration(ctrl.text),
+                          cal,
+                          selectedTimeOfDay);
+                    } catch (_) {
+                      return;
+                    }
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Thêm vào lịch'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      ctrl.dispose();
+    }
   }
 
   String _defaultTimeOfDay() {
@@ -490,30 +734,40 @@ class _SmartExercisePickerState extends State<SmartExercisePicker> {
     return 'night';
   }
 
-  void _addExercise(WgerExercise exercise, int duration, double calories, String timeOfDay) {
-    final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
-    if (userId == null) return;
+  Future<void> _addExercise(WgerExercise exercise, int duration,
+      double calories, String timeOfDay) async {
+    final userId =
+        Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+    if (userId == null) throw StateError('User must be signed in');
 
-    final cat = exercise.categoryName.toLowerCase();
-    String type = 'strength';
-    if (cat.contains('cardio')) type = 'cardio';
+    try {
+      await Provider.of<ExerciseProvider>(context, listen: false).addExercise(
+        ExerciseModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: userId,
+          name: exercise.name,
+          exerciseTemplateId: 'wger_${exercise.id}',
+          date: DateTime.now(),
+          duration: duration,
+          caloriesBurned: calories,
+          type: ExerciseProvider.mapCategoryToType(
+              exercise.name, exercise.categoryName),
+          intensity: 'medium',
+          timeOfDay: timeOfDay,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Không thể lưu bài tập. Vui lòng thử lại.'),
+        backgroundColor: AppColors.error,
+      ));
+      rethrow;
+    }
 
-    Provider.of<ExerciseProvider>(context, listen: false).addExercise(
-      ExerciseModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: userId,
-        name: exercise.name,
-        date: DateTime.now(),
-        duration: duration,
-        caloriesBurned: calories,
-        type: type,
-        intensity: 'medium',
-        timeOfDay: timeOfDay,
-      ),
-    );
-
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Da them "${exercise.name}"'),
+      content: Text('Đã thêm "${exercise.name}"'),
       backgroundColor: AppColors.success,
       duration: const Duration(seconds: 2),
     ));

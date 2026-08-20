@@ -158,6 +158,28 @@ async def test_hybrid_search_migration_present_and_wellformed():
 
 
 @pytest.mark.asyncio
+async def test_chat_message_thoughts_migration_present_and_wellformed():
+    """Migration 004 stores the reasoning needed to rebuild chat history UI."""
+    sql_path = db_module.MIGRATIONS_DIR / "004_chat_message_thoughts.sql"
+    assert sql_path.is_file(), f"Missing migration file: {sql_path}"
+
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "ADD COLUMN IF NOT EXISTS thoughts" in sql
+    assert "TEXT NOT NULL DEFAULT ''" in sql
+
+
+@pytest.mark.asyncio
+async def test_chat_message_structured_data_migration_present_and_wellformed():
+    """Migration 005 preserves action cards for chat history rendering."""
+    sql_path = db_module.MIGRATIONS_DIR / "005_chat_message_structured_data.sql"
+    assert sql_path.is_file(), f"Missing migration file: {sql_path}"
+
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "ADD COLUMN IF NOT EXISTS structured_data" in sql
+    assert "JSONB" in sql
+
+
+@pytest.mark.asyncio
 async def test_apply_migrations_handles_missing_dir(monkeypatch, tmp_path: Path):
     """Nếu thư mục migrations không tồn tại thì trả về [] thay vì raise."""
     monkeypatch.setattr(db_module, "MIGRATIONS_DIR", tmp_path / "no_such_dir")

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from services.agent.llm_client import LLMResponse, ToolCall
+from services.agent.llm_client import LLMResponse, StreamingToken, ToolCall
 from services.agent.memory_service import Context
 from services.agent.orchestrator import AgentOrchestrator
 from services.agent.tool_dispatcher import ToolResult
@@ -39,11 +39,15 @@ class FakeStore:
 @dataclass
 class FakeGateway:
     tokens: list[str] = field(default_factory=list)
+    thoughts: list[str] = field(default_factory=list)
     done: list[tuple[str, list[dict[str, Any]]]] = field(default_factory=list)
     errors: list[tuple[str, str]] = field(default_factory=list)
 
     async def send_token(self, token):
         self.tokens.append(token)
+
+    async def send_thought(self, token):
+        self.thoughts.append(token)
 
     async def send_done(self, full_response, performed_actions):
         self.done.append((full_response, performed_actions))
@@ -69,6 +73,23 @@ class FakeDispatcher:
     async def dispatch(self, session_id, call, timeout_ms):
         self.calls.append((session_id, call, timeout_ms))
         return ToolResult(ok=True, data={"answer": 42})
+
+
+class UiMessageDispatcher:
+    async def dispatch(self, session_id, call, timeout_ms):
+        return ToolResult(
+            ok=True,
+            data={"status": "success"},
+            ui_message={
+                "text": "Đã ghi nhận Cơm sườn",
+                "structured": {
+                    "type": "structured",
+                    "text": "",
+                    "meal_name": "Cơm sườn",
+                    "actions": [{"kind": "food", "name": "Cơm"}],
+                },
+            },
+        )
 
 
 class CapturingLLM(ScriptedLLM):
@@ -100,6 +121,32 @@ async def test_handle_chat_message_streams_text_and_done():
 
 
 @pytest.mark.asyncio
+async def test_handle_chat_message_persists_streamed_thoughts_for_history():
+    gateway = FakeGateway()
+    store = FakeStore()
+    llm = ScriptedLLM([
+        LLMResponse(
+            content_stream=_stream([
+                StreamingToken("Phân tích yêu cầu. ", "thought"),
+                StreamingToken("Đối chiếu dữ liệu.", "thought"),
+                "Câu trả lời",
+            ]),
+            full_text="Câu trả lời",
+        )
+    ])
+    orchestrator = AgentOrchestrator(
+        llm, FakeTools(), FakeMemory(), store, FakeDispatcher(), gateway,
+        max_steps=3,
+    )
+
+    await orchestrator.handleChatMessage("s1", "hi")
+
+    assert gateway.thoughts == ["Phân tích yêu cầu. ", "Đối chiếu dữ liệu."]
+    assistant_turn = next(turn for turn in store.turns if turn[1] == "assistant")
+    assert assistant_turn[5] == "Phân tích yêu cầu. Đối chiếu dữ liệu."
+
+
+@pytest.mark.asyncio
 async def test_handle_chat_message_dispatches_tool_then_streams_final_text():
     gateway = FakeGateway()
     dispatcher = FakeDispatcher()
@@ -114,6 +161,32 @@ async def test_handle_chat_message_dispatches_tool_then_streams_final_text():
 
     assert dispatcher.calls[0][1] is call
     assert gateway.done[0][1][0]["tool"] == "get_today_meals"
+
+
+@pytest.mark.asyncio
+async def test_handle_chat_message_persists_client_ui_card_for_history():
+    gateway = FakeGateway()
+    store = FakeStore()
+    call = ToolCall(id="c1", name="log_meal", arguments={})
+    llm = ScriptedLLM([
+        LLMResponse(tool_calls=[call]),
+        LLMResponse(content_stream=_stream(["xong"]), full_text="xong"),
+    ])
+    orchestrator = AgentOrchestrator(
+        llm,
+        FakeTools(),
+        FakeMemory(),
+        store,
+        UiMessageDispatcher(),
+        gateway,
+        max_steps=3,
+    )
+
+    await orchestrator.handleChatMessage("s1", "lưu cơm sườn")
+
+    ui_turn = next(turn for turn in store.turns if turn[2] == "Đã ghi nhận Cơm sườn")
+    assert ui_turn[1] == "assistant"
+    assert ui_turn[6]["meal_name"] == "Cơm sườn"
 
 
 @pytest.mark.asyncio
@@ -224,15 +297,15 @@ async def test_text_only_fallback_no_tool_call():
 
 @pytest.mark.asyncio
 async def test_plan_mapping_lives_in_the_tool_description():
-    """The goal/duration mapping belongs to ``create_plan``, not the prompt.
+    """The goal/duration mapping belongs to the high-level planner tool.
 
     It used to be hardcoded in the system prompt, where it cost tokens on every
     single turn — including turns that had nothing to do with plans — and could
     drift out of sync with the tool's real schema.
     """
-    from services.agent.tools.plan_tools import CREATE_PLAN_DESCRIPTOR
+    from services.agent.tools.plan_tools import CREATE_LONG_TERM_PLAN_DESCRIPTOR
 
-    description = CREATE_PLAN_DESCRIPTOR.description
+    description = CREATE_LONG_TERM_PLAN_DESCRIPTOR.description
     assert "lose_weight" in description
     assert "gain_muscle" in description
     assert "N*7" in description

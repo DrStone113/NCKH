@@ -8,16 +8,18 @@ import '../models/exercise_model.dart';
 /// - Optimistic updates cho thao tác CRUD
 /// - Pre-fetch data cho các ngày gần đây
 class ExerciseCacheService {
-  static final ExerciseCacheService _instance = ExerciseCacheService._internal();
+  static final ExerciseCacheService _instance =
+      ExerciseCacheService._internal();
   factory ExerciseCacheService() => _instance;
   ExerciseCacheService._internal();
 
   // Cache exercises by date (key: "userId_yyyy-MM-dd")
   final Map<String, List<ExerciseModel>> _exercisesByDate = {};
-  
+
   // Cache all exercises for a user (for history/stats)
   final Map<String, List<ExerciseModel>> _allExercisesByUser = {};
-  
+  final Map<String, DateTime> _allExercisesFetchTime = {};
+
   // Cache metadata
   final Map<String, DateTime> _lastFetchTime = {};
   static const Duration _cacheDuration = Duration(minutes: 15);
@@ -32,7 +34,7 @@ class ExerciseCacheService {
     final key = _getCacheKey(userId, date);
     final lastFetch = _lastFetchTime[key];
     if (lastFetch == null) return false;
-    
+
     final elapsed = DateTime.now().difference(lastFetch);
     return elapsed < _cacheDuration;
   }
@@ -43,37 +45,52 @@ class ExerciseCacheService {
     if (!isCacheValid(userId, date)) {
       return null;
     }
-    return _exercisesByDate[key];
+    final cached = _exercisesByDate[key];
+    return cached == null ? null : List.unmodifiable(cached);
   }
 
   /// Cache exercises for a date
-  void cacheExercises(String userId, DateTime date, List<ExerciseModel> exercises) {
+  void cacheExercises(
+      String userId, DateTime date, List<ExerciseModel> exercises) {
     final key = _getCacheKey(userId, date);
     _exercisesByDate[key] = List.from(exercises); // Create a copy
     _lastFetchTime[key] = DateTime.now();
-    debugPrint('📦 ExerciseCache: Cached ${exercises.length} exercises for $key');
+    debugPrint(
+        '📦 ExerciseCache: Cached ${exercises.length} exercises for $key');
   }
 
   /// Cache all exercises for a user
   void cacheAllExercises(String userId, List<ExerciseModel> exercises) {
     _allExercisesByUser[userId] = List.from(exercises);
-    debugPrint('📦 ExerciseCache: Cached ${exercises.length} total exercises for user $userId');
+    _allExercisesFetchTime[userId] = DateTime.now();
+    debugPrint(
+        '📦 ExerciseCache: Cached ${exercises.length} total exercises for user $userId');
   }
 
   /// Get all cached exercises for a user
   List<ExerciseModel>? getAllCachedExercises(String userId) {
-    return _allExercisesByUser[userId];
+    final fetchedAt = _allExercisesFetchTime[userId];
+    if (fetchedAt == null ||
+        DateTime.now().difference(fetchedAt) >= _cacheDuration) {
+      _allExercisesByUser.remove(userId);
+      _allExercisesFetchTime.remove(userId);
+      return null;
+    }
+    final cached = _allExercisesByUser[userId];
+    return cached == null ? null : List.unmodifiable(cached);
   }
 
   /// Update a single exercise in cache (optimistic update)
-  void updateExerciseInCache(String userId, DateTime date, ExerciseModel exercise) {
+  void updateExerciseInCache(
+      String userId, DateTime date, ExerciseModel exercise) {
     final key = _getCacheKey(userId, date);
     final cached = _exercisesByDate[key];
     if (cached != null) {
       final index = cached.indexWhere((e) => e.id == exercise.id);
       if (index != -1) {
         cached[index] = exercise;
-        debugPrint('✏️ ExerciseCache: Updated exercise ${exercise.id} in cache');
+        debugPrint(
+            '✏️ ExerciseCache: Updated exercise ${exercise.id} in cache');
       }
     }
 
@@ -88,27 +105,40 @@ class ExerciseCacheService {
   }
 
   /// Add an exercise to cache (optimistic update)
-  void addExerciseToCache(String userId, DateTime date, ExerciseModel exercise) {
+  void addExerciseToCache(
+      String userId, DateTime date, ExerciseModel exercise) {
     final key = _getCacheKey(userId, date);
     final cached = _exercisesByDate[key];
     if (cached != null) {
-      cached.add(exercise);
+      final index = cached.indexWhere((item) => item.id == exercise.id);
+      if (index == -1) {
+        cached.add(exercise);
+      } else {
+        cached[index] = exercise;
+      }
       debugPrint('➕ ExerciseCache: Added exercise ${exercise.id} to cache');
     } else {
       _exercisesByDate[key] = [exercise];
       _lastFetchTime[key] = DateTime.now();
-      debugPrint('➕ ExerciseCache: Created new cache with exercise ${exercise.id}');
+      debugPrint(
+          '➕ ExerciseCache: Created new cache with exercise ${exercise.id}');
     }
 
     // Also add to all exercises cache
     final allCached = _allExercisesByUser[userId];
     if (allCached != null) {
-      allCached.add(exercise);
+      final index = allCached.indexWhere((item) => item.id == exercise.id);
+      if (index == -1) {
+        allCached.add(exercise);
+      } else {
+        allCached[index] = exercise;
+      }
     }
   }
 
   /// Remove an exercise from cache (optimistic update)
-  void removeExerciseFromCache(String userId, DateTime date, String exerciseId) {
+  void removeExerciseFromCache(
+      String userId, DateTime date, String exerciseId) {
     final key = _getCacheKey(userId, date);
     final cached = _exercisesByDate[key];
     if (cached != null) {
@@ -138,7 +168,8 @@ class ExerciseCacheService {
     for (final date in dates) {
       // Skip if already cached
       if (isCacheValid(userId, date)) {
-        debugPrint('✅ ExerciseCache: Date ${date.day}/${date.month} already cached');
+        debugPrint(
+            '✅ ExerciseCache: Date ${date.day}/${date.month} already cached');
         continue;
       }
 
@@ -146,7 +177,8 @@ class ExerciseCacheService {
         final exercises = await fetchFunction(date);
         cacheExercises(userId, date, exercises);
       } catch (e) {
-        debugPrint('⚠️ ExerciseCache: Failed to pre-fetch ${date.day}/${date.month}: $e');
+        debugPrint(
+            '⚠️ ExerciseCache: Failed to pre-fetch ${date.day}/${date.month}: $e');
       }
     }
   }
@@ -161,9 +193,11 @@ class ExerciseCacheService {
 
   /// Clear all cache for a user
   void clearUserCache(String userId) {
-    _exercisesByDate.removeWhere((key, _) => key.startsWith(userId));
-    _lastFetchTime.removeWhere((key, _) => key.startsWith(userId));
+    final prefix = '${userId}_';
+    _exercisesByDate.removeWhere((key, _) => key.startsWith(prefix));
+    _lastFetchTime.removeWhere((key, _) => key.startsWith(prefix));
     _allExercisesByUser.remove(userId);
+    _allExercisesFetchTime.remove(userId);
     debugPrint('🗑️ ExerciseCache: Cleared all cache for user $userId');
   }
 
@@ -171,6 +205,7 @@ class ExerciseCacheService {
   void clearAllCache() {
     _exercisesByDate.clear();
     _allExercisesByUser.clear();
+    _allExercisesFetchTime.clear();
     _lastFetchTime.clear();
     debugPrint('🗑️ ExerciseCache: Cleared all cache');
   }
@@ -179,13 +214,14 @@ class ExerciseCacheService {
   Map<String, dynamic> getCacheStats() {
     return {
       'totalCachedDates': _exercisesByDate.length,
-      'totalExercises': _exercisesByDate.values.fold<int>(0, (sum, exercises) => sum + exercises.length),
+      'totalExercises': _exercisesByDate.values
+          .fold<int>(0, (sum, exercises) => sum + exercises.length),
       'totalUsers': _allExercisesByUser.length,
-      'oldestCache': _lastFetchTime.values.isEmpty 
-          ? null 
+      'oldestCache': _lastFetchTime.values.isEmpty
+          ? null
           : _lastFetchTime.values.reduce((a, b) => a.isBefore(b) ? a : b),
-      'newestCache': _lastFetchTime.values.isEmpty 
-          ? null 
+      'newestCache': _lastFetchTime.values.isEmpty
+          ? null
           : _lastFetchTime.values.reduce((a, b) => a.isAfter(b) ? a : b),
     };
   }

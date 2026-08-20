@@ -347,7 +347,10 @@ class StreamingContent(AsyncIterator[str]):
         
         # Pre-process the initial buffer
         for token in buffer:
-            self._process_content(token)
+            if isinstance(token, StreamingToken):
+                self._emit_queue.append(token)
+            else:
+                self._process_content(token)
 
     def _emit_char(self, t_type: str, char: str) -> None:
         if self._emit_queue and self._emit_queue[-1].token_type == t_type:
@@ -667,28 +670,36 @@ class LLMClient:
                                     if tc_chunk.function.arguments:
                                         tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
                         
+                        # Check for reasoning content
+                        reasoning = getattr(delta, "reasoning_content", None)
+                        if reasoning:
+                            buffered_tokens.append(StreamingToken(reasoning, "thought"))
+
                         content = delta.content
                         if content:
                             buffered_tokens.append(content)
                             buffered_text += content
                         
-                        # Stop buffering if native tool call detected, non-tool text started (≥2 tokens, ≥5 chars), or buffer full
-                        if native_tool_calls_detected:
+                        # Stop buffering if native tool call detected and no thoughts/content, or non-tool text started (≥2 tokens, ≥5 chars), or buffer full
+                        if native_tool_calls_detected and not buffered_tokens:
                             break
                         if len(buffered_tokens) >= 2 and len(buffered_text) >= 5 and not buffered_text.strip().startswith("<"):
                             break
-                        if len(buffered_tokens) >= 8 and len(buffered_text) >= 20:
+                        if len(buffered_tokens) >= 8 and (len(buffered_text) >= 20 or any(getattr(t, "token_type", "token") == "thought" for t in buffered_tokens)):
                             break
                     
-                    # Run early garbled check on the buffer
-                    _check_garbled("".join(buffered_tokens))
+                    # Run early garbled check on the buffer (only for non-thought content)
+                    plain_buffer = "".join(str(t) for t in buffered_tokens if getattr(t, "token_type", "token") != "thought")
+                    if plain_buffer:
+                        _check_garbled(plain_buffer)
 
-                    # Determine if this is a tool call response
-                    is_tool_call = native_tool_calls_detected
-                    if tools and ("<tool_call>" in buffered_text or "<function=" in buffered_text):
-                        is_tool_call = True
+                    # Determine if this is a pure tool call response without any thoughts or content
+                    has_thoughts = any(getattr(t, "token_type", "token") == "thought" for t in buffered_tokens)
+                    is_pure_tool_call = native_tool_calls_detected and not has_thoughts and not buffered_text.strip()
+                    if not has_thoughts and tools and ("<tool_call>" in buffered_text or "<function=" in buffered_text):
+                        is_pure_tool_call = True
 
-                    if is_tool_call:
+                    if is_pure_tool_call:
                         # Consume all remaining chunks
                         async for chunk in response_stream:
                             if not chunk or not getattr(chunk, "choices", None):
@@ -714,7 +725,7 @@ class LLMClient:
                             if content:
                                 buffered_tokens.append(content)
                         
-                        full_text = "".join(buffered_tokens)
+                        full_text = "".join(str(t) for t in buffered_tokens)
                         if tool_calls_map:
                             native_tool_calls = _parse_native_tool_calls(tool_calls_map.values())
                             return LLMResponse(tool_calls=native_tool_calls, content_stream=None, full_text="")
@@ -729,9 +740,12 @@ class LLMClient:
                             full_text=_strip_tool_call_markup(full_text),
                         )
 
-                    # Normal text response - return real-time stream
+                    # Normal text or reasoning-with-tools response - return real-time stream
                     llm_response = LLMResponse(tool_calls=[], content_stream=None, full_text="")
-                    llm_response.content_stream = StreamingContent(buffered_tokens, response_stream, llm_response)
+                    streaming_content = StreamingContent(buffered_tokens, response_stream, llm_response)
+                    if tool_calls_map:
+                        streaming_content._tool_calls_map = tool_calls_map
+                    llm_response.content_stream = streaming_content
                     return llm_response
 
                 except GarbledOutputError:

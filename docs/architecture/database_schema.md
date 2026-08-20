@@ -47,6 +47,7 @@ CREATE INDEX idx_plan_items_plan_day ON plan_items(plan_id, day_index);
 
 ### 3. Bảng Phiên Trò Chuyện & Nhắc Nhở (`chat_sessions`, `nudge_logs`)
 - `chat_sessions`: Lưu trữ `session_id`, `user_id`, `created_at`.
+- `chat_messages`: Lưu `content`, `thoughts` và `structured_data JSONB`. `structured_data` là payload trình bày bất biến của action card, giúp lịch sử dựng lại đúng giao diện trực tiếp mà không suy đoán từ câu chữ.
 - `nudge_logs`: Lưu vết các thông điệp Nudge chủ động được gửi tới người dùng.
 
 ---

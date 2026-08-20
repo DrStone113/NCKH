@@ -1,0 +1,17 @@
+{
+  "test_case_id": "phase2-c-smoke-pho-001",
+  "user_query": "Một tô phở bò có bao nhiêu calo và protein?",
+  "profile": {
+    "profile_id": "fixture-adult-001",
+    "age": 25,
+    "sex": "male",
+    "height_cm": 170,
+    "weight_kg": 70,
+    "activity_level": "moderate",
+    "goal": "maintain",
+    "target_weight_kg": 70,
+    "dietary_restrictions": [],
+    "allergies": [],
+    "food_preferences": ["Vietnamese food"]
+  }
+}

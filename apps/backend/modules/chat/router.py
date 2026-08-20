@@ -35,7 +35,10 @@ async def list_chat_sessions(
                 LIMIT 1
             ) AS title
         FROM chat_sessions s
-        WHERE (CAST(:user_id AS text) IS NULL OR s.user_id = :user_id OR s.user_id = 'anonymous')
+        WHERE (
+            (CAST(:user_id AS text) IS NULL AND s.user_id = 'anonymous')
+            OR s.user_id = :user_id
+        )
         ORDER BY s.last_active DESC
         LIMIT :limit
         """
@@ -66,7 +69,7 @@ async def get_session_messages(
     """Get all user & assistant messages for a session."""
     sql = text(
         """
-        SELECT id, session_id, role, content, created_at
+        SELECT id, session_id, role, content, thoughts, structured_data, created_at
         FROM chat_messages
         WHERE session_id = :sid
           AND role IN ('user', 'assistant')
@@ -83,6 +86,8 @@ async def get_session_messages(
             "session_id": str(r.session_id),
             "role": r.role,
             "content": r.content,
+            "thoughts": r.thoughts or "",
+            "structured": r.structured_data,
             "created_at": r.created_at.isoformat() if r.created_at else None,
         })
     return messages

@@ -115,3 +115,22 @@ def test_suggest_workout_bounds(
     # Sanity: each exercise reports a positive duration so the sum is meaningful.
     for ex in exercises:
         assert int(ex["duration_minutes"]) > 0
+
+
+def test_suggest_workout_preserves_wger_ids_and_varies_energy_estimates() -> None:
+    plan = suggest_workout(
+        muscle_group="full_body",
+        duration_min=40,
+        equipment="any",
+        level="advanced",
+    )
+
+    exercises = plan["exercises"]
+    assert all(ex["wger_id"] > 0 for ex in exercises)
+    assert all(ex["met"] > 0 for ex in exercises)
+    assert all(ex["calories_estimated"] is True for ex in exercises)
+    assert len({ex["calories_burned"] for ex in exercises}) > 1
+    assert len({ex["category"] for ex in exercises}) >= 3
+    assert plan["total_calories_burned"] == round(
+        sum(ex["calories_burned"] for ex in exercises), 2
+    )

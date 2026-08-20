@@ -1,6 +1,29 @@
 /// Models cho wger API Integration
 library;
 
+import '../utils/exercise_utils.dart';
+
+int _jsonInt(Object? value, [int fallback = 0]) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
+double? _jsonDouble(Object? value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '');
+}
+
+String _jsonString(Object? value, [String fallback = '']) =>
+    value?.toString().trim() ?? fallback;
+
+List<Map<String, dynamic>> _jsonMapList(Object? value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map>()
+      .map((item) => Map<String, dynamic>.from(item))
+      .toList(growable: false);
+}
+
 /// Model cho nhóm cơ từ wger API
 class WgerMuscle {
   final int id;
@@ -19,11 +42,11 @@ class WgerMuscle {
 
   factory WgerMuscle.fromJson(Map<String, dynamic> json) {
     return WgerMuscle(
-      id: json['id'] ?? 0,
-      nameEn: json['name_en'] ?? json['name'] ?? '',
-      isFront: json['is_front'] ?? true,
-      imageUrlMain: json['image_url_main'] as String?,
-      imageUrlSecondary: json['image_url_secondary'] as String?,
+      id: _jsonInt(json['id']),
+      nameEn: _jsonString(json['name_en'] ?? json['name']),
+      isFront: json['is_front'] is bool ? json['is_front'] as bool : true,
+      imageUrlMain: json['image_url_main']?.toString(),
+      imageUrlSecondary: json['image_url_secondary']?.toString(),
     );
   }
 
@@ -50,8 +73,8 @@ class WgerEquipment {
 
   factory WgerEquipment.fromJson(Map<String, dynamic> json) {
     return WgerEquipment(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
+      id: _jsonInt(json['id']),
+      name: _jsonString(json['name']),
     );
   }
 
@@ -75,8 +98,8 @@ class WgerExerciseCategory {
 
   factory WgerExerciseCategory.fromJson(Map<String, dynamic> json) {
     return WgerExerciseCategory(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
+      id: _jsonInt(json['id']),
+      name: _jsonString(json['name']),
     );
   }
 
@@ -110,13 +133,23 @@ class WgerExercise {
     this.imageUrl,
   });
 
+  List<WgerMuscle> get allMuscles {
+    final byId = <int, WgerMuscle>{};
+    for (final muscle in [...muscles, ...musclesSecondary]) {
+      byId[muscle.id] = muscle;
+    }
+    return List.unmodifiable(byId.values);
+  }
+
+  int get muscleCount => allMuscles.length;
+
   factory WgerExercise.fromJson(Map<String, dynamic> json) {
     // Extract name
-    String name = json['name']?.toString().trim() ?? '';
-    
+    String name = _jsonString(json['name']);
+
     // Extract description
-    String description = json['description']?.toString() ?? '';
-    
+    String description = _jsonString(json['description']);
+
     // Extract category name — backend trả về "category" hoặc "category_name"
     String categoryName = '';
     if (json['category_name'] != null) {
@@ -128,56 +161,36 @@ class WgerExercise {
         categoryName = json['category'].toString();
       }
     }
-    
+
     // Extract image URL
     String? imageUrl;
     if (json['image_url'] != null) {
       imageUrl = json['image_url'].toString();
-    } else if (json['images'] != null && json['images'] is List && (json['images'] as List).isNotEmpty) {
-      final firstImage = (json['images'] as List).first;
-      if (firstImage is Map && firstImage['image'] != null) {
-        imageUrl = firstImage['image'].toString();
-      }
+    } else {
+      final images = _jsonMapList(json['images']);
+      final mainImage =
+          images.where((image) => image['is_main'] == true).firstOrNull;
+      final selected = mainImage ?? images.firstOrNull;
+      imageUrl = selected?['image']?.toString();
     }
-    
+
     return WgerExercise(
-      id: json['id'] ?? 0,
+      id: _jsonInt(json['id']),
       name: name,
       description: description,
       categoryName: categoryName,
-      muscles: (json['muscles'] as List<dynamic>?)
-              ?.map((m) {
-                try {
-                  return WgerMuscle.fromJson(m as Map<String, dynamic>);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .whereType<WgerMuscle>()
-              .toList() ??
-          [],
-      musclesSecondary: (json['muscles_secondary'] as List<dynamic>?)
-              ?.map((m) {
-                try {
-                  return WgerMuscle.fromJson(m as Map<String, dynamic>);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .whereType<WgerMuscle>()
-              .toList() ??
-          [],
-      equipment: (json['equipment'] as List<dynamic>?)
-              ?.map((e) {
-                try {
-                  return WgerEquipment.fromJson(e as Map<String, dynamic>);
-                } catch (e) {
-                  return null;
-                }
-              })
-              .whereType<WgerEquipment>()
-              .toList() ??
-          [],
+      muscles: _jsonMapList(json['muscles'])
+          .map(WgerMuscle.fromJson)
+          .where((muscle) => muscle.id > 0)
+          .toList(growable: false),
+      musclesSecondary: _jsonMapList(json['muscles_secondary'])
+          .map(WgerMuscle.fromJson)
+          .where((muscle) => muscle.id > 0)
+          .toList(growable: false),
+      equipment: _jsonMapList(json['equipment'])
+          .map(WgerEquipment.fromJson)
+          .where((equipment) => equipment.name.isNotEmpty)
+          .toList(growable: false),
       imageUrl: imageUrl,
     );
   }
@@ -216,14 +229,12 @@ class WgerIngredient {
 
   factory WgerIngredient.fromJson(Map<String, dynamic> json) {
     return WgerIngredient(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      energy: json['energy'] != null ? (json['energy'] as num).toDouble() : null,
-      protein: json['protein'] != null ? (json['protein'] as num).toDouble() : null,
-      carbohydrates: json['carbohydrates'] != null
-          ? (json['carbohydrates'] as num).toDouble()
-          : null,
-      fat: json['fat'] != null ? (json['fat'] as num).toDouble() : null,
+      id: _jsonInt(json['id']),
+      name: _jsonString(json['name']),
+      energy: _jsonDouble(json['energy']),
+      protein: _jsonDouble(json['protein']),
+      carbohydrates: _jsonDouble(json['carbohydrates']),
+      fat: _jsonDouble(json['fat']),
     );
   }
 
@@ -240,22 +251,22 @@ class WgerIngredient {
 
   // Tính calo cho lượng gram cụ thể
   double caloriesForGrams(double grams) {
-    return (energy ?? 0) * grams / 100;
+    return (energy ?? 0) * grams.clamp(0, double.maxFinite) / 100;
   }
 
   // Tính protein cho lượng gram cụ thể
   double proteinForGrams(double grams) {
-    return (protein ?? 0) * grams / 100;
+    return (protein ?? 0) * grams.clamp(0, double.maxFinite) / 100;
   }
 
   // Tính carbs cho lượng gram cụ thể
   double carbsForGrams(double grams) {
-    return (carbohydrates ?? 0) * grams / 100;
+    return (carbohydrates ?? 0) * grams.clamp(0, double.maxFinite) / 100;
   }
 
   // Tính fat cho lượng gram cụ thể
   double fatForGrams(double grams) {
-    return (fat ?? 0) * grams / 100;
+    return (fat ?? 0) * grams.clamp(0, double.maxFinite) / 100;
   }
 }
 
@@ -272,14 +283,13 @@ class WgerExerciseListResponse {
   });
 
   factory WgerExerciseListResponse.fromJson(Map<String, dynamic> json) {
-    final results = (json['results'] as List<dynamic>?)
-            ?.map((e) => WgerExercise.fromJson(e as Map<String, dynamic>))
-            .where((e) => e.name.isNotEmpty) // lọc bài tập không có tên
-            .toList() ??
-        [];
+    final results = _jsonMapList(json['results'])
+        .map(WgerExercise.fromJson)
+        .where((exercise) => exercise.name.isNotEmpty)
+        .toList(growable: false);
     return WgerExerciseListResponse(
-      count: json['count'] ?? 0,
-      next: json['next'] as String?,
+      count: _jsonInt(json['count']),
+      next: json['next']?.toString(),
       results: results,
     );
   }
@@ -299,12 +309,12 @@ class WgerIngredientListResponse {
 
   factory WgerIngredientListResponse.fromJson(Map<String, dynamic> json) {
     return WgerIngredientListResponse(
-      count: json['count'] ?? 0,
-      next: json['next'],
-      results: (json['results'] as List<dynamic>?)
-              ?.map((i) => WgerIngredient.fromJson(i as Map<String, dynamic>))
-              .toList() ??
-          [],
+      count: _jsonInt(json['count']),
+      next: json['next']?.toString(),
+      results: _jsonMapList(json['results'])
+          .map(WgerIngredient.fromJson)
+          .where((ingredient) => ingredient.name.isNotEmpty)
+          .toList(growable: false),
     );
   }
 }
@@ -324,14 +334,19 @@ class ActionItem {
   });
 
   factory ActionItem.fromJson(Map<String, dynamic> json) {
-    final kind = json['kind'] ?? '';
-    final wgerId = json['wger_id'] ?? 0;
-    
+    final kind = _jsonString(json['kind']);
+    final wgerId = _jsonInt(json['wger_id']);
+
     // Đọc tên món ăn một cách phòng thủ từ nhiều thuộc tính có thể có
-    String name = json['name'] as String? ?? '';
-    final details = Map<String, dynamic>.from(json['details'] ?? {});
+    String name = _jsonString(json['name']);
+    final rawDetails = json['details'];
+    final details = rawDetails is Map
+        ? Map<String, dynamic>.from(rawDetails)
+        : <String, dynamic>{};
     if (name.isEmpty) {
-      name = details['dish_name'] as String? ?? details['food_name'] as String? ?? '';
+      name = details['dish_name'] as String? ??
+          details['food_name'] as String? ??
+          '';
     }
 
     if (kind == 'food') {
@@ -343,9 +358,30 @@ class ActionItem {
         details['fat'] = lookup['fat'];
       }
     } else if (kind == 'exercise') {
-      if (details['calories_burned'] == null || details['calories_burned'] == 0) {
-        final duration = details['duration_min'] ?? details['duration'] ?? 30;
-        details['calories_burned'] = (duration as num).toDouble() * 6.0; // 6 kcal per minute average
+      final duration = _jsonInt(
+        details['duration_min'] ?? details['duration'],
+        ExerciseUtils.defaultDurationMinutes,
+      ).clamp(
+        ExerciseUtils.minDurationMinutes,
+        ExerciseUtils.maxDurationMinutes,
+      );
+      details['duration'] = duration;
+      details['duration_min'] = duration;
+
+      final suppliedCalories = _jsonDouble(details['calories_burned']);
+      if (suppliedCalories == null ||
+          !suppliedCalories.isFinite ||
+          suppliedCalories <= 0) {
+        final category = _jsonString(details['category'] ?? details['type']);
+        final muscleCount = _jsonInt(details['muscle_count']);
+        details['calories_burned'] = ExerciseUtils.calculateCalories(
+          met: ExerciseUtils.estimateMet(name, category, muscleCount),
+          weightKg: 70,
+          durationMinutes: duration,
+        );
+        details['calories_estimated'] = true;
+      } else {
+        details['calories_burned'] = suppliedCalories;
       }
     }
 
@@ -400,10 +436,10 @@ class ActionItem {
   static List<ActionItem> parseActions(List<dynamic>? rawActions) {
     if (rawActions == null) return [];
     final List<ActionItem> result = [];
-    
+
     for (final raw in rawActions) {
       if (raw is! Map<String, dynamic>) continue;
-      
+
       final action = ActionItem.fromJson(raw);
       if (action.kind == 'food') {
         final cleanName = action.name.toLowerCase().trim();
@@ -414,15 +450,16 @@ class ActionItem {
             break;
           }
         }
-        
+
         if (matchedRecipeKey != null) {
           final recipe = compoundRecipes[matchedRecipeKey]!;
-          final totalGrams = (action.details['serving_grams'] as num? ?? 100.0).toDouble();
-          
+          final totalGrams =
+              (action.details['serving_grams'] as num? ?? 100.0).toDouble();
+
           recipe.forEach((ingredientName, ratio) {
             final ingredientGrams = totalGrams * ratio;
             final ingredientLookup = lookupFoodNutrition(ingredientName);
-            
+
             final ingredientDetails = {
               'dish_name': ingredientName,
               'meal_type': action.details['meal_type'] ?? 'lunch',
@@ -444,45 +481,85 @@ class ActionItem {
           continue;
         }
       }
-      
+
       result.add(action);
     }
-    
+
     return result;
   }
 
   static Map<String, double> lookupFoodNutrition(String foodName) {
     final cleanName = foodName.toLowerCase().trim();
-    
+
     // Dictionary các món ăn Việt Nam phổ biến và lượng calo/macros trên 100g
     final database = {
       'gạo': {'calories': 344.0, 'protein': 7.9, 'fat': 1.0, 'carbs': 76.2},
       'cơm': {'calories': 130.0, 'protein': 2.7, 'fat': 0.3, 'carbs': 28.0},
       'bún': {'calories': 110.0, 'protein': 1.7, 'fat': 0.0, 'carbs': 25.7},
       'phở': {'calories': 141.0, 'protein': 3.2, 'fat': 0.0, 'carbs': 32.1},
-      'bánh phở': {'calories': 141.0, 'protein': 3.2, 'fat': 0.0, 'carbs': 32.1},
+      'bánh phở': {
+        'calories': 141.0,
+        'protein': 3.2,
+        'fat': 0.0,
+        'carbs': 32.1
+      },
       'bánh mì': {'calories': 249.0, 'protein': 7.9, 'fat': 0.8, 'carbs': 52.6},
       'thịt bò': {'calories': 118.0, 'protein': 21.0, 'fat': 3.8, 'carbs': 0.0},
-      'thịt heo': {'calories': 139.0, 'protein': 19.0, 'fat': 7.0, 'carbs': 0.0},
-      'thịt heo nạc': {'calories': 139.0, 'protein': 19.0, 'fat': 7.0, 'carbs': 0.0},
-      'thịt gà': {'calories': 199.0, 'protein': 20.3, 'fat': 13.1, 'carbs': 0.0},
+      'thịt heo': {
+        'calories': 139.0,
+        'protein': 19.0,
+        'fat': 7.0,
+        'carbs': 0.0
+      },
+      'thịt heo nạc': {
+        'calories': 139.0,
+        'protein': 19.0,
+        'fat': 7.0,
+        'carbs': 0.0
+      },
+      'thịt gà': {
+        'calories': 199.0,
+        'protein': 20.3,
+        'fat': 13.1,
+        'carbs': 0.0
+      },
       'ức gà': {'calories': 165.0, 'protein': 31.0, 'fat': 3.6, 'carbs': 0.0},
       'trứng': {'calories': 166.0, 'protein': 14.8, 'fat': 11.6, 'carbs': 0.5},
       'đậu phụ': {'calories': 95.0, 'protein': 10.9, 'fat': 5.4, 'carbs': 0.7},
       'đậu hũ': {'calories': 95.0, 'protein': 10.9, 'fat': 5.4, 'carbs': 0.7},
       'cá': {'calories': 97.0, 'protein': 18.2, 'fat': 2.7, 'carbs': 0.0},
       'tôm': {'calories': 82.0, 'protein': 17.6, 'fat': 0.9, 'carbs': 0.9},
-      'thịt cua': {'calories': 100.0, 'protein': 18.0, 'fat': 1.5, 'carbs': 0.0},
+      'thịt cua': {
+        'calories': 100.0,
+        'protein': 18.0,
+        'fat': 1.5,
+        'carbs': 0.0
+      },
       'chả cua': {'calories': 120.0, 'protein': 12.0, 'fat': 5.0, 'carbs': 4.0},
       'cà chua': {'calories': 18.0, 'protein': 0.9, 'fat': 0.2, 'carbs': 3.9},
       'rau': {'calories': 25.0, 'protein': 1.5, 'fat': 0.2, 'carbs': 4.0},
       'rau sống': {'calories': 20.0, 'protein': 1.2, 'fat': 0.1, 'carbs': 3.5},
       'rau thơm': {'calories': 20.0, 'protein': 1.2, 'fat': 0.1, 'carbs': 3.5},
-      'bún riêu': {'calories': 150.0, 'protein': 8.0, 'fat': 6.0, 'carbs': 16.0},
-      'bún bò huế': {'calories': 160.0, 'protein': 9.0, 'fat': 6.0, 'carbs': 18.0},
+      'bún riêu': {
+        'calories': 150.0,
+        'protein': 8.0,
+        'fat': 6.0,
+        'carbs': 16.0
+      },
+      'bún bò huế': {
+        'calories': 160.0,
+        'protein': 9.0,
+        'fat': 6.0,
+        'carbs': 18.0
+      },
       'phở bò': {'calories': 150.0, 'protein': 9.0, 'fat': 5.0, 'carbs': 17.0},
       'phở gà': {'calories': 140.0, 'protein': 10.0, 'fat': 4.0, 'carbs': 16.0},
-      'bánh mì kẹp': {'calories': 260.0, 'protein': 9.0, 'fat': 8.0, 'carbs': 38.0},
+      'bánh mì kẹp': {
+        'calories': 260.0,
+        'protein': 9.0,
+        'fat': 8.0,
+        'carbs': 38.0
+      },
       'sữa': {'calories': 74.0, 'protein': 3.9, 'fat': 4.4, 'carbs': 4.8},
     };
 
@@ -540,15 +617,17 @@ class StructuredResponse {
   }
 
   /// Lấy tất cả food actions
-  List<ActionItem> get foodActions => actions.where((a) => a.kind == 'food').toList();
+  List<ActionItem> get foodActions =>
+      actions.where((a) => a.kind == 'food').toList();
 
   /// Lấy tất cả exercise actions
-  List<ActionItem> get exerciseActions => actions.where((a) => a.kind == 'exercise').toList();
+  List<ActionItem> get exerciseActions =>
+      actions.where((a) => a.kind == 'exercise').toList();
 
   /// Tổng calo ước tính của tất cả food actions
   double get totalFoodCalories => foodActions.fold(0, (sum, a) {
-    final cal = a.details['calories'] as num? ?? 0;
-    final grams = a.details['serving_grams'] as num? ?? 100;
-    return sum + cal * grams / 100;
-  });
+        final cal = a.details['calories'] as num? ?? 0;
+        final grams = a.details['serving_grams'] as num? ?? 100;
+        return sum + cal * grams / 100;
+      });
 }

@@ -23,12 +23,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
 from models.schemas import PlanItem
-from services.agent.tool_registry import ToolDescriptor
+from services.agent.tool_registry import ToolDescriptor, ToolRegistry
+from services.agent.tools import register_server_tools
 from services.agent.tools import plan_tools as pt
 
 
@@ -63,7 +64,35 @@ class _FakeAsyncSession:
 
         if "FROM plans WHERE id" in sql:
             return _FakeResult(self.plan_row)
+        if "COUNT(DISTINCT day_index)" in sql:
+            inserted_rows = [
+                row
+                for insert_sql, insert_params in self.executed
+                if "INSERT INTO plan_items" in insert_sql
+                for row in insert_params
+            ]
+            meal_rows = [
+                row for row in inserted_rows if row["item_type"] == "meal"
+            ]
+            return _FakeResult(
+                (
+                    len(inserted_rows),
+                    len({row["day_index"] for row in meal_rows}),
+                    len(meal_rows),
+                )
+            )
         return _FakeResult(None)
+
+
+@dataclass
+class _FailingAsyncSession(_FakeAsyncSession):
+    fail_on_sql: str = "INSERT"
+
+    async def execute(self, statement: Any, params: Any = None):
+        sql = str(statement)
+        if self.fail_on_sql in sql:
+            raise RuntimeError("database write failed")
+        return await super().execute(statement, params)
 
 
 # --------------------------------------------------------------------------- #
@@ -101,6 +130,63 @@ def test_append_plan_items_descriptor_metadata():
     assert "plan_id" in schema["required"]
     assert "day_index" in schema["required"]
     assert "items" in schema["required"]
+
+
+def test_create_long_term_plan_descriptor_generates_every_day_in_one_call():
+    descriptor = pt.CREATE_LONG_TERM_PLAN_DESCRIPTOR
+    assert descriptor.name == "create_long_term_plan"
+    assert descriptor.side == "server"
+    assert descriptor.idempotent is False
+    assert descriptor.timeout_ms == 120_000
+    assert "profile" in descriptor.parameters_schema["required"]
+    assert "request_id" in descriptor.parameters_schema["required"]
+    assert "TRỌN GÓI" in descriptor.description
+
+
+@pytest.mark.asyncio
+async def test_create_long_term_plan_runs_end_to_end_with_real_catalog_tools():
+    start = date(2026, 8, 14)
+    session = _FakeAsyncSession(plan_row=(start, 3))
+    registry = ToolRegistry()
+    register_server_tools(registry, db_session=session)
+
+    result = await pt.create_long_term_plan(
+        registry,
+        session,  # type: ignore[arg-type]
+        user_id="user-1",
+        goal="maintain",
+        duration_days=3,
+        start_date=start,
+        profile={
+            "user_id": "user-1",
+            "age": 30,
+            "gender": "male",
+            "height_cm": 172,
+            "weight_kg": 68,
+            "activity_level": "moderate",
+            "health_goal": "maintain",
+            "dietary_restrictions": [],
+        },
+        request_id="e2e-plan-1",
+    )
+
+    inserts = [
+        params
+        for sql, params in session.executed
+        if "INSERT INTO plan_items" in sql
+    ]
+    assert result["days_generated"] == 3
+    assert result["full_weeks"] == 0
+    assert result["remaining_days"] == 3
+    assert result["total_weeks"] == 1
+    assert len(inserts) == 3
+    assert {row[0]["day_index"] for row in inserts} == {1, 2, 3}
+    assert [len(rows) for rows in inserts] == [3, 4, 3]
+    assert all(
+        str(UUID(row["id"])) == row["id"]
+        for rows in inserts
+        for row in rows
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -159,6 +245,23 @@ async def test_create_plan_accepts_date_object_for_start_date():
     _, params = session.executed[0]
     assert params["start_date"] == date(2025, 3, 10)
     assert params["end_date"] == date(2025, 3, 12)
+
+
+@pytest.mark.asyncio
+async def test_create_plan_propagates_database_write_failure():
+    session = _FailingAsyncSession(fail_on_sql="INSERT INTO plans")
+
+    with pytest.raises(RuntimeError, match="database write failed"):
+        await pt.create_plan(
+            session,  # type: ignore[arg-type]
+            user_id="u",
+            goal="maintain",
+            duration_days=7,
+            start_date=date(2025, 3, 10),
+            daily_kcal_target=1800.0,
+            daily_protein_target=80.0,
+            request_id="r",
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -361,9 +464,56 @@ async def test_append_plan_items_accepts_dict_items():
     assert insert_params[0]["title"] == "Bún bò"
 
 
+@pytest.mark.asyncio
+async def test_append_plan_items_propagates_database_write_failure():
+    plan_start = date(2025, 1, 1)
+    plan_id = str(uuid4())
+    session = _FailingAsyncSession(
+        plan_row=(plan_start, 7),
+        fail_on_sql="INSERT INTO plan_items",
+    )
+
+    with pytest.raises(RuntimeError, match="database write failed"):
+        await pt.append_plan_items(
+            session,  # type: ignore[arg-type]
+            plan_id=plan_id,
+            day_index=1,
+            items=[
+                _make_plan_item(
+                    plan_id=plan_id,
+                    day_index=1,
+                    plan_date=plan_start,
+                )
+            ],
+            request_id="r",
+        )
+
+
 # --------------------------------------------------------------------------- #
 # append_plan_items validation — Requirements 3.5
 # --------------------------------------------------------------------------- #
+
+
+@pytest.mark.asyncio
+async def test_append_plan_items_rejects_non_uuid_plan_id():
+    session = _FakeAsyncSession(plan_row=(date(2025, 1, 1), 7))
+
+    with pytest.raises(ValueError, match="INVALID_PLAN_ID"):
+        await pt.append_plan_items(
+            session,  # type: ignore[arg-type]
+            plan_id="not-a-uuid",
+            day_index=1,
+            items=[
+                _make_plan_item(
+                    plan_id="ignored",
+                    day_index=1,
+                    plan_date=date(2025, 1, 1),
+                )
+            ],
+            request_id="r",
+        )
+
+    assert session.executed == []
 
 
 @pytest.mark.asyncio

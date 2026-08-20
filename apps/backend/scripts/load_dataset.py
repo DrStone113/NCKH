@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
 import uuid
@@ -52,6 +53,44 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 NAMESPACE = uuid.UUID("6f9619ff-8b86-d011-b42d-00c04fc964ff")
 
 EMBED_BATCH_SIZE = 64
+
+# Authoritative offline corpus definition shared with research mode. Raw and
+# valid counts are explicit: one food row (stt=450, "Papaya jam") has no
+# Vietnamese title and is therefore intentionally not chunked.
+APPROVED_CORPUS_SOURCES: tuple[dict[str, Any], ...] = (
+    {
+        "dataset_file": "vietnamese_foods.json",
+        "source_type": "official_food_composition_table",
+        "source_name": "Vietnam Food Composition Table - National Institute of Nutrition",
+        "expected_raw_count": 526,
+        "expected_valid_count": 525,
+    },
+    {
+        "dataset_file": "vietnamese_dishes.json",
+        "source_type": "curated_offline_dataset",
+        "source_name": "HealthApp Vietnamese dish catalog",
+        "expected_raw_count": 90,
+        "expected_valid_count": 90,
+    },
+    {
+        "dataset_file": "nutrition.json",
+        "source_type": "curated_offline_dataset",
+        "source_name": "HealthApp nutrition catalog",
+        "expected_raw_count": 11,
+        "expected_valid_count": 11,
+    },
+    {
+        "dataset_file": "exercises.json",
+        "source_type": "curated_offline_dataset",
+        "source_name": "HealthApp exercise catalog",
+        "expected_raw_count": 10,
+        "expected_valid_count": 10,
+    },
+)
+
+APPROVED_CORPUS_RECORD_COUNT = sum(
+    int(source["expected_valid_count"]) for source in APPROVED_CORPUS_SOURCES
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -294,6 +333,47 @@ def _load_json(filename: str) -> list[dict[str, Any]]:
     return data if isinstance(data, list) else []
 
 
+def _sha256_file(filename: str) -> str:
+    digest = hashlib.sha256()
+    with (DATA_DIR / filename).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def source_dataset_hashes() -> dict[str, str]:
+    """Return SHA-256 for every approved source file."""
+
+    return {
+        str(source["dataset_file"]): _sha256_file(str(source["dataset_file"]))
+        for source in APPROVED_CORPUS_SOURCES
+    }
+
+
+def _canonical_json(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _chunk_content_hash(
+    category: str, title: str, content: str, metadata: dict[str, Any]
+) -> str:
+    return hashlib.sha256(
+        _canonical_json(
+            {
+                "category": category,
+                "title": title,
+                "content": content,
+                "metadata": metadata,
+            }
+        )
+    ).hexdigest()
+
+
 def _chunk_id(category: str, title: str) -> uuid.UUID:
     """UUID5 ổn định để chạy lại script không tạo bản trùng."""
     return uuid.uuid5(NAMESPACE, f"{category}::{title}")
@@ -302,16 +382,43 @@ def _chunk_id(category: str, title: str) -> uuid.UUID:
 def collect_chunks() -> list[dict[str, Any]]:
     """Trả về danh sách chunk từ mọi nguồn dữ liệu có sẵn."""
     chunks: list[dict[str, Any]] = []
+    dataset_hashes = source_dataset_hashes()
+    source_specs = {
+        str(source["dataset_file"]): source for source in APPROVED_CORPUS_SOURCES
+    }
 
-    def add(category: str, title: str, content: str, metadata: dict[str, Any]) -> None:
+    def add(
+        category: str,
+        title: str,
+        content: str,
+        metadata: dict[str, Any],
+        *,
+        dataset_file: str,
+        source_record_id: str,
+    ) -> None:
+        title = str(title).strip()
+        content = str(content).strip()
         if not title or not content:
             return
+        source = source_specs[dataset_file]
+        normalized_metadata = {
+            **metadata,
+            "source_type": source["source_type"],
+            "source_name": source["source_name"],
+            "source_url": None,
+            "source_record_id": source_record_id,
+            "dataset_file": dataset_file,
+            "dataset_hash": dataset_hashes[dataset_file],
+        }
+        normalized_metadata["content_hash"] = _chunk_content_hash(
+            category, title, content, normalized_metadata
+        )
         chunks.append({
             "id": _chunk_id(category, title),
             "category": category,
             "title": title,
             "content": content,
-            "metadata": metadata,
+            "metadata": normalized_metadata,
         })
 
     # 1. Bảng thành phần thực phẩm Việt Nam — nguồn lớn nhất và chuẩn nhất.
@@ -328,7 +435,7 @@ def collect_chunks() -> list[dict[str, Any]]:
             "fiber": _num(item.get("fiber")),
             "nhan": nutrition_labels(item),
             "nguon": "Viện Dinh dưỡng - Bộ Y tế",
-        })
+        }, dataset_file="vietnamese_foods.json", source_record_id=f"ma_so:{item.get('ma_so') or item.get('stt')}")
     print(f"  vietnamese_foods.json  -> {len(foods)} thực phẩm")
 
     # 2. Món ăn Việt Nam
@@ -338,7 +445,7 @@ def collect_chunks() -> list[dict[str, Any]]:
             "meal_types": item.get("meal_types", []),
             "estimated_calories": _num(item.get("estimated_calories")),
             "loai": "mon_an",
-        })
+        }, dataset_file="vietnamese_dishes.json", source_record_id=f"id:{item.get('id')}")
     print(f"  vietnamese_dishes.json -> {len(dishes)} món ăn")
 
     # 3. Món ăn có sẵn macro chi tiết
@@ -350,7 +457,7 @@ def collect_chunks() -> list[dict[str, Any]]:
             "carbs": item.get("carbs", 0),
             "fat": item.get("fat", 0),
             "serving_size": item.get("serving_size", ""),
-        })
+        }, dataset_file="nutrition.json", source_record_id=f"id:{item.get('id')}")
     print(f"  nutrition.json         -> {len(nutrition)} món")
 
     # 4. Bài tập
@@ -360,7 +467,7 @@ def collect_chunks() -> list[dict[str, Any]]:
             "difficulty": item.get("difficulty", ""),
             "equipment": item.get("equipment", ""),
             "target_muscle": item.get("target_muscle", []),
-        })
+        }, dataset_file="exercises.json", source_record_id=f"id:{item.get('id')}")
     print(f"  exercises.json         -> {len(exercises)} bài tập")
 
     # Khử trùng theo id (cùng tên + cùng category thì giữ bản đầu tiên).
@@ -447,7 +554,7 @@ async def load_data(rebuild: bool = False) -> None:
                 await conn.executemany(
                     """
                     INSERT INTO knowledge_chunks (id, category, title, content, metadata)
-                    VALUES ($1, $2, $3, $4::jsonb)
+                    VALUES ($1, $2, $3, $4, $5::jsonb)
                     ON CONFLICT (id) DO NOTHING
                     """,
                     rows,

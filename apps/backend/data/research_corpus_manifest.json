@@ -1,0 +1,45 @@
+{
+  "chunking_strategy": "one valid approved JSON record per chunk; blank title/content skipped; UUID5(category,title); no overlap",
+  "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+  "corpus_version": "offline-v1-636",
+  "created_at": "2026-08-17T05:00:56.407394+00:00",
+  "dynamic_rows_allowed": false,
+  "embedding_count": 636,
+  "embedding_dimension": 1024,
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_model_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "expected_record_count": 636,
+  "ingestion_code_version": "phase2-research-corpus-v1",
+  "ingestion_git_commit": "799aeaec68de438c9b25a1ad3a5a69a9c624895e",
+  "ingestion_worktree_clean": false,
+  "inserted_chunk_count": 636,
+  "manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+  "normalization_behavior": "L2 normalized via normalize_embeddings=True",
+  "sentence_transformers_version": "5.6.1",
+  "source_dataset_files": [
+    {
+      "dataset_file": "vietnamese_foods.json",
+      "raw_record_count": 526,
+      "sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+      "valid_record_count": 525
+    },
+    {
+      "dataset_file": "vietnamese_dishes.json",
+      "raw_record_count": 90,
+      "sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+      "valid_record_count": 90
+    },
+    {
+      "dataset_file": "nutrition.json",
+      "raw_record_count": 11,
+      "sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+      "valid_record_count": 11
+    },
+    {
+      "dataset_file": "exercises.json",
+      "raw_record_count": 10,
+      "sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+      "valid_record_count": 10
+    }
+  ]
+}

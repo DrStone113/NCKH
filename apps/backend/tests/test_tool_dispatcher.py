@@ -7,8 +7,42 @@ from typing import Any
 import pytest
 
 from services.agent.llm_client import ToolCall
-from services.agent.tool_dispatcher import ToolDispatcher, ToolResult
+from services.agent.tool_dispatcher import (
+    ToolDispatcher,
+    ToolResult,
+    _normalise_plan_profile,
+)
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
+from services.agent.tools.plan_tools import CREATE_LONG_TERM_PLAN_DESCRIPTOR
+
+
+def test_normalise_plan_profile_uses_flutter_context_and_requested_goal():
+    profile = _normalise_plan_profile(
+        {
+            "user_id": "stale-user",
+            "age": 30,
+            "gender": "male",
+            "height": 172,
+            "weight": 68,
+            "activity_level": "moderate",
+            "health_goal": "maintain",
+            "dietary_restrictions": "no_seafood",
+            "today_meals": [{"name": "ignored"}],
+        },
+        user_id="real-user",
+        goal="gain_muscle",
+    )
+
+    assert profile == {
+        "user_id": "real-user",
+        "age": 30,
+        "gender": "male",
+        "height_cm": 172,
+        "weight_kg": 68,
+        "activity_level": "moderate",
+        "health_goal": "gain_muscle",
+        "dietary_restrictions": ["no_seafood"],
+    }
 
 
 @dataclass
@@ -100,11 +134,75 @@ async def test_client_dispatch_resolves_from_tool_result():
 
     task = asyncio.create_task(dispatcher.dispatch("session-1", call, 100))
     await asyncio.sleep(0)
-    dispatcher.on_tool_result("corr-1", {"ok": True, "data": {"user_id": "u1"}})
+    ui_message = {
+        "text": "Đã ghi nhận món ăn",
+        "structured": {"type": "structured", "actions": []},
+    }
+    dispatcher.on_tool_result(
+        "corr-1",
+        {
+            "ok": True,
+            "data": {"user_id": "u1"},
+            "ui_message": ui_message,
+        },
+    )
     result = await task
 
-    assert result == ToolResult(ok=True, data={"user_id": "u1"})
+    assert result == ToolResult(
+        ok=True,
+        data={"user_id": "u1"},
+        ui_message=ui_message,
+    )
     assert gateway.calls[0][0] == "corr-1"
+
+
+@pytest.mark.asyncio
+async def test_long_term_plan_dispatch_injects_profile_before_validation():
+    captured: dict[str, Any] = {}
+
+    async def create_complete_plan(**kwargs):
+        captured.update(kwargs)
+        return {"days_generated": kwargs["duration_days"]}
+
+    descriptor = ToolDescriptor(
+        name=CREATE_LONG_TERM_PLAN_DESCRIPTOR.name,
+        description=CREATE_LONG_TERM_PLAN_DESCRIPTOR.description,
+        parameters_schema=CREATE_LONG_TERM_PLAN_DESCRIPTOR.parameters_schema,
+        side="server",
+        fn=create_complete_plan,
+        idempotent=False,
+    )
+    gateway = _FakeGateway()
+    gateway.user_id = "user-1"
+    gateway.user_context = {
+        "age": 30,
+        "gender": "male",
+        "height": 172,
+        "weight": 68,
+        "activity_level": "moderate",
+        "health_goal": "maintain",
+    }
+    dispatcher = ToolDispatcher(_registry_with(descriptor), gateway=gateway)
+    call = ToolCall(
+        id="plan-call",
+        name="create_long_term_plan",
+        arguments={
+            "user_id": "stale-user",
+            "goal": "gain_muscle",
+            "duration_days": 7,
+            "start_date": "2026-08-14",
+            "profile": {"dietary_restrictions": ["vegetarian"]},
+            "request_id": "plan-request-1",
+        },
+    )
+
+    result = await dispatcher.dispatch("session-1", call, 1000)
+
+    assert result.ok is True
+    assert captured["user_id"] == "user-1"
+    assert captured["profile"]["height_cm"] == 172
+    assert captured["profile"]["health_goal"] == "gain_muscle"
+    assert captured["profile"]["dietary_restrictions"] == ["vegetarian"]
 
 
 @pytest.mark.asyncio

@@ -72,8 +72,10 @@ def _format_now(now: datetime | None) -> str:
     )
 
 
-def _format_facts(pinned_facts: list[Any]) -> str:
+def _format_facts(pinned_facts: list[Any], has_profile: bool = False) -> str:
     if not pinned_facts:
+        if has_profile:
+            return "(Chưa có ghi chú đặc biệt ngoài thông tin hồ sơ và nhật ký bên dưới.)"
         return "(Chưa biết gì về người dùng — hãy gọi get_user_profile trước khi tư vấn.)"
     buckets: dict[str, list[str]] = {}
     for fact in pinned_facts:
@@ -168,15 +170,305 @@ def _format_tool_catalog(tool_catalog: Any) -> str:
     return "Công cụ bạn thực sự có (chỉ được gọi đúng những tên này):\n" + "\n".join(lines)
 
 
+def _calculate_body_metrics(
+    age: int | None,
+    gender: str | None,
+    height_cm: float | None,
+    weight_kg: float | None,
+    activity_level: str | None,
+    health_goal: str | None,
+) -> dict[str, Any]:
+    """Calculate BMI, BMR, TDEE, recommended calories, and water goal."""
+    metrics: dict[str, Any] = {}
+    if height_cm and weight_kg and height_cm > 0:
+        h_m = height_cm / 100.0
+        bmi = weight_kg / (h_m * h_m)
+        metrics["bmi"] = round(bmi, 1)
+
+        # Tiêu chuẩn BMI cho người Việt Nam / Châu Á (IDI & WPRO)
+        if bmi < 18.5:
+            category = "Gầy (Underweight)"
+        elif bmi < 23.0:
+            category = "Bình thường (Normal / Healthy)"
+        elif bmi < 25.0:
+            category = "Tiền thừa cân (Pre-overweight)"
+        elif bmi < 30.0:
+            category = "Thừa cân / Béo phì độ I (Obese I)"
+        else:
+            category = "Béo phì độ II/III (Obese II+)"
+        metrics["bmi_category"] = category
+
+    if age and gender and height_cm and weight_kg:
+        g = str(gender).lower()
+        # Công thức Mifflin-St Jeor chuẩn quốc tế
+        if g in ("male", "nam", "m"):
+            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5
+        else:
+            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161
+        metrics["bmr"] = round(bmr, 0)
+
+        multipliers = {
+            "sedentary": 1.2,
+            "it_van_dong": 1.2,
+            "light": 1.375,
+            "nhe": 1.375,
+            "moderate": 1.55,
+            "vua": 1.55,
+            "active": 1.725,
+            "nhieu": 1.725,
+            "very_active": 1.9,
+            "rat_nhieu": 1.9,
+        }
+        act = str(activity_level or "sedentary").lower()
+        mult = multipliers.get(act, 1.2)
+        tdee = bmr * mult
+        metrics["tdee"] = round(tdee, 0)
+
+        # Lượng calo và đạm khuyến nghị theo mục tiêu
+        goal = str(health_goal or "maintain").lower()
+        if "lose" in goal or "giam" in goal:
+            # Thâm hụt an toàn 300-500 kcal, không dưới 1200 kcal/ngày
+            target_kcal = max(1200.0, tdee - 500.0)
+            metrics["daily_kcal_target"] = round(target_kcal, 0)
+            metrics["daily_protein_target"] = round(1.8 * weight_kg, 1)  # Giữ cơ khi thâm hụt
+        elif "gain" in goal or "tang" in goal:
+            # Thặng dư lành mạnh 300-500 kcal
+            target_kcal = tdee + 300.0
+            metrics["daily_kcal_target"] = round(target_kcal, 0)
+            metrics["daily_protein_target"] = round(2.0 * weight_kg, 1)  # Tăng cơ tối ưu
+        else:
+            metrics["daily_kcal_target"] = round(tdee, 0)
+            metrics["daily_protein_target"] = round(1.2 * weight_kg, 1)
+
+    if weight_kg and weight_kg > 0:
+        metrics["daily_water_liters"] = round(weight_kg * 0.033, 1)
+
+    return metrics
+
+
 def _format_profile(user_profile: Any) -> str:
+    """Format rich user profile, physical condition, goals, and today's app logs."""
     if not user_profile:
         return ""
-    if isinstance(user_profile, dict):
-        parts = [f"{k}: {v}" for k, v in user_profile.items() if v not in (None, "")]
-        if not parts:
-            return ""
-        return "Hồ sơ đã đọc trong phiên này: " + "; ".join(parts)
-    return f"Hồ sơ đã đọc trong phiên này: {user_profile}"
+
+    if hasattr(user_profile, "model_dump"):
+        data = user_profile.model_dump()
+    elif hasattr(user_profile, "dict"):
+        data = user_profile.dict()
+    elif isinstance(user_profile, dict):
+        data = dict(user_profile)
+    else:
+        return f"Hồ sơ người dùng: {user_profile}"
+
+    name = data.get("name") or data.get("user_name")
+    age = data.get("age")
+    gender = data.get("gender")
+    height = data.get("height") or data.get("height_cm")
+    weight = data.get("weight") or data.get("weight_kg")
+    target_weight = data.get("target_weight") or data.get("targetWeight")
+    activity_level = data.get("activity_level") or data.get("activityLevel")
+    health_goal = data.get("health_goal") or data.get("healthGoal")
+    dietary_restrictions = data.get("dietary_restrictions") or data.get("dietaryRestrictions")
+
+    calculated = _calculate_body_metrics(
+        age=int(age) if age is not None else None,
+        gender=str(gender) if gender is not None else None,
+        height_cm=float(height) if height is not None else None,
+        weight_kg=float(weight) if weight is not None else None,
+        activity_level=str(activity_level) if activity_level is not None else None,
+        health_goal=str(health_goal) if health_goal is not None else None,
+    )
+
+    bmi = data.get("bmi") or calculated.get("bmi")
+    bmi_category = data.get("bmi_category") or data.get("bmiCategory") or calculated.get("bmi_category")
+    bmr = data.get("bmr") or calculated.get("bmr")
+    tdee = data.get("tdee") or calculated.get("tdee")
+    daily_kcal_target = data.get("recommended_calories") or data.get("recommendedCalories") or calculated.get("daily_kcal_target")
+    daily_protein_target = data.get("daily_protein_target") or calculated.get("daily_protein_target")
+    water_goal = data.get("daily_water_goal") or data.get("dailyWaterGoal") or calculated.get("daily_water_liters")
+
+    gender_map = {"male": "Nam", "female": "Nữ"}
+    gender_vi = gender_map.get(str(gender).lower(), str(gender) if gender else "")
+
+    act_map = {
+        "sedentary": "Ít vận động (ngồi nhiều, ít tập)",
+        "light": "Vận động nhẹ (tập 1-3 ngày/tuần)",
+        "moderate": "Vận động vừa (tập 3-5 ngày/tuần)",
+        "active": "Vận động nhiều (tập 6-7 ngày/tuần)",
+        "very_active": "Vận động rất nhiều (vận động viên / lao động nặng)",
+    }
+    act_vi = act_map.get(str(activity_level).lower(), str(activity_level) if activity_level else "")
+
+    goal_map = {
+        "lose_weight": "Giảm cân / Giảm mỡ",
+        "lose": "Giảm cân / Giảm mỡ",
+        "gain_muscle": "Tăng cơ / Tăng cân lành mạnh",
+        "gain": "Tăng cơ / Tăng cân lành mạnh",
+        "maintain": "Duy trì vóc dáng & Sức khỏe",
+    }
+    goal_vi = goal_map.get(str(health_goal).lower(), str(health_goal) if health_goal else "Duy trì")
+
+    lines = ["=== THỂ TRẠNG VÀ CHỈ SỐ CƠ THỂ CỦA NGƯỜI DÙNG ==="]
+
+    basic_parts = []
+    if name:
+        basic_parts.append(f"Tên: {name}")
+    if age:
+        basic_parts.append(f"Tuổi: {age}")
+    if gender_vi:
+        basic_parts.append(f"Giới tính: {gender_vi}")
+    if height:
+        basic_parts.append(f"Chiều cao: {height} cm")
+    if weight:
+        basic_parts.append(f"Cân nặng hiện tại: {weight} kg")
+    if target_weight:
+        basic_parts.append(f"Cân nặng mục tiêu: {target_weight} kg")
+    if basic_parts:
+        lines.append("- Thông tin cơ bản: " + " | ".join(basic_parts))
+
+    metrics_parts = []
+    if bmi is not None:
+        cat_str = f" ({bmi_category})" if bmi_category else ""
+        metrics_parts.append(f"BMI: {bmi}{cat_str}")
+    if bmr is not None:
+        metrics_parts.append(f"BMR: {int(bmr)} kcal")
+    if tdee is not None:
+        metrics_parts.append(f"TDEE: {int(tdee)} kcal/ngày")
+    if act_vi:
+        metrics_parts.append(f"Mức vận động: {act_vi}")
+    if water_goal is not None:
+        metrics_parts.append(f"Nhu cầu nước: ~{water_goal} L/ngày")
+    if metrics_parts:
+        lines.append("- Chỉ số chuyển hóa & thể chất: " + " | ".join(metrics_parts))
+
+    if dietary_restrictions:
+        if isinstance(dietary_restrictions, list):
+            res_str = ", ".join(str(r) for r in dietary_restrictions if r)
+        else:
+            res_str = str(dietary_restrictions)
+        if res_str:
+            lines.append(f"- Kiêng cữ / Dị ứng thực phẩm: {res_str}")
+
+    # Goal & Strategy Directives
+    lines.append("")
+    lines.append("=== MỤC TIÊU & NGUYÊN TẮC TƯ VẤN CÁ NHÂN HÓA ===")
+    lines.append(f"- Mục tiêu chính: **{goal_vi}**")
+    if daily_kcal_target:
+        lines.append(f"- Lượng calo nạp khuyến nghị mỗi ngày: **{int(daily_kcal_target)} kcal/ngày**")
+    if daily_protein_target:
+        lines.append(f"- Lượng đạm khuyến nghị mỗi ngày: **~{daily_protein_target}g đạm/ngày**")
+
+    # Specific Coaching Directives
+    goal_str = str(health_goal or "").lower()
+    if "lose" in goal_str:
+        lines.append(
+            "- Hướng dẫn giảm mỡ: Tư vấn thực đơn có thâm hụt calo an toàn (300-500 kcal dưới TDEE, "
+            "tuyệt đối không dưới 1200 kcal/ngày). Ưu tiên đạm và rau củ chất xơ để tạo cảm giác no lâu. "
+            "Gợi ý bài tập kháng lực (giữ cơ) phối hợp cardio (đốt mỡ); nhắc nhở hạn chế đường ngọt và đồ chiên rán."
+        )
+    elif "gain" in goal_str:
+        lines.append(
+            "- Hướng dẫn tăng cơ: Tư vấn chế độ ăn thặng dư năng lượng nhẹ (300-500 kcal trên TDEE). "
+            "Ưu tiên nguồn đạm nạc (thịt bò, gà, trứng, cá, đậu phụ) và carb phức. Khuyến khích bài tập "
+            "kháng lực tăng tải dần (progressive overload) và ngủ đủ 7-8 tiếng để phục hồi cơ bắp."
+        )
+    else:
+        lines.append(
+            "- Hướng dẫn duy trì: Giữ năng lượng nạp cân bằng xấp xỉ mức TDEE. Đa dạng hóa các nhóm "
+            "thực phẩm và duy trì lịch tập luyện đều đặn tối thiểu 150 phút/tuần."
+        )
+
+    if bmi is not None and isinstance(bmi, (int, float)):
+        if bmi < 18.5:
+            lines.append(
+                "- Lưu ý thể trạng gầy: Không khuyến khích tập cardio quá sức làm sụt cân thêm; "
+                "chú trọng các bữa phụ giàu năng lượng và dinh dưỡng lành mạnh (hạt, chuối, sữa)."
+            )
+        elif bmi >= 25.0:
+            lines.append(
+                "- Lưu ý thể trạng thừa cân: Ưu tiên các bài tập an toàn cho khớp gối (đi bộ nhanh, đạp xe, bơi lội, máy elip), "
+                "tránh nhảy cao tiếp đất mạnh khi mới bắt đầu."
+            )
+
+    # Today's Live App Data
+    today_consumed = data.get("today_calories_consumed")
+    today_meals_count = data.get("today_meals_count")
+    today_meals = data.get("today_meals") or []
+    today_burned = data.get("today_calories_burned")
+    today_exercises_count = data.get("today_exercises_count")
+    today_exercises = data.get("today_exercises") or []
+
+    has_today_data = any(
+        x is not None for x in [today_consumed, today_meals_count, today_burned, today_exercises_count]
+    ) or bool(today_meals) or bool(today_exercises)
+
+    if has_today_data:
+        lines.append("")
+        lines.append("=== NHẬT KÝ THỰC TẾ HÔM NAY TRONG ỨNG DỤNG ===")
+        consumed_val = float(today_consumed or 0)
+        target_val = float(daily_kcal_target or tdee or 2000)
+        remaining_val = max(0.0, target_val - consumed_val)
+
+        lines.append(
+            f"- Thực tế đã ăn: {int(consumed_val)} kcal / Mục tiêu {int(target_val)} kcal "
+            f"(Còn lại được ăn: ~{int(remaining_val)} kcal)"
+        )
+        if today_meals:
+            completed_meals = [m for m in today_meals if m.get("is_completed")]
+            pending_meals = [m for m in today_meals if not m.get("is_completed")]
+
+            if completed_meals:
+                c_names = []
+                for m in completed_meals:
+                    m_name = m.get("name") or m.get("dish_name") or "Món ăn"
+                    m_cal = m.get("calories")
+                    m_type = m.get("meal_type") or ""
+                    type_label = {"breakfast": "Sáng", "lunch": "Trưa", "dinner": "Tối", "snack": "Phụ"}.get(str(m_type).lower(), m_type)
+                    type_prefix = f"[{type_label}] " if type_label else ""
+                    cal_suffix = f" ({m_cal} kcal)" if m_cal is not None else ""
+                    c_names.append(f"{type_prefix}{m_name}{cal_suffix}")
+                lines.append(f"- Bữa đã ăn ({len(completed_meals)} bữa): " + "; ".join(c_names))
+
+            if pending_meals:
+                p_names = []
+                for m in pending_meals:
+                    m_name = m.get("name") or m.get("dish_name") or "Món ăn"
+                    m_cal = m.get("calories")
+                    m_type = m.get("meal_type") or ""
+                    type_label = {"breakfast": "Sáng", "lunch": "Trưa", "dinner": "Tối", "snack": "Phụ"}.get(str(m_type).lower(), m_type)
+                    type_prefix = f"[{type_label}] " if type_label else ""
+                    cal_suffix = f" ({m_cal} kcal)" if m_cal is not None else ""
+                    p_names.append(f"{type_prefix}{m_name}{cal_suffix}")
+                lines.append(f"- Bữa dự kiến trong kế hoạch chưa ăn ({len(pending_meals)} bữa): " + "; ".join(p_names))
+
+            if not completed_meals and not pending_meals:
+                lines.append("- Bữa ăn hôm nay: Chưa ghi nhận bữa ăn nào")
+        elif today_meals_count:
+            lines.append(f"- Số bữa ăn đã hoàn thành hôm nay: {today_meals_count} bữa")
+        else:
+            lines.append("- Bữa ăn hôm nay: Chưa ghi nhận bữa ăn nào")
+
+        burned_val = float(today_burned or 0)
+        lines.append(f"- Tiêu hao vận động hôm nay: {int(burned_val)} kcal")
+        if today_exercises:
+            ex_names = []
+            for ex in today_exercises:
+                e_name = ex.get("name") or ex.get("exercise_name") or "Bài tập"
+                e_dur = ex.get("duration") or ex.get("duration_minutes") or ""
+                e_cal = ex.get("calories_burned") or ""
+                dur_str = f" {e_dur}p" if e_dur else ""
+                cal_str = f" ({e_cal} kcal)" if e_cal else ""
+                ex_names.append(f"{e_name}{dur_str}{cal_str}")
+            lines.append(f"- Bài tập hôm nay ({len(today_exercises)} bài): " + "; ".join(ex_names))
+        lines.append(
+            f"- QUY TẮC TƯ VẤN BỮA TIẾP THEO & ĐỐI CHIẾU THỰC ĐƠN: Người dùng còn khoảng {int(remaining_val)} kcal cho phần còn lại trong ngày. "
+            f"Trước khi gợi ý món ăn, BẮT BUỘC kiểm tra các bữa đã lên lịch ở trên. "
+            f"Nếu bữa ăn đó ĐÃ CÓ món được lên lịch sẵn trong kế hoạch (ví dụ: Bữa tối đã có 'Cơm đùi gà nấu nấm'), "
+            f"bạn PHẢI nêu rõ món đang có trong thực đơn, đề xuất món mới phù hợp (qua suggest_dish), và HỎI LẠI NGƯỜI DÙNG xem có muốn ĐỔI MÓN sang món mới này không hay giữ món cũ. "
+            f"Tuyệt đối không bỏ qua món đã lên lịch sẵn."
+        )
+
+    return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------- #
@@ -233,6 +525,11 @@ Tự động linh hoạt điều chỉnh món ăn theo vùng miền hoặc vị 
 - Miền Trung (Huế, Đà Nẵng, Quảng Nam...): Món ăn đậm đà, vị mặn cay nhẹ đặc trưng (Bún bò Huế, Mì Quảng, Cơm gà Hội An, Canh cá nấu ngót, Cá kho).
 - Miền Nam (TP.HCM, Cần Thơ, Miền Tây...): Phong phú, vị ngọt dịu thanh mát (Cơm tấm sườn nướng, Hủ tiếu Nam Vang, Canh chua cá lóc, Cá kho tộ, Bánh xèo)."""
 
+_REASONING = """\
+=== QUY TRÌNH TƯ DUY & SUY NGHĨ (CHAIN OF THOUGHT) ===
+Trước khi trả lời hoặc gọi công cụ, hãy kiểm tra ngắn gọn: người dùng muốn kết quả gì, dữ liệu bắt buộc đã đủ chưa, và hành động tiếp theo là gì.
+Phần reasoning được hiển thị cho người dùng nên phải súc tích, dễ hiểu, tối đa vài câu. Không kể tên tool, schema, tham số JSON, giới hạn số vòng lặp, chiến lược gọi song song hay nhật ký điều phối nội bộ. Không viết kế hoạch về cách sẽ lập kế hoạch; nếu dữ liệu đã đủ thì thực hiện ngay."""
+
 _TOOL_RULES = """\
 === DÙNG CÔNG CỤ TƯƠNG TÁC VỚI ỨNG DỤNG ===
 Bạn không chỉ là trợ lý trò chuyện bằng chữ, bạn ĐƯỢC TÍCH HỢP TRỰC TIẾP VỚI ỨNG DỤNG HEALTHAPP:
@@ -242,9 +539,12 @@ Bạn không chỉ là trợ lý trò chuyện bằng chữ, bạn ĐƯỢC TÍC
    Khi ghi nhận bài tập qua `log_exercise` mà đây là một buổi tập/chuỗi bài tập đã được bạn đề xuất (ví dụ: `Arms workout (beginner)`), bạn BẮT BUỘC phải truyền danh sách các bài tập con cùng số hiệp/số lần của buổi tập đó vào tham số `description` của `log_exercise` để lưu chi tiết các động tác cho người dùng xem.
    Khi gọi `log_meal` để ghi nhận các món ăn bạn đã gợi ý từ tool `suggest_dish` hoặc từ kết quả tra cứu `search_food_nutrition`, bạn BẮT BUỘC phải truyền tham số `components` chứa danh sách chi tiết các nguyên liệu/thành phần dinh dưỡng của món ăn đó (lấy nguyên vẹn từ kết quả của tool gợi ý/tra cứu bao gồm `name`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`) và truyền tham số `serving_grams` bằng tổng khối lượng của tất cả các thành phần cộng lại. Tuyệt đối không được gọi `log_meal` thiếu tham số `components` đối với các món ăn đã được gợi ý từ database. Ngoài ra, tên món ăn và thành phần bạn ghi nhận trong tool `log_meal` phải khớp hoàn toàn với những gì bạn đã trình bày bằng chữ cho người dùng.
 3. **Chuyển màn hình giúp người dùng**: Khi người dùng muốn xem hoặc đi tới màn hình nào ("mở trang dinh dưỡng", "cho xem lịch tập", "xem tiến độ"), gọi ngay `navigate_to_screen(screen)`.
-4. **Tạo kế hoạch dài hạn và lộ trình cuốn chiếu (3-7 ngày)**:
-   - **Kế hoạch vĩ mô (`create_plan`)**: Gọi khi người dùng bắt đầu một mục tiêu mới để lưu mục tiêu cốt lõi (goal, duration_days, daily_kcal_target, daily_protein_target).
-   - **Gợi ý thực đơn cuốn chiếu ngắn hạn (`append_plan_items`)**: Khi người dùng muốn lên thực đơn hoặc gợi ý bữa ăn, **CHỈ gợi ý dần dần cho 1 ngày, 3 ngày hoặc tối đa 7 ngày tới**. TUYỆT ĐỐI KHÔNG sinh thực đơn cho toàn bộ chu kỳ 30-60 ngày để tránh quá tải hệ thống và giúp người dùng dễ theo dõi thực tế.
+4. **Tạo kế hoạch dài hạn và lộ trình phân bổ theo tuần (Multi-week Phased Roadmap)**:
+   - Khi người dùng yêu cầu tạo/làm trọn một kế hoạch nhiều ngày và hồ sơ ở phần ngữ cảnh đã đủ, **gọi đúng một lần `create_long_term_plan`**. Tool này tự tính mục tiêu và điền đủ thực đơn + bài tập cho toàn bộ số ngày; không tự điều phối `create_plan`, `suggest_dish`, `suggest_workout`, `append_plan_items` theo từng ngày.
+   - Không hỏi người dùng chọn “tự động điền hay tự chọn”, không xin xác nhận lại, không dừng ở Ngày 1–2 và không đề nghị họ nhắn tiếp cho các ngày còn lại. Một yêu cầu rõ ràng như “tạo kế hoạch 7 ngày”, “làm cả 1 và 2”, “điền hết các ngày” nghĩa là thực hiện trọn gói ngay.
+   - Chỉ hỏi đúng một câu nếu thiếu dữ liệu bắt buộc mà ứng dụng thực sự không có (ví dụ dị ứng nghiêm trọng hoặc mục tiêu chưa xác định). Không hỏi lại thông tin đã có trong hồ sơ/ngữ cảnh.
+   - Sau khi tool thành công, trả lời ngắn: đã tạo đủ bao nhiêu ngày, mục tiêu chính và mời bấm “Xem”. Không in toàn bộ thực đơn nhiều ngày vào bong bóng chat vì màn chi tiết kế hoạch đã hiển thị dữ liệu đó.
+   - Với kế hoạch nhiều tuần, nhắc check-in cuối tuần trong một câu; không bắt người dùng quay lại yêu cầu tạo từng tuần.
    - **Phân bổ calo khoa học cho từng bữa trong ngày**: Khi gợi ý thực đơn cho cả ngày theo mục tiêu (vd: 2000-2100 kcal):
      + Bữa sáng: ~25-30% calo (500-600 kcal) → gọi `suggest_dish(meal_type='breakfast', target_kcal=550)`
      + Bữa trưa: ~35-40% calo (700-800 kcal) → gọi `suggest_dish(meal_type='lunch', target_kcal=750)`
@@ -257,11 +557,18 @@ Bạn không chỉ là trợ lý trò chuyện bằng chữ, bạn ĐƯỢC TÍC
 Bạn TUYỆT ĐỐI KHÔNG được tự nghĩ ra tên món, tên bài tập hay con số dinh dưỡng — \
 mọi thứ đó phải lấy từ tool, vì người dùng sẽ lưu chúng vào nhật ký sức khỏe thật:
 
-- **Gợi ý món ăn** → `suggest_dish(meal_type, target_kcal, ...)`. Kể cả khi người dùng \
-chỉ nói "gợi ý món khác", "ăn gì bây giờ", "món nữa đi", "bữa sáng đâu", "cho xin bữa phụ" — vẫn phải gọi tool. \
-Truyền `query` khi họ nêu loại món cụ thể ("cơm", "bún", "phở", "cháo", "salad"), \
-truyền `dietary_restrictions` khi họ kiêng (chay, không hải sản, ít tinh bột, nhiều đạm).
-Bạn TUYỆT ĐỐI không được tự nghĩ ra hoặc gợi ý tên món ăn từ kiến thức nền mà không gọi `suggest_dish` trước để lấy từ cơ sở dữ liệu. Nếu người dùng hỏi về một bữa ăn còn thiếu hoặc muốn đổi món khác, bạn BẮT BUỘC phải gọi lại `suggest_dish` cho bữa ăn đó với `recent_dish_ids` để tránh gợi ý trùng lặp.
+- **Gợi ý món ăn & Đối chiếu thực đơn hiện có:**
+  1. **Kiểm tra thực đơn hôm nay:** Khi người dùng yêu cầu gợi ý món ăn ("gợi ý bữa ăn", "gợi ý bữa ăn phù hợp với tôi", "tối nay ăn gì", "cho xin món trưa", "gợi ý món khác",...), BẮT BUỘC phải đối chiếu danh sách `Bữa dự kiến trong kế hoạch chưa ăn` và `Bữa đã ăn` trong phần ngữ cảnh (hoặc `get_today_meals`).
+  2. **Nếu bữa ăn đó ĐÃ CÓ món được lên lịch sẵn trong kế hoạch/thực đơn (ví dụ: Bữa tối đang có 'Cơm đùi gà nấu nấm' ~764 kcal):**
+     - BẮT BUỘC phải nhắc tên món hiện có trong thực đơn để người dùng biết.
+     - Gọi `suggest_dish` để lấy món mới có calo/macro phù hợp từ cơ sở dữ liệu.
+     - **HỎI LẠI NGƯỜI DÙNG XEM CÓ MUỐN ĐỔI MÓN HAY KHÔNG:**
+       *"Trong thực đơn hôm nay, bữa tối của bạn đang được lên lịch là **<món hiện có>** (~<calo> kcal). Nếu bạn muốn đổi khẩu vị, mình gợi ý món **<món mới từ suggest_dish>** (<calo>, <đạm>g đạm, <carbs>g tinh bột, <béo>g chất béo). Bạn có muốn đổi bữa tối sang món **<món mới>** này không, hay vẫn giữ món **<món hiện có>**?"*
+     - Tuyệt đối không được bỏ qua món đã có trong thực đơn để nói như thể bữa đó chưa có kế hoạch gì.
+  3. **Nếu bữa ăn đó CHƯA CÓ món nào lên lịch:** Gọi `suggest_dish` và đề xuất món mới kèm câu hỏi có muốn ghi vào nhật ký hay không.
+  4. **Khi người dùng xác nhận đổi món / lưu món mới** ("ừ đổi đi", "chọn <tên món>", "lưu đi", "ok"): GỌI NGAY `log_meal` với đầy đủ `components` để lưu món mới vào nhật ký.
+  5. Truyền `query` khi họ nêu loại món cụ thể ("cơm", "bún", "phở", "cháo", "salad"), truyền `dietary_restrictions` khi họ kiêng (chay, không hải sản, ít tinh bột, nhiều đạm).
+  6. Nếu người dùng muốn đổi món khác nữa, bạn BẮT BUỘC phải gọi lại `suggest_dish` với `recent_dish_ids` để tránh trùng lặp.
 - **Tra dinh dưỡng một thực phẩm/món cụ thể** → `search_food_nutrition(query)`.
 - **Tính BMR/TDEE/calo mục tiêu** → `calculate_tdee(...)`. Không tự nhân tay công thức.
 - **Gợi ý bài tập** → `suggest_workout(muscle_group, duration_min, equipment, level)`. \
@@ -277,7 +584,7 @@ cardio tính 8 kcal/phút). TUYỆT ĐỐI không được nói rằng tập t�
    - **KHI TOOL KHÔNG TÌM THẤY DỮ LIỆU HOẶC BÁO LỖI (`NO_DISH_FOUND`, `NO_FOOD_FOUND`, danh sách rỗng `[]`):** Bạn BẮT BUỘC phải thông báo trung thực, rõ ràng cho người dùng biết rằng cơ sở dữ liệu hiện tại chưa có món ăn / bài tập / thực phẩm này, và đề xuất họ thử tìm món khác hoặc đổi tiêu chí tìm kiếm.
    - **TUYỆT ĐỐI CẤM:** Tự nghĩ ra tên món ăn, tự ước lượng calo/protein/carbs/fat ảo, tự vẽ ra bài tập không có trong hệ thống khi tool không trả về kết quả.
 2. **TUYỆT ĐỐI KHÔNG NÓI DỐI LÀ ĐÃ LƯU DỮ LIỆU:**
-   - Bạn chỉ được thông báo "Đã lưu..." hoặc "Đã ghi nhận..." khi và chỉ khi bạn ĐÃ THỰC THI GỌI TOOL GHI NHẬN (`log_meal`, `log_exercise`, `log_weight`, `log_lifestyle`, `create_plan`) trong cùng lượt đó và tool thành công.
+   - Bạn chỉ được thông báo "Đã lưu..." hoặc "Đã ghi nhận..." khi và chỉ khi bạn ĐÃ THỰC THI GỌI TOOL GHI NHẬN (`log_meal`, `log_exercise`, `log_weight`, `log_lifestyle`, `create_long_term_plan`, `create_plan`) trong cùng lượt đó và tool thành công.
    - Cấm tuyệt đối việc chỉ trả lời bằng chữ khẳng định đã lưu mà không hề phát lệnh gọi tool song hành.
    - Nếu tool ghi nhận gặp lỗi: Báo rõ ràng cho người dùng là chưa thể lưu được.
 3. **KHÔNG BỊA LỊCH SỬ NGƯỜI DÙNG:**
@@ -332,7 +639,15 @@ Hỏi: "Chào bạn"
 Mình có thể giúp bạn: • Theo dõi dinh dưỡng • Gợi ý bài tập • ..."
 ✓ "Chào bạn, hôm nay bạn muốn xem gì?"
 
-Hỏi: "Tối nay ăn gì được?"
+Hỏi: "Tối nay ăn gì được?" / "Gợi ý bữa ăn phù hợp với tôi" (Khi trong thực đơn hôm nay bữa tối ĐÃ CÓ món "Cơm đùi gà nấu nấm ~764 kcal" theo kế hoạch)
+✓ [Gọi `suggest_dish(meal_type="dinner", target_kcal=764)` → tool trả về "Bún chả" 762 kcal]
+  "Trong thực đơn hôm nay, bữa tối của bạn đang được lên lịch là **Cơm đùi gà nấu nấm** (~764 kcal). Nếu bạn muốn đổi khẩu vị, mình gợi ý món **Bún chả** (762 kcal, 32.5g đạm, 68g tinh bột, 9.4g chất béo). Bạn có muốn đổi bữa tối sang món **Bún chả** này không, hay vẫn giữ món **Cơm đùi gà nấu nấm**?"
+
+Hỏi: "Đổi sang bún chả đi bạn" / "Ừ đổi đi" (Sau khi bạn hỏi xác nhận đổi món)
+✓ [Gọi tool `log_meal` với arguments={"dish_name": "Bún chả", "meal_type": "dinner", "serving_grams": 450, "components": [...], "request_id": "random_id_bc"}]
+  "Mình đã cập nhật món Bún chả vào bữa tối hôm nay cho bạn rồi nhé! Chúc bạn có một bữa tối ngon miệng."
+
+Hỏi: "Tối nay ăn gì được?" (Khi hôm nay CHƯA CÓ món nào được lên lịch cho bữa tối)
 ✗ "**Gợi ý thực đơn tối:** • Món 1: Ức gà áp chảo (250 kcal) • Món 2: Cá hồi nướng (320 kcal) • \
 Món 3: Salad ức gà (180 kcal). **Lưu ý:** Bạn nên tham khảo ý kiến bác sĩ..."
 ✗ "Cá hồi nướng với rau luộc là hợp nhất — khoảng 400 kcal và thêm 35g đạm." \
@@ -450,23 +765,26 @@ def buildSystemPrompt(
     clock = _format_now(now)
 
     if mode == "light":
-        return "\n\n".join(
-            part for part in [
-                _PERSONA,
-                _VOICE,
-                clock,
-                "Người dùng đang chào hỏi hoặc nói chuyện phiếm. Trả lời một câu thân thiện, "
-                "tự nhiên. Không liệt kê tính năng, không đọc lại chỉ số cơ thể, không gọi tool.",
-                f"Bối cảnh đã biết: {summary}" if summary else "",
-            ] if part
-        ).strip()
+        parts = [
+            _PERSONA,
+            _VOICE,
+            clock,
+            "Người dùng đang chào hỏi hoặc nói chuyện phiếm. Trả lời một câu thân thiện, "
+            "tự nhiên. Không liệt kê tính năng, không đọc lại chỉ số cơ thể, không gọi tool.",
+        ]
+        profile_text = _format_profile(user_profile)
+        if profile_text:
+            parts.append(profile_text)
+        if summary:
+            parts.append(f"Bối cảnh đã biết: {summary}")
+        return "\n\n".join(part for part in parts if part).strip()
 
     context_lines = [
         "=== BỐI CẢNH HIỆN TẠI ===",
         clock,
         "",
         "Người dùng này:",
-        _format_facts(pinned_facts),
+        _format_facts(pinned_facts, has_profile=bool(user_profile)),
     ]
 
     profile_text = _format_profile(user_profile)
@@ -493,6 +811,7 @@ def buildSystemPrompt(
         _VOICE,
         _CONSULTING,
         _REGIONAL_CUISINE,
+        _REASONING,
         _TOOL_RULES,
         _format_tool_catalog(tool_catalog),
         _MEDICAL,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/wger_models.dart';
+import '../models/workout_routine_model.dart';
 import '../services/wger_detail_service.dart';
+import '../features/exercise/screens/workout_simulation_screen.dart';
 import 'wger_image.dart';
 
-/// Hiển thị bottom sheet chi tiết exercise hoặc food từ wger
+/// Hiển thị bottom sheet chi tiết exercise hoặc food từ wger hoặc chuỗi bài tập AI
 Future<void> showDetailBottomSheet(
   BuildContext context,
   ActionItem action, {
-  VoidCallback? onSave,
+  Future<void> Function()? onSave,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -19,37 +21,60 @@ Future<void> showDetailBottomSheet(
 
 class _DetailSheet extends StatefulWidget {
   final ActionItem action;
-  final VoidCallback? onSave;
+  final Future<void> Function()? onSave;
   const _DetailSheet({required this.action, this.onSave});
 
   @override
   State<_DetailSheet> createState() => _DetailSheetState();
 }
 
-class _DetailSheetState extends State<_DetailSheet> {
+class _DetailSheetState extends State<_DetailSheet>
+    with SingleTickerProviderStateMixin {
   bool _loading = true;
-  ExerciseDetail? _exercise;
   IngredientDetail? _ingredient;
   String? _error;
+  late WorkoutRoutinePlan _routinePlan;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    if (widget.action.kind == 'exercise') {
+      _routinePlan = WorkoutRoutineParser.parseFromAction(widget.action);
+    }
     _load();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
     final svc = WgerDetailService();
     try {
-      if (widget.action.kind == 'exercise') {
-        _exercise = await svc.fetchExercise(widget.action.wgerId);
-      } else {
+      if (widget.action.kind != 'exercise' && widget.action.wgerId > 0) {
         _ingredient = await svc.fetchIngredient(widget.action.wgerId);
       }
     } catch (e) {
       _error = e.toString();
     }
     if (mounted) setState(() => _loading = false);
+  }
+
+  void _startWorkoutSimulation() {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WorkoutSimulationScreen(
+          routine: _routinePlan,
+          onSaveToJournal: widget.onSave,
+        ),
+      ),
+    );
   }
 
   @override
@@ -59,26 +84,33 @@ class _DetailSheetState extends State<_DetailSheet> {
         isExercise ? const Color(0xFF2196F3) : const Color(0xFF4CAF50);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
+      initialChildSize: 0.88,
+      minChildSize: 0.5,
+      maxChildSize: 0.96,
       builder: (_, controller) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 20,
+              offset: Offset(0, -6),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            // Handle
+            // Drag handle
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 4),
               child: Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 44,
+                  height: 4.5,
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
               ),
@@ -86,19 +118,33 @@ class _DetailSheetState extends State<_DetailSheet> {
 
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: isExercise
+                            ? [const Color(0xFF2196F3), const Color(0xFF1976D2)]
+                            : [
+                                const Color(0xFF4CAF50),
+                                const Color(0xFF388E3C)
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Icon(
                       isExercise ? Icons.fitness_center : Icons.restaurant_menu,
-                      color: color,
+                      color: Colors.white,
                       size: 24,
                     ),
                   ),
@@ -110,319 +156,791 @@ class _DetailSheetState extends State<_DetailSheet> {
                         Text(
                           widget.action.name,
                           style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w700),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          isExercise
-                              ? 'Hướng dẫn bài tập'
-                              : 'Thông tin dinh dưỡng',
-                          style: TextStyle(fontSize: 12, color: color),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                isExercise
+                                    ? _routinePlan.level
+                                    : 'Thông tin dinh dưỡng',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: color,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: Colors.black54),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
 
-            const Divider(height: 16),
+            const Divider(height: 12),
 
             // Content
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? _buildError(color)
-                      : ListView(
-                          controller: controller,
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          children: isExercise
-                              ? _buildExerciseContent(color)
-                              : _buildIngredientContent(color),
-                        ),
+                  : isExercise
+                      ? _buildStructuredWorkoutView(controller, color)
+                      : (_error != null || _ingredient == null)
+                          ? ListView(
+                              controller: controller,
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                              children: _buildIngredientFallback(color),
+                            )
+                          : ListView(
+                              controller: controller,
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                              children: _buildIngredientContent(color),
+                            ),
             ),
 
-            // Save button
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                  20, 8, 20, MediaQuery.of(context).padding.bottom + 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    widget.onSave?.call();
-                  },
-                  icon: const Icon(Icons.bookmark_add_outlined, size: 20),
-                  label: const Text('Lưu vào nhật ký',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-            ),
+            // Bottom Actions Bar
+            _buildBottomActionBar(color, isExercise),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildError(Color color) {
-    // Nếu wger_id = 0, hiển thị thông tin từ details thay vì lỗi
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: widget.action.kind == 'exercise'
-          ? _buildExerciseFallback(color)
-          : _buildIngredientFallback(color),
-    );
-  }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WORKOUT ROUTINE VIEW (3 PHASES + GUIDANCE + SIMULATION CTA)
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // ─── EXERCISE ───────────────────────────────────────────────────────────────
-
-  List<Widget> _buildExerciseContent(Color color) {
-    final ex = _exercise;
-    if (ex == null) return _buildExerciseFallback(color);
-
-    return [
-      // Image nếu có
-      if (ex.imageUrl != null) ...[
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            ex.imageUrl!,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-
-      // Category + Equipment chips
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          if (ex.category.isNotEmpty)
-            _chip(ex.category, Icons.category_outlined, color),
-          ...ex.equipment
-              .map((e) => _chip(e, Icons.sports_gymnastics, Colors.grey)),
-        ],
-      ),
-
-      // Aliases
-      if (ex.aliases.isNotEmpty) ...[
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: ex.aliases
-              .map((a) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Text(a,
-                        style: const TextStyle(
-                            fontSize: 11, color: Color(0xFF666666))),
-                  ))
-              .toList(),
-        ),
-      ],
-      const SizedBox(height: 20),
-
-      // Hướng dẫn
-      if (ex.description.isNotEmpty) ...[
-        _sectionTitle('📋 Hướng dẫn thực hiện', color),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.15)),
-          ),
-          child: Text(
-            ex.description,
-            style: const TextStyle(
-                fontSize: 14, height: 1.7, color: Color(0xFF333333)),
-          ),
-        ),
-        const SizedBox(height: 20),
-      ],
-
-      // Cơ chính + cơ phụ
-      if (ex.muscles.isNotEmpty || ex.musclesSecondary.isNotEmpty) ...[
-        _sectionTitle('💪 Nhóm cơ', color),
-        const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (ex.muscles.isNotEmpty)
-              Expanded(child: _muscleGroup('Cơ chính', ex.muscles, color)),
-            if (ex.muscles.isNotEmpty && ex.musclesSecondary.isNotEmpty)
-              const SizedBox(width: 12),
-            if (ex.musclesSecondary.isNotEmpty)
-              Expanded(
-                  child: _muscleGroup(
-                      'Cơ phụ', ex.musclesSecondary, Colors.orange)),
-          ],
-        ),
-        const SizedBox(height: 20),
-      ],
-
-      // Thông tin AI
-      _sectionTitle('⏱ Thông tin từ AI', Colors.grey),
-      const SizedBox(height: 8),
-      _infoCard(_buildAiExerciseRows(), Colors.grey),
-    ];
-  }
-
-  Widget _muscleGroup(String title, List<MuscleDetail> muscles, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w700, color: color)),
-          const SizedBox(height: 8),
-          ...muscles.map((m) {
-            final name = m.nameEn.isNotEmpty ? m.nameEn : m.name;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  if (m.imageUrlMain != null)
-                    WgerImage(m.imageUrlMain!,
-                        width: 28,
-                        height: 28,
-                        errorBuilder: (_, __, ___) =>
-                            Icon(Icons.circle, size: 8, color: color))
-                  else
-                    Icon(Icons.circle, size: 8, color: color),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(name,
-                        style: const TextStyle(
-                            fontSize: 13, color: Color(0xFF333333))),
+  Widget _buildStructuredWorkoutView(
+      ScrollController scrollController, Color color) {
+    return Column(
+      children: [
+        // Tab header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          child: Container(
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            );
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: color,
+              unselectedLabelColor: Colors.grey[600],
+              labelStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              unselectedLabelStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              tabs: const [
+                Tab(text: 'Lộ trình & Giai đoạn'),
+                Tab(text: 'Kỹ thuật & An toàn'),
+              ],
+            ),
+          ),
+        ),
+
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              // Tab 1: 3 Giai đoạn tập luyện
+              _buildPhasesTab(scrollController, color),
+
+              // Tab 2: Hướng dẫn kỹ thuật & Form
+              _buildGuidanceTab(scrollController, color),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhasesTab(ScrollController scrollController, Color color) {
+    final totalExercises = _routinePlan.totalExercisesCount;
+    final completedCount = _routinePlan.completedExercisesCount;
+    final progress = _routinePlan.overallProgress;
+
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      children: [
+        // Summary & Stats Overview Card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.08),
+                color.withValues(alpha: 0.03),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _statChip(
+                      Icons.timer_outlined,
+                      '${_routinePlan.totalDurationMinutes} phút',
+                      'Thời gian',
+                      color),
+                  _statChip(
+                      Icons.local_fire_department_outlined,
+                      '~${_routinePlan.totalCalories.toStringAsFixed(0)} kcal',
+                      'Calo đốt',
+                      const Color(0xFFFF7043)),
+                  _statChip(
+                      Icons.format_list_bulleted_rounded,
+                      '$totalExercises bài tập',
+                      'Động tác',
+                      const Color(0xFF9C27B0)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Thanh tiến độ
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            progress >= 1.0 ? Colors.green : color),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(0)}% ($completedCount/$totalExercises)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: progress >= 1.0 ? Colors.green : color,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // Danh sách 3 giai đoạn
+        ..._routinePlan.phases.map((phase) => _buildPhaseSection(phase, color)),
+
+        // Amber Disclaimer Box
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.25)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.amber, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Giáo án được cá nhân hóa bởi AI dựa trên thể trạng và mục tiêu sức khỏe của bạn.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statChip(IconData icon, String value, String label, Color chipColor) {
+    return Column(
+      children: [
+        Icon(icon, color: chipColor, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1A1A1A),
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhaseSection(WorkoutPhase phase, Color color) {
+    Color phaseColor;
+    IconData phaseIcon;
+    switch (phase.phaseType) {
+      case 'warmup':
+        phaseColor = Colors.orange;
+        phaseIcon = Icons.wb_sunny_outlined;
+        break;
+      case 'cooldown':
+        phaseColor = Colors.teal;
+        phaseIcon = Icons.self_improvement_rounded;
+        break;
+      default:
+        phaseColor = color;
+        phaseIcon = Icons.fitness_center_rounded;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Phase Header Banner
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: phaseColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(phaseIcon, color: phaseColor, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      phase.title,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w800,
+                        color: phaseColor,
+                      ),
+                    ),
+                    Text(
+                      phase.description,
+                      style: const TextStyle(
+                          fontSize: 11.5, color: Color(0xFF777777)),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${phase.durationMinutes} phút',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF666666),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          // Exercise cards within this phase
+          ...phase.exercises.asMap().entries.map((entry) {
+            final index = entry.key + 1;
+            final step = entry.value;
+            return _buildExerciseStepCard(step, index, phaseColor);
           }),
         ],
       ),
     );
   }
 
-  List<Widget> _buildExerciseFallback(Color color) {
-    final d = widget.action.details;
-    final nameLower = widget.action.name.toLowerCase();
-    final isWorkoutRoutine = nameLower.contains('workout') ||
-        nameLower.contains('luyện tập') ||
-        nameLower.contains('tập luyện') ||
-        nameLower.contains('kế hoạch') ||
-        d['description'] != null;
-
-    return [
-      _sectionTitle('⏱ Thông tin bài tập', color),
-      const SizedBox(height: 8),
-      _infoCard([
-        if (d['duration'] != null)
-          _infoRow('Thời gian', '${d['duration']} phút')
-        else if (d['duration_min'] != null)
-          _infoRow('Thời gian', '${d['duration_min']} phút'),
-        if (d['calories_burned'] != null)
-          _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
-        if (d['type'] != null)
-          _infoRow('Loại', _translateType(d['type'].toString())),
-      ], color),
-      const SizedBox(height: 16),
-      if (d['description'] != null && d['description'].toString().isNotEmpty) ...[
-        _sectionTitle('📋 Chi tiết động tác', color),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(16),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.15)),
-          ),
-          child: Text(
-            d['description'].toString(),
-            style: const TextStyle(
-                fontSize: 14, height: 1.7, color: Color(0xFF333333)),
-          ),
+  Widget _buildExerciseStepCard(
+      WorkoutExerciseStep step, int index, Color phaseColor) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: step.isCompleted
+              ? Colors.green.withValues(alpha: 0.4)
+              : Colors.grey.withValues(alpha: 0.2),
+          width: step.isCompleted ? 1.5 : 1.0,
         ),
-        const SizedBox(height: 16),
-      ],
-      Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.amber.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.amber, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                isWorkoutRoutine
-                    ? 'Đây là chuỗi bài tập kết hợp. Chi tiết thông tin được cung cấp bởi AI.'
-                    : 'Bài tập này chưa có trong cơ sở dữ liệu wger. Thông tin được cung cấp bởi AI.',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: step.isCompleted
+                    ? Colors.green
+                    : phaseColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: step.isCompleted
+                    ? const Icon(Icons.check, color: Colors.white, size: 18)
+                    : Text(
+                        index.toString().padLeft(2, '0'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: phaseColor,
+                        ),
+                      ),
               ),
             ),
-          ],
+            title: Text(
+              step.name,
+              style: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+                decoration:
+                    step.isCompleted ? TextDecoration.lineThrough : null,
+                color: step.isCompleted
+                    ? Colors.grey[600]
+                    : const Color(0xFF1A1A1A),
+              ),
+            ),
+            subtitle: Row(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: phaseColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${step.sets} hiệp × ${step.reps}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: phaseColor,
+                    ),
+                  ),
+                ),
+                if (step.vietnameseName.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      step.vietnameseName,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF888888),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            trailing: Checkbox(
+              value: step.isCompleted,
+              activeColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  step.isCompleted = val ?? false;
+                  if (step.isCompleted) {
+                    step.completedSets = step.sets;
+                  } else {
+                    step.completedSets = 0;
+                  }
+                });
+              },
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
+
+                    // Chips: Nhóm cơ & Thiết bị
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _chipSmall(Icons.accessibility_new,
+                            step.targetMusclesText, Colors.orange),
+                        _chipSmall(Icons.fitness_center, step.equipment,
+                            Colors.blueGrey),
+                        _chipSmall(Icons.timer_outlined,
+                            'Nghỉ ${step.restSeconds}s', Colors.teal),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Hướng dẫn kỹ thuật
+                    if (step.instructions.isNotEmpty) ...[
+                      const Text(
+                        '📋 Kỹ thuật thực hiện:',
+                        style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF333333)),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        step.instructions,
+                        style: const TextStyle(
+                            fontSize: 12.5,
+                            height: 1.5,
+                            color: Color(0xFF555555)),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+
+                    // Nhịp thở
+                    if (step.breathingCue.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: Colors.teal.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.air, color: Colors.teal, size: 16),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                step.breathingCue,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.teal,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ];
+    );
   }
 
-  List<Widget> _buildAiExerciseRows() {
-    final d = widget.action.details;
-    return [
-      if (d['duration'] != null) _infoRow('Thời gian', '${d['duration']} phút'),
-      if (d['calories_burned'] != null)
-        _infoRow('Calo đốt', '${d['calories_burned']} kcal'),
-      if (d['type'] != null)
-        _infoRow('Loại', _translateType(d['type'].toString())),
-    ];
+  Widget _chipSmall(IconData icon, String label, Color chipColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: chipColor.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: chipColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 11, color: chipColor, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
   }
 
-  // ─── INGREDIENT ─────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GUIDANCE TAB (FORM, BREATHING, RECOVERY TIPS)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildGuidanceTab(ScrollController scrollController, Color color) {
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      children: [
+        _guidanceSection(
+          icon: Icons.lightbulb_outline,
+          iconColor: Colors.amber,
+          title: 'Nguyên tắc tập luyện an toàn',
+          items: [
+            'Luôn khởi động kỹ 3-5 phút trước khi bước vào các bài tập chính.',
+            'Không khóa cứng khớp khuỷu tay và khớp gối khi phát lực tối đa.',
+            'Nếu cảm thấy đau nhói bất thường ở khớp, hãy dừng lại ngay.',
+          ],
+        ),
+        const SizedBox(height: 14),
+        _guidanceSection(
+          icon: Icons.air,
+          iconColor: Colors.teal,
+          title: 'Kỹ thuật Hít thở chuẩn Thể hình',
+          items: [
+            'Hít sâu bằng mũi trong pha hạ tạ hoặc mở rộng cơ thể (pha nạp năng lượng).',
+            'Thở dứt khoát bằng miệng trong pha phát lực, đẩy hoặc kéo tạ.',
+            'Tuyệt đối không nín thở (Valsalva quá lâu) để tránh tăng huyết áp đột ngột.',
+          ],
+        ),
+        const SizedBox(height: 14),
+        _guidanceSection(
+          icon: Icons.water_drop_outlined,
+          iconColor: Colors.blue,
+          title: 'Bổ sung nước & Dinh dưỡng phục hồi',
+          items: [
+            'Uống từng ngụm nhỏ 100-150ml sau mỗi 15-20 phút luyện tập.',
+            'Nạp bữa ăn giàu Protein (20-30g) kết hợp tinh bột hấp thu vừa trong 45 phút sau tập.',
+            'Ngủ đủ 7-8 tiếng để cơ bắp tái tạo và tổng hợp sợi cơ mới.',
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _guidanceSection({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required List<String> items,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...items.map((it) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF666666))),
+                    Expanded(
+                      child: Text(
+                        it,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.45,
+                            color: Color(0xFF444444)),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // BOTTOM ACTIONS BAR (SIMULATION PLAYER + SAVE TO JOURNAL)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildBottomActionBar(Color color, bool isExercise) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+          20, 10, 20, MediaQuery.of(context).padding.bottom + 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: isExercise
+          ? Row(
+              children: [
+                // Nút Bắt đầu Luyện tập & Mô phỏng (Primary Button)
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton.icon(
+                    onPressed: _startWorkoutSimulation,
+                    icon: const Icon(Icons.play_circle_filled_rounded,
+                        size: 22, color: Colors.white),
+                    label: const Text(
+                      'Bắt đầu luyện tập',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: color,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Nút Lưu nhật ký
+                Expanded(
+                  flex: 2,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onSave?.call();
+                    },
+                    icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                    label: const Text(
+                      'Lưu nhật ký',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: color,
+                      side: BorderSide(color: color, width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onSave?.call();
+                },
+                icon: const Icon(Icons.bookmark_add_outlined, size: 20),
+                label: const Text('Lưu vào nhật ký',
+                    style:
+                        TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INGREDIENT CONTENT (FOOD)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   List<Widget> _buildIngredientContent(Color color) {
     final ing = _ingredient;
     if (ing == null) return _buildIngredientFallback(color);
 
     return [
-      // Image nếu có
       if (ing.imageUrl != null) ...[
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -434,8 +952,6 @@ class _DetailSheetState extends State<_DetailSheet> {
         ),
         const SizedBox(height: 16),
       ],
-
-      // Brand / common name
       if (ing.brand != null || ing.commonName != null)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -446,122 +962,25 @@ class _DetailSheetState extends State<_DetailSheet> {
               _chip(ing.commonName!, Icons.label_outline, Colors.teal),
           ]),
         ),
-
-      // Vegan / Vegetarian badges
-      if (ing.isVegan == true || ing.isVegetarian == true)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Wrap(spacing: 8, children: [
-            if (ing.isVegan == true)
-              _chip('Vegan 🌱', Icons.eco_outlined, Colors.green),
-            if (ing.isVegetarian == true)
-              _chip('Vegetarian 🥗', Icons.grass_outlined, Colors.lightGreen),
-          ]),
-        ),
-
-      // Nutriscore
-      if (ing.nutriscore != null) ...[
-        _sectionTitle('🏷 Nutri-Score', color),
-        const SizedBox(height: 8),
-        _nutriscoreWidget(ing.nutriscore!),
-        const SizedBox(height: 16),
-      ],
-
-      // Macro cards
       _sectionTitle('🔥 Dinh dưỡng / 100g', color),
       const SizedBox(height: 12),
-      Row(children: [
-        _macroCard('Calo', ing.energy?.toStringAsFixed(0) ?? '-', 'kcal',
-            const Color(0xFFFF7043)),
-        const SizedBox(width: 8),
-        _macroCard('Protein', ing.protein?.toStringAsFixed(1) ?? '-', 'g',
-            const Color(0xFFE53935)),
-        const SizedBox(width: 8),
-        _macroCard('Carbs', ing.carbohydrates?.toStringAsFixed(1) ?? '-', 'g',
-            const Color(0xFFFFA000)),
-        const SizedBox(width: 8),
-        _macroCard('Fat', ing.fat?.toStringAsFixed(1) ?? '-', 'g',
-            const Color(0xFF00ACC1)),
-      ]),
-      const SizedBox(height: 20),
-
-      // Chi tiết đầy đủ
-      _sectionTitle('📊 Chi tiết dinh dưỡng', color),
-      const SizedBox(height: 8),
-      _infoCard([
-        if (ing.energy != null)
-          _infoRow('Năng lượng', '${ing.energy!.toStringAsFixed(0)} kcal'),
-        if (ing.protein != null)
-          _infoRow('Protein', '${ing.protein!.toStringAsFixed(1)} g'),
-        if (ing.carbohydrates != null)
-          _infoRow(
-              'Carbohydrates', '${ing.carbohydrates!.toStringAsFixed(1)} g'),
-        if (ing.carbohydratesSugar != null)
-          _infoRow(
-              '  └ Đường', '${ing.carbohydratesSugar!.toStringAsFixed(1)} g'),
-        if (ing.fat != null)
-          _infoRow('Chất béo', '${ing.fat!.toStringAsFixed(1)} g'),
-        if (ing.fatSaturated != null)
-          _infoRow('  └ Bão hòa', '${ing.fatSaturated!.toStringAsFixed(1)} g'),
-        if (ing.fiber != null)
-          _infoRow('Chất xơ', '${ing.fiber!.toStringAsFixed(1)} g'),
-        if (ing.sodium != null)
-          _infoRow('Natri', '${(ing.sodium! * 1000).toStringAsFixed(0)} mg'),
-      ], color),
-
-      // Weight units
-      if (ing.weightUnits.isNotEmpty) ...[
-        const SizedBox(height: 20),
-        _sectionTitle('⚖️ Đơn vị đo lường', color),
-        const SizedBox(height: 8),
-        _infoCard(
-          ing.weightUnits
-              .map((wu) => _infoRow(wu.name, '${wu.gram.toStringAsFixed(0)} g'))
-              .toList(),
-          color,
-        ),
-      ],
-    ];
-  }
-
-  Widget _nutriscoreWidget(String score) {
-    final colors = {
-      'a': Colors.green[700]!,
-      'b': Colors.lightGreen,
-      'c': Colors.yellow[700]!,
-      'd': Colors.orange,
-      'e': Colors.red,
-    };
-    final c = colors[score.toLowerCase()] ?? Colors.grey;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: c.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration:
-                BoxDecoration(color: c, borderRadius: BorderRadius.circular(8)),
-            child: Center(
-              child: Text(score.toUpperCase(),
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text('Nutri-Score $score',
-              style: TextStyle(color: c, fontWeight: FontWeight.w600)),
+          _macroCard('Calo', '${ing.energy?.toStringAsFixed(0) ?? 0}', 'kcal',
+              const Color(0xFFFF7043)),
+          const SizedBox(width: 8),
+          _macroCard('Protein', '${ing.protein?.toStringAsFixed(1) ?? 0}', 'g',
+              const Color(0xFFE53935)),
+          const SizedBox(width: 8),
+          _macroCard('Carbs', '${ing.carbohydrates?.toStringAsFixed(1) ?? 0}',
+              'g', const Color(0xFFFFA000)),
+          const SizedBox(width: 8),
+          _macroCard('Fat', '${ing.fat?.toStringAsFixed(1) ?? 0}', 'g',
+              const Color(0xFF00ACC1)),
         ],
       ),
-    );
+      const SizedBox(height: 20),
+    ];
   }
 
   List<Widget> _buildIngredientFallback(Color color) {
@@ -613,7 +1032,9 @@ class _DetailSheetState extends State<_DetailSheet> {
     ];
   }
 
-  // ─── HELPERS ────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _sectionTitle(String title, Color color) => Text(
         title,
@@ -640,46 +1061,6 @@ class _DetailSheetState extends State<_DetailSheet> {
         ),
       );
 
-  Widget _infoCard(List<Widget> rows, Color color) => Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: Column(
-          children: rows.asMap().entries.map((e) {
-            final isLast = e.key == rows.length - 1;
-            return Column(
-              children: [
-                e.value,
-                if (!isLast)
-                  Divider(
-                      height: 1,
-                      color: Colors.grey[200],
-                      indent: 16,
-                      endIndent: 16),
-              ],
-            );
-          }).toList(),
-        ),
-      );
-
-  Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF666666))),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A1A))),
-          ],
-        ),
-      );
-
   Widget _macroCard(String label, String value, String unit, Color color) =>
       Expanded(
         child: Container(
@@ -695,8 +1076,8 @@ class _DetailSheetState extends State<_DetailSheet> {
                   style: TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w800, color: color)),
               Text(unit,
-                  style:
-                      TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
+                  style: TextStyle(
+                      fontSize: 11, color: color.withValues(alpha: 0.8))),
               const SizedBox(height: 2),
               Text(label,
                   style: const TextStyle(
@@ -707,19 +1088,4 @@ class _DetailSheetState extends State<_DetailSheet> {
           ),
         ),
       );
-
-  String _translateType(String type) {
-    const map = {
-      'cardio': 'Cardio',
-      'strength': 'Sức mạnh',
-      'flexibility': 'Linh hoạt',
-      'sports': 'Thể thao',
-      'cool-down': 'Hồi phục',
-      'breakfast': 'Bữa sáng',
-      'lunch': 'Bữa trưa',
-      'dinner': 'Bữa tối',
-      'snack': 'Bữa phụ',
-    };
-    return map[type.toLowerCase()] ?? type;
-  }
 }

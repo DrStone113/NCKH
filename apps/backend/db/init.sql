@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     session_id  UUID REFERENCES chat_sessions(id) ON DELETE CASCADE,
     role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
     content     TEXT NOT NULL,
+    thoughts    TEXT NOT NULL DEFAULT '',
+    structured_data JSONB,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 

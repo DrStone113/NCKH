@@ -16,6 +16,8 @@ import 'nutrition_provider.dart';
 import 'lifestyle_provider.dart';
 import 'health_provider.dart';
 import '../utils/location_helper.dart';
+import '../utils/meal_nutrition_utils.dart';
+import '../utils/streaming_typewriter.dart';
 
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
@@ -25,13 +27,30 @@ class AIChatProvider extends ChangeNotifier {
   String? _streamingMessageId;
   String? _errorMessage;
   Timer? _timeoutTimer;
+  late final StreamingTypewriter _responseTypewriter;
+  late final StreamingTypewriter _thoughtTypewriter;
+  Map<String, dynamic>? _pendingDoneData;
+  String _deferredResponseText = '';
   final _uuid = const Uuid();
   String? _sessionId;
   final BackendApiService _backendApi = BackendApiService();
   double? _latitude;
   double? _longitude;
 
-  AIChatProvider() {
+  AIChatProvider({
+    Duration typewriterInterval = const Duration(milliseconds: 18),
+  }) {
+    _thoughtTypewriter = StreamingTypewriter(
+      interval: typewriterInterval,
+      batchMultiplier: 2,
+      onChunk: _appendThoughtTypewriterChunk,
+      onIdle: _onThoughtTypewriterIdle,
+    );
+    _responseTypewriter = StreamingTypewriter(
+      interval: typewriterInterval,
+      onChunk: _appendTypewriterChunk,
+      onIdle: _completePendingStream,
+    );
     initLocation();
   }
 
@@ -41,7 +60,8 @@ class AIChatProvider extends ChangeNotifier {
       if (loc != null) {
         _latitude = loc['latitude'];
         _longitude = loc['longitude'];
-        debugPrint('📍 [AIChatProvider] Location cached: $_latitude, $_longitude');
+        debugPrint(
+            '📍 [AIChatProvider] Location cached: $_latitude, $_longitude');
       }
     } catch (e) {
       debugPrint('📍 [AIChatProvider] Error initializing location: $e');
@@ -99,12 +119,15 @@ class AIChatProvider extends ChangeNotifier {
         isStreaming: false,
         timestamp: DateTime.now(),
       ));
-      debugPrint('✅ [AIChatProvider] Welcome message added. Total messages: ${_messages.length}');
+      debugPrint(
+          '✅ [AIChatProvider] Welcome message added. Total messages: ${_messages.length}');
       notifyListeners();
     } else {
-      debugPrint('ℹ️ [AIChatProvider] Already initialized. Total messages: ${_messages.length}');
+      debugPrint(
+          'ℹ️ [AIChatProvider] Already initialized. Total messages: ${_messages.length}');
     }
   }
+
   /// Start a new fresh chat session
   void startNewSession() {
     disconnect();
@@ -137,6 +160,7 @@ class AIChatProvider extends ChangeNotifier {
       final role = raw['role'] ?? 'user';
       final isUser = role == 'user';
       final text = raw['content'] ?? '';
+      final thoughts = raw['thoughts']?.toString() ?? '';
       final timeStr = raw['created_at'];
       DateTime ts = DateTime.now();
       if (timeStr != null) {
@@ -145,65 +169,20 @@ class AIChatProvider extends ChangeNotifier {
 
       StructuredResponse? structuredResponse;
       if (!isUser) {
-        // Tự động khôi phục cấu trúc bài tập khi tải lịch sử
-        final exMatch = RegExp(
-          r'(?:lưu bài tập|ghi nhận bài tập|lưu) \*\*?(.*?)\*\*? vào nhật ký vận động',
-          caseSensitive: false,
-        ).firstMatch(text);
-        if (exMatch != null) {
-          final exName = exMatch.group(1)!.trim().replaceAll('*', '');
-          if (exName.isNotEmpty) {
-            structuredResponse = StructuredResponse(
-              type: 'structured',
-              text: '',
-              actions: [
-                ActionItem(
-                  kind: 'exercise',
-                  wgerId: 0,
-                  name: exName,
-                  details: {
-                    'duration': 30,
-                    'duration_min': 30,
-                    'calories_burned': 180.0,
-                  },
-                ),
-              ],
+        final rawStructured = raw['structured'];
+        if (rawStructured is Map && rawStructured.isNotEmpty) {
+          try {
+            structuredResponse = StructuredResponse.fromJson(
+              Map<String, dynamic>.from(rawStructured),
             );
-          }
-        } else {
-          // Tự động khôi phục cấu trúc món ăn khi tải lịch sử
-          final mealMatch = RegExp(
-            r'(?:lưu món ăn|ghi nhận món|lưu món) \*\*?(.*?)\*\*? vào nhật ký',
-            caseSensitive: false,
-          ).firstMatch(text);
-          if (mealMatch != null) {
-            final dishName = mealMatch.group(1)!.trim().replaceAll('*', '');
-            if (dishName.isNotEmpty) {
-              final lookup = ActionItem.lookupFoodNutrition(dishName);
-              structuredResponse = StructuredResponse(
-                type: 'structured',
-                text: '',
-                mealName: dishName,
-                actions: [
-                  ActionItem(
-                    kind: 'food',
-                    wgerId: 0,
-                    name: dishName,
-                    details: {
-                      'dish_name': dishName,
-                      'meal_type': 'lunch',
-                      'serving_grams': 100.0,
-                      'calories': lookup['calories'],
-                      'protein': lookup['protein'],
-                      'carbs': lookup['carbs'],
-                      'fat': lookup['fat'],
-                    },
-                  ),
-                ],
-              );
-            }
+          } catch (e) {
+            debugPrint('❌ Invalid structured history payload: $e');
           }
         }
+
+        // Session cũ chưa có structured_data vẫn dùng fallback để không mất
+        // hoàn toàn card, nhưng dữ liệu mới luôn khôi phục payload gốc ở trên.
+        structuredResponse ??= _restoreLegacyStructuredResponse(text);
       }
 
       _messages.add(AIChatMessage(
@@ -214,11 +193,80 @@ class AIChatProvider extends ChangeNotifier {
         timestamp: ts,
         status: MessageStatus.done,
         structuredResponse: structuredResponse,
+        thoughts: thoughts,
       ));
     }
     debugPrint(
         '📜 [AIChatProvider] Loaded existing session: $sessionId with ${_messages.length} messages');
     notifyListeners();
+  }
+
+  StructuredResponse? _restoreLegacyStructuredResponse(String text) {
+    final exMatch = RegExp(
+      r'(?:lưu bài tập|ghi nhận bài tập|lưu) \*\*?(.*?)\*\*? vào nhật ký vận động',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (exMatch != null) {
+      final exName = exMatch.group(1)!.trim().replaceAll('*', '');
+      if (exName.isNotEmpty) {
+        final estimatedCalories = ExerciseProvider.estimateCaloriesForExercise(
+          name: exName,
+          categoryName: '',
+          muscleCount: 0,
+          weightKg: _lastUser?.weight ?? 70,
+          durationMinutes: 30,
+        );
+        return StructuredResponse(
+          type: 'structured',
+          text: '',
+          actions: [
+            ActionItem(
+              kind: 'exercise',
+              wgerId: 0,
+              name: exName,
+              details: {
+                'duration': 30,
+                'duration_min': 30,
+                'calories_burned': estimatedCalories,
+                'calories_estimated': true,
+              },
+            ),
+          ],
+        );
+      }
+      return null;
+    }
+
+    final mealMatch = RegExp(
+      r'(?:lưu món ăn|ghi nhận món|lưu món) \*\*?(.*?)\*\*? vào nhật ký',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (mealMatch == null) return null;
+
+    final dishName = mealMatch.group(1)!.trim().replaceAll('*', '');
+    if (dishName.isEmpty) return null;
+    final lookup = ActionItem.lookupFoodNutrition(dishName);
+    return StructuredResponse(
+      type: 'structured',
+      text: '',
+      mealName: dishName,
+      actions: [
+        ActionItem(
+          kind: 'food',
+          wgerId: 0,
+          name: dishName,
+          details: {
+            'dish_name': dishName,
+            'meal_type': 'lunch',
+            'serving_grams': 100.0,
+            'calories': lookup['calories'],
+            'protein': lookup['protein'],
+            'carbs': lookup['carbs'],
+            'fat': lookup['fat'],
+          },
+        ),
+      ],
+    );
   }
 
   /// Kết nối WebSocket với timeout 3 giây
@@ -227,7 +275,7 @@ class AIChatProvider extends ChangeNotifier {
     disconnect();
 
     debugPrint('🔌 [AIChatProvider] Connecting to ${AIChatbotConfig.wsUrl}...');
-    
+
     try {
       _channel = WebSocketChannel.connect(
         Uri.parse(AIChatbotConfig.wsUrl),
@@ -244,7 +292,7 @@ class AIChatProvider extends ChangeNotifier {
       );
 
       debugPrint('✅ [AIChatProvider] Connected successfully');
-      
+
       _subscription = _channel!.stream.listen(
         _handleMessage,
         onError: (error) {
@@ -320,7 +368,7 @@ class AIChatProvider extends ChangeNotifier {
     _lastTodayExercisesCount = todayExercisesCount;
     _lastTodayMeals = todayMeals;
     _lastTodayExercises = todayExercises;
-    
+
     if (_channel == null) {
       debugPrint('🔌 [AIChatProvider] No connection, connecting...');
       await connect(_sessionId ?? _uuid.v4());
@@ -337,6 +385,10 @@ class AIChatProvider extends ChangeNotifier {
     ));
 
     // 2. Tạo streaming message placeholder — status: thinking
+    _thoughtTypewriter.clear();
+    _responseTypewriter.clear();
+    _pendingDoneData = null;
+    _deferredResponseText = '';
     final streamingId = _uuid.v4();
     _streamingMessageId = streamingId;
     _isStreaming = true;
@@ -358,12 +410,37 @@ class AIChatProvider extends ChangeNotifier {
       _onError('TIMEOUT', 'Phản hồi quá lâu');
     });
 
-    // 3. Gửi ChatRequest JSON qua WebSocket
+    // 3. Gửi ChatRequest JSON qua WebSocket kèm user_context phong phú
+    final Map<String, dynamic> userContext = {
+      'user_id': user.id,
+      'name': user.name,
+      'age': user.age,
+      'gender': user.gender,
+      'height': user.height,
+      'weight': user.weight,
+      'target_weight': user.targetWeight,
+      'activity_level': user.activityLevel,
+      'health_goal': user.healthGoal,
+      'bmi': user.bmi,
+      'bmi_category': user.bmiCategory,
+      'bmr': user.bmr,
+      'tdee': user.tdee,
+      'recommended_calories': user.recommendedCalories,
+      'daily_water_goal': user.dailyWaterGoal,
+      'today_calories_consumed': todayCalories,
+      'today_meals_count': todayMealsCount,
+      'today_calories_burned': todayCaloriesBurned,
+      'today_exercises_count': todayExercisesCount,
+      'today_meals': todayMeals,
+      'today_exercises': todayExercises,
+    };
+
     final Map<String, dynamic> request = {
       'type': 'chat',
       'session_id': _sessionId,
       'user_id': user.id,
       'message': text,
+      'user_context': userContext,
     };
     if (_latitude != null && _longitude != null) {
       request['latitude'] = _latitude;
@@ -382,12 +459,13 @@ class AIChatProvider extends ChangeNotifier {
 
   /// Xử lý message nhận từ WebSocket
   void _handleMessage(dynamic raw) {
-    debugPrint('📥 [AIChatProvider] Received message: ${raw.toString().substring(0, raw.toString().length > 100 ? 100 : raw.toString().length)}...');
-    
+    debugPrint(
+        '📥 [AIChatProvider] Received message: ${raw.toString().substring(0, raw.toString().length > 100 ? 100 : raw.toString().length)}...');
+
     try {
       final data = jsonDecode(raw as String) as Map<String, dynamic>;
       final type = data['type'] as String?;
-      
+
       debugPrint('📦 [AIChatProvider] Message type: $type');
 
       switch (type) {
@@ -398,30 +476,28 @@ class AIChatProvider extends ChangeNotifier {
           _onThoughtReceived(data['content'] as String? ?? '');
           break;
         case 'status':
-          _onStatusReceived(data['content'] as String? ?? '');
-          break;
-        case 'tool_call':
-          _handleToolCall(data);
+          _onStatusReceived();
           break;
         case 'done':
           debugPrint('✅ [AIChatProvider] Stream done');
           _onStreamDone(data);
           break;
         case 'error':
-          debugPrint('❌ [AIChatProvider] Error received: ${data['code']} - ${data['message']}');
-          _onError(
-            data['code'] as String? ?? 'UNKNOWN',
-            data['message'] as String? ?? '',
-          );
+          _onError(data['code'] as String? ?? 'ERROR',
+              data['message'] as String? ?? 'Lỗi không xác định');
           break;
+        case 'tool_call':
+          _handleToolCall(data);
+          break;
+        default:
+          debugPrint('⚠️ [AIChatProvider] Unknown message type: $type');
       }
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Parse error: $e');
-      // Bỏ qua message không parse được
     }
   }
 
-  /// Xử lý tool call từ AI
+  /// Xử lý Tool Call từ Backend
   Future<void> _handleToolCall(Map<String, dynamic> data) async {
     _resetTimeoutTimer();
     final correlationId = data['correlation_id'] as String?;
@@ -436,6 +512,7 @@ class AIChatProvider extends ChangeNotifier {
     debugPrint('🛠️ [AIChatProvider] Handling tool_call: $name');
 
     Map<String, dynamic> resultData = {};
+    Map<String, dynamic>? uiMessage;
     bool isOk = true;
     String? error;
 
@@ -450,8 +527,21 @@ class AIChatProvider extends ChangeNotifier {
             'gender': _lastUser!.gender,
             'height': _lastUser!.height,
             'weight': _lastUser!.weight,
+            'target_weight': _lastUser!.targetWeight,
             'activity_level': _lastUser!.activityLevel,
             'health_goal': _lastUser!.healthGoal,
+            'bmi': _lastUser!.bmi,
+            'bmi_category': _lastUser!.bmiCategory,
+            'bmr': _lastUser!.bmr,
+            'tdee': _lastUser!.tdee,
+            'recommended_calories': _lastUser!.recommendedCalories,
+            'daily_water_goal': _lastUser!.dailyWaterGoal,
+            'today_calories_consumed': _lastTodayCalories,
+            'today_meals_count': _lastTodayMealsCount,
+            'today_calories_burned': _lastTodayCaloriesBurned,
+            'today_exercises_count': _lastTodayExercisesCount,
+            'today_meals': _lastTodayMeals,
+            'today_exercises': _lastTodayExercises,
           };
         } else {
           isOk = false;
@@ -476,27 +566,35 @@ class AIChatProvider extends ChangeNotifier {
         final dishName = args['dish_name'] as String? ?? 'Món ăn';
         final mealTypeRaw = args['meal_type'] as String? ?? 'lunch';
         final mealType = _mapMealType(mealTypeRaw);
-        final grams = args['serving_grams'] != null
-            ? (args['serving_grams'] as num).toDouble()
-            : 100.0;
+        final requestedGrams = _positiveDouble(args['serving_grams']);
+        final grams = requestedGrams ?? 100.0;
 
         final List<ActionItem> actions = [];
-        if (args['components'] != null) {
-          final List<dynamic> comps = args['args']?['components'] ?? args['components'] as List<dynamic>;
+        final rawComponents = args['components'];
+        if (rawComponents is List) {
+          final comps = rawComponents;
           for (final comp in comps) {
-            if (comp is Map<String, dynamic>) {
-              final compName = comp['name'] as String? ?? 'Thành phần';
-              final compGrams = (comp['serving_grams'] ?? 100.0) as num;
-              final compCal = (comp['calories'] ?? 0.0) as num;
-              final compPro = (comp['protein'] ?? 0.0) as num;
-              final compCarbs = (comp['carbs'] ?? 0.0) as num;
-              final compFat = (comp['fat'] ?? 0.0) as num;
+            if (comp is Map) {
+              final data = Map<String, dynamic>.from(comp);
+              final compName = data['name']?.toString().trim();
+              if (compName == null || compName.isEmpty) continue;
+              final gramsDouble = _positiveDouble(
+                    data['serving_grams'] ?? data['grams'],
+                  ) ??
+                  100;
+              final compCal = _nonNegativeDouble(data['calories']);
+              final compPro = _nonNegativeDouble(data['protein']);
+              final compCarbs = _nonNegativeDouble(data['carbs']);
+              final compFat = _nonNegativeDouble(data['fat']);
 
-              final double gramsDouble = compGrams.toDouble();
-              final double cal100g = gramsDouble > 0 ? (compCal.toDouble() * 100.0 / gramsDouble) : 0.0;
-              final double pro100g = gramsDouble > 0 ? (compPro.toDouble() * 100.0 / gramsDouble) : 0.0;
-              final double carb100g = gramsDouble > 0 ? (compCarbs.toDouble() * 100.0 / gramsDouble) : 0.0;
-              final double fat100g = gramsDouble > 0 ? (compFat.toDouble() * 100.0 / gramsDouble) : 0.0;
+              final double cal100g =
+                  gramsDouble > 0 ? (compCal * 100.0 / gramsDouble) : 0.0;
+              final double pro100g =
+                  gramsDouble > 0 ? (compPro * 100.0 / gramsDouble) : 0.0;
+              final double carb100g =
+                  gramsDouble > 0 ? (compCarbs * 100.0 / gramsDouble) : 0.0;
+              final double fat100g =
+                  gramsDouble > 0 ? (compFat * 100.0 / gramsDouble) : 0.0;
 
               actions.add(ActionItem(
                 kind: 'food',
@@ -512,6 +610,48 @@ class AIChatProvider extends ChangeNotifier {
                   'fat': fat100g,
                 },
               ));
+            }
+          }
+        }
+
+        // Nếu model thiếu components, dùng chính catalog của sheet "Thêm món
+        // ăn". Fallback cũ chỉ dò từ khoá đầu tiên (ví dụ "cơm") nên kcal và
+        // thành phần trong chatbot có thể khác hoàn toàn màn Dinh dưỡng.
+        if (actions.isEmpty && _nutritionProvider != null) {
+          await _nutritionProvider!.loadVietnameseDatabase();
+          final catalogDish = _nutritionProvider!.findVietnameseDish(dishName);
+          if (catalogDish != null) {
+            final resolved = MealNutritionUtils.resolveDish(
+              catalogDish,
+              _nutritionProvider!.vietnameseFoods,
+            );
+            final baseGrams = resolved.items.fold<double>(
+              0,
+              (sum, item) => sum + item.weightGrams,
+            );
+            final portionScale = requestedGrams != null && baseGrams > 0
+                ? requestedGrams / baseGrams
+                : 1.0;
+            for (final item in resolved.items) {
+              final itemGrams = item.weightGrams * portionScale;
+              if (itemGrams <= 0 || item.weightGrams <= 0) continue;
+              actions.add(
+                ActionItem(
+                  kind: 'food',
+                  wgerId: 0,
+                  name: item.name,
+                  details: {
+                    'dish_name': dishName,
+                    'meal_type': mealType,
+                    'serving_grams': itemGrams,
+                    'calories': item.calories * 100 / item.weightGrams,
+                    'protein': item.protein * 100 / item.weightGrams,
+                    'carbs': item.carbs * 100 / item.weightGrams,
+                    'fat': item.fat * 100 / item.weightGrams,
+                    'nutrition_source': 'vietnamese_catalog',
+                  },
+                ),
+              );
             }
           }
         }
@@ -548,19 +688,16 @@ class AIChatProvider extends ChangeNotifier {
             });
           } else {
             final lookup = ActionItem.lookupFoodNutrition(dishName);
-            actions.add(ActionItem(
-                kind: 'food',
-                wgerId: 0,
-                name: dishName,
-                details: {
-                  'dish_name': dishName,
-                  'meal_type': mealType,
-                  'serving_grams': grams,
-                  'calories': lookup['calories'],
-                  'protein': lookup['protein'],
-                  'carbs': lookup['carbs'],
-                  'fat': lookup['fat'],
-                }));
+            actions.add(
+                ActionItem(kind: 'food', wgerId: 0, name: dishName, details: {
+              'dish_name': dishName,
+              'meal_type': mealType,
+              'serving_grams': grams,
+              'calories': lookup['calories'],
+              'protein': lookup['protein'],
+              'carbs': lookup['carbs'],
+              'fat': lookup['fat'],
+            }));
           }
         }
 
@@ -587,6 +724,8 @@ class AIChatProvider extends ChangeNotifier {
 
         final totalCal = items.fold(0.0, (s, i) => s + i.calories);
 
+        var mealLogged = false;
+        String? mealLogError;
         if (_nutritionProvider != null && _lastUser != null) {
           try {
             final meal = MealModel(
@@ -598,29 +737,55 @@ class AIChatProvider extends ChangeNotifier {
               items: items,
             );
             await _nutritionProvider!.addMeal(meal);
+            mealLogged = true;
             debugPrint('✅ Auto-logged meal: $dishName');
           } catch (e) {
+            mealLogError = e.toString();
             debugPrint('❌ Error auto-logging meal: $e');
           }
+        } else {
+          mealLogError = 'Chưa có hồ sơ người dùng hoặc dịch vụ dinh dưỡng';
         }
 
-        final fakeStructured = StructuredResponse(
+        if (!mealLogged) {
+          _messages.add(AIChatMessage(
+            id: _uuid.v4(),
+            text:
+                '⚠️ Chưa thể ghi nhận món **$dishName**. Vui lòng thử lại sau.',
+            isUser: false,
+            isStreaming: false,
+            timestamp: DateTime.now(),
+          ));
+          notifyListeners();
+          resultData = {
+            'status': 'error',
+            'error': mealLogError ?? 'Không thể lưu món ăn',
+          };
+          break;
+        }
+
+        final structuredResponse = StructuredResponse(
           type: 'structured',
           text: '',
           mealName: dishName,
           actions: actions,
         );
+        final confirmationText =
+            '✅ Đã tự động ghi nhận món **$dishName** (~${totalCal.toStringAsFixed(0)} kcal) vào nhật ký ăn uống hôm nay!';
 
         _messages.add(AIChatMessage(
           id: _uuid.v4(),
-          text:
-              '✅ Đã tự động ghi nhận món **$dishName** (~${totalCal.toStringAsFixed(0)} kcal) vào nhật ký ăn uống hôm nay!',
+          text: confirmationText,
           isUser: false,
           isStreaming: false,
           timestamp: DateTime.now(),
-          structuredResponse: fakeStructured,
+          structuredResponse: structuredResponse,
         ));
         notifyListeners();
+        uiMessage = {
+          'text': confirmationText,
+          'structured': structuredResponse.toJson(),
+        };
 
         resultData = {
           'status': 'success',
@@ -630,10 +795,19 @@ class AIChatProvider extends ChangeNotifier {
         break;
       case 'log_exercise':
         final exName = args['exercise_name'] as String? ?? 'Bài tập';
-        final duration = (args['duration_min'] as num? ?? 30).toInt();
+        final duration =
+            (args['duration_min'] as num? ?? 30).toInt().clamp(1, 24 * 60);
         final description = args['description'] as String? ?? '';
         final wgerId = (args['wger_id'] as num? ?? 0).toInt();
-        final calBurned = (duration * 6.0);
+        final category =
+            args['category']?.toString() ?? args['type']?.toString() ?? '';
+        final calBurned = ExerciseProvider.estimateCaloriesForExercise(
+          name: exName,
+          categoryName: category,
+          muscleCount: 0,
+          weightKg: _lastUser?.weight ?? 70,
+          durationMinutes: duration,
+        );
 
         if (_exerciseProvider != null && _lastUser != null) {
           try {
@@ -641,11 +815,11 @@ class AIChatProvider extends ChangeNotifier {
               id: _uuid.v4(),
               userId: _lastUser!.id,
               name: exName,
-              exerciseTemplateId: wgerId > 0 ? wgerId.toString() : null,
+              exerciseTemplateId: wgerId > 0 ? 'wger_$wgerId' : null,
               date: DateTime.now(),
               duration: duration,
               caloriesBurned: calBurned.toDouble(),
-              type: 'cardio',
+              type: ExerciseProvider.mapCategoryToType(exName, category),
               intensity: 'medium',
             );
             await _exerciseProvider!.addExercise(exercise);
@@ -655,7 +829,7 @@ class AIChatProvider extends ChangeNotifier {
           }
         }
 
-        final fakeStructured = StructuredResponse(
+        final structuredResponse = StructuredResponse(
           type: 'structured',
           text: '',
           actions: [
@@ -668,20 +842,26 @@ class AIChatProvider extends ChangeNotifier {
                   'duration_min': duration,
                   'calories_burned': calBurned,
                   'description': description,
+                  'category': category,
                 })
           ],
         );
+        final confirmationText =
+            '✅ Đã tự động ghi nhận bài tập **$exName** ($duration phút, ~${calBurned.toStringAsFixed(0)} kcal) vào nhật ký vận động!';
 
         _messages.add(AIChatMessage(
           id: _uuid.v4(),
-          text:
-              '✅ Đã tự động ghi nhận bài tập **$exName** ($duration phút, ~${calBurned.toStringAsFixed(0)} kcal) vào nhật ký vận động!',
+          text: confirmationText,
           isUser: false,
           isStreaming: false,
           timestamp: DateTime.now(),
-          structuredResponse: fakeStructured,
+          structuredResponse: structuredResponse,
         ));
         notifyListeners();
+        uiMessage = {
+          'text': confirmationText,
+          'structured': structuredResponse.toJson(),
+        };
 
         resultData = {
           'status': 'success',
@@ -713,19 +893,29 @@ class AIChatProvider extends ChangeNotifier {
         break;
       case 'log_lifestyle':
         final logType = args['type'] as String? ?? 'mood';
-        final moodScore = args['mood_score'] != null ? (args['mood_score'] as num).toInt() : null;
+        final moodScore = args['mood_score'] != null
+            ? (args['mood_score'] as num).toInt()
+            : null;
         final moodLabel = args['mood_label'] as String? ?? 'Bình thường';
-        final sleepHours = args['sleep_hours'] != null ? (args['sleep_hours'] as num).toDouble() : null;
-        final stressScore = args['stress_score'] != null ? (args['stress_score'] as num).toInt() : null;
-        final waterMl = args['water_ml'] != null ? (args['water_ml'] as num).toDouble() : null;
+        final sleepHours = args['sleep_hours'] != null
+            ? (args['sleep_hours'] as num).toDouble()
+            : null;
+        final stressScore = args['stress_score'] != null
+            ? (args['stress_score'] as num).toInt()
+            : null;
+        final waterMl = args['water_ml'] != null
+            ? (args['water_ml'] as num).toDouble()
+            : null;
         final notes = args['notes'] as String? ?? '';
 
         if (_lifestyleProvider != null && _lastUser != null) {
           if (moodScore != null) {
-            await _lifestyleProvider!.logMood(_lastUser!.id, moodScore, moodLabel, notes: notes);
+            await _lifestyleProvider!
+                .logMood(_lastUser!.id, moodScore, moodLabel, notes: notes);
           }
           if (sleepHours != null && stressScore != null) {
-            await _lifestyleProvider!.logSleepAndStress(_lastUser!.id, sleepHours, stressScore);
+            await _lifestyleProvider!
+                .logSleepAndStress(_lastUser!.id, sleepHours, stressScore);
           }
           if (waterMl != null) {
             await _lifestyleProvider!.addWater(_lastUser!.id, waterMl);
@@ -734,7 +924,8 @@ class AIChatProvider extends ChangeNotifier {
 
         _messages.add(AIChatMessage(
           id: _uuid.v4(),
-          text: '✅ Đã tự động cập nhật chỉ số Sức khỏe Tinh thần & Lifestyle vào hệ thống!',
+          text:
+              '✅ Đã tự động cập nhật chỉ số Sức khỏe Tinh thần & Lifestyle vào hệ thống!',
           isUser: false,
           isStreaming: false,
           timestamp: DateTime.now(),
@@ -764,14 +955,19 @@ class AIChatProvider extends ChangeNotifier {
 
         _messages.add(AIChatMessage(
           id: _uuid.v4(),
-          text: '⏰ Đã thiết lập nhắc nhở **$title** vào lúc **$timeStr** thành công!',
+          text:
+              '⏰ Đã thiết lập nhắc nhở **$title** vào lúc **$timeStr** thành công!',
           isUser: false,
           isStreaming: false,
           timestamp: DateTime.now(),
         ));
         notifyListeners();
 
-        resultData = {'status': 'success', 'reminder_title': title, 'time': timeStr};
+        resultData = {
+          'status': 'success',
+          'reminder_title': title,
+          'time': timeStr
+        };
         break;
       // LƯU Ý QUAN TRỌNG:
       // Trước đây ba tool dưới đây trả về {'history': []} kèm ok=true. Đó là
@@ -786,7 +982,11 @@ class AIChatProvider extends ChangeNotifier {
           isOk = false;
           error = 'TOOL_INTERNAL_ERROR';
         } else {
-          resultData = {'days': days, 'count': history.length, 'history': history};
+          resultData = {
+            'days': days,
+            'count': history.length,
+            'history': history
+          };
         }
         break;
 
@@ -836,7 +1036,8 @@ class AIChatProvider extends ChangeNotifier {
       case 'get_active_plan':
         if (_lastUser != null) {
           try {
-            final planDetail = await _backendApi.getActivePlanDetail(_lastUser!.id);
+            final planDetail =
+                await _backendApi.getActivePlanDetail(_lastUser!.id);
             resultData = {'active_plan': planDetail};
           } catch (e) {
             debugPrint('⚠️ [AIChatProvider] get_active_plan error: $e');
@@ -851,8 +1052,13 @@ class AIChatProvider extends ChangeNotifier {
         final itemId = args['item_id'] as String?;
         if (itemId != null && itemId.isNotEmpty) {
           try {
-            await _backendApi.updatePlanItemCompletion(itemId: itemId, completed: true);
-            resultData = {'status': 'success', 'item_id': itemId, 'completed': true};
+            await _backendApi.updatePlanItemCompletion(
+                itemId: itemId, completed: true);
+            resultData = {
+              'status': 'success',
+              'item_id': itemId,
+              'completed': true
+            };
           } catch (e) {
             debugPrint('❌ [AIChatProvider] mark_plan_item_complete error: $e');
             isOk = false;
@@ -875,7 +1081,8 @@ class AIChatProvider extends ChangeNotifier {
       default:
         isOk = false;
         error = 'UNKNOWN_TOOL';
-        debugPrint('⚠️ [AIChatProvider] Tool $name is not supported locally yet.');
+        debugPrint(
+            '⚠️ [AIChatProvider] Tool $name is not supported locally yet.');
     }
 
     final response = {
@@ -883,11 +1090,13 @@ class AIChatProvider extends ChangeNotifier {
       'correlation_id': correlationId,
       'ok': isOk,
       if (isOk) 'data': resultData,
+      if (isOk && uiMessage != null) 'ui_message': uiMessage,
       if (!isOk) 'error': error,
     };
 
     try {
-      debugPrint('📡 [AIChatProvider] Sending tool_result: ${jsonEncode(response)}');
+      debugPrint(
+          '📡 [AIChatProvider] Sending tool_result: ${jsonEncode(response)}');
       _channel?.sink.add(jsonEncode(response));
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Send tool_result error: $e');
@@ -1039,55 +1248,77 @@ class AIChatProvider extends ChangeNotifier {
     });
   }
 
-  /// Append token vào streaming message — text tích lũy ở background, không hiện ra UI
+  /// Đưa token câu trả lời vào hàng đợi typewriter thích ứng.
   void _onTokenReceived(String token) {
     _resetTimeoutTimer();
-    if (_streamingMessageId == null) return;
+    if (_streamingMessageId == null || token.isEmpty) return;
 
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
 
-    // Chuyển sang streaming khi nhận token đầu tiên
-    final currentStatus = _messages[idx].status;
+    // Giữ câu trả lời lại để panel suy nghĩ có thời gian chạy hết hiệu ứng.
+    if (_thoughtTypewriter.hasPending || _deferredResponseText.isNotEmpty) {
+      _deferredResponseText += token;
+      return;
+    }
+    _responseTypewriter.add(token);
+  }
+
+  void _appendTypewriterChunk(String chunk) {
+    if (_streamingMessageId == null || chunk.isEmpty) return;
+
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
+
     _messages[idx] = _messages[idx].copyWith(
-      text: _messages[idx].text + token,
-      status: currentStatus == MessageStatus.thinking
-          ? MessageStatus.streaming
-          : currentStatus,
+      text: _messages[idx].text + chunk,
+      status: MessageStatus.streaming,
     );
-    // Gọi notifyListeners() để cập nhật UI chữ chạy thời gian thực
     notifyListeners();
   }
 
   /// Nhận token suy nghĩ từ backend
   void _onThoughtReceived(String token) {
     _resetTimeoutTimer();
-    if (_streamingMessageId == null) return;
+    if (_streamingMessageId == null || token.isEmpty) return;
 
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
 
+    _thoughtTypewriter.add(token);
+  }
+
+  void _appendThoughtTypewriterChunk(String chunk) {
+    if (_streamingMessageId == null || chunk.isEmpty) return;
+
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
     final currentMessage = _messages[idx];
     _messages[idx] = currentMessage.copyWith(
-      thoughts: currentMessage.thoughts + token,
-      status: MessageStatus.thinking, // Giữ hoặc chuyển về thinking khi nhận thought token
+      thoughts: currentMessage.thoughts + chunk,
+      // Một thought đến muộn không được làm ẩn phần câu trả lời đang chạy.
+      status: currentMessage.status == MessageStatus.streaming
+          ? MessageStatus.streaming
+          : MessageStatus.thinking,
     );
     notifyListeners();
   }
 
-  /// Nhận cập nhật trạng thái hoạt động từ backend
-  void _onStatusReceived(String statusText) {
+  void _onThoughtTypewriterIdle() {
+    _flushDeferredResponse();
+    _completePendingStream();
+  }
+
+  void _flushDeferredResponse() {
+    if (_deferredResponseText.isEmpty) return;
+    final deferredText = _deferredResponseText;
+    _deferredResponseText = '';
+    _responseTypewriter.add(deferredText);
+  }
+
+  /// Status trung gian chỉ là heartbeat; UI chỉ hiển thị thought thật.
+  void _onStatusReceived() {
     _resetTimeoutTimer();
-    if (_streamingMessageId == null) return;
-
-    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
-    if (idx == -1) return;
-
-    final currentMessage = _messages[idx];
-    _messages[idx] = currentMessage.copyWith(
-      statusText: statusText,
-    );
-    notifyListeners();
   }
 
   /// Lấy text hiển thị khi đang stream — ẩn tất cả data block tags và SUGGESTIONS
@@ -1097,7 +1328,7 @@ class AIChatProvider extends ChangeNotifier {
     final tagPattern = RegExp(
       r'(\[(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA|SUGGESTIONS)\]'
       r'|\*\*(ACTION_DATA|CUSTOM_DATA|STRUCTURED_DATA|DATA|SUGGESTIONS)\*\*'
-      r'|(?<!\[)SUGGESTIONS'   // "SUGGESTIONS" không có [ ở đầu
+      r'|(?<!\[)SUGGESTIONS' // "SUGGESTIONS" không có [ ở đầu
       r'|\{\s*"type"\s*:\s*"structured")',
       caseSensitive: false,
     );
@@ -1112,6 +1343,66 @@ class AIChatProvider extends ChangeNotifier {
   void _onStreamDone(Map<String, dynamic> data) {
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
+
+    _pendingDoneData = Map<String, dynamic>.from(data);
+    _reconcileTypewriterWithFullResponse(data);
+    _completePendingStream();
+  }
+
+  void _reconcileTypewriterWithFullResponse(Map<String, dynamic> data) {
+    final fullResponse = data['full_response'] as String? ?? '';
+    if (fullResponse.isEmpty || _streamingMessageId == null) return;
+
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
+
+    final visibleText = _messages[idx].text;
+    final receivedText =
+        visibleText + _responseTypewriter.pendingText + _deferredResponseText;
+    if (receivedText == fullResponse) return;
+
+    if (fullResponse.startsWith(visibleText)) {
+      _replacePendingResponse(fullResponse.substring(visibleText.length));
+      return;
+    }
+
+    // Phục hồi an toàn nếu full_response khác với các delta đã nhận.
+    _messages[idx] = _messages[idx].copyWith(
+      text: '',
+      status: _thoughtTypewriter.hasPending
+          ? MessageStatus.thinking
+          : MessageStatus.streaming,
+    );
+    _replacePendingResponse(fullResponse);
+    notifyListeners();
+  }
+
+  void _replacePendingResponse(String text) {
+    _responseTypewriter.clear();
+    if (_thoughtTypewriter.hasPending) {
+      _deferredResponseText = text;
+      return;
+    }
+    _deferredResponseText = '';
+    _responseTypewriter.replacePending(text);
+  }
+
+  void _completePendingStream() {
+    final data = _pendingDoneData;
+    if (data == null ||
+        _thoughtTypewriter.hasPending ||
+        _responseTypewriter.hasPending ||
+        _deferredResponseText.isNotEmpty) {
+      return;
+    }
+    _pendingDoneData = null;
+    _applyStreamDone(data);
+  }
+
+  void _applyStreamDone(Map<String, dynamic> data) {
+    _thoughtTypewriter.clear();
+    _responseTypewriter.clear();
+    _deferredResponseText = '';
 
     final fullResponse = data['full_response'] as String? ?? '';
     final structuredData = data['structured'] as Map<String, dynamic>?;
@@ -1133,7 +1424,10 @@ class AIChatProvider extends ChangeNotifier {
       final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
       if (idx != -1) {
         _messages[idx] = _messages[idx].copyWith(
-          text: fullResponse.isNotEmpty ? fullResponse : _messages[idx].text,
+          // Text đã được typewriter dựng đủ; full_response chỉ là fallback.
+          text: _messages[idx].text.isNotEmpty
+              ? _messages[idx].text
+              : fullResponse,
           isStreaming: false,
           status: MessageStatus.done,
           structuredResponse: structuredResponse,
@@ -1195,11 +1489,17 @@ class AIChatProvider extends ChangeNotifier {
     _channel = null;
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
+    _thoughtTypewriter.clear();
+    _responseTypewriter.clear();
+    _pendingDoneData = null;
+    _deferredResponseText = '';
   }
 
   @override
   void dispose() {
     disconnect();
+    _thoughtTypewriter.dispose();
+    _responseTypewriter.dispose();
     super.dispose();
   }
 
@@ -1212,19 +1512,38 @@ class AIChatProvider extends ChangeNotifier {
 
     try {
       final details = action.details;
-      final duration = details['duration'] as int? ?? 30;
-      final caloriesBurned = details['calories_burned'] as num? ?? 0;
-      final type = details['type'] as String? ?? 'cardio';
+      final rawDuration = details['duration'] ?? details['duration_min'] ?? 30;
+      final duration = (rawDuration is num
+              ? rawDuration.toInt()
+              : int.tryParse(rawDuration.toString()) ?? 30)
+          .clamp(1, 24 * 60);
+      final category =
+          details['category']?.toString() ?? details['type']?.toString() ?? '';
+      final rawCalories = details['calories_burned'];
+      final parsedCalories = rawCalories is num
+          ? rawCalories.toDouble()
+          : double.tryParse(rawCalories?.toString() ?? '');
+      final caloriesBurned = parsedCalories != null &&
+              parsedCalories.isFinite &&
+              parsedCalories > 0
+          ? parsedCalories
+          : ExerciseProvider.estimateCaloriesForExercise(
+              name: action.name,
+              categoryName: category,
+              muscleCount: 0,
+              weightKg: user.weight,
+              durationMinutes: duration,
+            );
 
       final exercise = ExerciseModel(
         id: _uuid.v4(),
         userId: user.id,
         name: action.name,
-        exerciseTemplateId: null, // wger exercise, no local template
+        exerciseTemplateId: action.wgerId > 0 ? 'wger_${action.wgerId}' : null,
         date: DateTime.now(),
         duration: duration,
-        caloriesBurned: caloriesBurned.toDouble(),
-        type: type,
+        caloriesBurned: caloriesBurned,
+        type: ExerciseProvider.mapCategoryToType(action.name, category),
         intensity: 'medium',
       );
 
@@ -1287,12 +1606,22 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   String _mapMealType(String mealType) {
-    switch (mealType.toLowerCase()) {
-      case 'breakfast': return 'sang';
-      case 'lunch': return 'trua';
-      case 'dinner': return 'toi';
-      case 'snack': return 'phu';
-      default: return mealType; // đã là tiếng Việt
-    }
+    return MealTypeUtils.normalize(mealType);
+  }
+
+  double? _positiveDouble(dynamic value) {
+    final parsed = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString() ?? '');
+    if (parsed == null || !parsed.isFinite || parsed <= 0) return null;
+    return parsed;
+  }
+
+  double _nonNegativeDouble(dynamic value) {
+    final parsed = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString() ?? '');
+    if (parsed == null || !parsed.isFinite || parsed < 0) return 0;
+    return parsed;
   }
 }

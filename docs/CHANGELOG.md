@@ -1,3 +1,165 @@
+## [2026-08-20] — Chuẩn hóa tính Calo Đã Ăn và bổ sung cơ chế đối chiếu thực đơn & xác nhận đổi món
+- **Fixed:** Tách biệt hoàn toàn `consumedCalories` (chỉ tính các bữa thực tế đã hoàn thành) và `plannedCalories` (tổng calo kế hoạch cả ngày) trong `NutritionProvider`. Giao diện màn Dinh dưỡng & Trang chủ không còn hiển thị nhầm calo kế hoạch thành calo "Đã ăn".
+- **Fixed:** Chatbot chỉ nhận `consumedCalories` thực tế đã nạp, không còn hiểu nhầm là người dùng đã ăn hết calo cả ngày khi các bữa vẫn ở trạng thái "sắp ăn".
+- **Added:** Bổ sung cơ chế **"Menu Awareness & Meal Replacement"** vào `system_prompt.py`: Chatbot luôn kiểm tra danh sách món ăn đã lên lịch trong ngày; nếu bữa ăn đã có món trong kế hoạch (ví dụ Bữa tối có *Cơm đùi gà nấu nấm*), AI sẽ thông báo món hiện có, đề xuất món mới và hỏi xác nhận người dùng có muốn đổi món hay không trước khi ghi nhật ký.
+- **Verified:** 485/485 backend tests passed; 70/70 Flutter tests passed; live test trên Vilao AI Gateway với model `rk/llms/qwen-3.7-plus` xác nhận phản hồi chính xác 100%.
+
+## [2026-08-20] — Cập nhật cấu hình mô hình Vilao AI và API Key mới
+- **Changed:** Chuyển đổi toàn bộ cấu hình AI Provider sang máy chủ Vilao AI (`https://api.vilao.ai/v1`) với API Key mới.
+- **Changed:** Cập nhật mô hình chính (`LLM_MODEL`) sang `rk/llms/qwen-3.7-plus` cho các tác vụ trò chuyện, trích xuất dữ liệu và tool calling trực tiếp.
+- **Changed:** Cập nhật mô hình suy luận sâu / fallback (`HEAVY_LLM_MODEL`) sang `spd/deepseek-v4-pro` cho các tác vụ phân tích sức khỏe phức tạp và dự phòng tự động khi mô hình chính quá tải.
+- **Updated:** Đồng bộ cấu hình trong `apps/backend/.env`, `apps/backend/config.py`, `.env` (gốc), `apps/backend/.env.docker`, `apps/backend/.env.example` và `services/experiment/config.py`.
+- **Verified:** Kiểm thử trực tiếp kết nối live API thành công: Health check OK, streaming token OK, non-streaming heavy inference OK, và tool calling detection chính xác.
+
+## [2026-08-14] — Sửa kế hoạch báo thành công nhưng không có món ăn/bài tập
+- **Fixed:** `PlannerAgent` không còn dùng chuỗi ghép `planUUID-day-meal` làm `plan_items.id`; mọi item nay dùng UUID v5 hợp lệ và ổn định theo plan/ngày/loại mục.
+- **Fixed:** `create_plan` và `append_plan_items` không còn nuốt lỗi PostgreSQL rồi ghi log thành công. Lỗi ghi dữ liệu được truyền ngược lên planner để rollback plan dang dở và để chatbot thông báo thất bại trung thực.
+- **Added:** Trước khi trả thành công, planner truy vấn hậu điều kiện trong PostgreSQL: phải đủ toàn bộ ngày và đúng ba bữa ăn mỗi ngày; thiếu dữ liệu sẽ báo `PLAN_INCOMPLETE`, rollback plan mới và không hủy plan active cũ.
+- **Security:** `append_plan_items` không còn rơi về plan active mới nhất toàn hệ thống khi `plan_id` sai hoặc không tồn tại, tránh nguy cơ gắn dữ liệu vào plan của người dùng khác.
+- **Data repair:** Plan 7 ngày rỗng `10f7ed25…` đã được giữ lại ở trạng thái `cancelled`; plan thay thế `1b1ea25d…` đang active với đủ 21 bữa ăn, 4 buổi tập và đủ Ngày 1–7.
+- **Verified:** 456/456 backend tests passed; chạy thật qua PostgreSQL và REST `/plans/{user_id}/active/detail` trả 25 item trên đủ 7 ngày; hậu điều kiện database cũng được chạy end-to-end và dữ liệu chẩn đoán tạm đã được xóa.
+
+## [2026-08-14] — Chia lộ trình dài hạn theo nhịp sinh hoạt tuần
+- **Fixed:** Kế hoạch dài hạn không còn là danh sách ngày phẳng dùng cùng một mục tiêu và xoay bài tập theo số thứ tự; 60 ngày nay được hiểu đúng là 8 tuần trọn vẹn + 4 ngày của Tuần 9.
+- **Added:** Planner phân toàn bộ lộ trình thành 4 giai đoạn theo tỷ lệ thời lượng: thích nghi, xây nền, tăng tiến và củng cố; mục tiêu calo, protein, cường độ và thời lượng tập thay đổi theo giai đoạn.
+- **Added:** Lịch tập bám thứ thật trong tuần, có buổi chính, ngày phục hồi chủ động và Chủ Nhật nghỉ hoàn toàn; giai đoạn chống chững của mục tiêu giảm cân có ngày nạp lại được kiểm soát.
+- **Added:** Mỗi plan item lưu metadata tuần/giai đoạn/ngày sinh hoạt để client không phải suy đoán lại quy tắc planner.
+- **Changed:** Màn chi tiết hiển thị “60 ngày • 8 tuần + 4 ngày”, đánh dấu tuần cuối chỉ có 4 ngày, đồng thời cho biết thứ/ngày tháng, loại ngày và mục tiêu riêng của từng ngày.
+- **Verified:** 452/452 backend tests và 70/70 Flutter tests passed; `flutter analyze` sạch; Flutter Web release build thành công.
+
+## [2026-08-14] — Tạo kế hoạch dài hạn trọn gói, không hỏi vòng vo từng ngày
+- **Fixed:** Chatbot không còn tự điều phối `create_plan` → nhiều lượt `suggest_dish`/`suggest_workout` → `append_plan_items` rồi hết ngân sách agent ở Ngày 1–2 và hỏi người dùng tiếp tục nhiều lần.
+- **Added:** Tool server `create_long_term_plan` gọi `PlannerAgent` một lần để tính mục tiêu, tạo plan và điền đủ thực đơn + bài tập cho toàn bộ số ngày được yêu cầu; profile hiện có được backend tự gắn vào tool call trước validation.
+- **Fixed:** `PlannerAgent` nay gọi được implementation thật nằm trong `ToolRegistry`, bao gồm đúng calling convention dạng một profile-dict của `calculate_tdee`; REST `/plans` và quick action vì vậy dùng chung luồng planner hoàn chỉnh.
+- **Changed:** Quick action 7/14/30 ngày không gửi lại câu “Hãy tạo kế hoạch...” vào chatbot sau khi REST đã tạo xong, tránh tạo trùng và tránh một vòng hội thoại xác nhận không cần thiết.
+- **Changed:** Reasoning hiển thị cho người dùng được yêu cầu viết ngắn gọn, không kể tên tool, JSON, giới hạn vòng lặp hay kế hoạch điều phối nội bộ.
+- **Verified:** 450/450 backend tests và 66/66 Flutter tests passed; `flutter analyze` sạch; kiểm thử end-to-end bằng catalog production tạo đủ 12 mục cho 3/3 ngày; Flutter Web release build thành công.
+
+## [2026-08-14] — Hiệu ứng typewriter cho quá trình suy nghĩ của AI
+- **Fixed:** Token `thought`/reasoning nay đi qua hàng đợi typewriter riêng thay vì nối thẳng toàn bộ vào `AIChatMessage`, nên panel “AI đang suy nghĩ...” vẫn nhả chữ mượt khi upstream trả hàng trăm chunk cùng lúc.
+- **Changed:** Token câu trả lời cuối được giữ lại cho tới khi backlog suy nghĩ đã hiển thị hết; giao diện không còn chuyển sang câu trả lời và làm ẩn panel reasoning quá sớm.
+- **Performance:** Reasoning dùng cùng nhịp 18 ms nhưng hệ số batch nhanh gấp đôi câu trả lời, giữ hiệu ứng dễ quan sát mà không kéo dài quá mức với nội dung suy nghĩ lớn.
+- **Lifecycle:** Cả hai hàng đợi và phần câu trả lời đang chờ đều được dọn khi bắt đầu lượt mới, ngắt kết nối, gặp lỗi hoặc dispose provider.
+- **Verified:** `flutter analyze` sạch, 66/66 Flutter tests passed và Flutter Web release build thành công.
+
+## [2026-08-14] — Hiển thị đầy đủ các ngày trong lịch trình kế hoạch
+- **Fixed:** Màn chi tiết kế hoạch nay luôn dựng đủ ngày trong tuần được chọn, thay vì chỉ render các `day_index` đã có `plan_items`.
+- **Added:** Ngày chưa có dữ liệu hiển thị trạng thái rõ ràng và nút “Bổ sung” để yêu cầu AI tạo thực đơn/lịch tập cho ngày đó.
+- **Changed:** Chỉ số tiến độ tách số ngày đã có lịch khỏi số mục đã hoàn thành, tránh trường hợp kế hoạch 7 ngày nhưng `3/3 xong` làm người dùng tưởng toàn bộ tuần đã đủ.
+- **Verified:** `flutter analyze` sạch, 65/65 Flutter tests passed và Flutter Web release build thành công.
+
+## [2026-08-14] — Làm mượt chữ trả lời Chatbot khi upstream trả dồn
+- **Added:** Thêm bộ đệm typewriter phía Flutter để phát dần nội dung câu trả lời thay vì render toàn bộ ngay khi nhà cung cấp xả nhiều SSE chunk cùng lúc.
+- **Changed:** Sự kiện WebSocket `done` nay chờ typewriter tiêu thụ hết backlog rồi mới chuyển message sang hoàn tất và hiển thị card/gợi ý.
+- **Performance:** Nhịp typewriter tự tăng kích thước batch với câu trả lời dài, giữ hiệu ứng đọc tự nhiên nhưng không kéo dài thời gian chờ quá mức.
+- **Unicode:** Pacing theo grapheme cluster bằng package `characters`, tránh cắt đôi emoji ghép hoặc ký tự Unicode.
+- **Verified:** `flutter analyze` sạch, 64/64 Flutter tests passed và Flutter Web release build thành công.
+
+## [2026-08-14] — Gỡ nút Thêm bài tập nổi khỏi màn Vận động
+- **Changed:** Loại bỏ `FloatingActionButton.extended` “Thêm bài tập” đang đè lên thẻ lịch tập và nút AI ở thanh điều hướng.
+- **Compatibility:** Luồng thêm bài tập vẫn giữ nguyên qua nút “Thêm bài tập ngay” trong trạng thái trống và các danh mục bài tập.
+- **Verified:** `flutter analyze` sạch, 61/61 Flutter tests passed và Flutter Web release build thành công.
+
+## [2026-08-14] — Hoàn thiện màn Cài đặt và quản lý dữ liệu cá nhân
+- **Changed:** Thiết kế lại màn Cài đặt thành các nhóm chức năng rõ ràng: hồ sơ sức khỏe, mục tiêu, trợ lý & nhắc nhở, dữ liệu hội thoại và tài khoản.
+- **Added:** Form chỉnh họ tên, tuổi, giới tính, chiều cao, cân nặng, cân nặng mục tiêu và mức độ vận động với kiểm tra dữ liệu trước khi lưu.
+- **Added:** Giao diện bật/tắt check-in chủ động theo từng nhóm uống nước, dinh dưỡng, vận động và tâm trạng; lựa chọn được lưu theo user trên thiết bị và đồng bộ lại backend.
+- **Added:** Màn quản lý lịch sử hội thoại hỗ trợ tải lại, mở phiên cũ, xóa từng phiên và xóa toàn bộ với hộp thoại xác nhận.
+- **Fixed:** Hồ sơ tài khoản demo nay cập nhật state cục bộ thay vì gọi Firestore chưa được khởi tạo; nút Trợ lý AI mở màn chat thật thay vì chỉ hiện snackbar.
+- **Privacy:** API danh sách lịch sử chỉ trả session thuộc đúng `user_id`; chế độ anonymous không còn bị ghép vào lịch sử của mọi tài khoản.
+- **Verified:** `flutter analyze` sạch, 61/61 Flutter tests và 445/445 backend tests passed; Flutter Web release build thành công.
+
+## [2026-08-14] — Đồng nhất giao diện Chatbot khi xem lại lịch sử
+- **Fixed:** Backend nay gom và lưu toàn bộ token `thought` của lượt trả lời vào `chat_messages.thoughts`, thay vì chỉ truyền tạm thời qua WebSocket rồi làm mất khi kết thúc phiên.
+- **Changed:** API `GET /chat/sessions/{session_id}/messages` trả lại `thoughts`; `AIChatProvider.loadExistingSession` khôi phục trường này để dùng đúng `AIThoughtsPanel` như tin nhắn vừa chat.
+- **Changed:** Panel reasoning đã hoàn tất và panel được nạp từ lịch sử mặc định giữ trạng thái mở như lúc đang chat; người dùng vẫn có thể thu gọn bằng nút mũi tên.
+- **Database:** Thêm migration `004_chat_message_thoughts.sql`; dữ liệu lịch sử cũ không có reasoning vì trước đây chưa từng được lưu, còn các lượt chat mới sẽ được khôi phục đầy đủ.
+
+## [2026-08-14] — Đồng nhất card món ăn giữa chat trực tiếp và lịch sử
+- **Fixed:** Card món ăn mở lại từ lịch sử nay dùng đúng `StructuredResponse` đã hiển thị lúc chat trực tiếp, giữ nguyên tên món, danh sách nguyên liệu, khối lượng và toàn bộ macro.
+- **Changed:** Client tool gửi thêm `ui_message` tách biệt khỏi dữ liệu dành cho LLM; backend lưu payload này vào `chat_messages.structured_data` và API lịch sử trả lại qua trường `structured`.
+- **Compatibility:** Các session cũ chưa có payload cấu trúc vẫn dùng bộ khôi phục legacy để không mất hoàn toàn card.
+- **Verified:** 444/444 backend tests và 59/59 Flutter tests passed; `flutter analyze` sạch; Flutter Web release build thành công.
+
+## [2026-08-14] — Chỉ hiển thị quá trình suy nghĩ thực tế của Chatbot
+- **Changed:** Loại bỏ bong bóng trạng thái trung gian như “Đang tải ngữ cảnh…”, “Đang lập kế hoạch…”, “Đang suy nghĩ câu trả lời…” và “Đang chạy công cụ…”.
+- **Changed:** Trong lúc chờ phản hồi, giao diện chỉ render `AIThoughtsPanel` sau khi nhận được token `thought`/reasoning thật từ backend; nếu chưa có reasoning thì không tạo placeholder giả.
+- **Changed:** Sự kiện WebSocket `status` vẫn được dùng ngầm làm heartbeat để gia hạn timeout, nhưng không còn được lưu vào `AIChatMessage` hay kích hoạt rebuild giao diện.
+- **Verified:** `flutter analyze` không phát hiện vấn đề, toàn bộ 57 Flutter tests passed và `flutter build web --release --no-tree-shake-icons` hoàn tất thành công.
+
+## [2026-08-14] — Tự động build lại Flutter Web khi khởi động
+- **Changed:** `start-all.bat` nay tính dấu vân tay SHA-256 của toàn bộ đầu vào build web (`lib/`, `web/`, `assets/`, `pubspec.yaml`, `pubspec.lock`) trước khi mở Web Server.
+- **Changed:** Nếu chưa có `build/web`, hoặc dấu vân tay khác lần build thành công gần nhất, script tự chạy `flutter build web --release --no-tree-shake-icons`; nếu không có thay đổi, script dùng lại bản build hiện tại để khởi động nhanh hơn.
+- **Safety:** Dấu vân tay chỉ được ghi vào `build/web/.source_hash` sau khi Flutter build thành công. Build lỗi sẽ dừng luồng khởi động Web Server và được thử lại ở lần chạy kế tiếp.
+- **Verified:** Fingerprint ổn định qua nhiều lần tính, nhánh không thay đổi nhận đúng `SkipBuild=True`, và `flutter build web --release --no-tree-shake-icons` hoàn tất thành công trong 63,4 giây.
+
+## [2026-08-13] — Comprehensive Exercise Module Overhaul, 3-Phase Routines & Animated Simulation Player
+- **Added:** Hệ thống **Luyện tập Tương tác, Mô phỏng Động tác Thể thao & Cải tổ Toàn diện Toàn bộ Giao diện Bài tập**:
+  - **Màn hình Vận động Chính ([`exercise_screen.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/features/exercise/screens/exercise_screen.dart)):**
+    - Thiết kế lại toàn bộ giao diện: Banner AI Huấn luyện viên thể thao, thẻ thống kê Calo & Thời gian tập luyện với gradient sống động, lưới danh mục bài tập tương tác.
+    - Danh sách "Lịch tập hôm nay": Mỗi thẻ bài tập tích hợp trực tiếp nút **▶ Tập ngay** (Quick Play) khởi chạy trình mô phỏng tương tác chỉ với 1 chạm.
+    - Modal chi tiết `_ExerciseLiveDetailModal`: Nhúng trực tiếp **Canvas Hoạt ảnh Chuyển động (`WorkoutSimulationWidget`)** ngay tại header, phân tách chuẩn 3 giai đoạn (Khởi động 4p ➔ Thân bài ➔ Giãn cơ 4p), hướng dẫn kỹ thuật từng bước, nhịp thở hít/thở, và nút CTA lớn **🚀 "Bắt đầu luyện tập"**.
+  - **Màn hình Chi tiết Bài tập ([`exercise_detail_screen.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/features/exercise/screens/exercise_detail_screen.dart)):**
+    - Nhúng khung hoạt ảnh mô phỏng chuyển động `WorkoutSimulationWidget` theo thời gian thực.
+    - Bổ sung nút CTA **🚀 "Bắt đầu luyện tập"** kết nối trực tiếp với `WorkoutSimulationScreen`.
+  - **Trình duyệt Bài tập ([`exercise_browser_screen.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/features/exercise/screens/exercise_browser_screen.dart)):**
+    - Mỗi thẻ bài tập wger được bổ sung nút **▶ Luyện tập ngay** khởi động trình phát đếm giờ và mô phỏng tức thì.
+  - **Bộ Chọn Nhóm cơ Thông minh ([`smart_exercise_picker.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/widgets/smart_exercise_picker.dart)):**
+    - Bổ sung tùy chọn "Luyện tập ngay" khi chọn bài tập từ bản đồ cơ bắp.
+  - **Trình Phát & Mô Phỏng Luyện Tập Tương Tác ([`workout_simulation_screen.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/features/exercise/screens/workout_simulation_screen.dart)):**
+    - Đồng hồ đếm giờ tương tác (Circular Countdown Timer) cho bài tập theo thời gian.
+    - Đếm hiệp và số lần (Set / Rep Counter) với nút hoàn thành nhanh.
+    - Chế độ nghỉ ngơi giữa các hiệp (Rest Interval Timer) đếm ngược 45s kèm hướng dẫn thả lỏng.
+    - Thanh theo dõi tiến độ thời gian thực (% hoàn thành, calo ước tính, thời gian tập).
+    - Màn hình chúc mừng hoàn thành và lưu thành tích vào nhật ký vận động (`ExerciseProvider`).
+  - **Thẻ Hành Động Chatbot ([`action_card_widget.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/widgets/action_card_widget.dart) & [`detail_bottom_sheet.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/widgets/detail_bottom_sheet.dart)):**
+    - Badge số lượng bài tập (`X bài tập · 3 giai đoạn`) và modal xem chi tiết 3 giai đoạn.
+  - **Sửa Lỗi Tag HTML & Hiệu Chuẩn Chỉ Số Calo Tiêu Thụ ([`exercise_provider.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/providers/exercise_provider.dart)):**
+    - `cleanHtml`: Loại bỏ sạch sẽ các thẻ HTML thô (`<p>`, `</p>`, `&nbsp;`, `<br/>`) trên toàn bộ danh mục và modal bài tập.
+    - `estimateMETForExercise`: Hiệu chuẩn chính xác chỉ số chuyển hóa MET theo từng động tác thực tế (Nước rút 11.5 MET, Nhảy dây 10.0 MET, Chạy bộ 8.5 MET, Zone 2 7.0 MET, Elliptical 6.0 MET, TRX 5.5 MET, Yoga 3.0 MET...) thay vì gán đồng loạt 8.0 MET gây trùng lặp 284 kcal/30p.
+- **Verified:** `flutter analyze` (0 issues), 31/31 tests passed 100% (`flutter test`).
+
+## [2026-08-13] — Multi-Week Phased Health Plan Roadmap & Week-by-Week Architecture
+- **Added:** Kiến trúc **Lộ trình Kế hoạch Sức khỏe Đa Giai đoạn theo Tuần (Phased Multi-week Roadmap)** hỗ trợ các kế hoạch dài hạn (60 ngày / 2 tháng, 30 ngày, 90 ngày):
+  - **Flutter UI ([`plan_detail_bottom_sheet.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/widgets/plan_detail_bottom_sheet.dart)):**
+    - Bổ sung thanh chọn tuần dạng cuộn ngang (**Week Selector Tabs: Tuần 1, Tuần 2, ..., Tuần N**) kèm chỉ báo trạng thái (*Hiện tại*, *Đã qua*, *Sắp tới*).
+    - Hiển thị thẻ tổng quan giai đoạn khoa học (**Phase Milestone Card**): Giai đoạn 1 (Tuần 1-2 Thích nghi), Giai đoạn 2 (Tuần 3-4 Tăng tốc đốt mỡ), Giai đoạn 3 (Tuần 5-6 Đột phá & Chống chững), Giai đoạn 4 (Tuần 7-8+ Siết nét & Duy trì).
+    - Tự động lọc và nhóm danh sách thực đơn & bài tập theo tuần được chọn (`day_index` tương ứng), kèm checkbox hoàn thành mục tiêu.
+    - Bổ sung hộp thoại **Check-in cân nặng tuần** tích hợp trực tiếp với API `/plans/checkins`.
+    - Trạng thái rỗng thông minh cho tuần mới kèm nút kích hoạt AI sinh thực đơn/bài tập cuốn chiếu.
+  - **Backend API ([`backend_api_service.dart`](file:///c:/Project/Chatbot/apps/mobile/lib/services/backend_api_service.dart)):** Bổ sung phương thức `createPlanCheckin` gửi dữ liệu check-in cân nặng và cảm nhận về máy chủ.
+  - **AI Agent System Prompt ([`system_prompt.py`](file:///c:/Project/Chatbot/apps/backend/services/agent/system_prompt.py)):** Bổ sung chỉ dẫn xây dựng lộ trình 4 giai đoạn theo tuần và sinh chi tiết thực đơn/bài tập cuốn chiếu cho tuần hiện tại khi người dùng yêu cầu kế hoạch 60 ngày.
+- **Verified:** 40/40 tests `test_planner.py` và `test_plan_tools.py` passed 100%, `flutter analyze` 0 issues.
+
+## [2026-08-13] — Compile and Linter Fixes in Flutter App
+- **Fixed:** Khắc phục lỗi biên dịch nghiêm trọng do thiếu từ khóa `async` trong hàm xử lý Tool Call của `AIChatProvider` khiến trình biên dịch Dart không thể nhận diện từ khóa `await` và gây ra chuỗi lỗi cú pháp liên quan.
+- **Fixed:** Dọn dẹp các cảnh báo phân tích linter trong dự án Flutter:
+  - Loại bỏ hàm private không sử dụng `_preFetchNearbyDates` trong [nutrition_provider.dart](file:///c:/Project/Chatbot/apps/mobile/lib/providers/nutrition_provider.dart).
+  - Xóa trường `_error` không sử dụng trong [plan_detail_bottom_sheet.dart](file:///c:/Project/Chatbot/apps/mobile/lib/widgets/plan_detail_bottom_sheet.dart) và tối ưu hóa widget `Row` thành `const Row(...)`.
+  - Thay thế 22 lời gọi `.withOpacity()` đã bị deprecated bằng `.withValues(alpha: ...)` trong [main.dart](file:///c:/Project/Chatbot/apps/mobile/lib/main.dart).
+  - Thêm ignore rules cho các cảnh báo sử dụng `dart:html` trong [location_helper_web.dart](file:///c:/Project/Chatbot/apps/mobile/lib/utils/location_helper_web.dart).
+- **Verified:** Chạy `flutter analyze` cho kết quả thành công tuyệt đối: `No issues found!`.
+
+## [2026-08-13] — Dynamic System Prompt & Personalization Engine theo Thể Trạng, Mục Tiêu và Dữ Liệu App
+- **Added:** Kiến trúc **Dynamic System Prompt** tự động biến đổi linh hoạt theo từng người dùng dựa trên dữ liệu thời gian thực trong ứng dụng.
+  - **Thể trạng & Chỉ số nhân trắc học:** Tự động tính toán và nhúng các thông số khoa học: **BMI** & Phân loại thể trạng người Việt (Gầy / Bình thường / Thừa cân / Béo phì), **BMR** (Mifflin-St Jeor), **TDEE** (Năng lượng tiêu thụ hàng ngày), **Nhu cầu nước** ($kg \times 0.033$), Mức độ vận động, Cân nặng mục tiêu.
+  - **Mục tiêu sức khỏe & Chiến lược tư vấn động:** Tự động áp dụng các nguyên tắc chuyên biệt theo mục tiêu (`lose_weight` - thâm hụt calo an toàn, giữ cơ no lâu; `gain_muscle` - thặng dư calo, đẩy mạnh đạm 1.6-2.2g/kg, quá tải lũy tiến; `maintain` - cân bằng năng lượng quanh TDEE) và thể trạng (bài tập an toàn cho khớp với người thừa cân/béo phì; tăng cân bền vững cho người gầy).
+  - **Đồng bộ dữ liệu nhật ký thực tế trong ngày:** Nhúng calo đã nạp (`today_calories_consumed`), calo đã đốt (`today_calories_burned`), calo còn lại (`remaining_calories`), danh sách các bữa ăn và bài tập đã ghi nhận trong ngày để AI căn chỉnh khẩu phần gợi ý tiếp theo chính xác.
+  - **Đồng bộ Data Pipeline:** Nâng cấp [ai_chat_provider.dart](file:///c:/Project/Chatbot/apps/mobile/lib/providers/ai_chat_provider.dart) gửi kèm `user_context` phong phú qua WebSocket; cập nhật [chat_gateway.py](file:///c:/Project/Chatbot/apps/backend/services/agent/chat_gateway.py) và [orchestrator.py](file:///c:/Project/Chatbot/apps/backend/services/agent/orchestrator.py) nạp trực tiếp bối cảnh người dùng vào System Prompt ngay từ lượt đầu tiên.
+- **Added:** Bổ sung test suite [test_dynamic_system_prompt.py](file:///c:/Project/Chatbot/apps/backend/tests/test_dynamic_system_prompt.py) kiểm tra tính toán BMI/BMR/TDEE, nguyên tắc mục tiêu và tích hợp orchestrator.
+- **Verified:** Vượt qua **433/433 bài kiểm thử unit tests** backend (100% passed).
+
+## [2026-08-13] — Live AI Reasoning / Chain-of-Thought Streaming cho Chatbot
+- **Added:** Tính năng truyền và hiển thị luồng suy nghĩ thực tế của Chatbot theo thời gian thực (Live AI Reasoning / Chain of Thought Stream).
+  - Khai thông luồng token tư duy (`reasoning_content` và `<think>...</think>`) từ LLM Backend qua WebSocket tới giao diện Chatbot Mobile.
+  - Bổ sung chỉ dẫn hệ thống `_REASONING` vào [system_prompt.py](file:///c:/Project/Chatbot/apps/backend/services/agent/system_prompt.py) yêu cầu AI phân tích logic, cân nhắc calo/macro và công cụ trước khi đưa ra phản hồi hoặc gọi tool.
+  - Nâng cấp component `AIThoughtsPanel` trong [chatbot_screen.dart](file:///c:/Project/Chatbot/apps/mobile/lib/features/chat/screens/chatbot_screen.dart) với biểu tượng bộ não phát sáng, live spinner, định dạng Markdown rõ ràng, tự động mở rộng theo thời gian thực và cho phép đóng/mở linh hoạt khi hoàn tất.
+- **Fixed:**
+  - Loại bỏ hoàn toàn kỹ thuật `prefill = " "` và các quy tắc cấm suy nghĩ cũ trong [orchestrator.py](file:///c:/Project/Chatbot/apps/backend/services/agent/orchestrator.py), khắc phục triệt để việc mô hình bị chặn không xuất ra token tư duy.
+  - Cập nhật [llm_client.py](file:///c:/Project/Chatbot/apps/backend/services/agent/llm_client.py) để lưu trữ an toàn `reasoning_content` trong buffer đầu và không nuốt stream khi chuẩn bị gọi tool.
+  - Cập nhật tên mô hình chính xác `LLM_MODEL=ds/qwen3.5-397b-a17b` trong `config.py` và `.env`.
+- **Verified:** 428/428 bài kiểm thử backend unit tests passed 100%, kiểm thử luồng suy nghĩ trực tiếp thành công.
+
 ## [2026-08-09] — LM Studio Local LLM Integration & Fast/Reasoning Modes
 - **Changed:** Cấu hình hệ thống sử dụng mô hình ngôn ngữ lớn chạy cục bộ (Local LLM) qua LM Studio.
   - Cập nhật [apps/backend/.env](file:///c:/Project/Chatbot/apps/backend/.env) để sử dụng `OPENAI_BASE_URL=http://localhost:1234/v1` và đặt tên mô hình `LLM_MODEL` và `HEAVY_LLM_MODEL` là `qwen/qwen3-8b` (đã được nạp và hoạt động trong LM Studio).

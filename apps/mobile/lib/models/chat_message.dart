@@ -2,10 +2,10 @@ import 'wger_models.dart';
 
 /// Trạng thái của bot message
 enum MessageStatus {
-  thinking,   // Đang xử lý — hiện animated indicator, ẩn text
-  streaming,  // Đang nhận token — vẫn ẩn text, giữ indicator
-  done,       // Hoàn tất — hiện kết quả
-  error,      // Lỗi
+  thinking, // Đang xử lý — chỉ hiện reasoning khi có thought thật
+  streaming, // Đang nhận token câu trả lời
+  done, // Hoàn tất — hiện kết quả
+  error, // Lỗi
 }
 
 /// Model cho AI Chat
@@ -13,7 +13,6 @@ class AIChatMessage {
   final String id;
   final String text;
   final String thoughts;
-  final String statusText;
   final bool isUser;
   final bool isStreaming;
   final MessageStatus status;
@@ -33,12 +32,11 @@ class AIChatMessage {
     this.suggestions = const [],
     this.isFlowQuestion = false,
     this.thoughts = '',
-    this.statusText = '',
-  })  : status = status ?? (isStreaming ? MessageStatus.thinking : MessageStatus.done),
+  })  : status = status ??
+            (isStreaming ? MessageStatus.thinking : MessageStatus.done),
         timestamp = timestamp ?? DateTime.now();
 
-  bool get isThinking =>
-      !isUser && status == MessageStatus.thinking;
+  bool get isThinking => !isUser && status == MessageStatus.thinking;
 
   AIChatMessage copyWith({
     String? id,
@@ -51,7 +49,6 @@ class AIChatMessage {
     List<String>? suggestions,
     bool? isFlowQuestion,
     String? thoughts,
-    String? statusText,
   }) {
     return AIChatMessage(
       id: id ?? this.id,
@@ -64,7 +61,6 @@ class AIChatMessage {
       suggestions: suggestions ?? this.suggestions,
       isFlowQuestion: isFlowQuestion ?? this.isFlowQuestion,
       thoughts: thoughts ?? this.thoughts,
-      statusText: statusText ?? this.statusText,
     );
   }
 }

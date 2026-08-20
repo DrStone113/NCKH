@@ -69,6 +69,33 @@ void main() {
       expect(outputJson['id'], 1);
       expect(outputJson['name'], 'Bench Press');
     });
+
+    test('accepts numeric strings and chooses the main image', () {
+      final exercise = WgerExercise.fromJson({
+        'id': '42',
+        'name': 'Row',
+        'category': {'name': 'Back'},
+        'muscles': [
+          {'id': '1', 'name_en': 'Back', 'is_front': false},
+        ],
+        'muscles_secondary': [
+          {'id': 1, 'name_en': 'Back', 'is_front': false},
+          {'id': 2, 'name_en': 'Biceps', 'is_front': true},
+        ],
+        'equipment': [
+          {'id': '3', 'name': 'Barbell'},
+        ],
+        'images': [
+          {'image': 'fallback.jpg', 'is_main': false},
+          {'image': 'main.jpg', 'is_main': true},
+        ],
+      });
+
+      expect(exercise.id, 42);
+      expect(exercise.categoryName, 'Back');
+      expect(exercise.imageUrl, 'main.jpg');
+      expect(exercise.muscleCount, 2);
+    });
   });
 
   group('WgerIngredient', () {
@@ -116,6 +143,7 @@ void main() {
       expect(ingredient.proteinForGrams(100), 31.0);
       expect(ingredient.carbsForGrams(100), 0.0);
       expect(ingredient.fatForGrams(100), 3.6);
+      expect(ingredient.caloriesForGrams(-50), 0);
     });
 
     test('should handle null macro values', () {
@@ -204,6 +232,45 @@ void main() {
       final outputJson = action.toJson();
       expect(outputJson['kind'], 'exercise');
       expect(outputJson['wger_id'], 192);
+    });
+
+    test('estimates missing exercise calories without a fixed value', () {
+      final sprint = ActionItem.fromJson({
+        'kind': 'exercise',
+        'wger_id': '10',
+        'name': 'Swimming 50m sprints',
+        'details': {'duration_min': '30', 'category': 'Cardio'},
+      });
+      final yoga = ActionItem.fromJson({
+        'kind': 'exercise',
+        'name': 'Hatha yoga',
+        'details': {'duration_min': 30, 'category': 'Yoga'},
+      });
+
+      expect(sprint.wgerId, 10);
+      expect(sprint.details['duration_min'], 30);
+      expect(sprint.details['calories_estimated'], isTrue);
+      expect(
+        sprint.details['calories_burned'] as double,
+        greaterThan(yoga.details['calories_burned'] as double),
+      );
+    });
+
+    test('normalizes invalid duration and calories from loose JSON types', () {
+      final action = ActionItem.fromJson({
+        'kind': 'exercise',
+        'name': 'Biceps curl',
+        'details': {
+          'duration': '-20',
+          'calories_burned': '-50',
+          'category': 'Arms',
+        },
+      });
+
+      expect(action.details['duration'], 1);
+      expect(action.details['duration_min'], 1);
+      expect(action.details['calories_burned'], greaterThan(0));
+      expect(action.details['calories_estimated'], isTrue);
     });
   });
 

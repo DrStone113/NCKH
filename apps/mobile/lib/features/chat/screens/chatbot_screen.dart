@@ -16,6 +16,7 @@ import '../../../widgets/detail_bottom_sheet.dart';
 import '../../../widgets/plan_detail_bottom_sheet.dart';
 import '../../../services/backend_api_service.dart';
 import '../../../widgets/formatted_markdown_text.dart';
+import '../../../widgets/meal_summary_card.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key, this.showBackButton = true});
@@ -179,8 +180,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                               : 'Sẵn sàng',
                       style: TextStyle(
                         fontSize: 11,
-                        color:
-                            hasError ? Colors.red : AppColors.textSecondary,
+                        color: hasError ? Colors.red : AppColors.textSecondary,
                         fontWeight: FontWeight.normal,
                       ),
                     ),
@@ -271,7 +271,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -472,7 +473,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              border:
+                  Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -481,8 +483,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 Expanded(
                   child: Text(
                     'Kế hoạch active: ${plan['duration_days']} ngày • ${plan['goal']}',
-                    style:
-                        const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ),
                 TextButton(
@@ -544,7 +546,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildMessageBubble(AIChatMessage message) {
-    // Bot đang thinking → hiện indicator trạng thái kèm thoughts nếu có
+    // Khi bot đang xử lý, chỉ hiển thị reasoning thật từ backend.
     if (message.isThinking) {
       return _buildThinkingBubble(message);
     }
@@ -673,9 +675,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  /// Bubble "Đang suy nghĩ..." với animated dots + label trạng thái và thoughts panel nếu có
+  /// Chỉ hiện quá trình reasoning thật; không hiện các status trung gian.
   Widget _buildThinkingBubble(AIChatMessage message) {
-    final statusText = message.statusText.isNotEmpty ? message.statusText : 'Đang suy nghĩ...';
+    if (message.thoughts.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -699,54 +704,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardDark,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(4),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const _TypingDots(),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          statusText,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (message.thoughts.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  AIThoughtsPanel(
-                    thoughts: message.thoughts,
-                    isThinking: true,
-                  ),
-                ],
-              ],
+            child: AIThoughtsPanel(
+              thoughts: message.thoughts,
+              isThinking: true,
             ),
           ),
         ],
@@ -806,7 +766,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.25)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -825,15 +786,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ));
 
           // Các bữa trong ngày
-          final mealOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
+          const mealOrder = MealTypeUtils.orderedTypes;
           final dishMap = dayGroups[day] ?? {};
           // Sắp xếp theo meal_type
           final sortedDishes = dishMap.entries.toList()
             ..sort((a, b) {
-              final ma = mealOrder
-                  .indexOf(a.value.first.details['meal_type'] as String? ?? '');
-              final mb = mealOrder
-                  .indexOf(b.value.first.details['meal_type'] as String? ?? '');
+              final ma = mealOrder.indexOf(MealTypeUtils.normalize(
+                a.value.first.details['meal_type'] as String?,
+              ));
+              final mb = mealOrder.indexOf(MealTypeUtils.normalize(
+                b.value.first.details['meal_type'] as String?,
+              ));
               return ma.compareTo(mb);
             });
 
@@ -898,7 +861,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
         child: ActionCardWidget(
           action: action,
-          onSaveToJournal: showSaveButton ? () => _handleSaveToJournal(action) : null,
+          onSaveToJournal:
+              showSaveButton ? () => _handleSaveToJournal(action) : null,
           onViewDetail: () => _handleViewDetail(action),
         ),
       ));
@@ -909,17 +873,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   /// Helper: Lấy label tiếng Việt cho meal_type
   String _getMealTypeLabel(String mealType) {
-    const labels = {
-      'sang': 'Bữa sáng',
-      'breakfast': 'Bữa sáng',
-      'trua': 'Bữa trưa',
-      'lunch': 'Bữa trưa',
-      'toi': 'Bữa tối',
-      'dinner': 'Bữa tối',
-      'phu': 'Ăn phụ',
-      'snack': 'Ăn phụ',
-    };
-    return labels[mealType.toLowerCase()] ?? 'Bữa ăn';
+    return MealTypeUtils.label(mealType);
   }
 
   /// Lưu food actions thành 1 MealModel với nhiều MealItem
@@ -929,7 +883,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final nutritionProvider = Provider.of<NutritionProvider>(context, listen: false);
+    final nutritionProvider =
+        Provider.of<NutritionProvider>(context, listen: false);
     final user = userProvider.currentUser;
     if (user == null || actions.isEmpty) return;
 
@@ -1088,18 +1043,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   String _mapMealType(String t) {
-    switch (t.toLowerCase()) {
-      case 'breakfast':
-        return 'sang';
-      case 'lunch':
-        return 'trua';
-      case 'dinner':
-        return 'toi';
-      case 'snack':
-        return 'phu';
-      default:
-        return t;
-    }
+    return MealTypeUtils.normalize(t);
   }
 
   /// Handle "Lưu vào nhật ký" button press
@@ -1232,7 +1176,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.04),
@@ -1273,7 +1218,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ),
                     ),
                     Icon(Icons.chevron_right,
-                        size: 18, color: AppColors.primary.withValues(alpha: 0.5)),
+                        size: 18,
+                        color: AppColors.primary.withValues(alpha: 0.5)),
                   ],
                 ),
               ),
@@ -1293,7 +1239,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     final todayMeals = nutritionProvider.todayMeals;
     final todayExercises = exerciseProvider.todayExercises;
-    final totalCal = nutritionProvider.totalCalories;
+    final consumedCal = nutritionProvider.consumedCalories;
+    final plannedCal = nutritionProvider.plannedCalories;
     final burnedCal = exerciseProvider.totalCaloriesBurned;
     final hasTodayData = todayMeals.isNotEmpty || todayExercises.isNotEmpty;
 
@@ -1323,7 +1270,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+                border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.08)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1344,7 +1292,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       GestureDetector(
                         onTap: () {
                           final summary = _buildTodaySummaryMessage(
-                              todayMeals, todayExercises, totalCal, burnedCal);
+                              nutritionProvider, exerciseProvider);
                           _sendMessage(summary);
                         },
                         child: Container(
@@ -1372,7 +1320,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         Expanded(
                           child: _buildContextStat(
                             '🍽️',
-                            '${totalCal.toStringAsFixed(0)} kcal',
+                            nutritionProvider.completedMealsCount > 0
+                                ? '${consumedCal.toStringAsFixed(0)} kcal đã ăn'
+                                : '${plannedCal.toStringAsFixed(0)} kcal dự kiến',
                             '${todayMeals.length} bữa ăn',
                             AppColors.calories,
                           ),
@@ -1421,7 +1371,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ...actions.map((a) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
-                        avatar: Text(a.$1, style: const TextStyle(fontSize: 13)),
+                        avatar:
+                            Text(a.$1, style: const TextStyle(fontSize: 13)),
                         label: Text(a.$2,
                             style: const TextStyle(
                                 fontSize: 12, fontWeight: FontWeight.w500)),
@@ -1436,13 +1387,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ...planActions.map((a) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
-                        avatar: Text(a.$1, style: const TextStyle(fontSize: 13)),
+                        avatar:
+                            Text(a.$1, style: const TextStyle(fontSize: 13)),
                         label: Text(a.$2,
                             style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600)),
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.08),
                         side: BorderSide(
                             color: AppColors.primary.withValues(alpha: 0.35)),
                         shape: RoundedRectangleBorder(
@@ -1482,8 +1435,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      _loadActivePlan();
-      _sendMessage('Hãy tạo kế hoạch $days ngày cho tôi');
+      // REST planner đã tạo và điền đủ kế hoạch. Không gửi lại cùng yêu cầu
+      // vào chatbot vì sẽ tạo một plan thứ hai rồi hỏi xác nhận từng ngày.
+      await _loadActivePlan();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1523,15 +1477,27 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   String _buildTodaySummaryMessage(
-    List<dynamic> meals,
-    List<dynamic> exercises,
-    double totalCal,
-    double burnedCal,
+    NutritionProvider nutritionProvider,
+    ExerciseProvider exerciseProvider,
   ) {
-    final buffer = StringBuffer('Hôm nay tôi đã:\n');
-    if (meals.isNotEmpty) {
+    final completedCount = nutritionProvider.completedMealsCount;
+    final pendingCount = nutritionProvider.pendingMealsCount;
+    final consumedCal = nutritionProvider.consumedCalories;
+    final plannedCal = nutritionProvider.plannedCalories;
+    final exercises = exerciseProvider.todayExercises;
+    final burnedCal = exerciseProvider.totalCaloriesBurned;
+
+    final buffer = StringBuffer('Hôm nay tình trạng dinh dưỡng & vận động của tôi:\n');
+    if (completedCount > 0) {
       buffer.write(
-          '- Ăn ${meals.length} bữa, tổng ${totalCal.toStringAsFixed(0)} kcal\n');
+          '- Đã ăn $completedCount bữa: tổng ${consumedCal.toStringAsFixed(0)} kcal\n');
+    }
+    if (pendingCount > 0) {
+      buffer.write(
+          '- Có $pendingCount bữa dự kiến trong kế hoạch chưa ăn (${(plannedCal - consumedCal).toStringAsFixed(0)} kcal)\n');
+    }
+    if (completedCount == 0 && pendingCount == 0) {
+      buffer.write('- Chưa ghi nhận bữa ăn nào hôm nay\n');
     }
     if (exercises.isNotEmpty) {
       buffer.write(
@@ -1627,11 +1593,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     hintText: isStreaming
                         ? 'AI đang phản hồi...'
                         : 'Nhập triệu chứng hoặc câu hỏi...',
-                    hintStyle:
-                        const TextStyle(color: AppColors.textHint, fontSize: 14),
+                    hintStyle: const TextStyle(
+                        color: AppColors.textHint, fontSize: 14),
                     border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
                   ),
                   maxLines: null,
                   textInputAction: TextInputAction.send,
@@ -1658,8 +1624,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ],
               ),
               child: IconButton(
-                icon: Icon(
-                    isStreaming ? Icons.hourglass_bottom : Icons.send,
+                icon: Icon(isStreaming ? Icons.hourglass_bottom : Icons.send,
                     color: isStreaming ? Colors.grey.shade600 : Colors.white,
                     size: 22),
                 onPressed: isStreaming ? null : _handleSubmit,
@@ -1719,66 +1684,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     Provider.of<AIChatProvider>(context, listen: false).sendMessage(
       text,
       user,
-      todayCalories: nutritionProvider.totalCalories,
-      todayMealsCount: nutritionProvider.todayMeals.length,
+      todayCalories: nutritionProvider.consumedCalories,
+      todayMealsCount: nutritionProvider.completedMealsCount,
       todayCaloriesBurned: exerciseProvider.totalCaloriesBurned,
       todayExercisesCount: exerciseProvider.todayExercises.length,
       todayMeals: todayMeals,
       todayExercises: todayExercises,
-    );
-  }
-}
-
-// === Typing dots animation ===
-class _TypingDots extends StatefulWidget {
-  const _TypingDots();
-
-  @override
-  State<_TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<_TypingDots>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(3, (index) {
-            final delay = index * 0.2;
-            final bounce = ((_controller.value - delay) % 1.0);
-            final opacity = bounce < 0.5 ? bounce * 2 : (1 - bounce) * 2;
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: opacity.clamp(0.3, 1.0)),
-                shape: BoxShape.circle,
-              ),
-            );
-          }),
-        );
-      },
     );
   }
 }
@@ -1801,219 +1712,37 @@ class _MealActionCard extends StatelessWidget {
     this.onSaveAll,
   });
 
-  /// Lấy nhãn bữa ăn từ meal_type
-  String get _mealTypeLabel {
-    switch (mealType.toLowerCase()) {
-      case 'breakfast':
-      case 'sang':
-        return 'Bữa sáng';
-      case 'lunch':
-      case 'trua':
-        return 'Bữa trưa';
-      case 'dinner':
-      case 'toi':
-        return 'Bữa tối';
-      case 'snack':
-      case 'phu':
-        return 'Ăn phụ';
-      default:
-        return '';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final totalCal = actions.fold(0.0, (sum, a) {
-      final cal = (a.details['calories'] as num? ?? 0).toDouble();
-      final g = (a.details['serving_grams'] as num? ?? 100).toDouble();
-      return sum + cal * g / 100;
-    });
-    final totalProtein = actions.fold(0.0, (sum, a) {
-      final p = (a.details['protein'] as num? ?? 0).toDouble();
-      final g = (a.details['serving_grams'] as num? ?? 100).toDouble();
-      return sum + p * g / 100;
-    });
-    final totalCarbs = actions.fold(0.0, (sum, a) {
-      final c = (a.details['carbs'] as num? ?? 0).toDouble();
-      final g = (a.details['serving_grams'] as num? ?? 100).toDouble();
-      return sum + c * g / 100;
-    });
-    final totalFat = actions.fold(0.0, (sum, a) {
-      final f = (a.details['fat'] as num? ?? 0).toDouble();
-      final g = (a.details['serving_grams'] as num? ?? 100).toDouble();
-      return sum + f * g / 100;
-    });
+    double gramsFor(ActionItem action) =>
+        (action.details['serving_grams'] as num? ?? 100).toDouble();
+    double totalFor(String field) => actions.fold(0, (sum, action) {
+          final per100g = (action.details[field] as num? ?? 0).toDouble();
+          return sum + per100g * gramsFor(action) / 100;
+        });
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.25), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.06),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
+    return MealSummaryCard(
+      name: mealName,
+      mealType: MealTypeUtils.normalize(mealType),
+      ingredients: actions
+          .map(
+            (action) => MealCardIngredientView(
+              name: action.name,
+              grams: gramsFor(action),
+              calories: (action.details['calories'] as num? ?? 0).toDouble() *
+                  gramsFor(action) /
+                  100,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.restaurant_menu,
-                      color: Color(0xFF4CAF50), size: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(mealName,
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1A1A1A))),
-                      Row(
-                        children: [
-                          if (_mealTypeLabel.isNotEmpty) ...[
-                            Text(_mealTypeLabel,
-                                style: const TextStyle(
-                                    fontSize: 11, color: Color(0xFF888888))),
-                            const Text(' · ',
-                                style: TextStyle(
-                                    fontSize: 11, color: Color(0xFF888888))),
-                          ],
-                          Text('${actions.length} nguyên liệu',
-                              style: const TextStyle(
-                                  fontSize: 11, color: Color(0xFF4CAF50))),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(totalCal.toStringAsFixed(0),
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.calories)),
-                    const Text('kcal',
-                        style: TextStyle(
-                            fontSize: 10, color: AppColors.textSecondary)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Danh sách nguyên liệu
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-            child: Column(
-              children: [
-                ...actions.map((a) {
-                  final g =
-                      (a.details['serving_grams'] as num? ?? 100).toDouble();
-                  final cal =
-                      (a.details['calories'] as num? ?? 0).toDouble() * g / 100;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.fiber_manual_record,
-                            size: 6, color: AppColors.textHint),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text('${a.name}  ${g.toStringAsFixed(0)}g',
-                              style: const TextStyle(fontSize: 13)),
-                        ),
-                        Text('${cal.toStringAsFixed(0)} kcal',
-                            style: const TextStyle(
-                                fontSize: 11, color: AppColors.textSecondary)),
-                      ],
-                    ),
-                  );
-                }),
-                const SizedBox(height: 4),
-                // Macro tổng
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _macroChip('P', totalProtein, AppColors.protein),
-                      _macroChip('C', totalCarbs, AppColors.carbs),
-                      _macroChip('F', totalFat, AppColors.fat),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
-
-          // Nút lưu
-          if (onSaveAll != null)
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onSaveAll,
-                  icon: const Icon(Icons.bookmark_add_outlined, size: 16),
-                  label: Text('Lưu "$mealName" vào nhật ký'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _macroChip(String label, double value, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('$label:',
-            style: TextStyle(
-                fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-        const SizedBox(width: 3),
-        Text('${value.toStringAsFixed(0)}g',
-            style:
-                const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-      ],
+          )
+          .toList(growable: false),
+      calories: totalFor('calories'),
+      protein: totalFor('protein'),
+      carbs: totalFor('carbs'),
+      fat: totalFor('fat'),
+      actionLabel: onSaveAll == null ? null : 'Lưu vào nhật ký',
+      actionIcon: Icons.bookmark_add_outlined,
+      onAction: onSaveAll,
+      primaryAction: true,
     );
   }
 }
@@ -2033,13 +1762,7 @@ class AIThoughtsPanel extends StatefulWidget {
 }
 
 class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
-  bool _isExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _isExpanded = widget.isThinking;
-  }
+  bool _isExpanded = true;
 
   @override
   void didUpdateWidget(AIThoughtsPanel oldWidget) {
@@ -2051,12 +1774,18 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.thoughts.trim().isEmpty) return const SizedBox.shrink();
+
+    final isLive = widget.isThinking;
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight.withValues(alpha: 0.5),
+        color: AppColors.surfaceLight.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.1),
+          color: isLive
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : AppColors.textHint.withValues(alpha: 0.15),
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -2064,34 +1793,49 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: widget.isThinking
-                ? null
-                : () => setState(() => _isExpanded = !_isExpanded),
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
                   Icon(
-                    Icons.psychology_outlined,
+                    Icons.psychology,
                     size: 16,
-                    color: AppColors.primary.withValues(alpha: 0.6),
+                    color: isLive
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    widget.isThinking ? 'Đang suy nghĩ...' : 'Xem quá trình suy nghĩ',
+                    isLive ? 'AI đang suy nghĩ...' : 'Xem quá trình suy nghĩ',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary.withValues(alpha: 0.8),
+                      color: isLive
+                          ? AppColors.primary
+                          : AppColors.primary.withValues(alpha: 0.8),
                     ),
                   ),
-                  const Spacer(),
-                  if (!widget.isThinking)
-                    Icon(
-                      _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                      size: 16,
-                      color: AppColors.textSecondary,
+                  if (isLive) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(
+                      width: 10,
+                      height: 10,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
                     ),
+                  ],
+                  const Spacer(),
+                  Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
                 ],
               ),
             ),
@@ -2100,14 +1844,14 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
             firstChild: const SizedBox.shrink(),
             secondChild: Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-              child: Text(
-                widget.thoughts.trim(),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: FormattedMarkdownText(
+                text: widget.thoughts.trim(),
                 style: const TextStyle(
                   fontSize: 12.5,
                   color: AppColors.textSecondary,
                   fontStyle: FontStyle.italic,
-                  height: 1.4,
+                  height: 1.45,
                 ),
               ),
             ),

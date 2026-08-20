@@ -78,6 +78,11 @@ logger = logging.getLogger(__name__)
 _KCAL_LOWER_FACTOR = 0.7
 _KCAL_UPPER_FACTOR = 1.5
 
+# Không co/giãn một suất ăn vô hạn chỉ để chạm đúng target kcal. Trước đây
+# một phần bún 400 g có thể bị kéo thành hơn 1 kg cho mục tiêu 900 kcal.
+_MIN_PORTION_SCALE = 0.65
+_MAX_PORTION_SCALE = 1.60
+
 #: Allowed values for ``meal_type`` (design.md §6.1, MealTypeLiteral).
 _VALID_MEAL_TYPES: frozenset[str] = frozenset(
     {"breakfast", "lunch", "dinner", "snack"}
@@ -309,6 +314,25 @@ def _build_dish_record(
             # Cannot scale a dish with zero energy.
             return None
 
+        # `estimated_calories` là tổng kcal được hiển thị trong catalog món
+        # Việt. Phân bổ hệ số này về components để catalog, suggest_dish và
+        # mobile không còn cho ba kết quả khác nhau với cùng một khẩu phần.
+        catalog_kcal = _safe_float(dish.get("estimated_calories"))
+        if catalog_kcal > 0:
+            calorie_factor = catalog_kcal / base_kcal
+            components = [
+                _ComponentSpec(
+                    name=c.name,
+                    base_grams=c.base_grams,
+                    kcal_per_g=c.kcal_per_g * calorie_factor,
+                    protein_per_g=c.protein_per_g,
+                    carbs_per_g=c.carbs_per_g,
+                    fat_per_g=c.fat_per_g,
+                )
+                for c in components
+            ]
+            base_kcal = catalog_kcal
+
         return _DishRecord(
             id=dish_id,
             name=name,
@@ -438,6 +462,7 @@ class _ScaledDish:
     total_protein: float
     total_carbs: float
     total_fat: float
+    scale_factor: float
 
 
 def _scale_dish(
@@ -448,7 +473,8 @@ def _scale_dish(
 
     Algorithm:
       1. ``raw_scale = target_kcal / dish.base_total_calories``.
-      2. Lift ``scale`` so the smallest component still rounds to ≥ 1g.
+      2. Clamp the portion to ``[0.65, 1.60]`` and lift ``scale`` if needed
+         so the smallest component still rounds to ≥ 1g.
       3. Scale every component's ``serving_grams`` by ``scale`` and round
          to the nearest integer (floor to 1).
       4. Recompute calories/macros from per-gram rates × actual grams.
@@ -464,7 +490,10 @@ def _scale_dish(
     # would be marginally tighter but the conservative ``1/min_base_g``
     # guarantees ``round(scale * min_base_g) ≥ 1`` for any rounding mode.
     min_safe_scale = 1.0 / float(min_base_g)
-    scale = max(raw_scale, min_safe_scale)
+    scale = min(
+        max(raw_scale, min_safe_scale, _MIN_PORTION_SCALE),
+        _MAX_PORTION_SCALE,
+    )
 
     components_out: list[dict[str, Any]] = []
     total_kcal = 0.0
@@ -504,6 +533,7 @@ def _scale_dish(
         total_protein=round(total_protein, 2),
         total_carbs=round(total_carbs, 2),
         total_fat=round(total_fat, 2),
+        scale_factor=round(scale, 4),
     )
 
 
@@ -686,10 +716,15 @@ def suggest_dish(
     if not candidates:
         raise ValueError("NO_DISH_FOUND")
 
-    # Deterministic pick: minimise distance to target, tiebreak by id ASC.
+    # Ưu tiên món cần co/giãn khẩu phần ít nhất. Nếu chỉ xếp theo kcal sau
+    # scale thì gần như mọi món đều bằng target và kết quả vô tình chọn theo id.
     best = min(
         candidates,
-        key=lambda s: (abs(s.total_calories - target_kcal_f), s.record.id),
+        key=lambda s: (
+            abs(s.scale_factor - 1.0),
+            abs(s.total_calories - target_kcal_f),
+            s.record.id,
+        ),
     )
     rec = best.record
     return {
@@ -701,6 +736,8 @@ def suggest_dish(
         "total_protein": best.total_protein,
         "total_carbs": best.total_carbs,
         "total_fat": best.total_fat,
+        "catalog_calories": round(rec.base_total_calories, 2),
+        "serving_scale": best.scale_factor,
         "region": _get_dish_region(rec.name),
     }
 

@@ -21,10 +21,12 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
 
     // Map full format to short format for UI
     if (user?.healthGoal != null) {
-      switch (user!.healthGoal) {
+      switch (user!.healthGoal.toLowerCase()) {
+        case 'lose':
         case 'lose_weight':
           _selectedGoal = 'lose';
           break;
+        case 'gain':
         case 'gain_muscle':
           _selectedGoal = 'gain';
           break;
@@ -214,7 +216,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                     const SizedBox(height: 12),
                     _buildGoalCard(
                       'gain',
-                      'Tăng cân',
+                      'Tăng cơ',
                       'Tăng cơ, tăng cân lành mạnh',
                       Icons.trending_up,
                       AppColors.info,
@@ -350,7 +352,9 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surfaceLight,
+          color: isSelected
+              ? color.withValues(alpha: 0.1)
+              : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -363,7 +367,9 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.2) : AppColors.surface,
+                color: isSelected
+                    ? color.withValues(alpha: 0.2)
+                    : AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 28),

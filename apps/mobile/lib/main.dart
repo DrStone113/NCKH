@@ -187,26 +187,26 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
           frameBorderColor = const Color(0xFF6B4EFF);
           frameShadows = [
             BoxShadow(
-              color: const Color(0xFF6B4EFF).withOpacity(0.5),
+              color: const Color(0xFF6B4EFF).withValues(alpha: 0.5),
               blurRadius: 25,
               spreadRadius: 2,
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withValues(alpha: 0.6),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
           ];
         } else if (_frameTheme == 'glass') {
-          frameBorderColor = Colors.white.withOpacity(0.25);
+          frameBorderColor = Colors.white.withValues(alpha: 0.25);
           frameShadows = [
             BoxShadow(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               blurRadius: 20,
               spreadRadius: -5,
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 40,
               offset: const Offset(0, 20),
             ),
@@ -216,12 +216,12 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
           frameBorderColor = const Color(0xFF1E1E2E);
           frameShadows = [
             BoxShadow(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               blurRadius: 45,
               offset: const Offset(0, 25),
             ),
             BoxShadow(
-              color: const Color(0xFF6B4EFF).withOpacity(0.15),
+              color: const Color(0xFF6B4EFF).withValues(alpha: 0.15),
               blurRadius: 60,
               offset: const Offset(0, 10),
             ),
@@ -258,8 +258,8 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF6B4EFF).withOpacity(0.18),
-                          const Color(0xFF6B4EFF).withOpacity(0.0),
+                          const Color(0xFF6B4EFF).withValues(alpha: 0.18),
+                          const Color(0xFF6B4EFF).withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -275,8 +275,8 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF00F2FE).withOpacity(0.12),
-                          const Color(0xFF00F2FE).withOpacity(0.0),
+                          const Color(0xFF00F2FE).withValues(alpha: 0.12),
+                          const Color(0xFF00F2FE).withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -290,15 +290,15 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1B1530).withOpacity(0.85),
+                      color: const Color(0xFF1B1530).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -395,7 +395,7 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(44),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.08),
+                                    color: Colors.white.withValues(alpha: 0.08),
                                     width: 1,
                                   ),
                                 ),
@@ -421,7 +421,7 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                                         width: 35,
                                         height: 3,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.12),
+                                          color: Colors.white.withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(2),
                                         ),
                                       ),
@@ -458,17 +458,17 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withOpacity(0.05),
+          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -490,17 +490,17 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withOpacity(0.05),
+          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+            color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

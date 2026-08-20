@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from datetime import date, timedelta
 from typing import Any, Iterable
 from uuid import uuid4
@@ -98,6 +99,71 @@ CREATE_PLAN_SCHEMA: dict[str, Any] = {
 }
 
 
+# High-level plan generation schema. Unlike ``create_plan`` this operation
+# creates the plan header and every meal/workout item in one deterministic
+# server-side run, so the LLM never has to orchestrate one day per chat step.
+CREATE_LONG_TERM_PLAN_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "user_id": {"type": "string", "minLength": 1},
+        "goal": {
+            "type": "string",
+            "enum": ["lose_weight", "maintain", "gain_muscle"],
+        },
+        "duration_days": {"type": "integer", "minimum": 3, "maximum": 120},
+        "start_date": {"type": "string", "format": "date"},
+        "profile": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "string", "minLength": 1},
+                "age": {"type": "integer", "minimum": 10, "maximum": 120},
+                "gender": {"type": "string", "enum": ["male", "female"]},
+                "height_cm": {"type": "number", "minimum": 100, "maximum": 250},
+                "weight_kg": {"type": "number", "minimum": 30, "maximum": 300},
+                "activity_level": {
+                    "type": "string",
+                    "enum": [
+                        "sedentary",
+                        "light",
+                        "moderate",
+                        "active",
+                        "very_active",
+                    ],
+                },
+                "health_goal": {
+                    "type": "string",
+                    "enum": ["lose_weight", "maintain", "gain_muscle"],
+                },
+                "dietary_restrictions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+            "required": [
+                "user_id",
+                "age",
+                "gender",
+                "height_cm",
+                "weight_kg",
+                "activity_level",
+                "health_goal",
+            ],
+            "additionalProperties": False,
+        },
+        "request_id": {"type": "string", "minLength": 1},
+    },
+    "required": [
+        "user_id",
+        "goal",
+        "duration_days",
+        "start_date",
+        "profile",
+        "request_id",
+    ],
+    "additionalProperties": False,
+}
+
+
 # `append_plan_items` parameters. Each item must point at a valid day in the
 # parent plan; the function loads the plan and verifies invariants from
 # design.md §6.3 before bulk-inserting into ``plan_items``.
@@ -163,18 +229,41 @@ APPEND_PLAN_ITEMS_SCHEMA: dict[str, Any] = {
 CREATE_PLAN_DESCRIPTOR = ToolDescriptor(
     name="create_plan",
     description=(
-        "Tạo kế hoạch dài hạn mới (status='active') và trả về `plan_id`. "
-        "Gọi khi người dùng muốn một lộ trình nhiều ngày/tuần. "
+        "Tool cấp thấp chỉ tạo header kế hoạch (status='active') và trả về "
+        "`plan_id`, KHÔNG tạo lịch từng ngày. Không dùng trực tiếp khi người "
+        "dùng yêu cầu một kế hoạch hoàn chỉnh; hãy dùng `create_long_term_plan`. "
         "Ánh xạ mục tiêu: giảm cân/giảm mỡ → goal='lose_weight'; "
         "tăng cơ/tăng cân → goal='gain_muscle'; giữ dáng/duy trì → goal='maintain'. "
         "duration_days tính bằng NGÀY, quy đổi từ tuần: N tuần → duration_days = N*7 "
         "(tối đa 120 ngày ≈ 17 tuần). "
-        "Không tự sinh `plan_items`; gọi `append_plan_items` sau đó để bổ sung từng ngày."
+        "Chỉ dùng cho sửa chữa/nâng cao cần tự quản lý plan_items."
     ),
     parameters_schema=CREATE_PLAN_SCHEMA,
     side="server",
     fn=None,  # Bound by register_server_tools (task 12.1) with an AsyncSession.
     idempotent=False,
+)
+
+
+CREATE_LONG_TERM_PLAN_DESCRIPTOR = ToolDescriptor(
+    name="create_long_term_plan",
+    description=(
+        "Tạo TRỌN GÓI kế hoạch nhiều ngày trong một lần: tự tính mục tiêu, tạo "
+        "header và điền đủ thực đơn + bài tập cho mọi ngày. BẮT BUỘC dùng tool "
+        "này khi người dùng yêu cầu tạo/làm trọn kế hoạch dài hạn; không gọi "
+        "create_plan, suggest_dish, suggest_workout hay append_plan_items thủ "
+        "công theo từng ngày và không hỏi xác nhận lại khi hồ sơ đã đủ. Quy đổi "
+        "N tuần thành duration_days=N*7. Lộ trình được chia thành block tuần 7 "
+        "ngày theo thứ trong tuần; ví dụ 60 ngày = 8 tuần đủ + 4 ngày của tuần "
+        "9, có phân kỳ cường độ và ngày nghỉ/phục hồi. Ánh xạ giảm cân/giảm mỡ → "
+        "goal='lose_weight'; tăng cơ/tăng cân → goal='gain_muscle'; giữ dáng → "
+        "goal='maintain'."
+    ),
+    parameters_schema=CREATE_LONG_TERM_PLAN_SCHEMA,
+    side="server",
+    fn=None,
+    idempotent=False,
+    timeout_ms=120_000,
 )
 
 
@@ -294,37 +383,34 @@ async def create_plan(
     end = start + timedelta(days=duration - 1)
 
     plan_id = str(uuid4())
-    try:
-        await session.execute(
-            text(
-                """
-                INSERT INTO plans (
-                    id, user_id, goal,
-                    start_date, end_date, duration_days,
-                    daily_kcal_target, daily_protein_target,
-                    status
-                )
-                VALUES (
-                    :id, :user_id, :goal,
-                    :start_date, :end_date, :duration_days,
-                    :daily_kcal, :daily_protein,
-                    'active'
-                )
-                """
-            ),
-            {
-                "id": plan_id,
-                "user_id": user_id,
-                "goal": goal,
-                "start_date": start,
-                "end_date": end,
-                "duration_days": duration,
-                "daily_kcal": kcal,
-                "daily_protein": protein,
-            },
-        )
-    except Exception as exc:
-        logger.warning("DB insert plan skipped (standalone mode): %s", exc)
+    await session.execute(
+        text(
+            """
+            INSERT INTO plans (
+                id, user_id, goal,
+                start_date, end_date, duration_days,
+                daily_kcal_target, daily_protein_target,
+                status
+            )
+            VALUES (
+                :id, :user_id, :goal,
+                :start_date, :end_date, :duration_days,
+                :daily_kcal, :daily_protein,
+                'active'
+            )
+            """
+        ),
+        {
+            "id": plan_id,
+            "user_id": user_id,
+            "goal": goal,
+            "start_date": start,
+            "end_date": end,
+            "duration_days": duration,
+            "daily_kcal": kcal,
+            "daily_protein": protein,
+        },
+    )
 
     logger.info(
         "create_plan inserted plan id=%s user=%s duration=%d kcal=%.1f protein=%.1f",
@@ -335,6 +421,42 @@ async def create_plan(
         protein,
     )
     return plan_id
+
+
+async def create_long_term_plan(
+    registry: Any,
+    session: AsyncSession,
+    *,
+    user_id: str,
+    goal: str,
+    duration_days: int,
+    start_date: date | str,
+    profile: dict[str, Any],
+    request_id: str,
+) -> dict[str, Any]:
+    """Generate a complete plan in one high-level tool invocation."""
+    from services.agent.planner import PlannerAgent
+
+    start = _coerce_date(start_date, field="start_date")
+    _ = request_id  # Idempotency is enforced by ToolDispatcher.
+    plan_id = await PlannerAgent(registry, db_session=session).createLongTermPlan(
+        user_id=user_id,
+        goal=goal,
+        duration_days=duration_days,
+        profile=profile,
+        start_date=start,
+    )
+
+    return {
+        "plan_id": str(plan_id),
+        "duration_days": duration_days,
+        "days_generated": duration_days,
+        "full_weeks": duration_days // 7,
+        "remaining_days": duration_days % 7,
+        "total_weeks": math.ceil(duration_days / 7),
+        "start_date": start.isoformat(),
+        "status": "active",
+    }
 
 
 def _coerce_plan_item(raw: Any) -> PlanItem:
@@ -398,41 +520,22 @@ async def append_plan_items(
         raise ValueError("INVALID_DAY_INDEX")
 
     import uuid
-    valid_uuid = False
+
     try:
         uuid.UUID(plan_id)
-        valid_uuid = True
     except (ValueError, TypeError):
-        valid_uuid = False
+        raise ValueError("INVALID_PLAN_ID") from None
 
-    plan_row = None
-    actual_plan_id = plan_id
-    if valid_uuid:
-        plan_row = (
-            await session.execute(
-                text(
-                    "SELECT start_date, duration_days FROM plans WHERE id = :id"
-                ),
-                {"id": plan_id},
-            )
-        ).first()
-
-    if plan_row is not None:
-        plan_start: date = plan_row[0]
-        plan_duration: int = int(plan_row[1])
-    else:
-        active_row = (
-            await session.execute(
-                text(
-                    "SELECT id, start_date, duration_days FROM plans WHERE status = 'active' ORDER BY created_at DESC LIMIT 1"
-                )
-            )
-        ).first()
-        if active_row is None:
-            raise ValueError("PLAN_NOT_FOUND")
-        actual_plan_id = str(active_row[0])
-        plan_start = active_row[1]
-        plan_duration = int(active_row[2])
+    plan_row = (
+        await session.execute(
+            text("SELECT start_date, duration_days FROM plans WHERE id = :id"),
+            {"id": plan_id},
+        )
+    ).first()
+    if plan_row is None:
+        raise ValueError("PLAN_NOT_FOUND")
+    plan_start: date = plan_row[0]
+    plan_duration: int = int(plan_row[1])
 
     if not (1 <= day_index <= plan_duration):
         raise ValueError("INVALID_DAY_INDEX")
@@ -471,7 +574,7 @@ async def append_plan_items(
     rows = [
         {
             "id": item.id or str(uuid4()),
-            "plan_id": actual_plan_id,
+            "plan_id": plan_id,
             "day_index": item.day_index,
             "plan_date": item.plan_date,
             "item_type": item.item_type,
@@ -484,10 +587,7 @@ async def append_plan_items(
         for item in materialised
     ]
 
-    try:
-        await session.execute(insert_sql, rows)
-    except Exception as exc:
-        logger.warning("DB append_plan_items skipped (standalone mode): %s", exc)
+    await session.execute(insert_sql, rows)
 
     logger.info(
         "append_plan_items inserted %d items plan_id=%s day_index=%d",
@@ -500,8 +600,11 @@ async def append_plan_items(
 __all__ = [
     "APPEND_PLAN_ITEMS_DESCRIPTOR",
     "APPEND_PLAN_ITEMS_SCHEMA",
+    "CREATE_LONG_TERM_PLAN_DESCRIPTOR",
+    "CREATE_LONG_TERM_PLAN_SCHEMA",
     "CREATE_PLAN_DESCRIPTOR",
     "CREATE_PLAN_SCHEMA",
     "append_plan_items",
+    "create_long_term_plan",
     "create_plan",
 ]

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/wger_models.dart';
+import '../models/workout_routine_model.dart';
 
 class ActionCardWidget extends StatelessWidget {
   final ActionItem action;
@@ -76,7 +77,7 @@ class ActionCardWidget extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        isExercise ? 'Bài tập' : 'Món ăn',
+                        isExercise ? 'Giáo án bài tập' : 'Món ăn',
                         style: TextStyle(
                           fontSize: 12,
                           color: primaryColor,
@@ -125,21 +126,33 @@ class ActionCardWidget extends StatelessWidget {
   }
 
   Widget _buildExerciseStats(Color color) {
-    final duration = action.details['duration'];
+    final duration = action.details['duration'] ?? action.details['duration_min'];
     final calories = action.details['calories_burned'];
     final type = action.details['type'];
+    final desc = action.details['description']?.toString() ?? '';
 
-    return Row(
+    int multiExerciseCount = 0;
+    if (desc.isNotEmpty) {
+      try {
+        final routine = WorkoutRoutineParser.parseFromAction(action);
+        final mainCount = routine.mainPhase?.exercises.length ?? 0;
+        if (mainCount > 1) {
+          multiExerciseCount = mainCount;
+        }
+      } catch (_) {}
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
       children: [
-        if (duration != null) ...[
+        if (duration != null)
           _buildStat(Icons.timer_outlined, '$duration phút', const Color(0xFF2196F3)),
-          const SizedBox(width: 10),
-        ],
-        if (calories != null) ...[
-          _buildStat(Icons.local_fire_department_outlined, '$calories kcal', const Color(0xFFFF7043)),
-          const SizedBox(width: 10),
-        ],
-        if (type != null)
+        if (calories != null)
+          _buildStat(Icons.local_fire_department_outlined, '${_fmt(calories)} kcal', const Color(0xFFFF7043)),
+        if (multiExerciseCount > 1)
+          _buildStat(Icons.format_list_bulleted_rounded, '$multiExerciseCount bài tập', const Color(0xFF9C27B0))
+        else if (type != null)
           _buildStat(Icons.sports, _translateType(type.toString()), const Color(0xFF9C27B0)),
       ],
     );
@@ -153,15 +166,12 @@ class ActionCardWidget extends StatelessWidget {
     final servingGrams = action.details['serving_grams'];
     final mealType = action.details['meal_type'];
 
-    // Tính giá trị thực tế theo serving_grams nếu có
-    // (calories/protein/carbs/fat là per 100g, serving_grams là khẩu phần)
     final double multiplier = servingGrams != null ? (servingGrams as num).toDouble() / 100.0 : 1.0;
     final bool hasServing = servingGrams != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Serving size badge
         if (hasServing) ...[
           Row(
             children: [
@@ -202,7 +212,6 @@ class ActionCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        // Macro stats — hiển thị giá trị thực tế theo khẩu phần
         Wrap(
           spacing: 8,
           runSpacing: 6,
@@ -241,7 +250,6 @@ class ActionCardWidget extends StatelessWidget {
               ),
           ],
         ),
-        // Per 100g note nếu có serving
         if (hasServing) ...[
           const SizedBox(height: 4),
           Text(
@@ -317,10 +325,14 @@ class ActionCardWidget extends StatelessWidget {
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.open_in_new, color: color, size: 18),
-            const SizedBox(width: 4),
+            Icon(
+              Icons.open_in_new,
+              color: color,
+              size: 18,
+            ),
+            const SizedBox(width: 6),
             Text(
               'Xem chi tiết',
               style: TextStyle(

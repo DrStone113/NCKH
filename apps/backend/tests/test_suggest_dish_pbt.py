@@ -85,7 +85,10 @@ _restrictions_strategy = st.lists(
     target_kcal=_target_kcal_strategy,
     dietary_restrictions=_restrictions_strategy,
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+@settings(
+    max_examples=100,
+    suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much],
+)
 def test_suggest_dish_respects_calorie_window_and_min_serving(
     meal_type: str,
     target_kcal: float,

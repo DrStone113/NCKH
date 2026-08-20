@@ -215,30 +215,34 @@ def test_suggest_dish_idempotent(
 ) -> None:
     """Two consecutive calls with the same args return the same dish payload.
 
-    Validates Requirements 2.2 for ``suggest_dish``. Some restriction
-    combinations admit no dish (``NO_DISH_FOUND``); we ``assume(False)`` in
-    that case so Hypothesis treats it as a filter, not a failure.
+    Validates Requirements 2.2 for ``suggest_dish``. A deterministic
+    ``NO_DISH_FOUND`` is also a valid idempotent outcome and must be exercised
+    instead of filtering most restrictive combinations out of the domain.
     """
-    try:
-        first = suggest_dish(
-            meal_type=meal_type,
-            target_kcal=target_kcal,
-            dietary_restrictions=dietary_restrictions,
-            recent_dish_ids=recent_dish_ids,
-        )
-    except ValueError as exc:
-        if str(exc) == "NO_DISH_FOUND":
-            assume(False)
-        raise
 
-    second = suggest_dish(
-        meal_type=meal_type,
-        target_kcal=target_kcal,
-        dietary_restrictions=dietary_restrictions,
-        recent_dish_ids=recent_dish_ids,
-    )
+    def _call() -> tuple[str, Any]:
+        try:
+            return (
+                "ok",
+                suggest_dish(
+                    meal_type=meal_type,
+                    target_kcal=target_kcal,
+                    dietary_restrictions=dietary_restrictions,
+                    recent_dish_ids=recent_dish_ids,
+                ),
+            )
+        except ValueError as exc:
+            if str(exc) == "NO_DISH_FOUND":
+                return "error", str(exc)
+            raise
 
-    assert _normalise_dish(first) == _normalise_dish(second)
+    first = _call()
+    second = _call()
+
+    if first[0] == "ok":
+        assert _normalise_dish(first[1]) == _normalise_dish(second[1])
+    else:
+        assert first == second
 
 
 # ---------------------------------------------------------------------------

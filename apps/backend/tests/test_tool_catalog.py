@@ -2,7 +2,7 @@ from services.agent.tool_registry import ToolRegistry
 from services.agent.tools import register_client_tools, register_server_tools
 
 
-def test_tool_catalog_registers_all_22_tools():
+def test_tool_catalog_registers_all_tools():
     registry = ToolRegistry()
     register_server_tools(registry)
     register_client_tools(registry)
@@ -27,6 +27,7 @@ def test_tool_catalog_registers_all_22_tools():
         "suggest_workout",
         "calculate_tdee",
         "search_food_nutrition",
+        "create_long_term_plan",
         "create_plan",
         "append_plan_items",
         "query_rag",
@@ -34,7 +35,7 @@ def test_tool_catalog_registers_all_22_tools():
     }
 
     assert set(registry.names()) == expected
-    assert len(registry.schemas()) == 23
+    assert len(registry.schemas()) == 24
 
 
 def test_client_write_tools_require_request_id():
@@ -63,5 +64,6 @@ def test_server_tool_sides_and_idempotency():
 
     assert registry.get("suggest_dish").side == "server"
     assert registry.get("suggest_dish").idempotent is True
+    assert registry.get("create_long_term_plan").idempotent is False
     assert registry.get("create_plan").idempotent is False
     assert registry.get("append_plan_items").idempotent is False

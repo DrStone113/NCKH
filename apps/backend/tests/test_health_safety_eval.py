@@ -45,6 +45,20 @@ def test_suggest_dish_query_matching():
     assert "phở" in result_pho["name"].lower() or "pho" in result_pho["name"].lower()
 
 
+def test_suggest_dish_keeps_large_target_portion_practical():
+    """Không kéo một món cụ thể thành khẩu phần hơn 1 kg để đủ target."""
+    result = suggest_dish(
+        meal_type="lunch",
+        target_kcal=900.0,
+        query="bún cá",
+    )
+
+    assert result["name"] == "Bún cá"
+    assert result["serving_scale"] <= 1.60
+    assert sum(c["serving_grams"] for c in result["components"]) <= 650
+    assert result["catalog_calories"] == pytest.approx(500.0)
+
+
 # ===========================================================================
 # Level 2 (Intermediate) Unit & Allergy Tests
 # ===========================================================================

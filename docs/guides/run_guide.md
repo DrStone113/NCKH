@@ -38,6 +38,8 @@ Thư mục dự án cung cấp script khởi động tự động: **`C:\Project
    .\start-all.bat
    ```
 
+`start-all.bat` tự kiểm tra nội dung mã nguồn Flutter, tài nguyên web và dependency. Nếu nội dung khác lần build thành công gần nhất (hoặc chưa có `build/web`), script tự chạy `flutter build web --release --no-tree-shake-icons` trước khi mở Backend và Web Server; nếu không có thay đổi, script dùng lại bản build hiện tại.
+
 *Lưu ý: Nếu terminal của bạn gặp lỗi font hoặc lỗi biên dịch ký tự do mã hóa UTF-8 của file `.bat`, hãy sử dụng **Phương pháp thủ công** dưới đây.*
 
 ---

@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Báo cáo kỹ thuật hiện trạng Flutter AI chatbot dinh dưỡng, sức khỏe và thể dục.">
+  <title>Báo cáo kỹ thuật dự án Scholar GPT</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f0f4f8;
+      --text: #18212f;
+      --muted: #596579;
+      --primary: #126b60;
+      --primary-soft: #e4f4f0;
+      --border: #d9e0e9;
+      --critical: #b42318;
+      --high: #c2410c;
+      --medium: #9a6700;
+      --low: #326b9a;
+      --shadow: 0 12px 36px rgb(15 23 42 / 8%);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.68 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: var(--primary); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(230px, 290px) minmax(0, 1040px);
+      gap: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    nav {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    nav strong { display: block; margin-bottom: 10px; }
+    nav ol { margin: 0; padding-left: 22px; }
+    nav li { margin: 5px 0; font-size: 0.9rem; }
+    nav a { color: var(--muted); text-decoration: none; }
+    nav a:hover { color: var(--primary); }
+
+    main {
+      min-width: 0;
+      padding: 44px clamp(24px, 5vw, 72px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      padding-bottom: 26px;
+      margin-bottom: 44px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      color: var(--primary);
+      font-weight: 750;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .82rem;
+    }
+
+    h1, h2, h3 { line-height: 1.25; scroll-margin-top: 24px; }
+    h1 { margin: .35rem 0 1rem; font-size: clamp(2rem, 5vw, 3.2rem); }
+    h2 { margin: 3.2rem 0 1.1rem; padding-top: .4rem; font-size: 1.75rem; }
+    h3 { margin: 2rem 0 .8rem; font-size: 1.22rem; }
+    p { margin: .7rem 0; }
+
+    .lead { max-width: 820px; color: var(--muted); font-size: 1.12rem; }
+    .meta { color: var(--muted); font-size: .92rem; }
+
+    .callout {
+      margin: 1rem 0;
+      padding: 14px 18px;
+      background: var(--primary-soft);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+    }
+
+    .warning {
+      background: #fff5eb;
+      border-left-color: var(--high);
+    }
+
+    .table-wrap {
+      width: 100%;
+      margin: 1rem 0 1.4rem;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { padding: 11px 13px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--surface-soft); font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+
+    code {
+      padding: .12rem .35rem;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface-soft);
+      font-size: .88em;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 18px;
+      background: #101827;
+      color: #e5eef8;
+      border-radius: 12px;
+      line-height: 1.48;
+    }
+
+    pre code { padding: 0; border: 0; background: transparent; color: inherit; }
+    ul, ol { padding-left: 1.35rem; }
+    li { margin: .35rem 0; }
+
+    .critical { color: var(--critical); font-weight: 700; }
+    .high { color: var(--high); font-weight: 700; }
+    .medium { color: var(--medium); font-weight: 700; }
+    .low { color: var(--low); font-weight: 700; }
+
+    .handoff {
+      margin-top: 5rem;
+      padding-top: 2rem;
+      border-top: 5px solid var(--primary);
+    }
+
+    .handoff > h1 { color: var(--primary); }
+
+    @media (max-width: 980px) {
+      .layout { display: block; padding: 0; }
+      nav { position: static; max-height: none; margin: 14px; }
+      main { border-radius: 0; border-left: 0; border-right: 0; padding: 28px 18px; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e1520;
+        --surface: #151e2b;
+        --surface-soft: #1d2938;
+        --text: #e8eef6;
+        --muted: #a9b5c5;
+        --primary: #68d3c2;
+        --primary-soft: #143a36;
+        --border: #334155;
+        --shadow: none;
+      }
+      .warning { background: #3b2916; }
+      .critical { color: #ff8a80; }
+      .high { color: #ffb17a; }
+      .medium { color: #ffd166; }
+      .low { color: #8ecae6; }
+    }
+
+    @media print {
+      :root { color-scheme: light; }
+      body { background: #fff; color: #111; font-size: 10.5pt; }
+      .layout { display: block; max-width: none; padding: 0; }
+      nav { display: none; }
+      main { border: 0; box-shadow: none; padding: 0; }
+      h2 { break-before: page; }
+      h2:first-of-type { break-before: auto; }
+      table, pre, .callout { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav aria-label="Mục lục">
+      <strong>Mục lục</strong>
+      <ol>
+        <li><a href="#overview">Tổng quan dự án</a></li>
+        <li><a href="#structure">Cấu trúc source code</a></li>
+        <li><a href="#features">Feature hiện tại</a></li>
+        <li><a href="#navigation">Screen &amp; Navigation</a></li>
+        <li><a href="#profile">User Profile &amp; Health Data</a></li>
+        <li><a href="#ai">AI / Chatbot</a></li>
+        <li><a href="#personalization">Personalization</a></li>
+        <li><a href="#nutrition">Meal / Nutrition</a></li>
+        <li><a href="#rag">RAG / Knowledge Base</a></li>
+        <li><a href="#safety">Safety</a></li>
+        <li><a href="#data">Data Layer</a></li>
+        <li><a href="#backend">Backend &amp; API</a></li>
+        <li><a href="#quality">Code Quality</a></li>
+        <li><a href="#testing">Testing</a></li>
+        <li><a href="#unfinished">Phần dang dở</a></li>
+        <li><a href="#dependencies">Dependency Map</a></li>
+        <li><a href="#user-flow">User Flow</a></li>
+        <li><a href="#scores">Mức độ hoàn thiện</a></li>
+        <li><a href="#research">Giá trị nghiên cứu</a></li>
+        <li><a href="#handoff">Project Handoff</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <header>
+        <div class="eyebrow">Technical audit · Working tree snapshot</div>
+        <h1>Báo cáo kỹ thuật dự án AI Chatbot dinh dưỡng</h1>
+        <p class="lead">Phân tích hiện trạng Flutter app, backend FastAPI, dữ liệu sức khỏe, hệ thống đề xuất món ăn, LLM agent, personalization, RAG, safety và mức độ sẵn sàng cho nghiên cứu.</p>
+        <p class="meta">Workspace: <code>C:\Project\Chatbot</code> · Ngày đánh giá: 15/08/2026 · Không chỉnh sửa source code hoặc dependency.</p>
+      </header>
+
+      <section id="overview">
+        <h2>1. Tổng quan dự án</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Thành phần</th><th>Hiện trạng</th></tr></thead>
+            <tbody>
+              <tr><td>Flutter/Dart</td><td>Môi trường kiểm tra dùng Flutter 3.44.8 stable và Dart 3.12.2. Project khai báo Dart <code>&gt;=3.0.0 &lt;4.0.0</code>; lockfile yêu cầu Dart ≥3.10 và Flutter ≥3.35. Không có FVM/version pin. Nguồn: <a href="../apps/mobile/pubspec.yaml">pubspec.yaml:6</a>.</td></tr>
+              <tr><td>Target</td><td>Android, Web và Windows. Không có runner cho iOS, macOS hoặc Linux.</td></tr>
+              <tr><td>Flutter architecture</td><td>Feature screens + Provider/ChangeNotifier + model/service/widget dùng chung. Chưa có repository/domain layer đồng nhất.</td></tr>
+              <tr><td>Navigation</td><td><code>MaterialApp.home</code> và <code>Navigator.push/MaterialPageRoute</code>; không có named/declarative router. Nguồn: <a href="../apps/mobile/lib/main.dart">main.dart:106</a>.</td></tr>
+              <tr><td>Backend</td><td>Python FastAPI, REST và WebSocket.</td></tr>
+              <tr><td>Storage</td><td>Firebase Auth, Cloud Firestore, SharedPreferences, PostgreSQL và pgvector.</td></tr>
+              <tr><td>AI</td><td>OpenAI-compatible Chat Completions; light model <code>ds/qwen3.5-397b-a17b</code>, heavy/fallback <code>deepseek/deepseek-v4-pro</code>. Nguồn: <a href="../apps/backend/config.py">config.py</a>.</td></tr>
+              <tr><td>Embedding</td><td>Sentence Transformers, mặc định <code>BAAI/bge-m3</code>, vector 1024 chiều.</td></tr>
+              <tr><td>External APIs</td><td>Wger, Open Food Facts, PubMed/NCBI, allowlisted web search, Google/Firebase.</td></tr>
+              <tr><td>Deployment</td><td>Docker Compose gồm Flutter web/Nginx, FastAPI, PostgreSQL-pgvector, loaders và Cloudflare Tunnel.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Ứng dụng là một health/nutrition tracker có chatbot làm giao diện điều phối. Flutter giữ profile và daily logs; FastAPI kết hợp history, facts, RAG và system prompt để gọi LLM; LLM dùng tools để tính toán, ghi log, điều hướng và tạo plan.</p>
+        <div class="callout">Khả năng vận hành thật của Firebase, PostgreSQL, LLM và tunnel trong production: <strong>Không xác định được từ code hiện tại.</strong></div>
+      </section>
+
+      <section id="structure">
+        <h2>2. Phân tích cấu trúc source code</h2>
+        <pre><code>Chatbot/
+├── apps/
+│   ├── mobile/
+│   │   ├── android/ web/ windows/
+│   │   ├── assets/
+│   │   └── lib/
+│   │       ├── config/ constants/
+│   │       ├── features/
+│   │       │   ├── auth/ chat/ exercise/
+│   │       │   ├── home/ nutrition/ settings/
+│   │       ├── models/ providers/ services/
+│   │       ├── theme/ utils/ widgets/
+│   │       └── main.dart
+│   └── backend/
+│       ├── data/ db/ models/ modules/
+│       ├── scripts/
+│       ├── services/
+│       │   ├── agent/
+│       │   │   └── tools/
+│       │   └── proactive_service.py
+│       └── tests/
+└── docker-compose.yml</code></pre>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Module</th><th>Trách nhiệm và phụ thuộc</th></tr></thead>
+            <tbody>
+              <tr><td><code>mobile/lib/features</code></td><td>UI theo feature; screen gọi Provider và đôi khi gọi service trực tiếp.</td></tr>
+              <tr><td><code>mobile/lib/providers</code></td><td>State, Firestore CRUD, backend calls, client tools và business logic. <code>AIChatProvider</code>, <code>NutritionProvider</code> đặc biệt lớn.</td></tr>
+              <tr><td><code>mobile/lib/models</code></td><td>User, health, meal, exercise, lifestyle, chat, Wger và Open Food Facts DTO.</td></tr>
+              <tr><td><code>mobile/lib/services</code></td><td>FastAPI client, Wger/OFF client, asset loader và cache.</td></tr>
+              <tr><td><code>backend/modules</code></td><td>Router cho chat, plan, nutrition, Wger, OFF và check-in.</td></tr>
+              <tr><td><code>backend/services/agent</code></td><td>LLM client, prompt, routing, orchestration, memory, planner, RAG, web search và tool dispatch.</td></tr>
+              <tr><td><code>backend/db</code></td><td>PostgreSQL connection, session store và migrations.</td></tr>
+              <tr><td><code>backend/data</code></td><td>Dataset JSON offline về món Việt, thực phẩm, dinh dưỡng và bài tập.</td></tr>
+              <tr><td><code>backend/tests</code></td><td>Unit/property/router tests; chưa có live integration environment trong repo.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>3. Toàn bộ feature hiện tại</h2>
+        <p><em>Complete</em> nghĩa là đường code chính tồn tại và Flutter tests không phát hiện lỗi; không đồng nghĩa đã xác nhận cloud production.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Feature</th><th>Trạng thái</th><th>Screen/logic</th><th>Data source</th><th>Ghi chú</th></tr></thead>
+            <tbody>
+              <tr><td>Email/password, Google auth</td><td>Complete</td><td>AuthScreen, UserProvider</td><td>Firebase</td><td>Phụ thuộc cấu hình Firebase ngoài code.</td></tr>
+              <tr><td>Demo login</td><td>Mock data</td><td>AuthScreen</td><td>Local/provider</td><td>Không phải onboarding thật.</td></tr>
+              <tr><td>Home dashboard</td><td>Complete</td><td>HomeScreen</td><td>Providers/Firestore</td><td>Bốn tab dùng IndexedStack.</td></tr>
+              <tr><td>Profile/goal settings</td><td>Complete</td><td>ProfileSettings, GoalSettings</td><td>Firestore</td><td>Sửa health profile cơ bản.</td></tr>
+              <tr><td>Health onboarding</td><td>Broken/unused</td><td>Không có screen</td><td>—</td><td>Đăng ký gán dữ liệu dummy.</td></tr>
+              <tr><td>BMI/BMR/TDEE</td><td>Complete</td><td>UserModel</td><td>Profile</td><td>Cutoff BMI khác backend.</td></tr>
+              <tr><td>Nutrition diary</td><td>Complete</td><td>NutritionScreen/Provider</td><td>Firestore</td><td>CRUD bữa ăn theo ngày.</td></tr>
+              <tr><td>Food catalog/search</td><td>Partially implemented</td><td>NutritionScreen</td><td>JSON/API/hard-code</td><td>Một search path chỉ dùng fallback hard-code.</td></tr>
+              <tr><td>Saved meals</td><td>Complete</td><td>NutritionProvider</td><td>SharedPreferences</td><td>Không có favorite entity riêng.</td></tr>
+              <tr><td>Static meal suggestions</td><td>UI only</td><td>NutritionScreen</td><td>Hard-code</td><td>Không tính/kiểm tra nutrition thật.</td></tr>
+              <tr><td>Long-term plan</td><td>Partially implemented</td><td>Chatbot/plan sheet, PlannerAgent</td><td>PostgreSQL</td><td>Restrictions bị bỏ qua ở REST; writes không atomic.</td></tr>
+              <tr><td>AI chatbot streaming</td><td>Partially implemented</td><td>ChatbotScreen, AIChatProvider</td><td>LLM/PostgreSQL/RAG</td><td>Thiếu backend auth; có integrity bugs.</td></tr>
+              <tr><td>Chat history</td><td>Complete</td><td>ChatHistorySettings</td><td>PostgreSQL</td><td>Endpoint không kiểm tra ownership.</td></tr>
+              <tr><td>Exercise catalog/tracking</td><td>Complete</td><td>Exercise screens/provider</td><td>Firestore, local Wger/API</td><td>Có 885 local Wger records.</td></tr>
+              <tr><td>Workout simulation</td><td>Complete</td><td>WorkoutSimulationScreen</td><td>Exercise models</td><td>Có thể lưu buổi tập hoàn thành.</td></tr>
+              <tr><td>Weight/water tracking</td><td>Partially implemented</td><td>Dashboard/HealthStats/chat</td><td>Firestore</td><td>Weight AI tool và hai nguồn water không đồng bộ.</td></tr>
+              <tr><td>Lifestyle/reminders</td><td>Partially implemented</td><td>Chủ yếu qua chatbot</td><td>Firestore</td><td>Không load daily logs; không có notification scheduler.</td></tr>
+              <tr><td>Proactive check-in</td><td>Partially implemented</td><td>Home/CheckinSettings</td><td>Prefs + backend memory</td><td>Persistence/action/disable behavior chưa hoàn chỉnh.</td></tr>
+              <tr><td>Open Food Facts UI</td><td>Broken/unused</td><td>Widget riêng</td><td>OFF API</td><td>Widget không gắn vào runtime screen.</td></tr>
+              <tr><td>Legacy Rasa chatbot</td><td>Broken/unused</td><td>ChatProvider</td><td>Rasa config</td><td>Chatbot thật dùng AIChatProvider.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="navigation">
+        <h2>4. Screen &amp; Navigation Map</h2>
+        <p>Project không định nghĩa route name. Tất cả đường chuyển screen chính dùng <code>MaterialPageRoute</code>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Screen</th><th>Chức năng/dữ liệu</th><th>Gọi đến</th><th>Được mở từ</th></tr></thead>
+            <tbody>
+              <tr><td>AuthWrapper</td><td>Chọn Home hoặc Auth theo state</td><td>UserProvider</td><td>App start</td></tr>
+              <tr><td>AuthScreen</td><td>Login/register/Google/demo</td><td>UserProvider</td><td>AuthWrapper</td></tr>
+              <tr><td>HomeScreen</td><td>Dashboard, nutrition, exercise, settings</td><td>Tất cả domain providers</td><td>AuthWrapper</td></tr>
+              <tr><td>NutritionScreen</td><td>Meal diary, saved meals, plan</td><td>NutritionProvider, plan API</td><td>Bottom navigation</td></tr>
+              <tr><td>ExerciseScreen</td><td>Diary, catalog, workout</td><td>ExerciseProvider</td><td>Bottom navigation</td></tr>
+              <tr><td>AccountSettingsScreen</td><td>Profile, goals, check-in, history, logout</td><td>User/Proactive providers</td><td>Bottom navigation</td></tr>
+              <tr><td>ChatbotScreen</td><td>Streaming chat, tools và plan</td><td>AIChatProvider + domain providers</td><td>FAB/settings/exercise/history</td></tr>
+              <tr><td>HealthStatsScreen</td><td>Weight/BMI history và chart</td><td>HealthProvider</td><td>Dashboard</td></tr>
+              <tr><td>ProfileSettingsScreen</td><td>Sửa demographics/body/activity</td><td>UserProvider</td><td>Account Settings</td></tr>
+              <tr><td>GoalSettingsScreen</td><td>Chọn health goal</td><td>UserProvider</td><td>Account Settings</td></tr>
+              <tr><td>CheckinSettingsScreen</td><td>Bật/tắt và giờ check-in</td><td>ProactiveProvider</td><td>Account Settings</td></tr>
+              <tr><td>ChatHistorySettingsScreen</td><td>Restore/xóa sessions</td><td>BackendApiService, AIChatProvider</td><td>Account Settings</td></tr>
+              <tr><td>ExerciseBrowser/Detail/History</td><td>Tìm, xem và theo dõi bài tập</td><td>Exercise/Wger services</td><td>ExerciseScreen</td></tr>
+              <tr><td>WorkoutSimulationScreen</td><td>Timer/animation và save workout</td><td>ExerciseProvider</td><td>Exercise/Browser/Detail</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre><code>App Start
+   ↓
+Firebase initialization
+   ↓
+AuthWrapper
+   ├── Unauthenticated → AuthScreen
+   └── Authenticated → HomeScreen
+                       ├── Dashboard → HealthStats / Check-in
+                       ├── Nutrition → Diary / Saved meals / Plan
+                       ├── Exercise → History / Browser / Simulation
+                       ├── Settings → Profile / Goal / Check-in / History
+                       └── FAB → Chatbot → Tools / Plan / Navigation</code></pre>
+        <p>Không có splash screen hoặc onboarding health questionnaire riêng.</p>
+      </section>
+
+      <section id="profile">
+        <h2>5. User Profile và Health Data</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Model/storage</th><th>Nơi nhập</th><th>Được dùng bởi</th><th>Nhận xét</th></tr></thead>
+            <tbody>
+              <tr><td>id, email, name</td><td>UserModel/Firestore</td><td>Auth/Profile</td><td>UI, chat identity</td><td>Email không đưa vào AI; id liên kết dữ liệu.</td></tr>
+              <tr><td>age, gender</td><td>UserModel/Firestore</td><td>Profile/demo</td><td>BMR, body fat, AI, planner</td><td>UI age 13–120; backend cho từ 10.</td></tr>
+              <tr><td>height, weight</td><td>UserModel/Firestore</td><td>Profile</td><td>BMI/BMR/TDEE/water/AI</td><td>AI weight tool không cập nhật current profile.</td></tr>
+              <tr><td>targetWeight</td><td>UserModel/Firestore</td><td>Profile</td><td>Chat context</td><td>Quick plan action không truyền targetWeight.</td></tr>
+              <tr><td>activityLevel</td><td>UserModel/Firestore</td><td>Profile</td><td>TDEE, AI, planner</td><td>String enum.</td></tr>
+              <tr><td>healthGoal</td><td>UserModel/Firestore</td><td>Goal Settings</td><td>Calories, exercise, AI, planner</td><td>Lose/gain/maintain.</td></tr>
+              <tr><td>BMI/BMR/TDEE</td><td>UserModel getters</td><td>Derived</td><td>Dashboard/prompt/targets</td><td>Không phải input riêng.</td></tr>
+              <tr><td>Body history</td><td>BodyMetrics/Firestore</td><td>Health UI/AI tool</td><td>Chart/history</td><td>Tách khỏi current UserModel.</td></tr>
+              <tr><td>Water</td><td>WaterIntake + LifestyleLog</td><td>Dashboard/AI</td><td>Dashboard/chat</td><td>Hai nguồn độc lập.</td></tr>
+              <tr><td>Mood/sleep/stress/notes</td><td>LifestyleLog/Firestore</td><td>AI tool</td><td>Chat context</td><td>Loader daily logs không được gọi.</td></tr>
+              <tr><td>Allergy/disease/medication</td><td>Không có Flutter profile field</td><td>Chỉ có thể nói trong chat</td><td>Prompt/memory một phần</td><td>Không có structured enforcement.</td></tr>
+              <tr><td>Preferences/dislikes/budget/frequency</td><td>Không có</td><td>—</td><td>—</td><td>Chưa implement.</td></tr>
+              <tr><td>Macro targets</td><td>Không có Flutter field</td><td>—</td><td>Planner chỉ tính protein</td><td>Không có carb/fat target.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Công thức hiện tại</h3>
+        <pre><code>BMI = weightKg / heightM²
+
+BMR male   = 10w + 6.25h - 5a + 5
+BMR female = 10w + 6.25h - 5a - 161
+
+TDEE = BMR × activityFactor
+activityFactor = 1.2 / 1.375 / 1.55 / 1.725 / 1.9
+
+Flutter calorie target:
+lose     = TDEE - 500
+gain     = TDEE + 300
+maintain = TDEE
+
+Body fat male   = 1.2×BMI + 0.23×age - 16.2
+Body fat female = 1.2×BMI + 0.23×age - 5.4
+
+Water target = weightKg × 0.033 litres</code></pre>
+        <p>Nguồn: <a href="../apps/mobile/lib/models/user_model.dart">user_model.dart</a>.</p>
+        <ul>
+          <li>Flutter dùng BMI normal dưới 25; backend prompt dùng cutoff châu Á dưới 23.</li>
+          <li>Comment gọi body-fat là US Navy nhưng implementation không phải US Navy formula.</li>
+          <li>Flutter và TDEE tool không đặt sàn 1.200 kcal; planner chỉ đặt sàn khi sinh schedule từng ngày.</li>
+          <li>Protein target khác nhau giữa system prompt và phase logic của planner.</li>
+          <li>Không có target carbohydrate hoặc fat.</li>
+        </ul>
+      </section>
+
+      <section id="ai">
+        <h2>6. Phân tích AI / Chatbot</h2>
+        <pre><code>User message
+ → ChatbotScreen._sendMessage()
+ → AIChatProvider.sendMessage()
+ → WS /chat/stream
+ → ChatGateway
+ → MemoryService + turn classification + SystemPrompt
+ → Orchestrator
+ → OpenAI-compatible LLM + server/client tools
+ → thought/token/tool/done/error events
+ → AIChatProvider
+ → Chatbot UI + structured action cards</code></pre>
+        <h3>Model, prompt và context</h3>
+        <ul>
+          <li><code>LLMClient</code> dùng <code>AsyncOpenAI</code> với light/heavy models trong cấu hình.</li>
+          <li>System prompt kết hợp profile, calculated metrics, remaining calories, recent history, rolling summary, confirmed facts, RAG chunks, safety và tool rules.</li>
+          <li>Memory gồm recent messages, summary, full-text relevant history, user facts và RAG.</li>
+          <li>Streaming và native function calling thực sự được sử dụng.</li>
+          <li>Structured response/action items được lưu cùng chat messages.</li>
+          <li>UI hiển thị cả <code>thoughts</code>, làm tăng rủi ro privacy/safety.</li>
+        </ul>
+        <h3>Tools</h3>
+        <p>Server tools tính TDEE, search nutrition, suggest dish/workout, tạo/đọc/update plan, query RAG và web medical knowledge. Client tools đọc profile/logs, ghi meal/exercise/weight/lifestyle/reminder, hoàn thành plan item và điều hướng Flutter.</p>
+        <h3>Retry, token và error handling</h3>
+        <ul>
+          <li>LLM thử primary hai lần rồi fallback hai lần, với delay cố định.</li>
+          <li>Không thấy xử lý riêng HTTP 429, <code>Retry-After</code>, quota hoặc circuit breaker.</li>
+          <li>Không có tokenizer-based context budget, explicit max tokens hoặc cost tracking.</li>
+          <li>App-state orchestrator cấu hình 6 steps/15s nhưng WebSocket router dựng instance mặc định 3 steps/5s.</li>
+          <li>Các turn WebSocket đồng thời có thể interleave do mỗi message tạo một async task riêng.</li>
+        </ul>
+        <h3>Security và integrity</h3>
+        <div class="callout warning">
+          <ul>
+            <li>Backend không xác minh Firebase token; client-supplied <code>user_id</code>/<code>session_id</code> có thể tạo cross-user access.</li>
+            <li>Có database URL và fallback JWT secret không an toàn trong config; giá trị secret không được ghi trong báo cáo.</li>
+            <li>Startup logging có thể ghi đầy đủ database URL kèm password.</li>
+            <li><code>log_exercise</code> có thể xác nhận thành công dù Firestore thất bại.</li>
+            <li>Lifestyle/reminder tools có thể báo thành công khi provider/persistence không khả dụng.</li>
+            <li><code>log_weight</code> không cập nhật current profile weight, làm TDEE về sau stale.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="personalization">
+        <h2>7. Kiểm tra Personalization</h2>
+        <pre><code>UserModel + daily logs
+    ↓
+Chatbot WebSocket payload
+    ↓
+System prompt + deterministic tools + planner
+    ↓
+LLM response/action</code></pre>
+        <p>Age, gender, height, weight, activity, goal, BMI/BMR/TDEE và daily meal/exercise logs thực sự được đưa vào prompt/planner. Memory còn có thể trích goal, preference và allergy từ chat.</p>
+        <p>Tuy nhiên, allergy/disease/preferences không có form chuẩn; REST plan truyền restrictions rỗng; user facts có thể auto-confirm nhưng không có UI review; không có feedback/rating/reward/outcome model. <code>test_adaptive_learning.py</code> chỉ là simulator trong test, không phải production implementation.</p>
+        <div class="callout"><strong>Phân loại: Level 3 — User profile + recommendation logic + LLM.</strong> Có long-term memory nhưng chưa có feedback-driven adaptation để đạt Level 4.</div>
+      </section>
+
+      <section id="nutrition">
+        <h2>8. Phân tích Meal / Nutrition System</h2>
+        <h3>Nguồn dữ liệu</h3>
+        <ul>
+          <li>526 thực phẩm Việt Nam.</li>
+          <li>90 món Việt.</li>
+          <li>11 nutrition records tổng quát.</li>
+          <li>10 exercise records cũ và 885 Wger records.</li>
+          <li>Flutter có catalog fallback hard-code; Open Food Facts widget chưa được dùng runtime.</li>
+        </ul>
+        <h3>Meal calculation và planner</h3>
+        <p><code>FoodItem</code> lưu nutrition theo 100 g và scale deterministic theo serving. <code>MealModel</code> cộng calories, protein, carbohydrate và fat.</p>
+        <ol>
+          <li>Planner tính TDEE/calorie target.</li>
+          <li>Chia ba bữa 30%/40%/30%.</li>
+          <li>Gọi <code>suggest_dish</code>.</li>
+          <li>Scale từng thành phần trong giới hạn khoảng 0.65–1.60.</li>
+          <li>Tính lại nutrition từ catalog.</li>
+          <li>Tạo exercise schedule và lưu plan/items trong PostgreSQL.</li>
+        </ol>
+        <p>Plan chính không phải LLM tự bịa calorie; nó do tools/dataset/rules sinh. LLM điều phối và diễn giải.</p>
+        <h3>Constraints và verification</h3>
+        <p>Dish tool chỉ hỗ trợ tập hẹp gồm vegetarian, vegan, low-carb, high-protein và no-seafood. Không có allergy ontology hoặc arbitrary allergen enforcement. REST plan hiện bỏ restrictions.</p>
+        <p>Không có independent verifier sau LLM. Structured dish output được Flutter tin trực tiếp. Fallback estimator có nhánh chỉnh calories mà không scale tương ứng macros, nên có thể mất nhất quán.</p>
+        <h3>History, favorites và search</h3>
+        <ul>
+          <li>Meal history nằm trong Firestore.</li>
+          <li>Saved meal templates nằm trong SharedPreferences; không có favorite entity riêng.</li>
+          <li>Một search function chỉ tìm catalog hard-code, không tìm toàn bộ dataset đã load.</li>
+          <li>Plan meal được merge vào state nhưng không tự biến thành Firestore diary.</li>
+          <li>Toggle plan meal có thể swallow lỗi và vẫn cập nhật UI.</li>
+        </ul>
+      </section>
+
+      <section id="rag">
+        <h2>9. RAG / Knowledge Base</h2>
+        <p>Project <strong>có RAG thực sự</strong>, không chỉ chèn context thủ công.</p>
+        <pre><code>Offline JSON + eligible web knowledge
+ → chunking
+ → BAAI/bge-m3 embeddings (1024 dimensions)
+ → PostgreSQL knowledge_chunks + pgvector
+ → cosine vector search + PostgreSQL FTS
+ → weighted reciprocal-rank fusion
+ → MemoryService
+ → system prompt with source URLs
+ → LLM</code></pre>
+        <ul>
+          <li>Dense weight 1.0, keyword weight 0.7, RRF k=60.</li>
+          <li>RAG được gọi tự động cho lượt không phải chitchat và có explicit query tool.</li>
+          <li>Web knowledge dùng PubMed/NCBI và allowlisted search với trust tiers/provenance.</li>
+          <li class="critical">Loader có lỗi: insert khai báo năm cột nhưng chỉ có bốn SQL placeholders trong <a href="../apps/backend/scripts/load_dataset.py">load_dataset.py</a>.</li>
+          <li>Embedding docstring nói normalized nhưng encode không bật <code>normalize_embeddings=True</code>.</li>
+          <li>Retrieval threshold không được áp dụng nhất quán với keyword-only hits.</li>
+          <li>Chưa có recall@k, MRR, faithfulness hoặc citation benchmark.</li>
+        </ul>
+        <div class="callout">Corpus thực tế đã được nạp thành công hay chưa: <strong>Không xác định được từ code hiện tại.</strong></div>
+      </section>
+
+      <section id="safety">
+        <h2>10. Safety</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tình huống</th><th>Cơ chế hiện có</th><th>Đánh giá</th></tr></thead>
+            <tbody>
+              <tr><td>Giảm cân cực đoan</td><td>Prompt cấm dưới 1.200 kcal, extreme fasting và &gt;1 kg/tuần</td><td>Prompt-only; planner không enforce đầy đủ.</td></tr>
+              <tr><td>Eating disorder</td><td>Prompt yêu cầu thận trọng/chuyên gia</td><td>Không classifier/escalation workflow.</td></tr>
+              <tr><td>Dị ứng</td><td>Chat fact + dish keyword filters</td><td>Không bảo đảm tránh allergen.</td></tr>
+              <tr><td>Bệnh nền/thai kỳ</td><td>Prompt cảnh báo</td><td>Không disease-specific validators.</td></tr>
+              <tr><td>Trẻ em</td><td>Backend nhận tuổi từ 10</td><td>Không có pediatric guardrail.</td></tr>
+              <tr><td>Thuốc</td><td>Không thấy checker</td><td>Chưa implement.</td></tr>
+              <tr><td>Chẩn đoán/kê đơn</td><td>Prompt cấm</td><td>Không output validation.</td></tr>
+              <tr><td>Emergency</td><td>Prompt nhận chest pain, dyspnea, fainting, severe injury, self-harm</td><td>Prompt-only escalation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Layer</th><th>Hiện trạng</th></tr></thead>
+            <tbody>
+              <tr><td>UI</td><td>Không có clinical disclaimer rõ; thoughts được hiển thị.</td></tr>
+              <tr><td>Prompt</td><td>Có no diagnosis/prescription, emergency và extreme diet rules. Đây là lớp mạnh nhất.</td></tr>
+              <tr><td>Application</td><td>Có schema validation/water warning/calorie floor một phần; không có medical validator.</td></tr>
+              <tr><td>Backend</td><td>Không moderation endpoint, policy engine hoặc post-generation safety pass.</td></tr>
+              <tr><td>LLM provider</td><td><strong>Không xác định được từ code hiện tại.</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="data">
+        <h2>11. Data Layer</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Model/entity</th><th>Fields chính</th><th>Storage</th><th>Used by</th></tr></thead>
+            <tbody>
+              <tr><td>UserModel</td><td>Identity, demographics, body, activity, goal</td><td>Firestore</td><td>Auth/profile/dashboard/AI</td></tr>
+              <tr><td>BodyMetrics, WaterIntake</td><td>Weight, BMI, amount, timestamps</td><td>Firestore</td><td>Health history/dashboard</td></tr>
+              <tr><td>LifestyleLog, Reminder</td><td>Mood, sleep, stress, water, notes, schedule</td><td>Firestore</td><td>Chat tools/context</td></tr>
+              <tr><td>FoodItem, MealItem, MealModel</td><td>Per-100g nutrition, grams, totals, date/type</td><td>JSON/API/Firestore</td><td>Nutrition diary/planner</td></tr>
+              <tr><td>SavedMealTemplate</td><td>Name/items</td><td>SharedPreferences</td><td>Saved meals</td></tr>
+              <tr><td>ExerciseTemplate/Model</td><td>MET, category, duration, calories</td><td>JSON/Wger/Firestore</td><td>Exercise features</td></tr>
+              <tr><td>ChatSession/Message</td><td>User, role, content, thoughts, structured data</td><td>PostgreSQL</td><td>Chat/history</td></tr>
+              <tr><td>KnowledgeChunk/Embedding</td><td>Text, source, metadata, vector</td><td>PostgreSQL/pgvector</td><td>RAG</td></tr>
+              <tr><td>Plan/PlanItem</td><td>Goal, dates, targets, meals, workouts, status</td><td>PostgreSQL raw SQL</td><td>Planner/UI</td></tr>
+              <tr><td>Facts/summaries/tool invocations</td><td>Memory and audit context</td><td>PostgreSQL</td><td>Personalization/orchestrator</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre><code>Flutter UI
+ → Provider
+    ├── Firebase Auth
+    ├── Cloud Firestore
+    ├── SharedPreferences
+    └── Backend REST/WebSocket
+         → FastAPI
+         → PostgreSQL + pgvector
+         → LLM / Wger / OFF / web knowledge</code></pre>
+        <p>Không có Firestore security rules trong repository. Mức bảo vệ server-side của Firestore: <strong>Không xác định được từ code hiện tại.</strong></p>
+      </section>
+
+      <section id="backend">
+        <h2>12. Backend &amp; API</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Endpoint</th><th>Vai trò</th><th>Auth/ghi chú</th></tr></thead>
+            <tbody>
+              <tr><td>GET /health</td><td>Backend health</td><td>Public</td></tr>
+              <tr><td>WS /chat/stream</td><td>Streaming chat/tools/memory</td><td>Token optional; không verify Firebase identity</td></tr>
+              <tr><td>/chat/sessions*</td><td>List/read/delete history</td><td>Không kiểm tra ownership</td></tr>
+              <tr><td>POST /plans</td><td>Tạo long-term plan</td><td>Public; restrictions rỗng</td></tr>
+              <tr><td>GET /plans/{user_id}/active*</td><td>Đọc active plan</td><td>Public</td></tr>
+              <tr><td>PATCH /plans/items/{id}</td><td>Update completion</td><td>Public</td></tr>
+              <tr><td>POST /plans/checkins</td><td>Ghi check-in item</td><td>Chưa adaptive</td></tr>
+              <tr><td>/checkin/*</td><td>Nudge, response, settings</td><td>Settings backend in-memory</td></tr>
+              <tr><td>/api/nutrition/*</td><td>Dishes/foods/categories/stats</td><td>JSON datasets</td></tr>
+              <tr><td>/wger/*</td><td>Exercise/detail/image proxy</td><td>Wger/local DB</td></tr>
+              <tr><td>/off/*</td><td>Open Food Facts proxy</td><td>Flutter runtime UI chưa dùng</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>CORS cho wildcard cùng credentials. Planner commit theo từng statement; rollback chỉ là xóa bù, không phải atomic transaction. Docker Compose còn gọi module <code>scripts.sync_wger</code> không tồn tại.</p>
+      </section>
+
+      <section id="quality">
+        <h2>13. Code Quality &amp; Architecture</h2>
+        <h3>Điểm tích cực</h3>
+        <ul>
+          <li>UI phân theo feature và models/providers/services khá dễ tìm.</li>
+          <li>Backend agent tách prompt, memory, RAG, tools, planner và orchestrator.</li>
+          <li>Có schema validation và property-based tests cho deterministic tools.</li>
+          <li>Flutter analyzer không báo issue.</li>
+          <li>Tool calculations/datasets giảm việc để LLM tự sinh số liệu.</li>
+        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mức độ</th><th>Vấn đề</th><th>Ảnh hưởng</th></tr></thead>
+            <tbody>
+              <tr><td class="critical">Critical</td><td>Backend thiếu authentication/authorization</td><td>Nguy cơ đọc/sửa/xóa dữ liệu chéo user.</td></tr>
+              <tr><td class="critical">Critical</td><td>Exercise tool báo success khi save thất bại</td><td>Chat xác nhận dữ liệu không tồn tại.</td></tr>
+              <tr><td class="critical">Critical</td><td>Database credential có thể bị log</td><td>Secret exposure.</td></tr>
+              <tr><td class="high">High</td><td>RAG loader SQL sai placeholders</td><td>Corpus có thể không nạp được.</td></tr>
+              <tr><td class="high">High</td><td>Plan writes không atomic</td><td>Có thể để lại plan thiếu item.</td></tr>
+              <tr><td class="high">High</td><td>Allergy/disease safety không enforce</td><td>Recommendation có thể không an toàn.</td></tr>
+              <tr><td class="high">High</td><td>Concurrent chat turns interleave</td><td>Order/state/action không xác định.</td></tr>
+              <tr><td class="high">High</td><td>AI weight log làm profile stale</td><td>TDEE/personalization sai ở lượt sau.</td></tr>
+              <tr><td class="medium">Medium</td><td>Health formulas không nhất quán</td><td>Kết quả client/prompt/plan khác nhau.</td></tr>
+              <tr><td class="medium">Medium</td><td>Hai nguồn water</td><td>Dashboard và AI context có thể lệch.</td></tr>
+              <tr><td class="medium">Medium</td><td>Giant screens/providers</td><td>Maintenance và testability giảm.</td></tr>
+              <tr><td class="medium">Medium</td><td>Error swallowing/mock fallback</td><td>Khó phân biệt dữ liệu rỗng và service failure.</td></tr>
+              <tr><td class="low">Low</td><td>Legacy/unused code</td><td>Tăng noise và maintenance cost.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="testing">
+        <h2>14. Testing</h2>
+        <div class="callout">
+          <strong>Kết quả chạy thực tế:</strong> <code>flutter test</code> PASS 70 tests; <code>flutter analyze</code> PASS, no issues. Backend pytest không chạy được vì môi trường Python 3.10.11 chưa cài pytest; không cài thêm do yêu cầu không đổi dependency.
+        </div>
+        <p>Static scan tìm thấy khoảng 314 hàm <code>test_*</code> trong 34 file backend; đây là số khai báo, không phải kết quả pass.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nhóm</th><th>Hiện có</th><th>Thiếu</th></tr></thead>
+            <tbody>
+              <tr><td>Flutter unit/widget</td><td>Models, calculations, providers/services/widgets</td><td>Firebase/chat/backend failure flow thật</td></tr>
+              <tr><td>Flutter integration</td><td>Không thấy integration_test</td><td>Full user journey</td></tr>
+              <tr><td>Backend unit</td><td>LLM mocks, routers, memory, RAG, planner, tools</td><td>Chưa chạy được trong môi trường hiện tại</td></tr>
+              <tr><td>Property-based</td><td>TDEE, dish, workout, registry, reads</td><td>Không thay thế live integration</td></tr>
+              <tr><td>Database</td><td>Migration/scoped-session tests</td><td>Live PostgreSQL/pgvector và atomicity</td></tr>
+              <tr><td>AI evaluation</td><td>Prompt keywords/tool rules</td><td>Live correctness, hallucination, citation, bias</td></tr>
+              <tr><td>RAG evaluation</td><td>Fusion/unit tests</td><td>Corpus load, recall@k, MRR, faithfulness</td></tr>
+              <tr><td>Adaptive learning</td><td>Synthetic test-only simulator</td><td>Production adaptation</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="unfinished">
+        <h2>15. Những phần đang dang dở</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Component</th><th>Evidence</th><th>Status</th><th>Possible intended purpose</th></tr></thead>
+            <tbody>
+              <tr><td>Health onboarding</td><td>Signup gán profile mặc định</td><td>Broken/unused</td><td>Thu thập health profile ban đầu; suy đoán.</td></tr>
+              <tr><td>Rasa ChatProvider</td><td>Registered nhưng UI dùng AIChatProvider</td><td>Broken/unused</td><td>Chatbot cũ.</td></tr>
+              <tr><td>OFFFoodSearchWidget</td><td>Không có runtime consumer</td><td>Broken/unused</td><td>Tìm packaged food.</td></tr>
+              <tr><td>FloatingChatBubble</td><td>Không được import</td><td>Broken/unused</td><td>Overlay entry point; suy đoán.</td></tr>
+              <tr><td>Lifestyle loader</td><td>loadTodayLogs chỉ có definition</td><td>Partial</td><td>Restore daily state.</td></tr>
+              <tr><td>Reminder notification</td><td>Không có scheduler/package</td><td>Partial</td><td>Nhắc việc thực tế.</td></tr>
+              <tr><td>Proactive settings/actions</td><td>Backend memory + logged_data không áp dụng providers</td><td>Temporary/partial</td><td>Persistent nudges/quick logging.</td></tr>
+              <tr><td>Plan check-in</td><td>Chèn JSON plan item, không replan</td><td>Partial</td><td>Adaptive planning; suy đoán.</td></tr>
+              <tr><td>RAG loader</td><td>Columns/placeholders mismatch</td><td>Broken</td><td>Nạp corpus vào pgvector.</td></tr>
+              <tr><td>Wger sync</td><td>Compose gọi module không tồn tại</td><td>Broken</td><td>Scheduled Wger sync.</td></tr>
+              <tr><td>Static meal suggestions</td><td>Chuỗi hard-code</td><td>UI only/mock</td><td>Prototype recommendation.</td></tr>
+              <tr><td>Firebase options</td><td>Chỉ example được track</td><td>Environment-dependent</td><td>Per-deployment Firebase config.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="dependencies">
+        <h2>16. Dependency Map</h2>
+        <pre><code>┌──────────────────────── Flutter ────────────────────────┐
+│ Auth / Home / Nutrition / Exercise / Chat / Settings   │
+│                         │                              │
+│                         ▼                              │
+│ Provider / ChangeNotifier                             │
+│ ├── UserProvider ───────────────► Firebase Auth/Store  │
+│ ├── HealthProvider ─────────────► Cloud Firestore      │
+│ ├── NutritionProvider ──────────► Firestore + prefs    │
+│ │                         └─────► FastAPI nutrition/plan│
+│ ├── ExerciseProvider ───────────► Firestore + Wger     │
+│ ├── LifestyleProvider ──────────► Cloud Firestore      │
+│ ├── ProactiveProvider ──────────► prefs + FastAPI      │
+│ └── AIChatProvider ─────────────► WS /chat/stream       │
+└─────────────────────────┬──────────────────────────────┘
+                          ▼
+┌──────────────────────── FastAPI ────────────────────────┐
+│ ChatGateway                                             │
+│ ├── MemoryService ───────────────► PostgreSQL           │
+│ │    └── RAGService ─────────────► pgvector + FTS       │
+│ ├── SystemPromptBuilder                                │
+│ └── Orchestrator                                       │
+│      ├── LLMClient ──────────────► OpenAI-compatible   │
+│      ├── TDEE/Dish/Workout tools                       │
+│      ├── Planner ────────────────► PostgreSQL           │
+│      └── Wger/OFF/PubMed/web knowledge                 │
+└─────────────────────────────────────────────────────────┘</code></pre>
+      </section>
+
+      <section id="user-flow">
+        <h2>17. User Flow thực tế</h2>
+        <pre><code>Cài/mở app
+ → Firebase init
+ → Login/register/demo
+ → Profile sức khỏe dummy
+ ✕ Không có onboarding health/allergy/disease
+ → Home
+ → User có thể tự sửa Profile/Goal
+ → Dashboard tính BMI/BMR/TDEE/targets
+ → Ghi meal/exercise/water hoặc mở Chatbot
+ → Chatbot gửi profile + daily logs tới FastAPI
+ → Memory + RAG + prompt + LLM/tools
+ → Streaming response/action card
+ → Log data / navigate / create plan
+ → Planner sinh meal/workout schedule
+ → User đánh dấu hoàn thành/check-in
+ ✕ Chưa có feedback-driven adaptive replan</code></pre>
+        <p>Các điểm đứt chính: profile dummy; thiếu structured allergy/disease; tool có thể báo success giả; check-in chưa feedback vào recommendation; proactive không có notification thật; backend identity không gắn an toàn với Firebase.</p>
+      </section>
+
+      <section id="scores">
+        <h2>18. Đánh giá mức độ hoàn thiện</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Category</th><th>Score</th><th>Explanation</th></tr></thead>
+            <tbody>
+              <tr><td>Flutter UI</td><td>8.0/10</td><td>Nhiều screen/chart/plan/workout UI; giant widgets và UI-only features.</td></tr>
+              <tr><td>Architecture</td><td>5.5/10</td><td>Module khá rõ nhưng Provider/UI/service coupling và duplicated logic.</td></tr>
+              <tr><td>Backend</td><td>6.0/10</td><td>Agent/tool/planner phong phú; auth, transaction, concurrency yếu.</td></tr>
+              <tr><td>Database</td><td>5.5/10</td><td>Firestore + PostgreSQL + pgvector; thiếu ownership, atomicity và loader tin cậy.</td></tr>
+              <tr><td>Nutrition logic</td><td>6.0/10</td><td>Có deterministic formulas/datasets; inconsistency và constraints hạn chế.</td></tr>
+              <tr><td>AI chatbot</td><td>6.5/10</td><td>Streaming/tools/memory/structured output; thiếu safety/rate-limit/integrity.</td></tr>
+              <tr><td>Personalization</td><td>6.0/10</td><td>Level 3; chưa có adaptive feedback.</td></tr>
+              <tr><td>Meal recommendation</td><td>5.5/10</td><td>Tool-grounded planner; verification và allergy support yếu.</td></tr>
+              <tr><td>Safety</td><td>4.0/10</td><td>Chủ yếu prompt guardrails.</td></tr>
+              <tr><td>Testing</td><td>6.0/10</td><td>Flutter tốt, backend test rộng; thiếu live integration/evals.</td></tr>
+              <tr><td>Research readiness</td><td>4.5/10</td><td>Có baseline nhưng thiếu protocol, metrics, feedback và reproducibility.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="research">
+        <h2>19. Giá trị cho nghiên cứu khoa học</h2>
+        <h3>A. Thành phần có thể tái sử dụng</h3>
+        <ul>
+          <li>Health/nutrition/exercise UI và tracking workflows.</li>
+          <li>BMI/BMR/TDEE/calorie calculations.</li>
+          <li>Streaming chat, structured client actions và tool registry.</li>
+          <li>Deterministic TDEE/dish/workout/plan tools.</li>
+          <li>Conversation history, summaries và user facts.</li>
+          <li>Hybrid pgvector + FTS RAG và Vietnamese datasets.</li>
+          <li>PostgreSQL plan/chat/knowledge schemas và property tests.</li>
+        </ul>
+        <h3>B. Có nhưng ít liên quan trực tiếp</h3>
+        <p>Workout painter, Wger image/SVG proxy, legacy Rasa, unused floating bubble, UI animations/carousel và OFF widget chưa tích hợp.</p>
+        <h3>C. Còn thiếu</h3>
+        <ul>
+          <li>Structured health onboarding và risk profile.</li>
+          <li>Versioned/provenance nutrition corpus và working ingestion.</li>
+          <li>Ground-truth recommendation/evaluation datasets.</li>
+          <li>Safety classifier, contraindication checks và output validation.</li>
+          <li>Feedback/adherence/outcome collection và adaptive personalization.</li>
+          <li>Experimental protocol, baselines, ablations và metrics.</li>
+          <li>Backend authentication, privacy controls và reproducibility.</li>
+        </ul>
+        <h3>D. Baseline experiments khả dụng</h3>
+        <p>LLM không RAG so với hybrid RAG; prompt-only so với tool-grounded; generic so với Level-3 personalization; vector-only/keyword-only/hybrid retrieval; stateless so với memory; light so với heavy model.</p>
+        <h3>E. Research contribution tiềm năng</h3>
+        <p>Hybrid RAG tiếng Việt cho nutrition, tool-grounded Vietnamese meal planning, kết hợp profile/daily logs/memory, safety-aware personalization và adherence-driven adaptive planning. Đây mới là nền tảng/hướng tiềm năng, chưa phải contribution đã được chứng minh.</p>
+      </section>
+
+      <section id="handoff" class="handoff">
+        <h1>PROJECT HANDOFF FOR SCHOLAR GPT</h1>
+
+        <h2>Project</h2>
+        <p>Flutter app theo dõi dinh dưỡng, sức khỏe và vận động, kết hợp AI chatbot để trả lời câu hỏi, ghi nhật ký bằng hội thoại và tạo kế hoạch ăn uống/tập luyện cá nhân hóa. Hiện tại đây là health tracker đa nguồn dữ liệu có LLM agent làm lớp hội thoại và điều phối tools; chưa phải hệ thống tư vấn y khoa hoặc adaptive nutrition đã được đánh giá khoa học.</p>
+
+        <h2>Tech Stack</h2>
+        <ul>
+          <li>Flutter/Dart, Provider/ChangeNotifier; Android, Web, Windows.</li>
+          <li>Firebase Authentication, Cloud Firestore và SharedPreferences.</li>
+          <li>FastAPI REST/WebSocket; PostgreSQL, async SQLAlchemy, raw SQL, pgvector.</li>
+          <li>OpenAI-compatible chat models; BAAI/bge-m3 embeddings.</li>
+          <li>Wger, Open Food Facts, PubMed/NCBI và allowlisted web search.</li>
+          <li>Docker Compose, Nginx và Cloudflare Tunnel.</li>
+        </ul>
+
+        <h2>Current Architecture</h2>
+        <pre><code>Flutter screens
+ → Provider/ChangeNotifier
+    ├── Firebase Auth/Firestore
+    ├── SharedPreferences/local JSON
+    └── FastAPI REST/WebSocket
+         → ChatGateway
+         → Memory + RAG + System Prompt
+         → Orchestrator
+         → LLM + tools
+         → PostgreSQL/pgvector</code></pre>
+        <p>Flutter chưa có repository/domain layer đồng nhất. Backend agent được chia thành LLM client, prompt builder, memory, RAG, planner, registry và orchestrator.</p>
+
+        <h2>Implemented Features</h2>
+        <p>Firebase auth, dashboard, profile/goals, BMI/BMR/TDEE, meal diary, saved meals, exercise catalog/tracking/history, workout simulation, weight/water history, streaming chatbot, server/client tools, action cards, chat history, deterministic long-term plans, plan completion, memory và hybrid RAG code.</p>
+
+        <h2>Partially Implemented Features</h2>
+        <p>Health onboarding, long-term plan restrictions/atomicity, allergies/diseases, lifestyle loading, real reminders, proactive check-ins, weight/profile synchronization, RAG ingestion, Open Food Facts UI và adaptive replanning.</p>
+
+        <h2>Current User Data</h2>
+        <p>Id, email, name, age, gender, height, current/target weight, activity level, health goal, body metrics, water, meals/macros, exercises, lifestyle data, reminders, chat history, memory facts và plan completion. Không có structured allergies, diseases, medications, pregnancy, preferences, disliked foods, budget hoặc exercise frequency.</p>
+
+        <h2>Current Nutrition Logic</h2>
+        <p>BMI = kg/m². BMR dùng Mifflin–St Jeor. TDEE dùng activity multipliers 1.2–1.9. Flutter dùng TDEE−500 cho giảm, +300 cho tăng. Water = 0.033 L/kg. Backend có calorie floor/protein rules nhưng không nhất quán giữa prompt, tool và planner. Không có carb/fat targets.</p>
+
+        <h2>Current AI Architecture</h2>
+        <p>Chatbot gửi profile/daily logs qua WebSocket tới ChatGateway. Backend tải history, summary, facts và RAG, dựng system prompt, rồi Orchestrator gọi OpenAI-compatible LLM và tools. Response được stream thành thoughts/tokens/actions. Không có token budget, dedicated rate-limit policy, moderation pass hoặc deterministic output safety validation. Backend chưa xác thực Firebase token.</p>
+
+        <h2>Current Personalization</h2>
+        <p><strong>Level 3.</strong> Profile, calculated metrics và daily logs đi vào prompt/planner; memory giữ facts. Chưa có feedback-driven adaptation, reward hoặc measured-outcome learning.</p>
+
+        <h2>Current Meal Recommendation</h2>
+        <p>Planner tính calorie target, chia ba bữa 30/40/30, dùng deterministic dish tool để chọn/scale món Việt và tạo exercise schedule. LLM điều phối/diễn giải. Constraints chỉ hỗ trợ tập hẹp; arbitrary allergies không được bảo đảm. Không có independent nutrition verifier sau LLM.</p>
+
+        <h2>Current RAG</h2>
+        <p>Hybrid RAG dùng BAAI/bge-m3, PostgreSQL FTS, pgvector và weighted reciprocal-rank fusion. RAG được tự động dùng cho non-chitchat và có query tool. Dataset loader có lỗi SQL columns/placeholders; corpus thật đã được nạp hay chưa: <strong>Không xác định được từ code hiện tại.</strong></p>
+
+        <h2>Current Safety Mechanisms</h2>
+        <p>System prompt cấm diagnosis/prescription, extreme diet và khuyên cấp cứu ở một số dấu hiệu. Pregnancy, diabetes, kidney/cardio disease và eating disorder được nhắc. Không có moderation, medical validator, medication checker, allergy ontology, pediatric rules, post-generation safety pass hoặc clinical disclaimer rõ. Provider safety: <strong>Không xác định được từ code hiện tại.</strong></p>
+
+        <h2>Current Database</h2>
+        <p>Firestore lưu profiles, body metrics, meal/exercise/water/lifestyle logs và reminders. SharedPreferences lưu saved meals/check-in settings. PostgreSQL/pgvector lưu chat, thoughts, structured data, summaries, facts, tool invocations, knowledge embeddings, plans/items và Wger-related data. Không có Firestore security rules trong repo.</p>
+
+        <h2>Major Problems</h2>
+        <ol>
+          <li>Backend APIs thiếu authentication và ownership enforcement.</li>
+          <li>Client-controlled user/session identity gây cross-user risk.</li>
+          <li>Exercise tool có thể báo success khi persistence thất bại.</li>
+          <li>Database credential có thể bị log.</li>
+          <li>RAG loader có lỗi SQL placeholders.</li>
+          <li>Plan creation không atomic.</li>
+          <li>Allergy/disease/medication safety không enforce.</li>
+          <li>Lifestyle state không được load ở runtime.</li>
+          <li>Hai nguồn water và weight/profile synchronization không nhất quán.</li>
+          <li>BMI/calorie/protein logic khác nhau giữa client/prompt/planner.</li>
+          <li>Concurrent WebSocket turns có thể interleave.</li>
+          <li>Thoughts/reasoning được lưu và hiển thị.</li>
+          <li>Proactive check-in chưa persistent hoặc thực thi logging đầy đủ.</li>
+          <li>Thiếu live AI/RAG/safety/integration evaluation.</li>
+        </ol>
+
+        <h2>Research-Relevant Existing Components</h2>
+        <p>Vietnamese datasets, deterministic health/meal tools, tool-grounded planner, streaming agent, structured actions, hybrid RAG, conversation summaries/facts, daily context, plan/check-in schema, property tests và Flutter tracking UI.</p>
+
+        <h2>Missing Research Components</h2>
+        <p>Curated/versioned corpus, working reproducible ingestion, ground truth, retrieval/generation/personalization metrics, baseline and ablation experiments, adherence feedback, adaptive learning, expert safety review, red-team dataset, backend security và model/prompt/dataset versioning.</p>
+
+        <h2>Important Files</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>File</th><th>Purpose / importance</th></tr></thead>
+            <tbody>
+              <tr><td><a href="../apps/mobile/lib/main.dart">apps/mobile/lib/main.dart</a></td><td>Entry point, Firebase initialization, provider graph và AuthWrapper.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/models/user_model.dart">models/user_model.dart</a></td><td>User profile và health calculations.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/providers/user_provider.dart">providers/user_provider.dart</a></td><td>Authentication và profile persistence.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/providers/ai_chat_provider.dart">providers/ai_chat_provider.dart</a></td><td>Streaming chat và client tools; có integrity risks.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/features/chat/screens/chatbot_screen.dart">chatbot_screen.dart</a></td><td>Main AI UI và context collection.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/providers/nutrition_provider.dart">nutrition_provider.dart</a></td><td>Food catalog, diary, plan merge và saved meals.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/utils/meal_nutrition_utils.dart">meal_nutrition_utils.dart</a></td><td>Dish nutrition resolution/fallback.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/providers/exercise_provider.dart">exercise_provider.dart</a></td><td>Exercise catalog và diary.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/providers/health_provider.dart">health_provider.dart</a></td><td>Body metrics và water tracking.</td></tr>
+              <tr><td><a href="../apps/mobile/lib/services/backend_api_service.dart">backend_api_service.dart</a></td><td>Flutter/FastAPI REST contract.</td></tr>
+              <tr><td><a href="../apps/backend/main.py">apps/backend/main.py</a></td><td>FastAPI composition, routers và CORS.</td></tr>
+              <tr><td><a href="../apps/backend/config.py">config.py</a></td><td>Model, database, RAG và agent config.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/chat_gateway.py">chat_gateway.py</a></td><td>WebSocket identity/session/turn orchestration.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/orchestrator.py">orchestrator.py</a></td><td>LLM/tool execution loop.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/llm_client.py">llm_client.py</a></td><td>LLM calls, streaming, retry và fallback.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/system_prompt.py">system_prompt.py</a></td><td>Personalization, RAG, tool và safety prompt.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/memory_service.py">memory_service.py</a></td><td>History, summaries, facts và RAG context.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/rag_service.py">rag_service.py</a></td><td>Embedding và hybrid retrieval.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/planner.py">planner.py</a></td><td>Long-term meal/workout planner.</td></tr>
+              <tr><td><a href="../apps/backend/services/agent/tools/dish.py">tools/dish.py</a></td><td>Dish selection, filtering và portion scaling.</td></tr>
+              <tr><td><a href="../apps/backend/scripts/load_dataset.py">scripts/load_dataset.py</a></td><td>RAG corpus loader; chứa blocking defect.</td></tr>
+              <tr><td><a href="../apps/backend/modules/chat/router.py">modules/chat/router.py</a></td><td>Chat/history/WebSocket endpoints.</td></tr>
+              <tr><td><a href="../apps/backend/modules/plans/router.py">modules/plans/router.py</a></td><td>Plan endpoints và restrictions issue.</td></tr>
+              <tr><td><a href="../docker-compose.yml">docker-compose.yml</a></td><td>Service topology và missing Wger sync reference.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Final Assessment</h2>
+        <ol>
+          <li><strong>Bài toán hiện tại:</strong> theo dõi health/nutrition/exercise và dùng chat để truy vấn, ghi log, tạo plan.</li>
+          <li><strong>Vai trò AI:</strong> lớp hội thoại/orchestrator; calculations đáng tin cậy hơn được giao cho tools/datasets/planner/RAG.</li>
+          <li><strong>Personalization:</strong> Level 3, chưa adaptive Level 4.</li>
+          <li><strong>Giá trị kỹ thuật nhất:</strong> streaming agent + tool calling + deterministic planner + memory + hybrid RAG.</li>
+          <li><strong>Yếu nhất:</strong> backend security/ownership và safety assurance, sau đó là action/persistence integrity.</li>
+          <li><strong>Sẵn sàng nghiên cứu:</strong> đủ làm prototype/baseline, chưa đủ đưa ra kết luận khoa học đáng tin cậy.</li>
+          <li><strong>Còn thiếu:</strong> verified corpus/ingestion, evaluation datasets/protocols, baselines/ablations, feedback loop, expert safety evaluation, backend security và reproducibility.</li>
+        </ol>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

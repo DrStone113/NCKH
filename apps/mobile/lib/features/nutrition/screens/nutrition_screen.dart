@@ -4,9 +4,12 @@ import '../../../providers/nutrition_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../models/meal_model.dart';
 import '../../../theme/app_theme.dart';
+import '../../../utils/meal_nutrition_utils.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/animated_counter.dart';
+import '../../../widgets/meal_summary_card.dart';
 import 'dart:math' as math;
+
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key});
 
@@ -19,15 +22,19 @@ class _NutritionScreenState extends State<NutritionScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+      final user =
+          Provider.of<UserProvider>(context, listen: false).currentUser;
       if (user != null) {
-        Provider.of<NutritionProvider>(context, listen: false).loadTodayMeals(user.id);
+        Provider.of<NutritionProvider>(context, listen: false)
+            .loadTodayMeals(user.id);
       }
     });
   }
 
-  void _showDatePicker(BuildContext context, NutritionProvider provider, String userId) {
-    DateTime viewMonth = DateTime(provider.selectedDate.year, provider.selectedDate.month);
+  void _showDatePicker(
+      BuildContext context, NutritionProvider provider, String userId) {
+    DateTime viewMonth =
+        DateTime(provider.selectedDate.year, provider.selectedDate.month);
 
     showModalBottomSheet(
       context: context,
@@ -36,8 +43,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
           final now = DateTime.now();
-          final daysInMonth = DateUtils.getDaysInMonth(viewMonth.year, viewMonth.month);
-          final firstWeekday = DateTime(viewMonth.year, viewMonth.month, 1).weekday % 7; // 0=Sun
+          final daysInMonth =
+              DateUtils.getDaysInMonth(viewMonth.year, viewMonth.month);
+          final firstWeekday =
+              DateTime(viewMonth.year, viewMonth.month, 1).weekday % 7; // 0=Sun
 
           return Container(
             decoration: const BoxDecoration(
@@ -49,7 +58,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Handle
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.textHint, borderRadius: BorderRadius.circular(2))),
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: AppColors.textHint,
+                        borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 16),
 
                 // Month navigator
@@ -59,22 +73,27 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
                       onPressed: () => setModalState(() {
-                        viewMonth = DateTime(viewMonth.year, viewMonth.month - 1);
+                        viewMonth =
+                            DateTime(viewMonth.year, viewMonth.month - 1);
                       }),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                     Text(
                       '${_monthLabel(viewMonth.month)} ${viewMonth.year}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
                       onPressed: () => setModalState(() {
-                        viewMonth = DateTime(viewMonth.year, viewMonth.month + 1);
+                        viewMonth =
+                            DateTime(viewMonth.year, viewMonth.month + 1);
                       }),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                   ],
                 ),
@@ -82,10 +101,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
                 // Weekday headers
                 Row(
-                  children: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d) =>
-                    Expanded(child: Center(child: Text(d,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textHint))))
-                  ).toList(),
+                  children: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+                      .map((d) => Expanded(
+                          child: Center(
+                              child: Text(d,
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textHint)))))
+                      .toList(),
                 ),
                 const SizedBox(height: 8),
 
@@ -105,10 +129,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     final day = index - firstWeekday + 1;
                     final date = DateTime(viewMonth.year, viewMonth.month, day);
                     final isFuture = date.isAfter(now);
-                    final isSelected = date.year == provider.selectedDate.year &&
-                        date.month == provider.selectedDate.month &&
-                        date.day == provider.selectedDate.day;
-                    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+                    final isSelected =
+                        date.year == provider.selectedDate.year &&
+                            date.month == provider.selectedDate.month &&
+                            date.day == provider.selectedDate.day;
+                    final isToday = date.year == now.year &&
+                        date.month == now.month &&
+                        date.day == now.day;
 
                     return GestureDetector(
                       onTap: () {
@@ -132,7 +159,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             '$day',
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected || isToday
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               color: isSelected
                                   ? Colors.white
                                   : isFuture
@@ -155,14 +184,28 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   String _monthLabel(int month) {
-    const months = ['', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    const months = [
+      '',
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12'
+    ];
     return months[month];
   }
 
   void _changeDate(BuildContext context, int days) {
     final provider = Provider.of<NutritionProvider>(context, listen: false);
-    final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+    final userId =
+        Provider.of<UserProvider>(context, listen: false).currentUser?.id;
     if (userId == null) return;
     final newDate = provider.selectedDate.add(Duration(days: days));
     // Cho phép xem các ngày tương lai để lập kế hoạch
@@ -183,10 +226,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
     String dateLabel;
     if (isToday) {
       dateLabel = 'Hôm nay';
-    } else if (selectedDate.year == yesterday.year && selectedDate.month == yesterday.month && selectedDate.day == yesterday.day) {
+    } else if (selectedDate.year == yesterday.year &&
+        selectedDate.month == yesterday.month &&
+        selectedDate.day == yesterday.day) {
       dateLabel = 'Hôm qua';
     } else {
-      dateLabel = '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+      dateLabel =
+          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
     }
 
     return Scaffold(
@@ -226,22 +272,30 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       icon: const Icon(Icons.chevron_left, size: 20),
                       onPressed: () => _changeDate(context, -1),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                     GestureDetector(
                       onTap: () {
-                        final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+                        final userId =
+                            Provider.of<UserProvider>(context, listen: false)
+                                .currentUser
+                                ?.id;
                         if (userId == null) return;
                         _showDatePicker(context, nutritionProvider, userId);
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_today, size: 13, color: AppColors.textSecondary),
+                          const Icon(Icons.calendar_today,
+                              size: 13, color: AppColors.textSecondary),
                           const SizedBox(width: 6),
-                          Text(dateLabel, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                          Text(dateLabel,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 14)),
                           const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.textSecondary),
+                          const Icon(Icons.keyboard_arrow_down,
+                              size: 16, color: AppColors.textSecondary),
                         ],
                       ),
                     ),
@@ -249,7 +303,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                       icon: const Icon(Icons.chevron_right, size: 20),
                       onPressed: () => _changeDate(context, 1),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                   ],
                 ),
@@ -279,7 +334,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 children: [
                   Expanded(
                     child: Text('Bữa ăn $dateLabel',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis),
                   ),
                   const SizedBox(width: 8),
@@ -288,7 +344,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     children: [
                       if (nutritionProvider.completedMealsCount > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.success.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
@@ -296,18 +353,23 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.check_circle, size: 12, color: AppColors.success),
+                              const Icon(Icons.check_circle,
+                                  size: 12, color: AppColors.success),
                               const SizedBox(width: 4),
                               Text(
                                 '${nutritionProvider.completedMealsCount} đã ăn',
-                                style: const TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
                         ),
                       if (nutritionProvider.pendingMealsCount > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: AppColors.warning.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
@@ -315,11 +377,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.schedule, size: 12, color: AppColors.warning),
+                              const Icon(Icons.schedule,
+                                  size: 12, color: AppColors.warning),
                               const SizedBox(width: 4),
                               Text(
                                 '${nutritionProvider.pendingMealsCount} sắp ăn',
-                                style: const TextStyle(fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.warning,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -343,11 +409,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   child: const Center(
                     child: Column(
                       children: [
-                        Icon(Icons.restaurant_menu, size: 48, color: AppColors.textHint),
+                        Icon(Icons.restaurant_menu,
+                            size: 48, color: AppColors.textHint),
                         SizedBox(height: 12),
-                        Text('Chưa có bữa ăn nào', style: TextStyle(color: AppColors.textSecondary)),
+                        Text('Chưa có bữa ăn nào',
+                            style: TextStyle(color: AppColors.textSecondary)),
                         SizedBox(height: 4),
-                        Text('Nhấn + để thêm bữa ăn', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                        Text('Nhấn + để thêm bữa ăn',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textHint)),
                       ],
                     ),
                   ),
@@ -362,7 +432,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   Widget _buildCalorieSummary(NutritionProvider provider, double target) {
-    final consumed = provider.totalCalories;
+    final consumed = provider.consumedCalories;
     final progress = target > 0 ? (consumed / target).clamp(0.0, 1.5) : 0.0;
     final remaining = (target - consumed).clamp(0.0, target);
 
@@ -390,9 +460,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     AnimatedCounter(
                       value: consumed,
                       decimals: 0,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold),
                     ),
-                    const Text('kcal', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    const Text('kcal đã ăn',
+                        style: TextStyle(
+                            fontSize: 10, color: AppColors.textSecondary)),
                   ],
                 ),
               ),
@@ -411,6 +484,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 const SizedBox(height: 8),
                 _calorieStat('Còn lại', remaining,
                     consumed > target ? AppColors.error : AppColors.success),
+                if (provider.pendingMealsCount > 0) ...[
+                  const SizedBox(height: 8),
+                  _calorieStat('Kế hoạch', provider.plannedCalories,
+                      AppColors.textSecondary),
+                ],
               ],
             ),
           ),
@@ -423,13 +501,16 @@ class _NutritionScreenState extends State<NutritionScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+        Text(label,
+            style:
+                const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
         Flexible(
           child: AnimatedCounter(
             value: value,
             decimals: 0,
             suffix: ' kcal',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w600, color: color),
           ),
         ),
       ],
@@ -437,10 +518,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   Widget _buildMacroBreakdown(NutritionProvider provider) {
-    final total = provider.totalProtein + provider.totalCarbs + provider.totalFat;
-    final proteinPct = total > 0 ? (provider.totalProtein / total * 100) : 0;
-    final carbsPct = total > 0 ? (provider.totalCarbs / total * 100) : 0;
-    final fatPct = total > 0 ? (provider.totalFat / total * 100) : 0;
+    final hasConsumed = provider.consumedCalories > 0;
+    final p = hasConsumed ? provider.consumedProtein : provider.totalProtein;
+    final c = hasConsumed ? provider.consumedCarbs : provider.totalCarbs;
+    final f = hasConsumed ? provider.consumedFat : provider.totalFat;
+
+    final total = p + c + f;
+    final proteinPct = total > 0 ? (p / total * 100) : 0;
+    final carbsPct = total > 0 ? (c / total * 100) : 0;
+    final fatPct = total > 0 ? (f / total * 100) : 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -451,13 +537,29 @@ class _NutritionScreenState extends State<NutritionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Thành phần dinh dưỡng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Thành phần dinh dưỡng',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                hasConsumed ? 'Đã ăn' : 'Dự kiến',
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
-          _macroBar('Protein', provider.totalProtein, proteinPct.toDouble(), AppColors.protein),
+          _macroBar('Protein', p, proteinPct.toDouble(),
+              AppColors.protein),
           const SizedBox(height: 12),
-          _macroBar('Carbs', provider.totalCarbs, carbsPct.toDouble(), AppColors.carbs),
+          _macroBar('Carbs', c, carbsPct.toDouble(),
+              AppColors.carbs),
           const SizedBox(height: 12),
-          _macroBar('Chất béo', provider.totalFat, fatPct.toDouble(), AppColors.fat),
+          _macroBar(
+              'Chất béo', f, fatPct.toDouble(), AppColors.fat),
         ],
       ),
     );
@@ -473,7 +575,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
             Flexible(
               child: Text(
                 '${grams.toStringAsFixed(1)}g (${pct.toStringAsFixed(0)}%)',
-                style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 12, color: color, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -508,7 +611,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
           children: [
             Icon(Icons.delete_outline, color: Colors.white, size: 22),
             SizedBox(width: 6),
-            Text('Xoá', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Xoá',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -519,7 +624,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
           title: const Text('Xác nhận xoá'),
           content: Text('Xoá "${meal.name}"?'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huỷ')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Huỷ')),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -531,146 +638,30 @@ class _NutritionScreenState extends State<NutritionScreen> {
       onDismissed: (_) {
         _deleteMeal(context, meal.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xoá "${meal.name}"'), backgroundColor: AppColors.success),
+          SnackBar(
+              content: Text('Đã xoá "${meal.name}"'),
+              backgroundColor: AppColors.success),
         );
       },
-      child: Container(
+      child: MealSummaryCard(
+        name: meal.name,
+        mealType: meal.mealType,
+        ingredients: meal.items
+            .map(MealCardIngredientView.fromMealItem)
+            .toList(growable: false),
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        completed: meal.isCompleted,
         margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: meal.isCompleted ? AppColors.success.withValues(alpha: 0.05) : AppColors.cardDark,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: meal.isCompleted ? AppColors.success.withValues(alpha: 0.3) : AppColors.surfaceLight,
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          children: [
-            // Header: tên món + toggle + calo tổng
-            GestureDetector(
-              onTap: () => Provider.of<NutritionProvider>(context, listen: false).toggleMealCompleted(meal.id),
-              onLongPress: () => _showAddItemToMeal(context, meal),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34, height: 34,
-                      decoration: BoxDecoration(
-                        color: meal.isCompleted
-                            ? AppColors.success.withValues(alpha: 0.15)
-                            : _getMealColor(meal.mealType).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        meal.isCompleted ? Icons.check_circle : _getMealIcon(meal.mealType),
-                        color: meal.isCompleted ? AppColors.success : _getMealColor(meal.mealType),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            meal.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              decoration: meal.isCompleted ? TextDecoration.lineThrough : null,
-                              color: meal.isCompleted ? AppColors.textSecondary : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'P:${meal.protein.toStringAsFixed(0)}g  C:${meal.carbs.toStringAsFixed(0)}g  F:${meal.fat.toStringAsFixed(0)}g',
-                            style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          meal.calories.toStringAsFixed(0),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: meal.isCompleted ? AppColors.textSecondary : AppColors.calories,
-                          ),
-                        ),
-                        const Text('kcal', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      ],
-                    ),
-                    const SizedBox(width: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: meal.isCompleted
-                            ? AppColors.success.withValues(alpha: 0.12)
-                            : AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        meal.isCompleted ? '✓' : '⏳',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: meal.isCompleted ? AppColors.success : AppColors.warning,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Danh sách thành phần
-            if (meal.items.isNotEmpty) ...[
-              const Divider(height: 1, indent: 12, endIndent: 12),
-              ...meal.items.map((item) => Padding(
-                padding: const EdgeInsets.fromLTRB(56, 4, 12, 4),
-                child: Row(
-                  children: [
-                    const Icon(Icons.fiber_manual_record, size: 6, color: AppColors.textHint),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${item.name}  ${item.weightGrams.toStringAsFixed(0)}g',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Text(
-                      '${item.calories.toStringAsFixed(0)} kcal',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textHint),
-                    ),
-                  ],
-                ),
-              )),
-              // Nút thêm thành phần
-              GestureDetector(
-                onTap: () => _showAddItemToMeal(context, meal),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(56, 4, 12, 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.add, size: 14, color: _getMealColor(meal.mealType).withValues(alpha: 0.7)),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Thêm thành phần',
-                        style: TextStyle(fontSize: 11, color: _getMealColor(meal.mealType).withValues(alpha: 0.7)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        onTap: () => Provider.of<NutritionProvider>(
+          context,
+          listen: false,
+        ).toggleMealCompleted(meal.id),
+        onLongPress: () => _showAddItemToMeal(context, meal),
+        actionLabel: 'Thêm thành phần',
+        onAction: () => _showAddItemToMeal(context, meal),
       ),
     );
   }
@@ -688,21 +679,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   Color _getMealColor(String type) {
-    switch (type) {
-      case 'breakfast': case 'sang': return const Color(0xFFFF9800);
-      case 'lunch': case 'trua': return const Color(0xFF4CAF50);
-      case 'dinner': case 'toi': return const Color(0xFF3F51B5);
-      default: return const Color(0xFF9C27B0);
-    }
+    return MealPresentation.accent(type);
   }
 
   IconData _getMealIcon(String type) {
-    switch (type) {
-      case 'breakfast': case 'sang': return Icons.wb_sunny;
-      case 'lunch': case 'trua': return Icons.lunch_dining;
-      case 'dinner': case 'toi': return Icons.dinner_dining;
-      default: return Icons.fastfood;
-    }
+    return MealPresentation.mealIcon(type);
   }
 
   void _showAddMealDialog(BuildContext context, DateTime date) {
@@ -713,8 +694,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
       isDismissible: true,
       enableDrag: true,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: _AddMealSheet(date: date, initialMealType: _getDefaultMealType()),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child:
+            _AddMealSheet(date: date, initialMealType: _getDefaultMealType()),
       ),
     );
   }
@@ -744,25 +727,30 @@ class _NutritionScreenState extends State<NutritionScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('💡 Gợi ý thực đơn', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('💡 Gợi ý thực đơn',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text('Dựa trên mục tiêu ${targetCal.toStringAsFixed(0)} kcal/ngày',
                 style: const TextStyle(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             ...suggestions.map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(s['title'] as String, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  ...(s['items'] as List<String>).map((item) => Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 2),
-                    child: Text('• $item', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                  )),
-                ],
-              ),
-            )),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s['title'] as String,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      ...(s['items'] as List<String>).map((item) => Padding(
+                            padding: const EdgeInsets.only(left: 8, bottom: 2),
+                            child: Text('• $item',
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary)),
+                          )),
+                    ],
+                  ),
+                )),
           ],
         ),
       ),
@@ -774,7 +762,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
   }
 
   /// Nhóm bữa ăn theo loại và hiển thị có header
-  List<Widget> _buildMealsByType(BuildContext context, NutritionProvider provider) {
+  List<Widget> _buildMealsByType(
+      BuildContext context, NutritionProvider provider) {
     final mealGroups = <String, List<MealModel>>{
       'sang': [],
       'trua': [],
@@ -783,12 +772,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
     };
 
     for (final meal in provider.todayMeals) {
-      final type = meal.mealType;
-      if (mealGroups.containsKey(type)) {
-        mealGroups[type]!.add(meal);
-      } else {
-        mealGroups['phu']!.add(meal);
-      }
+      final type = MealTypeUtils.normalize(meal.mealType);
+      mealGroups[type]!.add(meal);
     }
 
     final groupOrder = ['sang', 'trua', 'toi', 'phu'];
@@ -817,12 +802,16 @@ class _NutritionScreenState extends State<NutritionScreen> {
             children: [
               Text(
                 groupLabels[type]!,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               Text(
                 '${groupCal.toStringAsFixed(0)} kcal',
-                style: const TextStyle(fontSize: 12, color: AppColors.calories, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.calories,
+                    fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 8),
               Container(
@@ -838,7 +827,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: completedCount == meals.length ? AppColors.success : AppColors.warning,
+                    color: completedCount == meals.length
+                        ? AppColors.success
+                        : AppColors.warning,
                   ),
                 ),
               ),
@@ -862,7 +853,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: GestureDetector(
-            onTap: () => _showAddMealDialogForType(context, provider.selectedDate, type),
+            onTap: () =>
+                _showAddMealDialogForType(context, provider.selectedDate, type),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
@@ -880,7 +872,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   const SizedBox(width: 6),
                   Text(
                     'Thêm vào ${groupLabels[type]!.split(' ').skip(1).join(' ')}',
-                    style: TextStyle(fontSize: 12, color: _getMealColor(type), fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: _getMealColor(type),
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -899,7 +894,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
         child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: GestureDetector(
-            onTap: () => _showAddMealDialogForType(context, provider.selectedDate, type),
+            onTap: () =>
+                _showAddMealDialogForType(context, provider.selectedDate, type),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
@@ -909,14 +905,19 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(_getMealIcon(type), size: 20, color: _getMealColor(type).withValues(alpha: 0.5)),
+                  Icon(_getMealIcon(type),
+                      size: 20,
+                      color: _getMealColor(type).withValues(alpha: 0.5)),
                   const SizedBox(width: 12),
                   Text(
                     groupLabels[type]!,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textHint),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textHint),
                   ),
                   const Spacer(),
-                  Icon(Icons.add_circle_outline, size: 18, color: _getMealColor(type).withValues(alpha: 0.5)),
+                  Icon(Icons.add_circle_outline,
+                      size: 18,
+                      color: _getMealColor(type).withValues(alpha: 0.5)),
                 ],
               ),
             ),
@@ -929,7 +930,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
     return widgets;
   }
 
-  void _showAddMealDialogForType(BuildContext context, DateTime date, String mealType) {
+  void _showAddMealDialogForType(
+      BuildContext context, DateTime date, String mealType) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -937,7 +939,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
       isDismissible: true,
       enableDrag: true,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: _AddMealSheet(date: date, initialMealType: mealType),
       ),
     );
@@ -955,11 +958,13 @@ class _AddMealSheet extends StatefulWidget {
   State<_AddMealSheet> createState() => _AddMealSheetState();
 }
 
-class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderStateMixin {
+class _AddMealSheetState extends State<_AddMealSheet>
+    with SingleTickerProviderStateMixin {
   final _mealNameController = TextEditingController();
   late String _mealType;
   final List<MealItem> _items = [];
   late TabController _tabController;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -987,10 +992,10 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
   void _addItem(MealItem item) => setState(() => _items.add(item));
   void _removeItem(int index) => setState(() => _items.removeAt(index));
 
-  void _save() {
+  Future<void> _save() async {
     final userId =
         Provider.of<UserProvider>(context, listen: false).currentUser?.id;
-    if (userId == null || _items.isEmpty) return;
+    if (userId == null || _items.isEmpty || _isSaving) return;
 
     final mealName = _mealNameController.text.trim().isNotEmpty
         ? _mealNameController.text.trim()
@@ -1008,8 +1013,22 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
       items: List.from(_items),
     );
 
-    Provider.of<NutritionProvider>(context, listen: false).addMeal(meal);
-    Navigator.pop(context);
+    final provider = Provider.of<NutritionProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isSaving = true);
+    try {
+      await provider.addMeal(meal);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Không thể lưu món ăn. Vui lòng thử lại.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   void _saveAsTemplate() {
@@ -1043,46 +1062,10 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
 
   void _loadFromDish(Map<String, dynamic> dish) {
     final dishName = dish['name']?.toString() ?? 'Món ăn';
-    final rawIngredients = dish['ingredients'] as List<dynamic>? ?? [];
     final foodsDb =
         Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
-
-    final newItems = <MealItem>[];
-    for (final ing in rawIngredients) {
-      if (ing is Map<String, dynamic>) {
-        final ingName = ing['name']?.toString() ?? '';
-        final grams = (ing['grams'] as num?)?.toDouble() ?? 100.0;
-
-        final cleanIngName = ingName.toLowerCase().trim();
-        FoodItem? matchedFood = foodsDb
-            .where((f) => f.name.toLowerCase().trim() == cleanIngName)
-            .firstOrNull;
-        matchedFood ??= foodsDb
-            .where((f) =>
-                f.name.toLowerCase().contains(cleanIngName) ||
-                cleanIngName.contains(f.name.toLowerCase()))
-            .firstOrNull;
-
-        if (matchedFood != null) {
-          newItems.add(matchedFood.toMealItem(
-            itemId:
-                '${matchedFood.id}_${DateTime.now().millisecondsSinceEpoch}_${newItems.length}',
-            grams: grams,
-          ));
-        } else {
-          newItems.add(MealItem(
-            id: 'ing_${DateTime.now().millisecondsSinceEpoch}_${newItems.length}',
-            foodId: '',
-            name: ingName,
-            weightGrams: grams,
-            calories: (grams * 1.5),
-            protein: (grams * 0.1),
-            carbs: (grams * 0.2),
-            fat: (grams * 0.05),
-          ));
-        }
-      }
-    }
+    final nutrition = MealNutritionUtils.resolveDish(dish, foodsDb);
+    final newItems = nutrition.items;
 
     setState(() {
       _items.clear();
@@ -1092,7 +1075,8 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Đã chọn món "$dishName" (${newItems.length} thành phần)'),
+        content:
+            Text('Đã chọn món "$dishName" (${newItems.length} thành phần)'),
         backgroundColor: AppColors.success,
         duration: const Duration(seconds: 1),
       ),
@@ -1100,10 +1084,14 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
   }
 
   void _loadFromTemplate(SavedMealTemplate template) {
-    final db = Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
+    final db =
+        Provider.of<NutritionProvider>(context, listen: false).vietnameseFoods;
     final newItems = <MealItem>[];
     for (final t in template.items) {
-      final food = db.where((f) => f.id == t.foodId || f.name.toLowerCase() == t.name.toLowerCase()).firstOrNull;
+      final food = db
+          .where((f) =>
+              f.id == t.foodId || f.name.toLowerCase() == t.name.toLowerCase())
+          .firstOrNull;
       if (food != null) {
         newItems.add(food.toMealItem(
           itemId: '${t.foodId}_${DateTime.now().millisecondsSinceEpoch}',
@@ -1378,11 +1366,24 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: _items.isEmpty ? null : _save,
-              icon: const Icon(Icons.check, size: 16),
-              label: Text(_items.isEmpty
-                  ? 'Chọn thành phần'
-                  : 'Lưu món ăn (${_items.length})'),
+              onPressed: _items.isEmpty || _isSaving ? null : _save,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check, size: 16),
+              label: Text(
+                _isSaving
+                    ? 'Đang lưu...'
+                    : _items.isEmpty
+                        ? 'Chọn thành phần'
+                        : 'Lưu món ăn (${_items.length})',
+              ),
             ),
           ),
         ],
@@ -1391,16 +1392,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
   }
 
   Color _getMealTypeColor(String type) {
-    switch (type) {
-      case 'sang':
-        return const Color(0xFFFF9800);
-      case 'trua':
-        return const Color(0xFF4CAF50);
-      case 'toi':
-        return const Color(0xFF3F51B5);
-      default:
-        return const Color(0xFF9C27B0);
-    }
+    return MealPresentation.accent(type);
   }
 }
 
@@ -1410,8 +1402,7 @@ class _AddMealSheetState extends State<_AddMealSheet> with SingleTickerProviderS
 class _SampleMealsTab extends StatefulWidget {
   final String mealType;
   final void Function(Map<String, dynamic>) onSelectDish;
-  const _SampleMealsTab(
-      {required this.mealType, required this.onSelectDish});
+  const _SampleMealsTab({required this.mealType, required this.onSelectDish});
 
   @override
   State<_SampleMealsTab> createState() => _SampleMealsTabState();
@@ -1428,144 +1419,8 @@ class _SampleMealsTabState extends State<_SampleMealsTab> {
   }
 
   static (String emoji, Color bg, Color border) _getDishVisuals(String name) {
-    final lower = name.toLowerCase().trim();
-    if (lower.contains('phở') ||
-        lower.contains('bún') ||
-        lower.contains('mì') ||
-        lower.contains('miến') ||
-        lower.contains('hủ tiếu') ||
-        lower.contains('bánh canh')) {
-      return (
-        '🍜',
-        const Color(0xFFFF5722).withValues(alpha: 0.15),
-        const Color(0xFFFF5722).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('cơm') || lower.contains('xôi') || lower.contains('gạo')) {
-      return (
-        '🍚',
-        const Color(0xFFFF9800).withValues(alpha: 0.15),
-        const Color(0xFFFF9800).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('cháo') || lower.contains('súp') || lower.contains('canh')) {
-      return (
-        '🥣',
-        const Color(0xFF009688).withValues(alpha: 0.15),
-        const Color(0xFF009688).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('bánh mì') || lower.contains('sandwich')) {
-      return (
-        '🥖',
-        const Color(0xFF8D6E63).withValues(alpha: 0.15),
-        const Color(0xFF8D6E63).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('bánh bao') ||
-        lower.contains('bánh cuốn') ||
-        lower.contains('há cảo') ||
-        lower.contains('bánh xèo') ||
-        lower.contains('bánh tráng')) {
-      return (
-        '🥟',
-        const Color(0xFFAB47BC).withValues(alpha: 0.15),
-        const Color(0xFFAB47BC).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('gà') || lower.contains('vịt') || lower.contains('chim')) {
-      return (
-        '🍗',
-        const Color(0xFFFF7043).withValues(alpha: 0.15),
-        const Color(0xFFFF7043).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('bò') ||
-        lower.contains('heo') ||
-        lower.contains('thịt') ||
-        lower.contains('sườn') ||
-        lower.contains('chả')) {
-      return (
-        '🥩',
-        const Color(0xFFE91E63).withValues(alpha: 0.15),
-        const Color(0xFFE91E63).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('tôm') ||
-        lower.contains('cua') ||
-        lower.contains('mực') ||
-        lower.contains('hải sản') ||
-        lower.contains('nghêu') ||
-        lower.contains('sò') ||
-        lower.contains('ốc')) {
-      return (
-        '🦐',
-        const Color(0xFF00BCD4).withValues(alpha: 0.15),
-        const Color(0xFF00BCD4).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('cá') || lower.contains('lươn')) {
-      return (
-        '🐟',
-        const Color(0xFF03A9F4).withValues(alpha: 0.15),
-        const Color(0xFF03A9F4).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('trứng') || lower.contains('ốp la')) {
-      return (
-        '🍳',
-        const Color(0xFFFFC107).withValues(alpha: 0.18),
-        const Color(0xFFFFC107).withValues(alpha: 0.4)
-      );
-    }
-    if (lower.contains('salad') ||
-        lower.contains('rau') ||
-        lower.contains('gỏi') ||
-        lower.contains('nộm') ||
-        lower.contains('cuốn')) {
-      return (
-        '🥗',
-        const Color(0xFF4CAF50).withValues(alpha: 0.15),
-        const Color(0xFF4CAF50).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('lẩu') || lower.contains('xào') || lower.contains('kho')) {
-      return (
-        '🥘',
-        const Color(0xFFFF6F00).withValues(alpha: 0.15),
-        const Color(0xFFFF6F00).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('sữa') ||
-        lower.contains('sữa chua') ||
-        lower.contains('sinh tố') ||
-        lower.contains('nước ép') ||
-        lower.contains('trà') ||
-        lower.contains('cà phê')) {
-      return (
-        '🥤',
-        const Color(0xFF9C27B0).withValues(alpha: 0.15),
-        const Color(0xFF9C27B0).withValues(alpha: 0.35)
-      );
-    }
-    if (lower.contains('chuối') ||
-        lower.contains('táo') ||
-        lower.contains('cam') ||
-        lower.contains('dưa') ||
-        lower.contains('bơ') ||
-        lower.contains('trái') ||
-        lower.contains('hoa quả')) {
-      return (
-        '🍎',
-        const Color(0xFFE91E63).withValues(alpha: 0.15),
-        const Color(0xFFE91E63).withValues(alpha: 0.35)
-      );
-    }
-    return (
-      '🍽️',
-      const Color(0xFFFF9800).withValues(alpha: 0.15),
-      const Color(0xFFFF9800).withValues(alpha: 0.35)
-    );
+    final visual = MealPresentation.dishVisual(name);
+    return (visual.emoji, visual.background, visual.border);
   }
 
   @override
@@ -1586,8 +1441,9 @@ class _SampleMealsTabState extends State<_SampleMealsTab> {
       final types = (d['meal_types'] as List<dynamic>? ?? [])
           .map((e) => e.toString().toLowerCase())
           .toList();
-      final matchType =
-          types.isEmpty || types.contains(targetType) || widget.mealType == 'phu';
+      final matchType = types.isEmpty ||
+          types.contains(targetType) ||
+          widget.mealType == 'phu';
       final matchQuery = _query.isEmpty || name.contains(_query.toLowerCase());
       return matchType && matchQuery;
     }).toList();
@@ -1623,13 +1479,13 @@ class _SampleMealsTabState extends State<_SampleMealsTab> {
                   itemBuilder: (ctx, i) {
                     final d = filtered[i];
                     final name = d['name']?.toString() ?? '';
-                    final cal = (d['estimated_calories'] as num?)?.toDouble() ??
-                        0.0;
+                    final cal =
+                        (d['estimated_calories'] as num?)?.toDouble() ?? 0.0;
                     final ingredients =
                         (d['ingredients'] as List<dynamic>? ?? []);
                     final ingSummary = ingredients
-                        .map((ing) =>
-                            '${ing['name']} ${(ing['grams'] ?? 100)}g')
+                        .map(
+                            (ing) => '${ing['name']} ${(ing['grams'] ?? 100)}g')
                         .join(' · ');
 
                     final visuals = _getDishVisuals(name);
@@ -1752,9 +1608,11 @@ class _SavedMealsTab extends StatelessWidget {
           children: [
             Icon(Icons.bookmark_border, size: 48, color: AppColors.textHint),
             SizedBox(height: 12),
-            Text('Chưa có món nào được lưu', style: TextStyle(color: AppColors.textSecondary)),
+            Text('Chưa có món nào được lưu',
+                style: TextStyle(color: AppColors.textSecondary)),
             SizedBox(height: 4),
-            Text('Tạo món ăn rồi nhấn 🔖 để lưu lại', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+            Text('Tạo món ăn rồi nhấn 🔖 để lưu lại',
+                style: TextStyle(fontSize: 12, color: AppColors.textHint)),
           ],
         ),
       );
@@ -1809,12 +1667,15 @@ class _TemplateCard extends StatelessWidget {
           children: [
             // Emoji
             Container(
-              width: 44, height: 44,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(child: Text(template.emoji, style: const TextStyle(fontSize: 22))),
+              child: Center(
+                  child: Text(template.emoji,
+                      style: const TextStyle(fontSize: 22))),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1822,11 +1683,16 @@ class _TemplateCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(template.name,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
                   const SizedBox(height: 3),
                   Text(
-                    template.items.map((i) => '${i.name} ${i.defaultGrams.toStringAsFixed(0)}g').join(' · '),
-                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    template.items
+                        .map((i) =>
+                            '${i.name} ${i.defaultGrams.toStringAsFixed(0)}g')
+                        .join(' · '),
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1838,19 +1704,26 @@ class _TemplateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('~${cal.toStringAsFixed(0)}',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.calories)),
-                const Text('kcal', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.calories)),
+                const Text('kcal',
+                    style: TextStyle(
+                        fontSize: 10, color: AppColors.textSecondary)),
               ],
             ),
             if (canDelete) ...[
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: onDelete,
-                child: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                child: const Icon(Icons.delete_outline,
+                    size: 18, color: AppColors.error),
               ),
             ] else ...[
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textHint),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 14, color: AppColors.textHint),
             ],
           ],
         ),
@@ -1885,11 +1758,17 @@ class _AddItemSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
                 child: Column(
                   children: [
-                    Center(child: Container(width: 40, height: 4,
-                        decoration: BoxDecoration(color: AppColors.textHint, borderRadius: BorderRadius.circular(2)))),
+                    Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: AppColors.textHint,
+                                borderRadius: BorderRadius.circular(2)))),
                     const SizedBox(height: 12),
                     Text('Thêm vào "${meal.name}"',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                   ],
                 ),
@@ -1899,11 +1778,13 @@ class _AddItemSheet extends StatelessWidget {
                   mealType: meal.mealType,
                   onItemAdded: (item) {
                     final updated = meal.copyWith(items: [...meal.items, item]);
-                    Provider.of<NutritionProvider>(ctx, listen: false).updateMeal(updated);
+                    Provider.of<NutritionProvider>(ctx, listen: false)
+                        .updateMeal(updated);
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       SnackBar(
-                        content: Text('Đã thêm "${item.name}" vào "${meal.name}"'),
+                        content:
+                            Text('Đã thêm "${item.name}" vào "${meal.name}"'),
                         backgroundColor: AppColors.success,
                       ),
                     );
@@ -2092,8 +1973,8 @@ class _FoodPickerListState extends State<_FoodPickerList> {
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.2)),
+                border:
+                    Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2136,9 +2017,7 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                         return Column(
                           children: [
                             Text(
-                              _selected!
-                                  .caloriesForGrams(g)
-                                  .toStringAsFixed(0),
+                              _selected!.caloriesForGrams(g).toStringAsFixed(0),
                               style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -2216,9 +2095,12 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                 }),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.cardDark,
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.cardDark,
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected
                         ? Border.all(color: AppColors.primary, width: 1.5)
@@ -2244,24 +2126,30 @@ class _FoodPickerListState extends State<_FoodPickerList> {
                           children: [
                             Text(food.name,
                                 style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
                                   fontSize: 13,
                                 )),
                             const SizedBox(height: 2),
                             Text(
                               '${food.caloriesPer100g.toStringAsFixed(0)} kcal  P:${food.proteinPer100g.toStringAsFixed(0)}g  C:${food.carbsPer100g.toStringAsFixed(0)}g  F:${food.fatPer100g.toStringAsFixed(0)}g /100g',
-                              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                              style: const TextStyle(
+                                  fontSize: 10, color: AppColors.textSecondary),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(food.category, style: const TextStyle(fontSize: 9, color: AppColors.textHint)),
+                        child: Text(food.category,
+                            style: const TextStyle(
+                                fontSize: 9, color: AppColors.textHint)),
                       ),
                     ],
                   ),

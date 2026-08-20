@@ -3,6 +3,7 @@ In-memory session cache with TTL-based expiry.
 Thread-safe via threading.Lock.
 """
 
+import json
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -20,6 +21,8 @@ class ChatTurn:
     content: str
     tool_call_id: str | None = None
     tool_name: str | None = None
+    thoughts: str = ""
+    structured_data: dict | None = None
 
 
 @dataclass
@@ -53,6 +56,8 @@ class SessionStore:
         content: str,
         tool_call_id: str | None = None,
         tool_name: str | None = None,
+        thoughts: str = "",
+        structured_data: dict | None = None,
     ) -> None:
         with self._lock:
             session = self._store.get(session_id)
@@ -65,6 +70,8 @@ class SessionStore:
                     content=content,
                     tool_call_id=tool_call_id,
                     tool_name=tool_name,
+                    thoughts=thoughts,
+                    structured_data=structured_data,
                 )
             )
             session.last_active = datetime.now(timezone.utc)
@@ -76,8 +83,18 @@ class SessionStore:
         content: str,
         tool_call_id: str | None = None,
         tool_name: str | None = None,
+        thoughts: str = "",
+        structured_data: dict | None = None,
     ) -> None:
-        self.append_turn(session_id, role, content, tool_call_id, tool_name)
+        self.append_turn(
+            session_id,
+            role,
+            content,
+            tool_call_id,
+            tool_name,
+            thoughts,
+            structured_data,
+        )
 
     def get_history(self, session_id: str, max_turns: int = 10) -> list[ChatTurn]:
         with self._lock:
@@ -114,9 +131,19 @@ class DbSessionStore:
         content: str,
         tool_call_id: str | None = None,
         tool_name: str | None = None,
+        thoughts: str = "",
+        structured_data: dict | None = None,
     ) -> str:
         # Always record in memory cache so conversation history works in standalone mode
-        session_store.append_turn(session_id, role, content, tool_call_id, tool_name)
+        session_store.append_turn(
+            session_id,
+            role,
+            content,
+            tool_call_id,
+            tool_name,
+            thoughts,
+            structured_data,
+        )
         msg_id = str(uuid4())
         if self.db_session is None:
             return msg_id
@@ -126,9 +153,11 @@ class DbSessionStore:
                 text(
                     """
                     INSERT INTO chat_messages (
-                        id, session_id, role, content, tool_call_id, tool_name
+                        id, session_id, role, content, tool_call_id, tool_name,
+                        thoughts, structured_data
                     ) VALUES (
-                        :id, :session_id, :role, :content, :tool_call_id, :tool_name
+                        :id, :session_id, :role, :content, :tool_call_id, :tool_name,
+                        :thoughts, CAST(:structured_data AS JSONB)
                     )
                     """
                 ),
@@ -139,10 +168,19 @@ class DbSessionStore:
                     "content": content,
                     "tool_call_id": tool_call_id,
                     "tool_name": tool_name,
+                    "thoughts": thoughts,
+                    "structured_data": (
+                        json.dumps(structured_data, ensure_ascii=False)
+                        if structured_data is not None
+                        else None
+                    ),
                 },
             )
         except Exception as e:
             mark_db_offline(60.0)
             import logging
-            logging.getLogger(__name__).warning("Database unavailable in DbSessionStore.appendTurn: %s", e)
+
+            logging.getLogger(__name__).warning(
+                "Database unavailable in DbSessionStore.appendTurn: %s", e
+            )
         return msg_id

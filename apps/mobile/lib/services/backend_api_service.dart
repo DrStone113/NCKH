@@ -180,10 +180,11 @@ class BackendApiService {
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(payload),
         )
-        .timeout(const Duration(seconds: 20));
+        .timeout(const Duration(seconds: 180));
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
     throw Exception('Create plan failed: ${response.statusCode}');
   }
@@ -194,7 +195,8 @@ class BackendApiService {
           .get(Uri.parse('$baseUrl/plans/$userId/active'))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        return json.decode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
@@ -209,7 +211,8 @@ class BackendApiService {
           .get(Uri.parse('$baseUrl/plans/$userId/active/detail'))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        return json.decode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
@@ -232,6 +235,33 @@ class BackendApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Update plan item failed: ${response.statusCode}');
     }
+  }
+
+  /// Create a plan check-in (log weight and progress)
+  Future<Map<String, dynamic>> createPlanCheckin({
+    required String userId,
+    required String planId,
+    double? weight,
+    String? note,
+  }) async {
+    final payload = {
+      'user_id': userId,
+      'plan_id': planId,
+      if (weight != null) 'weight': weight,
+      if (note != null && note.isNotEmpty) 'note': note,
+    };
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/plans/checkins'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception('Plan check-in failed: ${response.statusCode}');
   }
 
   /// Get chat sessions list for a user
@@ -274,13 +304,17 @@ class BackendApiService {
   }
 
   /// Get active proactive check-in nudge
-  Future<Map<String, dynamic>?> getActiveCheckin({String userId = 'default_user'}) async {
+  Future<Map<String, dynamic>?> getActiveCheckin(
+      {String userId = 'default_user'}) async {
     try {
-      final uri = Uri.parse('$baseUrl/checkin/active').replace(queryParameters: {'user_id': userId});
-      final response = await _client.get(uri).timeout(const Duration(seconds: 10));
+      final uri = Uri.parse('$baseUrl/checkin/active')
+          .replace(queryParameters: {'user_id': userId});
+      final response =
+          await _client.get(uri).timeout(const Duration(seconds: 10));
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.body.isEmpty || response.body == 'null') return null;
-        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        return json.decode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
@@ -302,24 +336,31 @@ class BackendApiService {
       if (selectedOptionId != null) 'selected_option_id': selectedOptionId,
       if (responseText != null) 'response_text': responseText,
     };
-    final response = await _client.post(
-      Uri.parse('$baseUrl/checkin/respond'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    ).timeout(const Duration(seconds: 10));
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/checkin/respond'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
     throw Exception('Respond checkin failed: ${response.statusCode}');
   }
 
   /// Get check-in settings
-  Future<Map<String, dynamic>> getCheckinSettings({String userId = 'default_user'}) async {
-    final uri = Uri.parse('$baseUrl/checkin/settings').replace(queryParameters: {'user_id': userId});
-    final response = await _client.get(uri).timeout(const Duration(seconds: 10));
+  Future<Map<String, dynamic>> getCheckinSettings(
+      {String userId = 'default_user'}) async {
+    final uri = Uri.parse('$baseUrl/checkin/settings')
+        .replace(queryParameters: {'user_id': userId});
+    final response =
+        await _client.get(uri).timeout(const Duration(seconds: 10));
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
     throw Exception('Get checkin settings failed: ${response.statusCode}');
   }
@@ -329,14 +370,18 @@ class BackendApiService {
     Map<String, dynamic> settings, {
     String userId = 'default_user',
   }) async {
-    final uri = Uri.parse('$baseUrl/checkin/settings').replace(queryParameters: {'user_id': userId});
-    final response = await _client.put(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(settings),
-    ).timeout(const Duration(seconds: 10));
+    final uri = Uri.parse('$baseUrl/checkin/settings')
+        .replace(queryParameters: {'user_id': userId});
+    final response = await _client
+        .put(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(settings),
+        )
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
     throw Exception('Update checkin settings failed: ${response.statusCode}');
   }
@@ -346,4 +391,3 @@ class BackendApiService {
     _client.close();
   }
 }
-

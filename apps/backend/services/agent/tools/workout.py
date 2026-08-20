@@ -86,12 +86,9 @@ _PER_EXERCISE_MINUTES: int = 5
 _MIN_EXERCISES: int = 2
 _MAX_EXERCISES: int = 8
 
-#: Calories-burned heuristic, kcal per minute. Cardio is ~1.6× more intense
-#: than typical strength work for a 70 kg adult (Ainsworth MET table). The
-#: numbers are intentionally simple integers so the workout payload is
-#: reproducible across runs.
-_KCAL_PER_MIN_CARDIO: float = 8.0
-_KCAL_PER_MIN_STRENGTH: float = 5.0
+#: Reference weight used when the caller has not supplied a user profile.
+#: Calories remain an estimate and the payload explicitly marks them as such.
+_REFERENCE_WEIGHT_KG: float = 70.0
 
 #: Allowed values for ``muscle_group`` (design.md §9.5 preconditions).
 _VALID_MUSCLE_GROUPS: frozenset[str] = frozenset(
@@ -476,25 +473,107 @@ def _resolve_user_state_fatigue(
     return value
 
 
+def _estimate_met(exercise: _ExerciseRecord) -> float:
+    """Estimate exercise intensity without assigning one value to a category."""
+    name = exercise.name.lower()
+
+    if any(term in name for term in ("sprint", "hiit", "tabata", "burpee")):
+        return 11.5
+    if any(term in name for term in ("jump rope", "skipping", "box jump")):
+        return 10.0
+    if any(term in name for term in ("running", "jogging", "treadmill")):
+        return 8.5
+    if any(term in name for term in ("rowing", "swimming")):
+        return 7.5
+    if any(term in name for term in ("cycling", "spinning", "elliptical")):
+        return 6.5
+    if any(term in name for term in ("deadlift", "squat", "clean", "snatch")):
+        return 6.5
+    if any(
+        term in name
+        for term in (
+            "bench press",
+            "pull up",
+            "pull-up",
+            "push up",
+            "push-up",
+            "overhead press",
+            "barbell row",
+        )
+    ):
+        return 6.0
+    if any(term in name for term in ("plank", "crunch", "sit up", "core")):
+        return 4.2
+    if any(
+        term in name
+        for term in (
+            "curl",
+            "extension",
+            "raise",
+            "fly",
+            "adduction",
+            "abduction",
+        )
+    ):
+        return 3.8
+
+    # Stable variation prevents otherwise-unrecognised exercises from all
+    # displaying the exact same energy while keeping the tool idempotent.
+    checksum = sum((index + 1) * ord(char) for index, char in enumerate(name))
+    variation = ((checksum % 7) - 3) * 0.1
+    base = 7.0 if exercise.category in _CARDIO_CATEGORIES else 4.5
+    return round(max(3.0, min(11.0, base + variation)), 1)
+
+
 def _calories_for(exercise: _ExerciseRecord) -> float:
-    rate = (
-        _KCAL_PER_MIN_CARDIO
-        if exercise.category in _CARDIO_CATEGORIES
-        else _KCAL_PER_MIN_STRENGTH
+    met = _estimate_met(exercise)
+    return round(
+        met * _REFERENCE_WEIGHT_KG * (_PER_EXERCISE_MINUTES / 60.0),
+        2,
     )
-    return round(rate * _PER_EXERCISE_MINUTES, 2)
 
 
 def _exercise_payload(exercise: _ExerciseRecord) -> dict[str, Any]:
     is_cardio = exercise.category in _CARDIO_CATEGORIES
     return {
+        "wger_id": exercise.id,
         "name": exercise.name,
         "category": exercise.category,
         "duration_minutes": _PER_EXERCISE_MINUTES,
         "sets": 1 if is_cardio else 3,
         "reps": "continuous" if is_cardio else "10-12",
+        "met": _estimate_met(exercise),
         "calories_burned": _calories_for(exercise),
+        "calories_estimated": True,
     }
+
+
+def _select_diverse(
+    candidates: list[_ExerciseRecord], count: int
+) -> list[_ExerciseRecord]:
+    """Select deterministically while spreading full-body plans across groups."""
+    buckets: dict[str, list[_ExerciseRecord]] = {}
+    for exercise in candidates:
+        buckets.setdefault(exercise.category, []).append(exercise)
+
+    selected: list[_ExerciseRecord] = []
+    offsets = {category: 0 for category in buckets}
+    categories = sorted(buckets)
+    while len(selected) < count:
+        added = False
+        for category in categories:
+            offset = offsets[category]
+            bucket = buckets[category]
+            if offset >= len(bucket):
+                continue
+            selected.append(bucket[offset])
+            offsets[category] = offset + 1
+            added = True
+            if len(selected) == count:
+                break
+        if not added:
+            break
+    return selected
 
 
 def _workout_title(muscle_group: str, level: str) -> str:
@@ -583,7 +662,7 @@ def suggest_workout(
         # keep the contract explicit.
         raise ValueError("INVALID_DURATION")
 
-    selected = candidates[:k]
+    selected = _select_diverse(candidates, k)
 
     # ---- assemble payload -------------------------------------------------
     exercises_out = [_exercise_payload(ex) for ex in selected]

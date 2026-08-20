@@ -100,9 +100,12 @@ class AgentOrchestrator:
         self._background_tasks: set[asyncio.Task[Any]] = set()
 
     # ------------------------------------------------------------------ main
-    async def handleChatMessage(self, session_id: str, user_text: str) -> None:
+    async def handleChatMessage(
+        self, session_id: str, user_text: str, user_context: Any = None
+    ) -> None:
         gateway = self.gateway
         performed_actions: list[dict[str, Any]] = []
+        thought_chunks: list[str] = []
         try:
             if gateway is not None and hasattr(gateway, "send_status"):
                 await gateway.send_status("🔍 Đang tải ngữ cảnh và phân tích câu hỏi...")
@@ -122,7 +125,8 @@ class AgentOrchestrator:
                 session_id,
             )
 
-            messages = self._build_messages(context, user_text, plan)
+            user_profile: Any = user_context
+            messages = self._build_messages(context, user_text, plan, user_profile=user_profile)
             await self._append_turn(session_id, "user", user_text)
 
             # The router proposes a per-turn budget; the constructor's
@@ -133,22 +137,28 @@ class AgentOrchestrator:
             # Tracks how many times each tool already failed this turn, so a
             # broken tool cannot spin the loop until max_steps runs out.
             failure_counts: dict[str, int] = {}
-            user_profile: Any = None
 
             for step in range(step_budget):
                 if gateway is not None and hasattr(gateway, "send_status"):
                     if step > 0:
                         await gateway.send_status(f"💭 Đang suy nghĩ bước {step + 1}...")
                     else:
-                        if plan.use_heavy_model:
-                            await gateway.send_status("🤖 Đang suy nghĩ câu trả lời...")
-                prefill = " " if not plan.use_heavy_model else None
-                response = await llm.chat(messages, tools=tool_schemas, prefill=prefill)
-                full_response = await self._stream_final(gateway, response)
+                        await gateway.send_status("🤖 Đang suy nghĩ câu trả lời...")
+                response = await llm.chat(messages, tools=tool_schemas, prefill=None)
+                full_response, step_thoughts = await self._stream_final(
+                    gateway, response
+                )
+                if step_thoughts:
+                    thought_chunks.append(step_thoughts)
 
                 if not response.tool_calls:
                     if full_response.strip():
-                        await self._append_turn(session_id, "assistant", full_response)
+                        await self._append_turn(
+                            session_id,
+                            "assistant",
+                            full_response,
+                            thoughts="".join(thought_chunks),
+                        )
                     if gateway is not None:
                         await gateway.send_done(full_response, performed_actions)
                     self._schedule_memory_update(session_id)
@@ -183,13 +193,29 @@ class AgentOrchestrator:
                     messages.append(
                         {"role": "tool", "tool_call_id": call.id, "content": serialized}
                     )
+                    ui_message = result.ui_message
+                    if isinstance(ui_message, dict):
+                        ui_text = ui_message.get("text")
+                        structured_data = ui_message.get("structured")
+                        if isinstance(ui_text, str) and isinstance(
+                            structured_data, dict
+                        ):
+                            await self._append_turn(
+                                session_id,
+                                "assistant",
+                                ui_text,
+                                structured_data=structured_data,
+                            )
                     performed_actions.append({
                         "tool": call.name,
                         "args": call.arguments,
                         "result_summary": self._summarize_result(result),
                     })
                     if call.name == "get_user_profile" and result.ok and result.data:
-                        user_profile = result.data
+                        if isinstance(user_profile, dict) and isinstance(result.data, dict):
+                            user_profile = {**user_profile, **result.data}
+                        else:
+                            user_profile = result.data
 
                 # Refresh the system prompt with anything we just learned about
                 # the user so later steps in the same turn stop re-asking.
@@ -218,7 +244,12 @@ class AgentOrchestrator:
             # Loop exhausted — make one last tool-free pass so the user still
             # gets a real answer.
             await self._final_answer_fallback(
-                session_id, llm, messages, gateway, performed_actions
+                session_id,
+                llm,
+                messages,
+                gateway,
+                performed_actions,
+                thought_chunks,
             )
             self._schedule_memory_update(session_id)
 
@@ -280,6 +311,7 @@ class AgentOrchestrator:
         messages: list[dict[str, Any]],
         gateway: Any | None,
         performed_actions: list[dict[str, Any]],
+        thought_chunks: list[str],
     ) -> None:
         """One tool-free completion so an exhausted loop still answers."""
         messages.append({
@@ -291,7 +323,9 @@ class AgentOrchestrator:
         })
         try:
             response = await llm.chat(messages, tools=None)
-            text = await self._stream_final(gateway, response)
+            text, final_thoughts = await self._stream_final(gateway, response)
+            if final_thoughts:
+                thought_chunks.append(final_thoughts)
         except (LLMUnavailableError, GarbledOutputError):
             text = ""
 
@@ -303,7 +337,12 @@ class AgentOrchestrator:
             if gateway is not None:
                 await gateway.send_token(text)
 
-        await self._append_turn(session_id, "assistant", text)
+        await self._append_turn(
+            session_id,
+            "assistant",
+            text,
+            thoughts="".join(thought_chunks),
+        )
         if gateway is not None:
             await gateway.send_done(text, performed_actions)
 
@@ -330,7 +369,11 @@ class AgentOrchestrator:
             task.add_done_callback(self._background_tasks.discard)
 
     def _build_messages(
-        self, context: Any, user_text: str, plan: TurnPlan | None = None
+        self,
+        context: Any,
+        user_text: str,
+        plan: TurnPlan | None = None,
+        user_profile: Any = None,
     ) -> list[dict[str, Any]]:
         plan = plan or classify_turn(user_text, history_len=len(context.history))
         prompt = buildSystemPrompt(
@@ -338,19 +381,10 @@ class AgentOrchestrator:
             context.pinned_facts,
             context.rag_chunks,
             tool_catalog=self.tools if plan.offer_tools else None,
+            user_profile=user_profile,
             mode=plan.prompt_mode,
             relevant_history=getattr(context, "relevant_history", None),
         )
-
-        # Append instructions for XML tool calling if prefilling is used and tools are offered
-        if not plan.use_heavy_model and plan.offer_tools:
-            prompt += (
-                "\n\n=== QUY TẮC GỌI TOOL BẮT BUỘC KHI KHÔNG SUY NGHĨ ===\n"
-                "Vì bạn đang trả lời trực tiếp mà không qua bước suy nghĩ, nếu cần gọi công cụ (tool), "
-                "bạn BẮT BUỘC phải viết lệnh gọi công cụ bằng định dạng JSON trong cặp thẻ <tool_call>...</tool_call>.\n"
-                "Ví dụ: <tool_call>{\"name\": \"log_meal\", \"arguments\": {\"food_name\": \"cơm trắng\", \"weight_g\": 150}}</tool_call>.\n"
-                "Không được trả lời suông hoặc giải thích trước khi gọi tool."
-            )
 
         messages: list[dict[str, Any]] = [{"role": "system", "content": prompt}]
 
@@ -367,20 +401,27 @@ class AgentOrchestrator:
         messages.append({"role": "user", "content": user_text})
         return messages
 
-    async def _stream_final(self, gateway: Any | None, response: Any) -> str:
+    async def _stream_final(
+        self, gateway: Any | None, response: Any
+    ) -> tuple[str, str]:
         chunks: list[str] = []
+        thought_chunks: list[str] = []
         if response.content_stream is None:
-            return response.full_text or ""
+            return response.full_text or "", ""
         async for token in response.content_stream:
             token_type = getattr(token, "token_type", "token")
             if token_type == "thought":
+                thought_chunks.append(str(token))
                 if gateway is not None and hasattr(gateway, "send_thought"):
                     await gateway.send_thought(token)
             else:
                 chunks.append(token)
                 if gateway is not None and hasattr(gateway, "send_token"):
                     await gateway.send_token(token)
-        return "".join(chunks) or response.full_text or ""
+        return (
+            "".join(chunks) or response.full_text or "",
+            "".join(thought_chunks),
+        )
 
     async def _append_turn(
         self,
@@ -389,16 +430,34 @@ class AgentOrchestrator:
         content: str,
         tool_call_id: str | None = None,
         tool_name: str | None = None,
+        thoughts: str = "",
+        structured_data: dict[str, Any] | None = None,
     ) -> None:
         append = getattr(self.session_store, "appendTurn", None)
         if append is not None:
-            result = append(session_id, role, content, tool_call_id, tool_name)
+            result = append(
+                session_id,
+                role,
+                content,
+                tool_call_id,
+                tool_name,
+                thoughts,
+                structured_data,
+            )
             if hasattr(result, "__await__"):
                 await result
             return
         append = getattr(self.session_store, "append_turn", None)
         if append is not None:
-            append(session_id, role, content, tool_call_id, tool_name)
+            append(
+                session_id,
+                role,
+                content,
+                tool_call_id,
+                tool_name,
+                thoughts,
+                structured_data,
+            )
 
     @staticmethod
     def _call_to_message(call: ToolCall) -> dict[str, Any]:

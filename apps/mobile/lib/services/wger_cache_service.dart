@@ -18,7 +18,7 @@ class WgerCacheService {
   List<WgerExercise> get cachedExercises => _local.allExercises;
   List<WgerExerciseCategory> get cachedCategories => _local.categories;
   List<WgerMuscle> get cachedMuscles => _local.muscles;
-  List<WgerEquipment> get cachedEquipment => const [];
+  List<WgerEquipment> get cachedEquipment => _local.equipment;
 
   /// Load data từ JSON local khi app khởi động
   Future<void> preFetchData() async {
@@ -49,8 +49,15 @@ class WgerCacheService {
 
     if (categoryName != null && categoryName.isNotEmpty) {
       list = _local.getByCategory(categoryName);
-    } else if (muscleId != null) {
-      list = _local.getByMuscle(muscleId);
+    } else if (categoryId != null) {
+      list = _local.getByCategoryId(categoryId);
+    }
+    if (muscleId != null) {
+      final muscleExerciseIds =
+          _local.getByMuscle(muscleId).map((exercise) => exercise.id).toSet();
+      list = list
+          .where((exercise) => muscleExerciseIds.contains(exercise.id))
+          .toList(growable: false);
     }
 
     return list;
@@ -66,12 +73,20 @@ class WgerCacheService {
     if (!_local.isLoaded) await _local.loadExercises();
 
     var source = _local.allExercises;
-    if (muscleId != null) source = _local.getByMuscle(muscleId);
+    if (categoryId != null) source = _local.getByCategoryId(categoryId);
+    if (muscleId != null) {
+      final muscleExerciseIds =
+          _local.getByMuscle(muscleId).map((exercise) => exercise.id).toSet();
+      source = source
+          .where((exercise) => muscleExerciseIds.contains(exercise.id))
+          .toList(growable: false);
+    }
 
     final pageItems = _local.getPage(source, page, pageSize: pageSize);
+    final hasMore = page > 0 && page * pageSize < source.length;
     return WgerExerciseListResponse(
       count: source.length,
-      next: pageItems.length == pageSize ? 'has_more' : null,
+      next: hasMore ? 'has_more' : null,
       results: pageItems,
     );
   }
@@ -79,7 +94,8 @@ class WgerCacheService {
   /// Tìm kiếm theo tên
   List<WgerExercise> search(String query) => _local.search(query);
 
-  void clearCache() => debugPrint('ℹ️ WgerCache: Local JSON cache không cần clear');
+  void clearCache() =>
+      debugPrint('ℹ️ WgerCache: Local JSON cache không cần clear');
   Future<void> refreshCache() => preFetchData();
   void dispose() {}
 }

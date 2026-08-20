@@ -10,8 +10,10 @@ from services.agent.tool_registry import ToolDescriptor, ToolRegistry
 from services.agent.tools import dish, food, tdee, workout
 from services.agent.tools.plan_tools import (
     APPEND_PLAN_ITEMS_DESCRIPTOR,
+    CREATE_LONG_TERM_PLAN_DESCRIPTOR,
     CREATE_PLAN_DESCRIPTOR,
     append_plan_items,
+    create_long_term_plan,
     create_plan,
 )
 from services.agent.tools.web_knowledge import (
@@ -52,9 +54,16 @@ def register_server_tools(
     if db_session is not None:
         registry.register(_clone_descriptor(CREATE_PLAN_DESCRIPTOR, fn=partial(create_plan, db_session)))
         registry.register(_clone_descriptor(APPEND_PLAN_ITEMS_DESCRIPTOR, fn=partial(append_plan_items, db_session)))
+        registry.register(
+            _clone_descriptor(
+                CREATE_LONG_TERM_PLAN_DESCRIPTOR,
+                fn=partial(create_long_term_plan, registry, db_session),
+            )
+        )
     else:
         registry.register(CREATE_PLAN_DESCRIPTOR)
         registry.register(APPEND_PLAN_ITEMS_DESCRIPTOR)
+        registry.register(CREATE_LONG_TERM_PLAN_DESCRIPTOR)
 
     if rag_service is not None and db_session is not None:
         async def query_rag(query: str, top_k: int = 5):
@@ -110,7 +119,7 @@ def register_client_tools(registry: ToolRegistry) -> None:
     """
     client_tools: list[ToolDescriptor] = [
         # Domain 1: Dinh dưỡng (Nutrition)
-        ToolDescriptor("get_user_profile", "Đọc hồ sơ người dùng (tuổi, giới tính, chiều cao, cân nặng, mục tiêu, mức vận động). GỌI ĐẦU TIÊN trước mọi lời khuyên cá nhân hóa, tính TDEE hay lập kế hoạch. Không hỏi người dùng những thông tin này — ứng dụng đã lưu sẵn.", _schema({}), "client", idempotent=True),
+        ToolDescriptor("get_user_profile", "Đọc hồ sơ người dùng (tuổi, giới tính, chiều cao, cân nặng, mục tiêu, mức vận động) khi phần ngữ cảnh hệ thống chưa có hồ sơ. Không gọi lại nếu hồ sơ đầy đủ đã hiện trong prompt và không hỏi người dùng những thông tin ứng dụng đã lưu.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_today_meals", "Đọc các bữa ăn đã ghi trong ngày hôm nay kèm calo và macro. Gọi khi cần biết người dùng đã nạp bao nhiêu, còn dư bao nhiêu, hoặc trước khi gợi ý bữa tiếp theo.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_meal_log_range", "Đọc nhật ký ăn uống trong một khoảng ngày (định dạng YYYY-MM-DD). Gọi khi người dùng hỏi về tuần này, tháng qua, hoặc khi cần phân tích xu hướng ăn uống nhiều ngày.", _schema({"from_date": _DATE, "to_date": _DATE}, ["from_date", "to_date"]), "client", idempotent=True),
         ToolDescriptor(
@@ -167,7 +176,7 @@ def register_client_tools(registry: ToolRegistry) -> None:
         ToolDescriptor("set_lifestyle_reminder", "Đặt nhắc nhở thói quen (uống nước, đi ngủ, tập luyện). Chỉ gọi khi người dùng thực sự yêu cầu nhắc, đừng tự ý đặt. time theo định dạng HH:MM 24 giờ.", _schema({"title": {"type": "string", "minLength": 1}, "rem_type": {"type": "string", "description": "water | sleep | workout | meal"}, "time": {"type": "string", "description": "HH:MM, vd '21:30'"}, "note": {"type": "string"}, "request_id": _REQUEST_ID}, ["title", "time", "request_id"]), "client", idempotent=False),
 
         # General & Navigation
-        ToolDescriptor("get_active_plan", "Đọc kế hoạch dài hạn đang chạy và tiến độ của nó. Gọi trước khi tạo kế hoạch mới (để không tạo trùng) hoặc khi người dùng hỏi về tiến độ.", _schema({}), "client", idempotent=True),
+        ToolDescriptor("get_active_plan", "Đọc kế hoạch dài hạn đang chạy khi người dùng hỏi tiến độ hoặc muốn sửa kế hoạch hiện có. Không cần gọi trước `create_long_term_plan`: tool tạo trọn gói tự thay thế plan active cũ mà vẫn giữ lịch sử.", _schema({}), "client", idempotent=True),
         ToolDescriptor("mark_plan_item_complete", "Đánh dấu một mục trong kế hoạch là đã hoàn thành. Cần item_id lấy từ get_active_plan.", _schema({"item_id": {"type": "string", "minLength": 1}, "request_id": _REQUEST_ID}, ["item_id", "request_id"]), "client", idempotent=False),
         ToolDescriptor("navigate_to_screen", "Mở một màn hình trong ứng dụng giúp người dùng. Chỉ gọi khi họ muốn đi tới đâu đó ('mở trang dinh dưỡng'), không dùng để trả lời câu hỏi thông tin.", _schema({"screen": {"type": "string", "minLength": 1, "description": "dashboard | nutrition | workout | profile | plan"}, "params": {"type": "object"}, "request_id": _REQUEST_ID}, ["screen", "request_id"]), "client", idempotent=False),
     ]
@@ -192,7 +201,7 @@ DOMAIN_MODULE_MAP = {
         "get_lifestyle_logs", "log_lifestyle", "set_lifestyle_reminder"
     ],
     "general": [
-        "get_user_profile", "get_active_plan", "create_plan",
+        "get_user_profile", "get_active_plan", "create_long_term_plan", "create_plan",
         "append_plan_items", "query_rag", "search_medical_knowledge",
         "navigate_to_screen", "mark_plan_item_complete"
     ]

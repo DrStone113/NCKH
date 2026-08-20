@@ -196,37 +196,44 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SizedBox(
           height: 64,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               // Tab 0: Tổng quan
-              _buildNavItem(
-                index: 0,
-                activeIcon: Icons.dashboard,
-                inactiveIcon: Icons.dashboard_outlined,
-                label: 'Tổng quan',
+              Expanded(
+                child: _buildNavItem(
+                  index: 0,
+                  activeIcon: Icons.dashboard,
+                  inactiveIcon: Icons.dashboard_outlined,
+                  label: 'Tổng quan',
+                ),
               ),
               // Tab 1: Dinh dưỡng
-              _buildNavItem(
-                index: 1,
-                activeIcon: Icons.restaurant,
-                inactiveIcon: Icons.restaurant_outlined,
-                label: 'Dinh dưỡng',
+              Expanded(
+                child: _buildNavItem(
+                  index: 1,
+                  activeIcon: Icons.restaurant,
+                  inactiveIcon: Icons.restaurant_outlined,
+                  label: 'Dinh dưỡng',
+                ),
               ),
-              // Center Notch Gap
-              const SizedBox(width: 48),
+              // Vùng trống ở tâm dành cho nút chatbot.
+              const Spacer(),
               // Tab 2: Vận động
-              _buildNavItem(
-                index: 2,
-                activeIcon: Icons.fitness_center,
-                inactiveIcon: Icons.fitness_center_outlined,
-                label: 'Vận động',
+              Expanded(
+                child: _buildNavItem(
+                  index: 2,
+                  activeIcon: Icons.fitness_center,
+                  inactiveIcon: Icons.fitness_center_outlined,
+                  label: 'Vận động',
+                ),
               ),
               // Tab 3: Cài đặt
-              _buildNavItem(
-                index: 3,
-                activeIcon: Icons.person,
-                inactiveIcon: Icons.person_outlined,
-                label: 'Cài đặt',
+              Expanded(
+                child: _buildNavItem(
+                  index: 3,
+                  activeIcon: Icons.person,
+                  inactiveIcon: Icons.person_outlined,
+                  label: 'Cài đặt',
+                ),
               ),
             ],
           ),
@@ -246,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => _onTabChanged(index),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -257,12 +264,23 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 24,
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                ),
               ),
             ),
           ],

@@ -122,6 +122,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
+        titleSpacing: widget.showBackButton ? 0 : 16,
         leading: widget.showBackButton
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),

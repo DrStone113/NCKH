@@ -258,6 +258,8 @@ class _CheckinSwitch extends StatelessWidget {
     return SwitchListTile(
       value: value,
       onChanged: enabled ? onChanged : null,
+      hoverColor: AppColors.surfaceLight.withValues(alpha: 0.65),
+      overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       secondary: Container(
         width: 40,
         height: 40,

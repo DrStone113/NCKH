@@ -5,7 +5,7 @@ import '../../../models/user_model.dart';
 import '../../../providers/proactive_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../theme/app_theme.dart';
-import '../../auth/screens/auth_screen.dart';
+import '../../auth/screens/auth_wrapper.dart';
 import '../../chat/screens/chatbot_screen.dart';
 import 'chat_history_settings_screen.dart';
 import 'checkin_settings_screen.dart';
@@ -29,12 +29,12 @@ class AccountSettingsScreen extends StatelessWidget {
             title: const Row(
               children: [
                 Icon(Icons.logout, color: AppColors.error),
-                SizedBox(width: 10),
+                SizedBox(width: 8),
                 Text('Đăng xuất'),
               ],
             ),
             content: const Text(
-              'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?',
+              'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?',
             ),
             actions: [
               TextButton(
@@ -57,7 +57,7 @@ class AccountSettingsScreen extends StatelessWidget {
     await context.read<UserProvider>().signOut();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      MaterialPageRoute(builder: (_) => const AuthWrapper()),
       (_) => false,
     );
   }

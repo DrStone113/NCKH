@@ -14,7 +14,7 @@ import 'health_stats_screen.dart';
 import '../../nutrition/screens/nutrition_screen.dart';
 import '../../exercise/screens/exercise_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
-import '../../auth/screens/auth_screen.dart';
+import '../../auth/screens/auth_wrapper.dart';
 import '../../settings/screens/goal_settings_screen.dart';
 import '../../settings/screens/account_settings_screen.dart';
 import '../../../widgets/bento_card.dart';
@@ -1130,7 +1130,7 @@ class _DashboardTab extends StatelessWidget {
               await Provider.of<UserProvider>(context, listen: false).signOut();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const AuthScreen()),
+                  MaterialPageRoute(builder: (_) => const AuthWrapper()),
                   (route) => false,
                 );
               }

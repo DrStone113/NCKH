@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'feature_card.dart';
 import '../utils/responsive_utils.dart';
@@ -10,364 +11,291 @@ class FeatureCarousel extends StatefulWidget {
   State<FeatureCarousel> createState() => _FeatureCarouselState();
 }
 
-class _FeatureCarouselState extends State<FeatureCarousel> with TickerProviderStateMixin {
-  late AnimationController _rotationController;
-  late AnimationController _floatController;
+class _FeatureCarouselState extends State<FeatureCarousel> {
+  static const int _itemCount = 4;
+  static const int _baseOffset = 1000; // Base index for smooth 2-way infinite scroll
+
   late PageController _pageController;
   Timer? _autoRotateTimer;
   int _activeCard = 0;
+  bool _isUserInteracting = false;
+  double _viewportFraction = 0.88;
 
   @override
   void initState() {
     super.initState();
-    
-    _pageController = PageController(initialPage: 0);
-    
-    // Animation cho hiệu ứng xoay mượt mà
-    _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
+    _pageController = PageController(
+      initialPage: _baseOffset,
+      viewportFraction: _viewportFraction,
     );
-
-    // Animation cho hiệu ứng float nhẹ nhàng
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    // Tự động xoay cards sau mỗi 3.5 giây
     _startAutoRotate();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newFraction = _calculateViewportFraction(context);
+    if ((_viewportFraction - newFraction).abs() > 0.01) {
+      _viewportFraction = newFraction;
+      final currentPage = _pageController.hasClients 
+          ? (_pageController.page?.round() ?? _baseOffset + _activeCard)
+          : _baseOffset + _activeCard;
+      _pageController.dispose();
+      _pageController = PageController(
+        initialPage: currentPage,
+        viewportFraction: _viewportFraction,
+      );
+      setState(() {});
+    }
+  }
+
+  double _calculateViewportFraction(BuildContext context) {
+    if (ResponsiveUtils.isDesktop(context)) {
+      return 0.34;
+    } else if (ResponsiveUtils.isTablet(context)) {
+      return 0.52;
+    }
+    return 0.88;
+  }
+
   void _startAutoRotate() {
-    _autoRotateTimer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
-      if (mounted && _pageController.hasClients) {
-        final nextPage = (_activeCard + 1) % 5; // 5 cards
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOutCubic,
-        );
-      }
+    _autoRotateTimer?.cancel();
+    _autoRotateTimer = Timer.periodic(const Duration(milliseconds: 3600), (timer) {
+      if (!mounted || _isUserInteracting || !_pageController.hasClients) return;
+      
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
     });
   }
 
-  void _changeCard(int newIndex) {
-    if (_pageController.hasClients) {
-      _pageController.animateToPage(
-        newIndex,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutCubic,
-      );
-    }
+  void _changeCard(int targetCardIndex) {
+    if (!_pageController.hasClients) return;
+
+    final currentPage = _pageController.page?.round() ?? (_baseOffset + _activeCard);
+    final currentCardIndex = currentPage % _itemCount;
+
+    int diff = targetCardIndex - currentCardIndex;
+    if (diff > 2) diff -= _itemCount;
+    if (diff < -2) diff += _itemCount;
+
+    _pageController.animateToPage(
+      currentPage + diff,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   @override
   void dispose() {
     _autoRotateTimer?.cancel();
     _pageController.dispose();
-    _rotationController.dispose();
-    _floatController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final visibleCards = ResponsiveUtils.getCarouselVisibleCards(context);
-    final cardWidth = ResponsiveUtils.getCarouselCardWidth(context);
-    
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Column(
-          children: [
-            Expanded(
-              child: visibleCards > 1 
-                  ? _buildMultiCardView(cardWidth, visibleCards)
-                  : _buildSingleCardView(),
+    return Column(
+      children: [
+        Expanded(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification notification) {
+              if (notification is ScrollStartNotification) {
+                _isUserInteracting = true;
+                _autoRotateTimer?.cancel();
+              } else if (notification is ScrollEndNotification) {
+                _isUserInteracting = false;
+                _startAutoRotate();
+              }
+              return false;
+            },
+            child: ScrollConfiguration(
+              behavior: const MaterialScrollBehavior().copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                  PointerDeviceKind.stylus,
+                },
+              ),
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) {
+                  final normalizedIndex = index % _itemCount;
+                  if (_activeCard != normalizedIndex) {
+                    setState(() {
+                      _activeCard = normalizedIndex;
+                    });
+                  }
+                },
+                itemBuilder: (context, index) {
+                  final cardIndex = index % _itemCount;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                    child: _getCardByIndex(cardIndex),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 16),
-            // Dots indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return GestureDetector(
-                  onTap: () => _changeCard(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: _activeCard == index ? 24 : 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _activeCard == index 
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFBDBDBD),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildSingleCardView() {
-    return Center(
-      child: AspectRatio(
-        aspectRatio: 0.85,
-        child: PageView.builder(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() {
-              _activeCard = index;
-            });
-          },
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _getCardByIndex(index),
-            );
-          },
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildMultiCardView(double cardWidth, int visibleCards) {
-    return Center(
-      child: AspectRatio(
-        aspectRatio: 0.85,
-        child: PageView.builder(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() {
-              _activeCard = index;
-            });
-          },
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: SizedBox(
-                width: cardWidth,
-                child: _getCardByIndex(index),
+        const SizedBox(height: 12),
+        // Dots indicator
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_itemCount, (index) {
+            final isActive = _activeCard == index;
+            return GestureDetector(
+              onTap: () => _changeCard(index),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                width: isActive ? 26 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: isActive 
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFD1D5DB),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             );
-          },
+          }),
         ),
-      ),
+        const SizedBox(height: 12),
+      ],
     );
   }
-
 
   Widget _getCardByIndex(int index) {
     switch (index) {
       case 0:
-        return _buildCard1();
+        return const FeatureCard(
+          title: 'Theo dõi Hoạt động',
+          description: 'Giám sát số bước chân, lượng calo tiêu hao và thời gian vận động mỗi ngày.',
+          image: _FeatureGraphic(
+            gradientColors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+            icon: Icons.directions_run,
+            iconColor: Color(0xFF2E7D32),
+            label: 'Bước chân & Vận động',
+          ),
+        );
       case 1:
-        return _buildCard2();
+        return const FeatureCard(
+          title: 'Kế hoạch Tập luyện',
+          description: 'Các bài tập thể chất thông minh giúp bạn tối ưu hóa vóc dáng và sức khỏe.',
+          image: _FeatureGraphic(
+            gradientColors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+            icon: Icons.fitness_center,
+            iconColor: Color(0xFFEF6C00),
+            label: 'Sức mạnh & Cơ bắp',
+          ),
+        );
       case 2:
-        return _buildCard3();
+        return const FeatureCard(
+          title: 'Phân tích Dinh dưỡng',
+          description: 'Gợi ý thực đơn cá nhân hóa và tính toán Macro/Calo chuẩn xác theo mục tiêu.',
+          image: _FeatureGraphic(
+            gradientColors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
+            icon: Icons.restaurant_menu,
+            iconColor: Color(0xFF00796B),
+            label: 'Dinh dưỡng Lành mạnh',
+          ),
+        );
       case 3:
-        return _buildCard4();
-      case 4:
-        return _buildCard5();
+        return const FeatureCard(
+          title: 'Theo dõi Nước uống',
+          description: 'Nhắc nhở uống nước đúng giờ và duy trì độ ẩm lý tưởng cho cơ thể suốt ngày dài.',
+          image: _FeatureGraphic(
+            gradientColors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+            icon: Icons.water_drop,
+            iconColor: Color(0xFF1976D2),
+            label: 'Cân bằng Nước',
+          ),
+        );
       default:
-        return _buildCard1();
+        return const SizedBox();
     }
-  }
-
-  Widget _buildCard1() {
-    return const FeatureCard(
-      title: 'Theo dõi Hoạt động',
-      description: 'Giám sát số bước chân, lượng calo đốt cháy và thời gian vận động hàng ngày.',
-      image: _PlaceholderGraphic(
-        color: Color(0xFFE8F5E9),
-        icon: Icons.directions_run,
-        iconColor: Color(0xFF4CAF50),
-        label: 'Bước chân & Cardio',
-      ),
-    );
-  }
-
-  Widget _buildCard2() {
-    return const FeatureCard(
-      title: 'Kế hoạch Tập luyện',
-      description: 'Các bài tập được tùy chỉnh để giúp bạn đạt được mục tiêu thể hình.',
-      image: _PlaceholderGraphic(
-        color: Color(0xFFFFF3E0),
-        icon: Icons.fitness_center,
-        iconColor: Color(0xFFFF9800),
-        label: 'Sức mạnh',
-        isDark: true,
-      ),
-    );
-  }
-
-  Widget _buildCard3() {
-    return const FeatureCard(
-      title: 'Phân tích Dinh dưỡng',
-      description: 'Theo dõi bữa ăn và nhận thông tin sức khỏe cá nhân hóa hàng ngày.',
-      image: _PlaceholderGraphic(
-        color: Color(0xFFE0F2F1),
-        icon: Icons.restaurant_menu,
-        iconColor: Color(0xFF009688),
-        label: 'Chế độ ăn lành mạnh',
-      ),
-    );
-  }
-
-  Widget _buildCard4() {
-    return const FeatureCard(
-      title: 'Theo dõi Nước uống',
-      description: 'Duy trì đủ nước với nhắc nhở thông minh và mục tiêu uống nước hàng ngày.',
-      image: _PlaceholderGraphic(
-        color: Color(0xFFE3F2FD),
-        icon: Icons.water_drop,
-        iconColor: Color(0xFF2196F3),
-        label: 'Cân bằng nước',
-      ),
-    );
-  }
-
-  Widget _buildCard5() {
-    return const FeatureCard(
-      title: 'Phân tích Giấc ngủ',
-      description: 'Giám sát chất lượng giấc ngủ và cải thiện sự nghỉ ngơi của bạn.',
-      image: _PlaceholderGraphic(
-        color: Color(0xFFF3E5F5),
-        icon: Icons.bedtime,
-        iconColor: Color(0xFF9C27B0),
-        label: 'Chất lượng giấc ngủ',
-        isDark: true,
-      ),
-    );
   }
 }
 
-class _PlaceholderGraphic extends StatefulWidget {
-  final Color color;
+class _FeatureGraphic extends StatelessWidget {
+  final List<Color> gradientColors;
   final IconData icon;
   final Color iconColor;
   final String label;
-  final bool isDark;
 
-  const _PlaceholderGraphic({
-    required this.color,
+  const _FeatureGraphic({
+    required this.gradientColors,
     required this.icon,
     required this.iconColor,
     required this.label,
-    this.isDark = false,
   });
 
   @override
-  State<_PlaceholderGraphic> createState() => _PlaceholderGraphicState();
-}
-
-class _PlaceholderGraphicState extends State<_PlaceholderGraphic> 
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    // Hiệu ứng pulse nhẹ cho icon
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.08,
-    ).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final iconSize = ResponsiveUtils.getIconSize(context);
-    final bodySize = ResponsiveUtils.getBodySize(context);
-
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            widget.color,
-            widget.color.withValues(alpha: widget.color.a * 0.7),
-          ],
+          colors: gradientColors,
         ),
       ),
       child: Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _pulseAnimation.value,
-                      child: Container(
-                        padding: EdgeInsets.all(iconSize * 0.67),
-                        decoration: BoxDecoration(
-                          color: widget.isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: widget.iconColor.withValues(alpha: 0.25),
-                              blurRadius: 16,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(widget.icon, size: iconSize * 2, color: widget.iconColor),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: iconSize * 0.67, vertical: iconSize * 0.33),
+                  width: 54,
+                  height: 54,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: iconColor.withValues(alpha: 0.22),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 30,
+                    color: iconColor,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.94),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: Text(
-                    widget.label,
+                    label,
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark ? const Color(0xFF333333) : widget.iconColor,
-                      fontSize: bodySize,
+                      fontWeight: FontWeight.w700,
+                      color: iconColor,
+                      fontSize: 12.5,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ),

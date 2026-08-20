@@ -34,7 +34,7 @@ class _AuthScreenState extends State<AuthScreen> {
         child: SafeArea(
           child: Column(
             children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -63,7 +63,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             
             // Carousel
             const Expanded(

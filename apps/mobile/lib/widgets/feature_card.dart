@@ -30,69 +30,60 @@ class _FeatureCardState extends State<FeatureCard> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        transform: Matrix4.identity()
-          ..translateByDouble(0.0, _isHovered ? -6.0 : 0.0, 0.0, 0.0)
-          ..scaleByDouble(_isHovered ? 1.03 : 1.0, _isHovered ? 1.03 : 1.0, 1.0, 1.0),
+        transform: Matrix4.translationValues(0, _isHovered ? -4 : 0, 0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: _isHovered 
-                ? Theme.of(context).primaryColor.withValues(alpha: 0.4)
-                : Colors.grey.withValues(alpha: 0.15),
-            width: _isHovered ? 2 : 1,
+                ? Theme.of(context).primaryColor.withValues(alpha: 0.35)
+                : Colors.grey.withValues(alpha: 0.12),
+            width: _isHovered ? 1.5 : 1.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? Colors.black.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.04),
+              blurRadius: _isHovered ? 16 : 10,
+              offset: Offset(0, _isHovered ? 6 : 3),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Graphic section
             Expanded(
               flex: 5,
               child: Container(
-                margin: EdgeInsets.all(cardPadding * 0.5),
+                margin: EdgeInsets.all(cardPadding * 0.4),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
                   color: const Color(0xFFF8F9FA),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    widget.image,
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withValues(alpha: 0.05),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                child: widget.image,
               ),
             ),
+            // Text info section
             Expanded(
               flex: 3,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  cardPadding,
-                  (cardPadding * 0.25).clamp(2.0, 8.0),
-                  cardPadding,
-                  (cardPadding * 0.5).clamp(4.0, 16.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: cardPadding * 0.8,
+                  vertical: 4.0,
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  alignment: Alignment.topLeft,
+                  alignment: Alignment.centerLeft,
                   child: SizedBox(
-                    width: ResponsiveUtils.isMobile(context) ? MediaQuery.of(context).size.width * 0.7 : 280,
+                    width: 260,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
@@ -100,22 +91,22 @@ class _FeatureCardState extends State<FeatureCard> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: titleSize,
+                            fontSize: (titleSize * 0.95).clamp(15.0, 18.0),
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111111),
-                            letterSpacing: -0.5,
+                            color: const Color(0xFF1E293B),
+                            letterSpacing: -0.3,
                           ),
                         ),
-                        SizedBox(height: cardPadding * 0.25),
+                        const SizedBox(height: 3),
                         Text(
                           widget.description,
-                          style: TextStyle(
-                            fontSize: bodySize,
-                            color: const Color(0xFF666666),
-                            height: 1.3,
-                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: (bodySize * 0.85).clamp(11.0, 13.0),
+                            color: const Color(0xFF64748B),
+                            height: 1.25,
+                          ),
                         ),
                       ],
                     ),

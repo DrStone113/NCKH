@@ -1,3 +1,18 @@
+## [2026-08-20] — Sửa lỗi điều hướng sau khi Đăng xuất và Đăng nhập lại
+- **Fixed:** Sửa lỗi người dùng sau khi đăng xuất và đăng nhập lại bị đứng ở `AuthScreen` và phải reload/F5 trang mới vào được app.
+- **Architecture:** Tách `AuthWrapper` thành module độc lập `auth_wrapper.dart`; chuẩn hóa các luồng đăng xuất trong `HomeScreen` và `AccountSettingsScreen` điều hướng quay về `AuthWrapper` thay vì đè `AuthScreen` trần lên navigation stack.
+- **Improved:** Trạng thái xác thực `isAuthenticated` nay phản hồi tức thì: khi đăng nhập (Google, Email hoặc Demo), giao diện tự động chuyển thẳng vào `HomeScreen` mượt mà không cần tải lại trang.
+- **Verified:** 70/70 Flutter tests pass; `flutter analyze` 0 issues.
+
+## [2026-08-20] — Tối ưu hóa mượt mà và sửa lỗi mất hiển thị Carousel màn hình Đăng nhập
+- **Fixed:** Sửa lỗi slide/carousel tính năng nổi bật trên màn hình đăng nhập (`AuthScreen`) bị mất hiển thị hoặc giật lag do vòng đời `PageController` không ổn định trong `didChangeDependencies`.
+- **Improved:** Kích hoạt hỗ trợ kéo/vuốt cảm ứng và chuột (`PointerDeviceKind.mouse`, `touch`, `trackpad`) qua `ScrollConfiguration`, cho phép người dùng chủ động trượt slide mượt mà trên cả Web, Mobile và Desktop.
+- **Changed:** Bỏ thẻ "Phân tích Giấc ngủ", tinh gọn danh sách tính năng thành 4 thẻ cốt lõi: Hoạt động, Luyện tập, Dinh dưỡng, Nước uống cùng 4 chấm chỉ báo tương ứng.
+- **Improved:** Khởi tạo `PageController` chuẩn xác trong `initState` với `viewportFraction: 0.88` (hiệu ứng thẻ peek hiện đại hai bên) và cuộn vô hạn mượt mà.
+- **Improved:** Tự động tạm dừng timer khi người dùng chạm vuốt và kích hoạt lại khi nhả tay; nâng cấp hiệu ứng hover mượt mà và chỉ báo dot chuyển động sắc nét.
+- **Layout:** Tối ưu hóa khả năng co giãn linh hoạt của `FeatureCard` và `_FeatureGraphic` bằng `FittedBox(fit: BoxFit.scaleDown)`, loại bỏ nguy cơ tràn pixel (overflow) trên các thiết bị màn hình nhỏ.
+- **Verified:** 70/70 Flutter tests pass; `flutter analyze` 0 issues.
+
 ## [2026-08-20] — Chuẩn hóa tính Calo Đã Ăn và bổ sung cơ chế đối chiếu thực đơn & xác nhận đổi món
 - **Fixed:** Tách biệt hoàn toàn `consumedCalories` (chỉ tính các bữa thực tế đã hoàn thành) và `plannedCalories` (tổng calo kế hoạch cả ngày) trong `NutritionProvider`. Giao diện màn Dinh dưỡng & Trang chủ không còn hiển thị nhầm calo kế hoạch thành calo "Đã ăn".
 - **Fixed:** Chatbot chỉ nhận `consumedCalories` thực tế đã nạp, không còn hiểu nhầm là người dùng đã ăn hết calo cả ngày khi các bữa vẫn ở trạng thái "sắp ăn".

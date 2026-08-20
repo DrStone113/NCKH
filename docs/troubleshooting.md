@@ -406,3 +406,29 @@
      - Khi người dùng xác nhận đồng ý đổi món ("ừ đổi đi", "chọn bún chả", "lưu món mới"), AI mới tiến hành gọi `log_meal` để cập nhật món mới vào nhật ký.
   3. Kiểm thử live thực tế trên API Gateway Vilao AI với model `rk/llms/qwen-3.7-plus` xác nhận phản hồi chính xác 100%.
 
+### 48. Carousel màn hình Đăng nhập bị chập chờn, lúc hiện lúc mất và giật lag
+- **Triệu chứng**: Khi mở màn hình đăng nhập (`AuthScreen`), thanh slide / carousel giới thiệu tính năng nổi bật (Theo dõi hoạt động, Kế hoạch tập luyện, Dinh dưỡng...) đôi khi bị biến mất hoàn toàn thành khoảng trống màu mint, hoặc bị giật khi chuyển động.
+- **Nguyên nhân gốc**:
+  1. `_pageController` trong `FeatureCarousel` không được khởi tạo ở `initState()` mà khởi tạo trong `didChangeDependencies()` với `initialPage: 5000 + _activeCard`. Khi `didChangeDependencies()` chạy lại (rebuild, dialog xuất hiện, media query cập nhật), controller cũ bị `dispose()` khi `PageView` vẫn đang gắn kết, gây mất liên kết và lỗi render.
+  2. Bố cục `AspectRatio(0.85)` lồng trong `Expanded` và `Center` bên ngoài `PageView` gây xung đột ràng buộc chiều cao/rộng trên các kích thước màn hình khác nhau, khiến widget con bị co về 0 hoặc overflow.
+  3. `FeatureCard` sử dụng biến đổi Matrix4 tùy biến (`translateByDouble`/`scaleByDouble`) và lồng `FittedBox` với chiều rộng cố định, gây lỗi gãy layout hoặc chữ bị thu nhỏ quá mức / tràn pixel khi chiều cao màn hình giới hạn.
+  4. Timer tự động xoay (`Timer.periodic`) không kiểm tra trạng thái tương tác vuốt của người dùng, dẫn đến xung đột khi người dùng vừa vuốt vừa bị timer kích hoạt chuyển slide.
+- **Cách xử lý**:
+  1. Khởi tạo `PageController` an toàn trong `initState()` với `viewportFraction: 0.88` (trên mobile) tạo hiệu ứng thẻ nổi peek 2 bên hiện đại, và giải phóng chuẩn xác trong `dispose()`.
+  2. Xử lý infinite loop mượt mà với `PageView.builder` và modulo an toàn `index % itemCount`, tự động tạm dừng timer khi người dùng chạm vuốt (`ScrollStartNotification`) và tiếp tục khi thả tay (`ScrollEndNotification`).
+  3. Loại bỏ các phép biến đổi Matrix4 lỗi thời trong `FeatureCard`, chuẩn hóa hiệu ứng hover trên Web/Desktop bằng `Matrix4.translationValues(0, -4, 0)`.
+  4. Bọc các khối nội dung đồ họa và tiêu đề trong `FittedBox(fit: BoxFit.scaleDown)` với ràng buộc linh hoạt, đảm bảo hiển thị 100% sắc nét, không bị tràn (overflow) trên mọi kích thước thiết bị.
+  5. Đạt 100% kiểm thử: 70/70 Flutter tests pass, `flutter analyze` sạch lỗi.
+
+### 49. Đăng xuất xong đăng nhập lại phải reload trang mới vào được app
+- **Triệu chứng**: Khi người dùng ấn "Đăng xuất" từ `HomeScreen` hoặc `AccountSettingsScreen`, sau đó đăng nhập lại (Google, Email, hoặc Tài khoản Demo), màn hình bị đứng ở `AuthScreen` và không tự động chuyển vào `HomeScreen`. Người dùng phải ấn F5/Reload trang thì mới vào được ứng dụng.
+- **Nguyên nhân gốc**:
+  1. Khi khởi động ứng dụng, `main.dart` sử dụng `AuthWrapper` (là một `Consumer<UserProvider>`) làm trang chủ `home`. Khi người dùng đăng nhập lần đầu, `userProvider.notifyListeners()` kích hoạt `AuthWrapper` tự động chuyển sang `HomeScreen`.
+  2. Tuy nhiên, trong hàm `_showLogoutDialog` của `HomeScreen` và `AccountSettingsScreen`, sau khi `signOut()` được gọi, code lại thực hiện `Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const AuthScreen()), ...)` đè trực tiếp `AuthScreen` lên gốc Navigation Stack, loại bỏ hoàn toàn `AuthWrapper`.
+  3. Khi ở màn `AuthScreen` độc lập này, việc đăng nhập lại tuy cập nhật `_currentUser` trong `UserProvider` nhưng `AuthScreen` không lắng nghe state để tự điều hướng, và `AuthWrapper` đã bị hủy khỏi cây widget.
+- **Cách xử lý**:
+  1. Tách `AuthWrapper` thành widget độc lập [auth_wrapper.dart](../apps/mobile/lib/features/auth/screens/auth_wrapper.dart).
+  2. Cập nhật tất cả các lệnh điều hướng đăng xuất trong [home_screen.dart](../apps/mobile/lib/features/home/screens/home_screen.dart) và [account_settings_screen.dart](../apps/mobile/lib/features/settings/screens/account_settings_screen.dart) sang `pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const AuthWrapper()), ...)`.
+  3. Nhờ đó, khi đăng xuất hoặc đăng nhập lại ở bất kỳ thời điểm nào, `AuthWrapper` luôn quản trị trạng thái `isAuthenticated` tự động chuyển đổi giữa `AuthScreen` và `HomeScreen` mượt mà ngay lập tức mà không cần reload trang.
+  4. Đạt 100% kiểm thử: 70/70 Flutter tests pass, `flutter analyze` 0 issues.
+

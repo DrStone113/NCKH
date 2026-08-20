@@ -4,8 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
-import 'features/auth/screens/auth_screen.dart';
-import 'features/home/screens/home_screen.dart';
+import 'features/auth/screens/auth_wrapper.dart';
 import 'providers/user_provider.dart';
 import 'providers/health_provider.dart';
 import 'providers/nutrition_provider.dart';
@@ -115,37 +114,6 @@ class MyApp extends StatelessWidget {
           return child ?? const SizedBox.shrink();
         },
       ),
-    );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<UserProvider>(
-      builder: (context, userProvider, _) {
-        // Chờ session restore xong trước khi quyết định route
-        if (!userProvider.isInitialized) {
-          return const Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Đang tải...', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
-          );
-        }
-        if (userProvider.isAuthenticated) {
-          return const HomeScreen();
-        }
-        return const AuthScreen();
-      },
     );
   }
 }

@@ -897,7 +897,7 @@ class _DashboardTab extends StatelessWidget {
         'icon': Icons.chat_bubble,
         'label': 'Hỏi chatbot',
         'color': AppColors.accent,
-        'tab': 3
+        'tab': -3
       },
       {
         'icon': Icons.flag,
@@ -917,7 +917,9 @@ class _DashboardTab extends StatelessWidget {
         return Flexible(
           child: GestureDetector(
             onTap: () {
-              if (action['tab'] == -1) {
+              if (action['tab'] == -3) {
+                onOpenChat?.call();
+              } else if (action['tab'] == -1) {
                 Navigator.push(
                     context,
                     MaterialPageRoute(

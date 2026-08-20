@@ -363,21 +363,30 @@ class _DashboardTab extends StatelessWidget {
       NutritionProvider nutritionProvider,
       ExerciseProvider exerciseProvider,
       dynamic user) {
+    final cardHeight = ResponsiveUtils.responsive(
+      context,
+      mobile: 180.0,
+      tablet: 220.0,
+      desktop: 250.0,
+    );
+
     return Column(
       children: [
         // Calorie & Exercise Row
         Row(
           children: [
             Expanded(
-              child: AnimatedCard(
+              child: _buildStatCard(
                 delay: 200,
+                height: cardHeight,
                 child: _buildCalorieCard(context, nutritionProvider, user),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AnimatedCard(
+              child: _buildStatCard(
                 delay: 250,
+                height: cardHeight,
                 child: _buildExerciseCard(context, exerciseProvider),
               ),
             ),
@@ -388,15 +397,17 @@ class _DashboardTab extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: AnimatedCard(
+              child: _buildStatCard(
                 delay: 300,
+                height: cardHeight,
                 child: _buildTdeeCard(context, user),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: AnimatedCard(
+              child: _buildStatCard(
                 delay: 350,
+                height: cardHeight,
                 child: _buildWaterCard(context, user),
               ),
             ),
@@ -411,37 +422,59 @@ class _DashboardTab extends StatelessWidget {
       NutritionProvider nutritionProvider,
       ExerciseProvider exerciseProvider,
       dynamic user) {
+    final cardHeight = ResponsiveUtils.responsive(
+      context,
+      mobile: 180.0,
+      tablet: 220.0,
+      desktop: 250.0,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: AnimatedCard(
+          child: _buildStatCard(
             delay: 200,
+            height: cardHeight,
             child: _buildCalorieCard(context, nutritionProvider, user),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: AnimatedCard(
+          child: _buildStatCard(
             delay: 250,
+            height: cardHeight,
             child: _buildExerciseCard(context, exerciseProvider),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: AnimatedCard(
+          child: _buildStatCard(
             delay: 300,
+            height: cardHeight,
             child: _buildTdeeCard(context, user),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: AnimatedCard(
+          child: _buildStatCard(
             delay: 350,
+            height: cardHeight,
             child: _buildWaterCard(context, user),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatCard({
+    required int delay,
+    required double height,
+    required Widget child,
+  }) {
+    return SizedBox(
+      height: height,
+      child: AnimatedCard(delay: delay, child: child),
     );
   }
 
@@ -655,8 +688,11 @@ class _DashboardTab extends StatelessWidget {
     return BentoCard(
       padding: EdgeInsets.all(cardPadding),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.local_fire_department,
                   color: AppColors.calories, size: iconSize * 0.75),
@@ -702,8 +738,11 @@ class _DashboardTab extends StatelessWidget {
     return BentoCard(
       padding: EdgeInsets.all(cardPadding),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.fitness_center,
                   color: AppColors.success, size: iconSize * 0.75),
@@ -761,9 +800,11 @@ class _DashboardTab extends StatelessWidget {
     return BentoCard(
       padding: EdgeInsets.all(cardPadding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.bolt, color: AppColors.accent, size: iconSize * 0.75),
               const SizedBox(width: 6),
@@ -810,9 +851,11 @@ class _DashboardTab extends StatelessWidget {
       onTap: () => _addWater(context, user),
       padding: EdgeInsets.all(cardPadding),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.water_drop,
                   color: isOverLimit
@@ -824,7 +867,7 @@ class _DashboardTab extends StatelessWidget {
                   style: TextStyle(
                       fontSize: smallSize, color: AppColors.textSecondary)),
               if (isOverLimit || isNearLimit) ...[
-                const Spacer(),
+                const SizedBox(width: 6),
                 Icon(
                   Icons.warning_amber,
                   color: isOverLimit ? AppColors.error : AppColors.warning,
@@ -913,6 +956,7 @@ class _DashboardTab extends StatelessWidget {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: actions.map((action) {
         return Flexible(
           child: GestureDetector(
@@ -950,13 +994,16 @@ class _DashboardTab extends StatelessWidget {
                         color: action['color'] as Color, size: iconSize),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    action['label'] as String,
-                    style: TextStyle(
-                        fontSize: smallSize, color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(
+                    height: smallSize * 2.8,
+                    child: Text(
+                      action['label'] as String,
+                      style: TextStyle(
+                          fontSize: smallSize, color: AppColors.textSecondary),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),

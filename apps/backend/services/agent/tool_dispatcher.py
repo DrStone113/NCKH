@@ -80,10 +80,19 @@ def _normalise_plan_profile(
     elif not isinstance(restrictions, list):
         restrictions = []
 
+    safety_profile = source.get("nutrition_safety_profile") or source.get(
+        "nutritionSafetyProfile"
+    )
+    if not isinstance(safety_profile, dict):
+        safety_profile = {}
+
     return {
         "user_id": user_id or source.get("user_id") or source.get("id"),
         "age": source.get("age"),
         "gender": source.get("gender"),
+        "equation_sex": source.get("equation_sex")
+        or source.get("equationSex"),
+        "nutrition_safety_profile": safety_profile,
         "height_cm": source.get("height_cm") or source.get("height"),
         "weight_kg": source.get("weight_kg") or source.get("weight"),
         "activity_level": source.get("activity_level")
@@ -115,7 +124,8 @@ class ToolResult:
         ``"TIMEOUT"``, ``"TOOL_INTERNAL_ERROR"``, ``"DISCONNECTED"``).
         ``None`` on success.
     data:
-        Tool-specific payload on success; ``None`` on failure.
+        Tool-specific payload. Failed write tools may include their typed
+        ``write_status`` here so REJECTED and ERROR remain distinguishable.
     ui_message:
         Optional presentation payload produced by a client tool. It is kept
         outside ``data`` so it can be persisted for history without being sent
@@ -353,7 +363,13 @@ class ToolDispatcher:
         error = payload.get("error")
         if isinstance(error, dict):
             error = error.get("code") or error.get("message")
-        future.set_result(ToolResult(ok=False, error=str(error or "TOOL_INTERNAL_ERROR")))
+        future.set_result(
+            ToolResult(
+                ok=False,
+                error=str(error or "TOOL_INTERNAL_ERROR"),
+                data=payload.get("data"),
+            )
+        )
 
     def cleanup_session(self, session_id: str) -> None:
         for call_id, (pending_session_id, future) in list(self._pending_calls.items()):

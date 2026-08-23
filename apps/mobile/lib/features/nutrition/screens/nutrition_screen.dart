@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/nutrition_provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../../models/meal_model.dart';
+import '../../../models/canonical_nutrition.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/meal_nutrition_utils.dart';
 import '../../../widgets/animated_card.dart';
@@ -216,7 +217,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
   Widget build(BuildContext context) {
     final nutritionProvider = Provider.of<NutritionProvider>(context);
     final user = Provider.of<UserProvider>(context).currentUser;
-    final targetCal = user?.recommendedCalories ?? 2000;
+    final targetCal = user?.recommendedCalories;
     final selectedDate = nutritionProvider.selectedDate;
     final isToday = nutritionProvider.isToday;
 
@@ -242,7 +243,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
-            onPressed: () => _showMealSuggestions(context, targetCal),
+            onPressed: targetCal == null
+                ? null
+                : () => _showMealSuggestions(context, targetCal),
             tooltip: 'Gợi ý thực đơn',
           ),
         ],
@@ -315,7 +318,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
             // Calorie summary
             AnimatedCard(
               delay: 100,
-              child: _buildCalorieSummary(nutritionProvider, targetCal),
+              child: _buildCalorieSummary(
+                  nutritionProvider, user?.canonicalNutrition),
             ),
             const SizedBox(height: 20),
 
@@ -431,10 +435,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
     );
   }
 
-  Widget _buildCalorieSummary(NutritionProvider provider, double target) {
-    final consumed = provider.consumedCalories;
-    final progress = target > 0 ? (consumed / target).clamp(0.0, 1.5) : 0.0;
-    final remaining = (target - consumed).clamp(0.0, target);
+  Widget _buildCalorieSummary(
+      NutritionProvider provider, CanonicalNutritionState? canonical) {
+    final summary = canonical == null
+        ? null
+        : provider.canonicalDailySummary(canonical);
+    final target = canonical?.calorieTargetKcalPerDay;
+    final consumed = summary?.energyConsumedKcal ?? 0.0;
+    final progress = target != null && target > 0
+        ? (consumed / target).clamp(0.0, 1.5)
+        : 0.0;
+    final remaining = summary?.energyRemainingKcal;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -451,14 +462,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
             child: CustomPaint(
               painter: _CalorieRingPainter(
                 progress: progress.toDouble(),
-                consumed: consumed > target,
+                consumed: target != null && consumed > target,
               ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     AnimatedCounter(
-                      value: consumed,
+                      value: roundNutritionEnergyForDisplay(consumed),
                       decimals: 0,
                       style: const TextStyle(
                           fontSize: 22, fontWeight: FontWeight.bold),
@@ -478,15 +489,21 @@ class _NutritionScreenState extends State<NutritionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _calorieStat('Mục tiêu', target, AppColors.primary),
+                if (target != null)
+                  _calorieStat('Mục tiêu',
+                      canonical!.displayCalorieTargetKcalPerDay!, AppColors.primary)
+                else
+                  const Text('Mục tiêu: cần hướng dẫn chuyên gia'),
                 const SizedBox(height: 8),
-                _calorieStat('Đã ăn', consumed, AppColors.calories),
+                _calorieStat('Đã ăn', roundNutritionEnergyForDisplay(consumed), AppColors.calories),
                 const SizedBox(height: 8),
-                _calorieStat('Còn lại', remaining,
-                    consumed > target ? AppColors.error : AppColors.success),
+                if (remaining != null)
+                  _calorieStat('Còn lại', roundNutritionEnergyForDisplay(remaining),
+                      remaining < 0 ? AppColors.error : AppColors.success),
                 if (provider.pendingMealsCount > 0) ...[
                   const SizedBox(height: 8),
-                  _calorieStat('Kế hoạch', provider.plannedCalories,
+                  _calorieStat('Kế hoạch',
+                      roundNutritionEnergyForDisplay(provider.plannedCalories),
                       AppColors.textSecondary),
                 ],
               ],
@@ -523,10 +540,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final c = hasConsumed ? provider.consumedCarbs : provider.totalCarbs;
     final f = hasConsumed ? provider.consumedFat : provider.totalFat;
 
-    final total = p + c + f;
-    final proteinPct = total > 0 ? (p / total * 100) : 0;
-    final carbsPct = total > 0 ? (c / total * 100) : 0;
-    final fatPct = total > 0 ? (f / total * 100) : 0;
+    final percentages = calculateMacroEnergyPercentages(
+      proteinGrams: p,
+      carbohydrateGrams: c,
+      fatGrams: f,
+    );
+    final proteinPct = percentages.protein;
+    final carbsPct = percentages.carbohydrate;
+    final fatPct = percentages.fat;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -574,7 +595,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
             Text(name, style: const TextStyle(fontSize: 13)),
             Flexible(
               child: Text(
-                '${grams.toStringAsFixed(1)}g (${pct.toStringAsFixed(0)}%)',
+                '${roundNutritionMacroForDisplay(grams).toStringAsFixed(0)}g (${pct.toStringAsFixed(0)}%)',
                 style: TextStyle(
                     fontSize: 12, color: color, fontWeight: FontWeight.w600),
                 overflow: TextOverflow.ellipsis,

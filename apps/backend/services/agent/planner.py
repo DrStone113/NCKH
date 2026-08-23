@@ -11,6 +11,7 @@ from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
 from models.schemas import ExercisePlanPayload, MealPlanPayload, PlanItem, UserProfile
+from services.nutrition.registry import POLICY, POLICY_VERSION
 
 
 @dataclass(slots=True)
@@ -161,11 +162,14 @@ class PlannerAgent:
                 "calculate_tdee",
                 dict(validated.model_dump()),
             )
+            if metrics.get("calorie_target_status") != "AVAILABLE":
+                raise PlannerError(
+                    str(metrics.get("status") or "CALORIE_TARGET_UNAVAILABLE")
+                )
             daily_kcal = float(metrics["daily_kcal"])
             tdee = float(metrics.get("tdee", daily_kcal))
-            daily_protein = self._protein_target(
-                validated.weight_kg, goal, phase_index=1
-            )
+            daily_protein = float(metrics["daily_protein"])
+            formula_ids = list(metrics.get("formula_ids") or [])
             plan_id = await self._call_tool(
                 "create_plan",
                 {
@@ -175,6 +179,8 @@ class PlannerAgent:
                     "start_date": start_date.isoformat(),
                     "daily_kcal_target": daily_kcal,
                     "daily_protein_target": daily_protein,
+                    "nutrition_policy_version": POLICY_VERSION,
+                    "nutrition_formula_ids": formula_ids,
                     "request_id": f"plan-{user_id}-{start_date.isoformat()}-{duration_days}",
                 },
             )
@@ -190,22 +196,13 @@ class PlannerAgent:
                 phase_key, phase_title, weekly_focus = _PHASE_DETAILS[goal][
                     phase_index
                 ]
-                weekly_kcal = self._weekly_kcal_target(
-                    daily_kcal, goal, phase_index, tdee=tdee
-                )
-                is_refeed_day = (
-                    goal == "lose_weight"
-                    and phase_index == 3
-                    and plan_date.weekday() == 5
-                )
-                day_kcal = self._day_kcal_target(
-                    weekly_kcal,
-                    tdee=tdee,
-                    is_refeed_day=is_refeed_day,
-                )
-                week_protein = self._protein_target(
-                    validated.weight_kg, goal, phase_index=phase_index
-                )
+                # Nutrition baselines do not vary by planner phase. The old
+                # unregistered phase deficits/surpluses and protein escalation
+                # were hidden policy and are deliberately removed for new plans.
+                weekly_kcal = daily_kcal
+                is_refeed_day = False
+                day_kcal = daily_kcal
+                week_protein = daily_protein
                 workout_focus = self._workout_focus(plan_date, goal)
                 day_kind = self._day_kind(plan_date, workout_focus)
                 schedule = {
@@ -229,11 +226,9 @@ class PlannerAgent:
                     "is_refeed_day": is_refeed_day,
                 }
 
-                for meal_type, ratio in (
-                    ("breakfast", 0.30),
-                    ("lunch", 0.40),
-                    ("dinner", 0.30),
-                ):
+                meal_split = POLICY["meal_split"]
+                for meal_type in ("breakfast", "lunch", "dinner"):
+                    ratio = float(meal_split[meal_type])
                     dish = await self._call_tool(
                         "suggest_dish",
                         {
@@ -448,33 +443,19 @@ class PlannerAgent:
     def _protein_target(
         weight_kg: float, goal: str, *, phase_index: int
     ) -> float:
-        multipliers = {
-            "lose_weight": (1.6, 1.8, 1.8, 1.6),
-            "gain_muscle": (1.8, 2.0, 2.0, 1.8),
-            "maintain": (1.4, 1.5, 1.5, 1.4),
-        }
-        multiplier = multipliers[goal][phase_index - 1]
-        return round(weight_kg * multiplier, 2)
+        raise RuntimeError("USE_CANONICAL_PROTEIN_TARGET")
 
     @staticmethod
     def _weekly_kcal_target(
         daily_kcal: float, goal: str, phase_index: int, *, tdee: float
     ) -> float:
-        adjustments = {
-            "lose_weight": (200.0, 0.0, 100.0, 250.0),
-            "gain_muscle": (-100.0, 0.0, 100.0, 0.0),
-            "maintain": (0.0, 0.0, 0.0, 0.0),
-        }
-        target = max(1200.0, daily_kcal + adjustments[goal][phase_index - 1])
-        return min(tdee, target) if goal == "lose_weight" else target
+        return daily_kcal
 
     @staticmethod
     def _day_kcal_target(
         weekly_kcal: float, *, tdee: float, is_refeed_day: bool
     ) -> float:
-        if not is_refeed_day:
-            return weekly_kcal
-        return max(weekly_kcal, min(tdee, weekly_kcal + 300.0))
+        return weekly_kcal
 
     @staticmethod
     def _workout_focus(plan_date: date, goal: str) -> str | None:

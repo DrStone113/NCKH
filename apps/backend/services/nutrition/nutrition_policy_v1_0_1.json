@@ -1,0 +1,120 @@
+{
+  "policy_version": "nutrition-policy-v1.0.1",
+  "base_policy_version": "nutrition-policy-v1",
+  "compatibility_patch": {
+    "mathematical_rules_changed": false,
+    "difference": "BMI below 18.5 is specialist-gated after informational BMI, RMR, and TDEE estimation; structured self-reported applicability answers and complete derived-result provenance are added.",
+    "unknown_safety_answer_behavior": "PRESERVE_UNKNOWN_ALLOW_TARGET_WITH_WARNING"
+  },
+  "supported_age": {"minimum": 19, "maximum": 64},
+  "bmi": {
+    "formula_id": "BMI_CALC_V1",
+    "classification_formula_id": "BMI_CLASS_VN_MOH_2022_V1",
+    "applicability_formula_id": "BMI_UNDERWEIGHT_SPECIALIST_GATE_V1_0_1",
+    "boundaries": [18.5, 23.0, 25.0, 30.0],
+    "codes": ["UNDERWEIGHT", "NORMAL", "OVERWEIGHT", "OBESITY_I", "OBESITY_II"],
+    "labels": ["Thiếu cân", "Bình thường", "Thừa cân", "Béo phì độ I", "Béo phì độ II"],
+    "display_ranges": ["< 18.5", "18.5 - 22.9", "23 - 24.9", "25 - 29.9", "≥ 30"]
+  },
+  "rmr": {"formula_id": "RMR_MIFFLIN_ST_JEOR_V1"},
+  "activity": {
+    "formula_id": "TDEE_ACTIVITY_FACTOR_V1",
+    "factors": {
+      "sedentary": 1.2,
+      "light": 1.375,
+      "moderate": 1.55,
+      "active": 1.725,
+      "very_active": 1.9
+    }
+  },
+  "calories": {
+    "maintenance_formula_id": "CALORIE_MAINTENANCE_V1",
+    "loss_formula_id": "CALORIE_WEIGHT_LOSS_10PCT_CAP500_V1",
+    "gain_formula_id": "CALORIE_WEIGHT_GAIN_10PCT_CAP300_V1",
+    "safety_formula_id": "LOW_ENERGY_SAFETY_GATE_1200_V1",
+    "adjustment_fraction": 0.10,
+    "loss_cap_kcal": 500.0,
+    "gain_cap_kcal": 300.0,
+    "specialist_gate_kcal": 1200.0
+  },
+  "protein": {
+    "formula_id": "PROTEIN_GOAL_ACTIVITY_RANGE_V1",
+    "reference_formula_id": "PROTEIN_ADULT_REFERENCE_MINIMUM_V1",
+    "reference_g_per_kg": 0.8,
+    "branches": {
+      "sedentary_maintenance": {"minimum": 0.8, "maximum": 1.0, "planning": 0.9},
+      "active_maintenance": {"minimum": 1.2, "maximum": 1.4, "planning": 1.3},
+      "weight_loss": {"minimum": 1.4, "maximum": 1.6, "planning": 1.5},
+      "gain_resistance": {"minimum": 1.4, "maximum": 1.8, "planning": 1.6}
+    }
+  },
+  "carbohydrate": {
+    "formula_id": "CARBOHYDRATE_AMDR_RANGE_V1",
+    "minimum_energy_fraction": 0.45,
+    "maximum_energy_fraction": 0.65,
+    "kcal_per_gram": 4.0
+  },
+  "fat": {
+    "formula_id": "FAT_AMDR_RANGE_V1",
+    "minimum_energy_fraction": 0.20,
+    "maximum_energy_fraction": 0.35,
+    "kcal_per_gram": 9.0
+  },
+  "fluid": {
+    "formula_id": "APPROXIMATE_FLUID_33MLKG_V1",
+    "ml_per_kg": 33.0
+  },
+  "meal_split": {
+    "formula_id": "PRODUCT_DEFAULT_MEAL_SPLIT_V1",
+    "breakfast": 0.30,
+    "lunch": 0.40,
+    "dinner": 0.30
+  },
+  "rounding": {
+    "formula_id": "ROUNDING_V1",
+    "bmi_storage_decimals": 2,
+    "energy_storage_decimals": 0,
+    "macro_storage_decimals": 1,
+    "fluid_storage_decimals_ml": 0,
+    "bmi_display_decimals": 1,
+    "energy_display_increment_kcal": 10,
+    "macro_display_increment_g": 1,
+    "fluid_display_increment_ml": 100,
+    "mode": "ROUND_HALF_UP"
+  },
+  "safety_profile": {
+    "formula_id": "NUTRITION_APPLICABILITY_SCREEN_V1_0_1",
+    "answers": ["YES", "NO", "UNKNOWN", "NOT_PROVIDED"],
+    "fields": [
+      "pregnancy",
+      "lactation",
+      "eating_disorder_risk_or_history",
+      "serious_renal_condition",
+      "fluid_restricted_cardiac_condition",
+      "clinically_complex_metabolic_condition"
+    ],
+    "yes_status": "UNSUPPORTED",
+    "unknown_behavior": "PRESERVE_UNKNOWN_ALLOW_TARGET_WITH_WARNING"
+  },
+  "daily_summary": {"formula_id": "DAILY_NUTRITION_SUMMARY_CONSUMED_V1_0_1"},
+  "registry": [
+    {"formula_id":"BMI_CALC_V1","category":"MATHEMATICAL_CALCULATION","source":"WHO body mass index definition","status":"APPROVED","units":"kg/m^2","applicability":"Adults with known positive height and weight","limitations":"Surrogate screening measure; not body-fat measurement"},
+    {"formula_id":"BMI_CLASS_VN_MOH_2022_V1","category":"DISPLAY_CLASSIFICATION","source":"Vietnam Ministry of Health Decision 2892/QD-BYT (2022)","status":"APPROVED","units":"kg/m^2","applicability":"Supported Vietnamese adult population","limitations":"Screening/display information; not diagnosis"},
+    {"formula_id":"BMI_UNDERWEIGHT_SPECIALIST_GATE_V1_0_1","category":"SAFETY_BOUND","source":"nutrition-policy-v1.0.1 applicability clarification","status":"PRODUCT_SAFETY_GATE","units":"kg/m^2","applicability":"Calculated BMI below 18.5","limitations":"Allows informational BMI/RMR/TDEE estimates but no ordinary calorie or macronutrient prescription; not diagnosis"},
+    {"formula_id":"RMR_MIFFLIN_ST_JEOR_V1","category":"ESTIMATION_EQUATION","source":"Mifflin et al. 1990","status":"APPROVED","units":"kcal/day","applicability":"Supported adults with explicit equation-sex input","limitations":"Estimated resting expenditure; not measured metabolism"},
+    {"formula_id":"TDEE_ACTIVITY_FACTOR_V1","category":"ESTIMATION_EQUATION","source":"Approved nutrition-policy-v1 compatibility series","status":"HEURISTIC","units":"kcal/day","applicability":"Supported adults with a known activity category","limitations":"Activity categories approximate lifestyle energy expenditure"},
+    {"formula_id":"CALORIE_MAINTENANCE_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1","status":"APPROVED","units":"kcal/day","applicability":"Supported adults with maintain goal","limitations":"Based on estimated, not measured, TDEE"},
+    {"formula_id":"CALORIE_WEIGHT_LOSS_10PCT_CAP500_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1","status":"APPROVED","units":"kcal/day","applicability":"Supported adults with weight-loss goal","limitations":"Does not predict guaranteed weight change"},
+    {"formula_id":"CALORIE_WEIGHT_GAIN_10PCT_CAP300_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1","status":"APPROVED","units":"kcal/day","applicability":"Supported adults with gain goal","limitations":"Does not predict muscle gain"},
+    {"formula_id":"LOW_ENERGY_SAFETY_GATE_1200_V1","category":"SAFETY_BOUND","source":"Approved nutrition-policy-v1 conservative product gate","status":"PRODUCT_SAFETY_GATE","units":"kcal/day","applicability":"Ordinary calculated calorie targets","limitations":"Not a physiological minimum; requires specialist guidance below threshold"},
+    {"formula_id":"PROTEIN_ADULT_REFERENCE_MINIMUM_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1 adult reference","status":"APPROVED","units":"g/kg/day","applicability":"Supported adults","limitations":"Reference minimum, not an athlete target"},
+    {"formula_id":"PROTEIN_GOAL_ACTIVITY_RANGE_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1","status":"APPROVED","units":"g/kg/day and g/day","applicability":"Supported adults by goal and activity","limitations":"Not for athlete-specific or clinical protein prescriptions"},
+    {"formula_id":"CARBOHYDRATE_AMDR_RANGE_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1 AMDR reference","status":"APPROVED","units":"percent energy and g/day","applicability":"Supported adults with an available calorie target","limitations":"Reference range; no universal point target"},
+    {"formula_id":"FAT_AMDR_RANGE_V1","category":"NUTRITION_POLICY","source":"Approved nutrition-policy-v1 AMDR reference","status":"APPROVED","units":"percent energy and g/day","applicability":"Supported adults with an available calorie target","limitations":"Total-fat range; does not encode fat quality"},
+    {"formula_id":"APPROXIMATE_FLUID_33MLKG_V1","category":"PRODUCT_HEURISTIC","source":"Approved nutrition-policy-v1 compatibility rule","status":"HEURISTIC","units":"mL/day","applicability":"Supported adults without renal or fluid-restricted cardiac exclusions","limitations":"Not a physiological requirement; excludes food water; not climate or exercise adjusted"},
+    {"formula_id":"PRODUCT_DEFAULT_MEAL_SPLIT_V1","category":"PRODUCT_HEURISTIC","source":"Approved nutrition-policy-v1 product default","status":"PRODUCT_DEFAULT","units":"fraction of daily energy","applicability":"Optional three-meal product planning default","limitations":"Not scientific or physiologically required"},
+    {"formula_id":"ROUNDING_V1","category":"PRODUCT_POLICY","source":"Approved nutrition-policy-v1","status":"APPROVED","units":"mixed","applicability":"Canonical serialized and displayed outputs","limitations":"All classification and downstream calculations use unrounded values"},
+    {"formula_id":"NUTRITION_APPLICABILITY_SCREEN_V1_0_1","category":"SAFETY_BOUND","source":"nutrition-policy-v1.0.1 structured applicability patch","status":"PRODUCT_SAFETY_GATE","units":"tri-state self-report","applicability":"Self-reported supported-population screening","limitations":"Not diagnosis; UNKNOWN remains unknown and does not itself block targets"},
+    {"formula_id":"DAILY_NUTRITION_SUMMARY_CONSUMED_V1_0_1","category":"MATHEMATICAL_CALCULATION","source":"nutrition-policy-v1.0.1 provenance patch","status":"APPROVED","units":"kcal/day and g/day","applicability":"Authoritative consumed meal records","limitations":"Summary accuracy depends on meal record accuracy and completeness"}
+  ]
+}

@@ -161,6 +161,7 @@ async def test_create_long_term_plan_runs_end_to_end_with_real_catalog_tools():
             "user_id": "user-1",
             "age": 30,
             "gender": "male",
+            "equation_sex": "male",
             "height_cm": 172,
             "weight_kg": 68,
             "activity_level": "moderate",
@@ -205,6 +206,8 @@ async def test_create_plan_inserts_with_correct_end_date_and_status():
         start_date="2025-01-01",
         daily_kcal_target=2000.0,
         daily_protein_target=120.0,
+        nutrition_policy_version="nutrition-policy-v1.0.1",
+        nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
         request_id="req-abc",
     )
 
@@ -240,6 +243,8 @@ async def test_create_plan_accepts_date_object_for_start_date():
         start_date=date(2025, 3, 10),
         daily_kcal_target=1800.0,
         daily_protein_target=80.0,
+        nutrition_policy_version="nutrition-policy-v1.0.1",
+        nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
         request_id="r",
     )
     _, params = session.executed[0]
@@ -260,6 +265,8 @@ async def test_create_plan_propagates_database_write_failure():
             start_date=date(2025, 3, 10),
             daily_kcal_target=1800.0,
             daily_protein_target=80.0,
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="r",
         )
 
@@ -282,6 +289,8 @@ async def test_create_plan_rejects_invalid_duration(bad_duration):
             start_date="2025-01-01",
             daily_kcal_target=2000.0,
             daily_protein_target=100.0,
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="r",
         )
     # No SQL was emitted on validation failure.
@@ -301,6 +310,8 @@ async def test_create_plan_rejects_non_positive_kcal(bad_kcal):
             start_date="2025-01-01",
             daily_kcal_target=bad_kcal,  # type: ignore[arg-type]
             daily_protein_target=100.0,
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="r",
         )
     assert session.executed == []
@@ -319,6 +330,8 @@ async def test_create_plan_rejects_non_positive_protein(bad_protein):
             start_date="2025-01-01",
             daily_kcal_target=2000.0,
             daily_protein_target=bad_protein,  # type: ignore[arg-type]
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="r",
         )
     assert session.executed == []
@@ -336,6 +349,8 @@ async def test_create_plan_rejects_blank_request_id():
             start_date="2025-01-01",
             daily_kcal_target=2000.0,
             daily_protein_target=100.0,
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="",
         )
 
@@ -352,6 +367,8 @@ async def test_create_plan_rejects_invalid_start_date_string():
             start_date="not-a-date",
             daily_kcal_target=2000.0,
             daily_protein_target=100.0,
+            nutrition_policy_version="nutrition-policy-v1.0.1",
+            nutrition_formula_ids=["RMR_MIFFLIN_ST_JEOR_V1"],
             request_id="r",
         )
 

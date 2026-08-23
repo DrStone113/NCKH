@@ -5,6 +5,7 @@ import '../constants/firestore_collections.dart';
 import '../services/exercise_cache_service.dart';
 import '../services/local_exercise_service.dart';
 import '../utils/exercise_utils.dart';
+import '../models/app_state_value.dart';
 
 class ExerciseProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
@@ -15,9 +16,13 @@ class ExerciseProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _wgerLoaded = false;
   List<ExerciseTemplate>? _exerciseDatabaseCache;
+  DataStatus _todayExercisesStatus = DataStatus.notLoaded;
+  DateTime? _todayExercisesObservedAt;
 
   List<ExerciseModel> get todayExercises => _todayExercises;
   bool get isLoading => _isLoading;
+  DataStatus get todayExercisesStatus => _todayExercisesStatus;
+  DateTime? get todayExercisesObservedAt => _todayExercisesObservedAt;
   double get totalCaloriesBurned =>
       _todayExercises.fold(0, (acc, ex) => acc + ex.caloriesBurned);
   int get totalDuration =>
@@ -76,6 +81,7 @@ class ExerciseProvider with ChangeNotifier {
     if (cached != null) {
       debugPrint('📦 Using cached exercises for today');
       _todayExercises = List.of(cached);
+      _todayExercisesStatus = DataStatus.stale;
       notifyListeners();
 
       // Pre-fetch nearby dates in background
@@ -104,6 +110,8 @@ class ExerciseProvider with ChangeNotifier {
         return !exercise.date.isBefore(startOfDay) &&
             exercise.date.isBefore(endOfDay);
       }).toList();
+      _todayExercisesStatus = DataStatus.known;
+      _todayExercisesObservedAt = DateTime.now();
 
       // Cache the result
       _cacheService.cacheExercises(userId, today, _todayExercises);
@@ -117,7 +125,39 @@ class ExerciseProvider with ChangeNotifier {
       _preFetchNearbyDates(userId, today);
     } catch (e) {
       debugPrint('❌ Error loading exercises from Firestore: $e');
-      _todayExercises = [];
+      _todayExercisesStatus = DataStatus.error;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> refreshTodayExercisesAuthoritatively(String userId) async {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    _isLoading = true;
+    try {
+      final snapshot = await _firestore
+          .collection(FirestoreCollections.exerciseDiary)
+          .where('userId', isEqualTo: userId)
+          .get(const GetOptions(source: Source.server));
+      final allExercises = snapshot.docs
+          .map((doc) => ExerciseModel.fromMap(doc.data()))
+          .toList(growable: false);
+      _todayExercises = allExercises.where((exercise) {
+        return !exercise.date.isBefore(startOfDay) &&
+            exercise.date.isBefore(endOfDay);
+      }).toList();
+      _cacheService.cacheExercises(userId, today, _todayExercises);
+      _cacheService.cacheAllExercises(userId, allExercises);
+      _todayExercisesStatus = DataStatus.known;
+      _todayExercisesObservedAt = DateTime.now();
+      return true;
+    } catch (e) {
+      _todayExercisesStatus = DataStatus.error;
+      debugPrint('❌ Authoritative exercise read failed: $e');
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

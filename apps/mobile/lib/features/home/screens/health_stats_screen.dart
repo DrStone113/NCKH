@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../providers/user_provider.dart';
 import '../../../providers/health_provider.dart';
 import '../../../theme/app_theme.dart';
+import '../../../models/canonical_nutrition.dart';
 
 class HealthStatsScreen extends StatefulWidget {
   const HealthStatsScreen({super.key});
@@ -17,9 +18,11 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = Provider.of<UserProvider>(context, listen: false).currentUser?.id;
+      final userId =
+          Provider.of<UserProvider>(context, listen: false).currentUser?.id;
       if (userId != null) {
-        Provider.of<HealthProvider>(context, listen: false).loadWeightHistory(userId);
+        Provider.of<HealthProvider>(context, listen: false)
+            .loadWeightHistory(userId);
       }
     });
   }
@@ -29,7 +32,9 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
     final user = Provider.of<UserProvider>(context).currentUser;
     final healthProvider = Provider.of<HealthProvider>(context);
 
-    if (user == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -49,7 +54,8 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             const SizedBox(height: 20),
 
             // Weight chart
-            const Text('Biểu đồ cân nặng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Biểu đồ cân nặng',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _buildWeightChart(healthProvider),
             const SizedBox(height: 20),
@@ -83,7 +89,11 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
-              user.gender == 'male' ? Icons.person : Icons.person_2,
+              user.gender == 'male'
+                  ? Icons.person
+                  : user.gender == 'female'
+                      ? Icons.person_2
+                      : Icons.person_outline,
               color: Colors.white,
               size: 28,
             ),
@@ -93,11 +103,16 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(user.name,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
                 const SizedBox(height: 4),
                 Text(
-                  '${user.age} tuổi • ${user.gender == "male" ? "Nam" : "Nữ"} • ${user.activityLevelText}',
-                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
+                  '${user.age} tuổi • ${_genderLabel(user.gender)} • ${user.activityLevelText}',
+                  style: TextStyle(
+                      fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -122,10 +137,25 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
       mainAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _metricCard('BMI', user.bmi.toStringAsFixed(1), user.bmiCategory, _getBmiColor(user.bmi)),
-        _metricCard('BMR', '${user.bmr.toStringAsFixed(0)}', 'kcal/ngày', AppColors.accent),
-        _metricCard('TDEE', '${user.tdee.toStringAsFixed(0)}', 'kcal/ngày', AppColors.primary),
-        _metricCard('Mỡ cơ thể', '${user.estimatedBodyFat.toStringAsFixed(1)}%', 'ước tính', AppColors.warning),
+        _metricCard('BMI', user.displayBmi.toStringAsFixed(1), user.bmiCategory,
+            _getBmiColor(user.bmiCategoryCode)),
+        _metricCard(
+            'RMR ước tính',
+            user.displayRmr?.toStringAsFixed(0) ?? 'Chưa có',
+            'kcal/ngày',
+            AppColors.accent),
+        _metricCard(
+            'TDEE ước tính',
+            user.displayTdee?.toStringAsFixed(0) ?? 'Chưa có',
+            'kcal/ngày',
+            AppColors.primary),
+        _metricCard(
+            'Mỡ cơ thể',
+            user.estimatedBodyFat == null
+                ? 'Chưa có'
+                : '${user.estimatedBodyFat!.toStringAsFixed(1)}%',
+            'ước tính',
+            AppColors.warning),
         _metricCard(
           'Chiều cao',
           '${user.height.toStringAsFixed(0)}',
@@ -144,7 +174,8 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
     );
   }
 
-  Widget _metricCard(String title, String value, String subtitle, Color color, {VoidCallback? onEdit}) {
+  Widget _metricCard(String title, String value, String subtitle, Color color,
+      {VoidCallback? onEdit}) {
     return GestureDetector(
       onTap: onEdit,
       child: Container(
@@ -161,14 +192,21 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
                 if (onEdit != null)
-                  Icon(Icons.edit, size: 16, color: color.withValues(alpha: 0.6)),
+                  Icon(Icons.edit,
+                      size: 16, color: color.withValues(alpha: 0.6)),
               ],
             ),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-            Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textHint)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+            Text(subtitle,
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.textHint)),
           ],
         ),
       ),
@@ -227,13 +265,17 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
                 reservedSize: 40,
                 getTitlesWidget: (value, meta) => Text(
                   value.toStringAsFixed(0),
-                  style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 10, color: AppColors.textSecondary),
                 ),
               ),
             ),
-            bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(show: false),
           minX: 0,
@@ -278,16 +320,17 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Thang đo BMI (Tiêu chuẩn Việt Nam)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Thang đo BMI (Tiêu chuẩn Việt Nam)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _bmiRange('Gầy độ III', '< 16', const Color(0xFFE53935), user.bmi < 16),
-          _bmiRange('Gầy độ II', '16 - 16.9', const Color(0xFFFF5722), user.bmi >= 16 && user.bmi < 17),
-          _bmiRange('Gầy độ I', '17 - 18.4', AppColors.info, user.bmi >= 17 && user.bmi < 18.5),
-          _bmiRange('Bình thường', '18.5 - 24.9', AppColors.success, user.bmi >= 18.5 && user.bmi < 25),
-          _bmiRange('Thừa cân', '25 - 29.9', AppColors.warning, user.bmi >= 25 && user.bmi < 30),
-          _bmiRange('Béo phì độ I', '30 - 34.9', const Color(0xFFFF9800), user.bmi >= 30 && user.bmi < 35),
-          _bmiRange('Béo phì độ II', '35 - 39.9', AppColors.error, user.bmi >= 35 && user.bmi < 40),
-          _bmiRange('Béo phì độ III', '≥ 40', const Color(0xFF9C27B0), user.bmi >= 40),
+          ...NutritionPolicyV1.bmiCategories.map(
+            (category) => _bmiRange(
+              category.label,
+              category.displayRange,
+              _getBmiColor(category.code),
+              user.bmiCategoryCode == category.code,
+            ),
+          ),
         ],
       ),
     );
@@ -300,19 +343,29 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
       decoration: BoxDecoration(
         color: isActive ? color.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-        border: isActive ? Border.all(color: color.withValues(alpha: 0.4)) : null,
+        border:
+            isActive ? Border.all(color: color.withValues(alpha: 0.4)) : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
+              Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                      color: color, borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 10),
-              Text(label, style: TextStyle(fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
+              Text(label,
+                  style: TextStyle(
+                      fontWeight:
+                          isActive ? FontWeight.bold : FontWeight.normal)),
             ],
           ),
-          Text(range, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(range,
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary)),
           if (isActive) Icon(Icons.check_circle, color: color, size: 18),
         ],
       ),
@@ -329,15 +382,31 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Khuyến nghị', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Khuyến nghị',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const Divider(color: AppColors.surfaceLight),
           const SizedBox(height: 8),
-          _recommendItem(Icons.restaurant, 'Mục tiêu calo', '${user.recommendedCalories.toStringAsFixed(0)} kcal/ngày (${user.healthGoalText})'),
-          _recommendItem(Icons.water_drop, 'Uống nước', '${user.dailyWaterGoal.toStringAsFixed(1)} lít/ngày'),
-          _recommendItem(Icons.fitness_center, 'Vận động', '150-300 phút/tuần theo WHO'),
+          _recommendItem(
+              Icons.restaurant,
+              'Mục tiêu calo',
+              user.displayRecommendedCalories == null
+                  ? 'Cần hướng dẫn chuyên gia'
+                  : '${user.displayRecommendedCalories!.toStringAsFixed(0)} kcal/ngày (${user.healthGoalText})'),
+          _recommendItem(
+              Icons.water_drop,
+              'Mục tiêu dịch gần đúng',
+              user.displayDailyWaterGoal == null
+                  ? 'Không khả dụng'
+                  : '${user.displayDailyWaterGoal!.toStringAsFixed(1)} lít/ngày (ước tính)'),
+          _recommendItem(
+              Icons.fitness_center, 'Vận động', '150-300 phút/tuần theo WHO'),
           _recommendItem(Icons.bedtime, 'Giấc ngủ', '7-9 giờ/đêm'),
           const SizedBox(height: 8),
-          Text(user.bmiAdvice, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontStyle: FontStyle.italic)),
+          Text(user.bmiAdvice,
+              style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic)),
         ],
       ),
     );
@@ -354,8 +423,12 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                Text(value, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -364,16 +437,20 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
     );
   }
 
-  Color _getBmiColor(double bmi) {
-    if (bmi < 16) return const Color(0xFFE53935); // Gầy độ III
-    if (bmi < 17) return const Color(0xFFFF5722); // Gầy độ II
-    if (bmi < 18.5) return AppColors.info; // Gầy độ I
-    if (bmi < 25) return AppColors.success; // Bình thường
-    if (bmi < 30) return AppColors.warning; // Thừa cân
-    if (bmi < 35) return const Color(0xFFFF9800); // Béo phì độ I
-    if (bmi < 40) return AppColors.error; // Béo phì độ II
-    return const Color(0xFF9C27B0); // Béo phì độ III
-  }
+  String _genderLabel(String? gender) => switch (gender) {
+        'male' => 'Nam',
+        'female' => 'Nữ',
+        _ => 'Chưa cung cấp',
+      };
+
+  Color _getBmiColor(String? code) => switch (code) {
+        'UNDERWEIGHT' => AppColors.info,
+        'NORMAL' => AppColors.success,
+        'OVERWEIGHT' => AppColors.warning,
+        'OBESITY_I' => const Color(0xFFFF9800),
+        'OBESITY_II' => AppColors.error,
+        _ => AppColors.textSecondary,
+      };
 
   void _showUpdateWeightDialog(BuildContext context) {
     final controller = TextEditingController();
@@ -400,11 +477,14 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             onPressed: () async {
               final weight = double.tryParse(controller.text);
               if (weight != null && weight > 0) {
-                final userProvider = Provider.of<UserProvider>(context, listen: false);
-                final healthProvider = Provider.of<HealthProvider>(context, listen: false);
+                final userProvider =
+                    Provider.of<UserProvider>(context, listen: false);
+                final healthProvider =
+                    Provider.of<HealthProvider>(context, listen: false);
                 await userProvider.updateWeight(weight);
                 if (userProvider.currentUser != null) {
-                  await healthProvider.loadWeightHistory(userProvider.currentUser!.id);
+                  await healthProvider
+                      .loadWeightHistory(userProvider.currentUser!.id);
                 }
                 if (context.mounted) Navigator.pop(context);
               }
@@ -418,8 +498,9 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
 
   void _showUpdateHeightDialog(BuildContext context) {
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
-    final controller = TextEditingController(text: user?.height.toStringAsFixed(0));
-    
+    final controller =
+        TextEditingController(text: user?.height.toStringAsFixed(0));
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -444,11 +525,14 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             onPressed: () async {
               final height = double.tryParse(controller.text);
               if (height != null && height > 50 && height < 300) {
-                await Provider.of<UserProvider>(context, listen: false).updateHeight(height);
+                await Provider.of<UserProvider>(context, listen: false)
+                    .updateHeight(height);
                 if (context.mounted) Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập chiều cao hợp lệ (50-300 cm)')),
+                  const SnackBar(
+                      content:
+                          Text('Vui lòng nhập chiều cao hợp lệ (50-300 cm)')),
                 );
               }
             },
@@ -462,7 +546,7 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
   void _showUpdateAgeDialog(BuildContext context) {
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     final controller = TextEditingController(text: user?.age.toString());
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -487,11 +571,13 @@ class _HealthStatsScreenState extends State<HealthStatsScreen> {
             onPressed: () async {
               final age = int.tryParse(controller.text);
               if (age != null && age > 0 && age < 150) {
-                await Provider.of<UserProvider>(context, listen: false).updateAge(age);
+                await Provider.of<UserProvider>(context, listen: false)
+                    .updateAge(age);
                 if (context.mounted) Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập tuổi hợp lệ (1-150)')),
+                  const SnackBar(
+                      content: Text('Vui lòng nhập tuổi hợp lệ (1-150)')),
                 );
               }
             },

@@ -330,7 +330,6 @@ class _AuthScreenState extends State<AuthScreen> {
                           email: email,
                           name: name.isNotEmpty ? name : 'User',
                           age: 25,
-                          gender: 'male',
                           height: 170,
                           weight: 68,
                           targetWeight: 65,

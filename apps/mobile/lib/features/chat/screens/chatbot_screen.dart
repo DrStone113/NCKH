@@ -48,12 +48,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           Provider.of<LifestyleProvider>(context, listen: false);
       final healthProvider =
           Provider.of<HealthProvider>(context, listen: false);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
 
       aiChatProvider.setProviders(
         exerciseProvider: exerciseProvider,
         nutritionProvider: nutritionProvider,
         lifestyleProvider: lifestyleProvider,
         healthProvider: healthProvider,
+        userProvider: userProvider,
       );
 
       if (aiChatProvider.messages.isEmpty) {
@@ -1423,6 +1425,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         userContext: {
           'age': user.age,
           'gender': user.gender,
+          'equation_sex': user.equationSex,
+          'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
           'height': user.height,
           'weight': user.weight,
           'activity_level': user.activityLevel,
@@ -1489,7 +1493,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final exercises = exerciseProvider.todayExercises;
     final burnedCal = exerciseProvider.totalCaloriesBurned;
 
-    final buffer = StringBuffer('Hôm nay tình trạng dinh dưỡng & vận động của tôi:\n');
+    final buffer =
+        StringBuffer('Hôm nay tình trạng dinh dưỡng & vận động của tôi:\n');
     if (completedCount > 0) {
       buffer.write(
           '- Đã ăn $completedCount bữa: tổng ${consumedCal.toStringAsFixed(0)} kcal\n');

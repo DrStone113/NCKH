@@ -1,5 +1,18 @@
 # 04. Sổ Tay Sửa Lỗi (Troubleshooting Guide)
 
+## D1: chatbot báo lưu bữa ăn nhưng consumed totals không đổi
+
+- **Nguyên nhân gốc:** `log_meal` tạo `MealModel` với mặc định
+  `isCompleted=false`, trong khi consumed totals chỉ cộng meal completed. Đồng
+  thời `NutritionProvider.addMeal` nuốt lỗi Firestore, khiến caller không biết
+  persistence thất bại.
+- **Cách xử lý:** meal do chatbot ghi nhận là `CONSUMED` được tạo với
+  `isCompleted=true`; document được đọc lại từ server để xác nhận. Nếu ghi/đọc
+  xác nhận thất bại, optimistic state được rollback và write result là `ERROR`,
+  nên chatbot không được phát thông báo “đã lưu”.
+- **Hồi quy:** chạy `development_d1_state_correctness_test.dart`, gồm cả
+  log → read → consumed total và synthetic failed persistence.
+
 ## 🛠️ Lỗi Thường Gặp & Cách Xử Lý
 
 ### 1. `get_active_plan` trả về null hoặc quăng exception

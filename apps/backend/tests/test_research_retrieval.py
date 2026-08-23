@@ -141,8 +141,25 @@ async def test_real_pgvector_retrieval_is_frozen_read_only_and_repeatable() -> N
         expected_version=config.corpus_version,
         expected_hash=config.corpus_hash,
     )
+    assert manifest.corpus_version == "offline-v1-636"
+    assert manifest.corpus_hash == (
+        "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081"
+    )
     assert manifest.inserted_chunk_count == manifest.embedding_count == 636
     assert manifest.dynamic_rows_allowed is False
+    assert manifest.embedding_model == "BAAI/bge-m3"
+    assert manifest.embedding_model_revision == (
+        "5617a9f61b028005a4858fdac845db406aefb181"
+    )
+    assert manifest.embedding_dimension == 1024
+    assert {
+        item.dataset_file: item.sha256 for item in manifest.source_dataset_files
+    } == {
+        "vietnamese_foods.json": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "vietnamese_dishes.json": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "nutrition.json": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "exercises.json": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+    }
 
     provider = PostgresFrozenRagProvider()
     first = await provider.retrieve("Phở bò có bao nhiêu calo?", config)

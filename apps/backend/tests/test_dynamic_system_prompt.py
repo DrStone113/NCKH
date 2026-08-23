@@ -16,38 +16,39 @@ def test_calculate_body_metrics_male_lose_weight():
     # Nam, 25 tuổi, 175cm, 70kg, sedentary, lose_weight
     metrics = _calculate_body_metrics(
         age=25,
-        gender="male",
+        equation_sex="male",
         height_cm=175.0,
         weight_kg=70.0,
         activity_level="sedentary",
         health_goal="lose_weight",
     )
-    assert metrics["bmi"] == 22.9
-    assert metrics["bmi_category"] == "Bình thường (Normal / Healthy)"
-    assert metrics["bmr"] == 1674.0
-    assert metrics["tdee"] in (2008.0, 2009.0)
-    assert metrics["daily_kcal_target"] == max(1200.0, metrics["tdee"] - 500.0)
-    assert metrics["daily_protein_target"] == 126.0  # 1.8 * 70
-    assert metrics["daily_water_liters"] == 2.3  # 70 * 0.033
+    assert metrics["bmi"] == 22.86
+    assert metrics["bmi_category"] == "Bình thường"
+    assert metrics["bmr"] == 1673.75
+    assert metrics["tdee"] == pytest.approx(2008.5)
+    assert metrics["daily_kcal_target"] == pytest.approx(metrics["tdee"] * 0.9)
+    assert metrics["daily_protein_target"] == 105.0
+    assert metrics["daily_water_liters"] == 2.31
 
 
 def test_calculate_body_metrics_female_gain_muscle():
     # Nữ, 22 tuổi, 160cm, 45kg, light, gain_muscle
     metrics = _calculate_body_metrics(
         age=22,
-        gender="female",
+        equation_sex="female",
         height_cm=160.0,
         weight_kg=45.0,
         activity_level="light",
         health_goal="gain_muscle",
     )
-    assert metrics["bmi"] == 17.6
-    assert metrics["bmi_category"] == "Gầy (Underweight)"
+    assert metrics["bmi"] == 17.58
+    assert metrics["bmi_category"] == "Thiếu cân"
     # BMR: 10*45 + 6.25*160 - 5*22 - 161 = 450 + 1000 - 110 - 161 = 1179
     assert metrics["bmr"] == 1179.0
-    assert metrics["tdee"] == round(1179.0 * 1.375, 0)
-    assert metrics["daily_kcal_target"] == metrics["tdee"] + 300.0
-    assert metrics["daily_protein_target"] == 90.0  # 2.0 * 45
+    assert metrics["tdee"] == pytest.approx(1179.0 * 1.375)
+    assert metrics["status"] == "REQUIRES_SPECIALIST_GUIDANCE"
+    assert metrics["daily_kcal_target"] is None
+    assert metrics["daily_protein_target"] is None
 
 
 def test_format_profile_includes_goal_and_today_logs():
@@ -55,6 +56,7 @@ def test_format_profile_includes_goal_and_today_logs():
         "name": "Nguyễn Văn A",
         "age": 28,
         "gender": "male",
+        "equation_sex": "male",
         "height": 172.0,
         "weight": 75.0,
         "target_weight": 68.0,
@@ -68,6 +70,10 @@ def test_format_profile_includes_goal_and_today_logs():
             {"name": "Cơm tấm sườn", "calories": 800, "meal_type": "lunch"},
         ],
         "today_calories_burned": 250,
+        "daily_nutrition_summary": {
+            "policy_version": "nutrition-policy-v1.0.1",
+            "formula_ids": ["DAILY_NUTRITION_SUMMARY_CONSUMED_V1_0_1"],
+        },
         "today_exercises_count": 1,
         "today_exercises": [
             {"name": "Chạy bộ", "duration": 30, "calories_burned": 250}
@@ -82,7 +88,7 @@ def test_format_profile_includes_goal_and_today_logs():
     assert "75.0 kg" in formatted
     assert "Cân nặng mục tiêu: 68.0 kg" in formatted
     assert "BMI: 25.4" in formatted
-    assert "Thừa cân" in formatted
+    assert "Béo phì độ I" in formatted
     assert "Kiêng cữ / Dị ứng thực phẩm: không ăn cay, hạn chế đường" in formatted
 
     assert "=== MỤC TIÊU & NGUYÊN TẮC TƯ VẤN CÁ NHÂN HÓA ===" in formatted
@@ -91,6 +97,8 @@ def test_format_profile_includes_goal_and_today_logs():
 
     assert "=== NHẬT KÝ THỰC TẾ HÔM NAY TRONG ỨNG DỤNG ===" in formatted
     assert "1250 kcal" in formatted
+    assert "nutrition-policy-v1.0.1" in formatted
+    assert "DAILY_NUTRITION_SUMMARY_CONSUMED_V1_0_1" in formatted
     assert "Phở bò tái" in formatted
     assert "Cơm tấm sườn" in formatted
     assert "Chạy bộ" in formatted
@@ -102,6 +110,7 @@ def test_build_system_prompt_integrates_user_profile():
         "name": "Trần Thị B",
         "age": 24,
         "gender": "female",
+        "equation_sex": "female",
         "height": 158.0,
         "weight": 48.0,
         "health_goal": "gain_muscle",
@@ -130,6 +139,7 @@ async def test_orchestrator_injects_user_context_into_prompt_first_turn():
         "name": "Lê Hoàng",
         "age": 30,
         "gender": "male",
+        "equation_sex": "male",
         "height": 180.0,
         "weight": 80.0,
         "health_goal": "lose_weight",

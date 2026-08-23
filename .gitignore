@@ -23,6 +23,8 @@
 **/.packages
 **/.metadata
 **/pubspec.lock
+# Flutter applications should commit their resolved dependency graph.
+!apps/mobile/pubspec.lock
 **/devtools_options.yaml
 
 # Android

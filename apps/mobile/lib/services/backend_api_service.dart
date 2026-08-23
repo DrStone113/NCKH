@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../models/app_state_value.dart';
 
 /// Service để gọi backend API
 /// Hỗ trợ cả local development và production
@@ -206,18 +207,31 @@ class BackendApiService {
   }
 
   Future<Map<String, dynamic>?> getActivePlanDetail(String userId) async {
+    final result = await readActivePlanDetail(userId);
+    return result.status == ActivePlanStatus.activePlanFound
+        ? result.plan
+        : null;
+  }
+
+  Future<ActivePlanReadResult> readActivePlanDetail(String userId) async {
     try {
       final response = await _client
           .get(Uri.parse('$baseUrl/plans/$userId/active/detail'))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(utf8.decode(response.bodyBytes))
+        final plan = json.decode(utf8.decode(response.bodyBytes))
             as Map<String, dynamic>;
+        return ActivePlanReadResult.found(plan);
       }
-      return null;
+      if (response.statusCode == 404) {
+        return const ActivePlanReadResult.none();
+      }
+      return ActivePlanReadResult.error(
+        'HTTP_${response.statusCode}',
+      );
     } catch (e) {
       debugPrint('⚠️ BackendAPI: Get active plan detail failed: $e');
-      return null;
+      return const ActivePlanReadResult.error('ACTIVE_PLAN_READ_ERROR');
     }
   }
 

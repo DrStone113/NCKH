@@ -88,15 +88,16 @@ class MyApp extends StatelessWidget {
         // HealthProvider được thêm vào đây để chatbot đọc/ghi được lịch sử cân
         // nặng. Thiếu nó thì tool `get_weight_history` và `log_weight` không có
         // nguồn dữ liệu nào để làm việc.
-        ChangeNotifierProxyProvider4<ExerciseProvider, NutritionProvider, LifestyleProvider, HealthProvider, AIChatProvider>(
+        ChangeNotifierProxyProvider5<UserProvider, ExerciseProvider, NutritionProvider, LifestyleProvider, HealthProvider, AIChatProvider>(
           create: (_) => AIChatProvider(),
-          update: (_, exercise, nutrition, lifestyle, health, aiChat) {
+          update: (_, user, exercise, nutrition, lifestyle, health, aiChat) {
             final chat = aiChat ?? AIChatProvider();
             chat.setProviders(
               exerciseProvider: exercise,
               nutritionProvider: nutrition,
               lifestyleProvider: lifestyle,
               healthProvider: health,
+              userProvider: user,
             );
             return chat;
           },

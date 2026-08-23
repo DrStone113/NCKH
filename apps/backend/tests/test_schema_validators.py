@@ -43,6 +43,7 @@ def _valid_user_profile_kwargs(**overrides):
         user_id="user-1",
         age=30,
         gender="male",
+        equation_sex="male",
         height_cm=170.0,
         weight_kg=70.0,
         activity_level="moderate",
@@ -143,9 +144,13 @@ class TestUserProfileValidators:
         with pytest.raises(ValidationError):
             UserProfile(**_valid_user_profile_kwargs(height_cm=invalid_height))
 
-    def test_invalid_gender_raises(self):
+    def test_general_gender_is_semantically_separate(self):
+        profile = UserProfile(**_valid_user_profile_kwargs(gender="nonbinary"))
+        assert profile.gender == "nonbinary"
+
+    def test_invalid_equation_sex_raises(self):
         with pytest.raises(ValidationError):
-            UserProfile(**_valid_user_profile_kwargs(gender="other"))
+            UserProfile(**_valid_user_profile_kwargs(equation_sex="other"))
 
     def test_invalid_activity_level_raises(self):
         with pytest.raises(ValidationError):

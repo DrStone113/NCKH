@@ -1,5 +1,16 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS build-env
 
+# The upstream `stable` image is a moving tag. Pin the approved SDK revision
+# before resolving dependencies or compiling the application.
+ARG FLUTTER_VERSION=3.44.8
+ARG FLUTTER_REVISION=058e0af2c2
+RUN git -C /sdks/flutter fetch --depth 1 origin \
+      refs/tags/${FLUTTER_VERSION}:refs/tags/${FLUTTER_VERSION} \
+    && test "$(git -C /sdks/flutter rev-parse refs/tags/${FLUTTER_VERSION})" = \
+      "$(git -C /sdks/flutter rev-parse ${FLUTTER_REVISION})" \
+    && git -C /sdks/flutter checkout --detach ${FLUTTER_REVISION} \
+    && flutter --version
+
 # Enable web
 RUN flutter config --enable-web
 

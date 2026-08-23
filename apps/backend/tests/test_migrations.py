@@ -180,6 +180,17 @@ async def test_chat_message_structured_data_migration_present_and_wellformed():
 
 
 @pytest.mark.asyncio
+async def test_nutrition_policy_plan_provenance_migration_present():
+    sql_path = db_module.MIGRATIONS_DIR / "007_nutrition_policy_v1.sql"
+    assert sql_path.is_file()
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "nutrition_policy_version" in sql
+    assert "nutrition_formula_ids" in sql
+    assert "JSONB" in sql
+    assert "UPDATE plans" not in sql
+
+
+@pytest.mark.asyncio
 async def test_apply_migrations_handles_missing_dir(monkeypatch, tmp_path: Path):
     """Nếu thư mục migrations không tồn tại thì trả về [] thay vì raise."""
     monkeypatch.setattr(db_module, "MIGRATIONS_DIR", tmp_path / "no_such_dir")

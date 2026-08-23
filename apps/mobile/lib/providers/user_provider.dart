@@ -4,14 +4,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../constants/firestore_collections.dart';
+import '../models/app_state_value.dart';
 
 class UserProvider with ChangeNotifier {
   UserModel? _currentUser;
   bool _isInitialized = false;
+  DataStatus _profileStatus = DataStatus.notLoaded;
+  DateTime? _profileReadAt;
 
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
   bool get isInitialized => _isInitialized;
+  DataStatus get profileStatus => _profileStatus;
+  DateTime? get profileReadAt => _profileReadAt;
 
   UserProvider() {
     _restoreSession();
@@ -29,10 +34,13 @@ class UserProvider with ChangeNotifier {
             .get();
         if (doc.exists) {
           _currentUser = UserModel.fromMap(doc.data() as Map<String, dynamic>);
+          _profileStatus = DataStatus.known;
+          _profileReadAt = DateTime.now();
           debugPrint('✅ Session restored: ${_currentUser!.name}');
         }
       }
     } catch (e) {
+      _profileStatus = DataStatus.error;
       debugPrint('⚠️ Session restore failed: $e');
     } finally {
       _isInitialized = true;
@@ -47,7 +55,6 @@ class UserProvider with ChangeNotifier {
       email: 'demo@health.app',
       name: 'Nguyễn Văn A',
       age: 25,
-      gender: 'male',
       height: 170,
       weight: 68,
       targetWeight: 65,
@@ -55,6 +62,8 @@ class UserProvider with ChangeNotifier {
       healthGoal: 'maintain',
       createdAt: DateTime.now(),
     );
+    _profileStatus = DataStatus.notLoaded;
+    _profileReadAt = null;
     notifyListeners();
   }
 
@@ -74,6 +83,8 @@ class UserProvider with ChangeNotifier {
         name: userData.name,
         age: userData.age,
         gender: userData.gender,
+        equationSex: userData.equationSex,
+        nutritionSafetyProfile: userData.nutritionSafetyProfile,
         height: userData.height,
         weight: userData.weight,
         targetWeight: userData.targetWeight,
@@ -164,7 +175,6 @@ class UserProvider with ChangeNotifier {
         email: user.email ?? '',
         name: user.displayName ?? 'User',
         age: 25,
-        gender: 'male',
         height: 170,
         weight: 68,
         targetWeight: 65,
@@ -189,6 +199,8 @@ class UserProvider with ChangeNotifier {
       await FirebaseAuth.instance.signOut();
     } catch (_) {}
     _currentUser = null;
+    _profileStatus = DataStatus.notLoaded;
+    _profileReadAt = null;
     notifyListeners();
   }
 
@@ -234,6 +246,68 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Refresh the profile from its authoritative document before a chatbot read.
+  Future<bool> refreshCurrentUser() async {
+    final user = _currentUser;
+    if (user == null) {
+      _profileStatus = DataStatus.missing;
+      return false;
+    }
+    if (user.id == 'demo') {
+      _profileStatus = DataStatus.notLoaded;
+      _profileReadAt = null;
+      return false;
+    }
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection(FirestoreCollections.users)
+          .doc(user.id)
+          .get(const GetOptions(source: Source.server));
+      final data = doc.data();
+      if (!doc.exists || data == null) {
+        _profileStatus = DataStatus.missing;
+        return false;
+      }
+      _currentUser = UserModel.fromMap(data);
+      _profileStatus = DataStatus.known;
+      _profileReadAt = DateTime.now();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _profileStatus = DataStatus.error;
+      return false;
+    }
+  }
+
+  /// Synchronize profile weight only after a weight-history measurement has
+  /// persisted. This method deliberately does not append another measurement.
+  Future<WriteResult<UserModel>> synchronizeWeightFromMeasurement(
+    double newWeight,
+  ) async {
+    final user = _currentUser;
+    if (user == null || newWeight <= 0) {
+      return const WriteResult.rejected('INVALID_PROFILE_WEIGHT');
+    }
+    final updated = user.copyWith(weight: newWeight);
+    if (user.id == 'demo') {
+      return const WriteResult.rejected(
+          'PROFILE_WEIGHT_PERSISTENCE_UNAVAILABLE');
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection(FirestoreCollections.users)
+          .doc(user.id)
+          .update({'weight': newWeight});
+      _currentUser = updated;
+      _profileStatus = DataStatus.known;
+      _profileReadAt = DateTime.now();
+      notifyListeners();
+      return WriteResult.persisted(updated);
+    } catch (e) {
+      return const WriteResult.error('PROFILE_WEIGHT_SYNC_ERROR');
     }
   }
 

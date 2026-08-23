@@ -91,7 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<HealthProvider>(context, listen: false)
             .loadTodayWaterIntake(userId);
         Provider.of<NutritionProvider>(context, listen: false).loadSavedMeals();
-        Provider.of<ProactiveProvider>(context, listen: false).loadActiveCheckin(userId);
+        Provider.of<ProactiveProvider>(context, listen: false)
+            .loadActiveCheckin(userId);
       }
       // Initialize ChatProvider
       Provider.of<ChatProvider>(context, listen: false).initialize();
@@ -585,30 +586,14 @@ class _DashboardTab extends StatelessWidget {
 
   Widget _buildBmiCard(BuildContext context, dynamic user) {
     final bmiValue = user.bmi;
+    final bmiDisplayValue = user.displayBmi;
     final bmiPercent = ((bmiValue - 10) / 35).clamp(0.0, 1.0);
     final titleSize = ResponsiveUtils.getTitleSize(context);
     final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
 
-    Color bmiColor;
-    if (bmiValue < 16) {
-      bmiColor = const Color(0xFFE53935);
-    } else if (bmiValue < 17) {
-      bmiColor = const Color(0xFFFF5722);
-    } else if (bmiValue < 18.5) {
-      bmiColor = AppColors.info;
-    } else if (bmiValue < 25) {
-      bmiColor = AppColors.success;
-    } else if (bmiValue < 30) {
-      bmiColor = AppColors.warning;
-    } else if (bmiValue < 35) {
-      bmiColor = const Color(0xFFFF9800);
-    } else if (bmiValue < 40) {
-      bmiColor = AppColors.error;
-    } else {
-      bmiColor = const Color(0xFF9C27B0);
-    }
+    final bmiColor = _bmiColorForCode(user.bmiCategoryCode);
 
     return BentoCard(
       padding: EdgeInsets.all(cardPadding),
@@ -646,7 +631,7 @@ class _DashboardTab extends StatelessWidget {
           Row(
             children: [
               AnimatedCounter(
-                value: bmiValue,
+                value: bmiDisplayValue,
                 decimals: 1,
                 style: TextStyle(
                   fontSize: titleSize * 1.5,
@@ -693,11 +678,22 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
+  Color _bmiColorForCode(String? code) => switch (code) {
+        'UNDERWEIGHT' => AppColors.info,
+        'NORMAL' => AppColors.success,
+        'OVERWEIGHT' => AppColors.warning,
+        'OBESITY_I' => const Color(0xFFFF9800),
+        'OBESITY_II' => AppColors.error,
+        _ => AppColors.textSecondary,
+      };
+
   Widget _buildCalorieCard(
       BuildContext context, NutritionProvider nutritionProvider, dynamic user) {
     final target = user.recommendedCalories;
     final consumed = nutritionProvider.consumedCalories;
-    final progress = target > 0 ? (consumed / target).clamp(0.0, 1.5) : 0.0;
+    final progress = target != null && target > 0
+        ? (consumed / target).clamp(0.0, 1.5)
+        : 0.0;
     final bodySize = ResponsiveUtils.getBodySize(context);
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final cardPadding = ResponsiveUtils.getCardPadding(context);
@@ -727,7 +723,9 @@ class _DashboardTab extends StatelessWidget {
                 mobile: 80.0, tablet: 100.0, desktop: 120.0),
             strokeWidth: ResponsiveUtils.responsive(context,
                 mobile: 6.0, tablet: 8.0, desktop: 10.0),
-            color: consumed > target ? AppColors.error : AppColors.calories,
+            color: target != null && consumed > target
+                ? AppColors.error
+                : AppColors.calories,
             backgroundColor: AppColors.surfaceLight,
             child: AnimatedCounter(
               value: consumed,
@@ -737,7 +735,9 @@ class _DashboardTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '/ ${target.toStringAsFixed(0)} kcal',
+            target == null
+                ? 'Chưa có mục tiêu thông thường'
+                : '/ ${user.displayRecommendedCalories.toStringAsFixed(0)} kcal',
             style:
                 TextStyle(fontSize: smallSize, color: AppColors.textSecondary),
           ),
@@ -826,17 +826,23 @@ class _DashboardTab extends StatelessWidget {
             children: [
               Icon(Icons.bolt, color: AppColors.accent, size: iconSize * 0.75),
               const SizedBox(width: 6),
-              Text('TDEE',
+              Text('TDEE ước tính',
                   style: TextStyle(
                       fontSize: smallSize, color: AppColors.textSecondary)),
             ],
           ),
           const SizedBox(height: 8),
-          AnimatedCounter(
-            value: user.tdee,
-            decimals: 0,
-            style: TextStyle(fontSize: titleSize, fontWeight: FontWeight.bold),
-          ),
+          if (user.displayTdee == null)
+            Text('Cần xác nhận',
+                style:
+                    TextStyle(fontSize: smallSize, fontWeight: FontWeight.bold))
+          else
+            AnimatedCounter(
+              value: user.displayTdee!,
+              decimals: 0,
+              style:
+                  TextStyle(fontSize: titleSize, fontWeight: FontWeight.bold),
+            ),
           Text('kcal/ngày',
               style: TextStyle(
                   fontSize: smallSize, color: AppColors.textSecondary)),
@@ -854,7 +860,8 @@ class _DashboardTab extends StatelessWidget {
     final waterProvider = Provider.of<HealthProvider>(context);
     final waterGoal = user.dailyWaterGoal;
     final current = waterProvider.todayWaterIntake;
-    final glassesTarget = (waterGoal * 1000 / 250).round();
+    final glassesTarget =
+        waterGoal == null ? null : (waterGoal * 1000 / 250).round();
     final glassesDone = (current / 250).round();
 
     final isOverLimit = current > 5000;
@@ -904,14 +911,20 @@ class _DashboardTab extends StatelessWidget {
                     ? AppColors.error
                     : (isNearLimit ? AppColors.warning : AppColors.info)),
           ),
-          Text('/ ${waterGoal.toStringAsFixed(1)}L',
+          Text(
+              waterGoal == null
+                  ? 'Mục tiêu dịch không khả dụng'
+                  : '/ ${user.displayDailyWaterGoal.toStringAsFixed(1)}L',
               style: TextStyle(
                   fontSize: smallSize, color: AppColors.textSecondary)),
           const SizedBox(height: 4),
           Text(
-            '$glassesDone / $glassesTarget ly',
+            glassesTarget == null
+                ? '$glassesDone ly'
+                : '$glassesDone / $glassesTarget ly',
             style: TextStyle(
-                fontSize: smallSize, color: AppColors.info.withValues(alpha: 0.7)),
+                fontSize: smallSize,
+                color: AppColors.info.withValues(alpha: 0.7)),
           ),
           if (isOverLimit)
             Padding(
@@ -1156,8 +1169,8 @@ class _DashboardTab extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.info.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: AppColors.info.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         children: [

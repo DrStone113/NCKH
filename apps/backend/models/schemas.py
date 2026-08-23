@@ -3,10 +3,30 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from services.nutrition.calculator import NutritionSafetyProfile, SafetyAnswer
+
+
+class NutritionSafetyProfilePayload(BaseModel):
+    """Self-reported applicability answers; no field is clinically inferred."""
+
+    pregnancy: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+    lactation: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+    eating_disorder_risk_or_history: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+    serious_renal_condition: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+    fluid_restricted_cardiac_condition: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+    clinically_complex_metabolic_condition: SafetyAnswer = SafetyAnswer.NOT_PROVIDED
+
+    def to_canonical(self) -> NutritionSafetyProfile:
+        return NutritionSafetyProfile(**self.model_dump())
+
 
 class UserContext(BaseModel):
     age: int = Field(ge=10, le=120, default=25)
-    gender: Literal["male", "female"] = "male"
+    gender: str | None = None
+    equation_sex: Literal["male", "female"] | None = None
+    nutrition_safety_profile: NutritionSafetyProfilePayload = Field(
+        default_factory=NutritionSafetyProfilePayload
+    )
     height: float = Field(ge=100, le=250, default=170)   # cm
     weight: float = Field(ge=30, le=300, default=70)     # kg
     activity_level: Literal[
@@ -19,8 +39,8 @@ class UserContext(BaseModel):
     today_calories_burned: float | None = None
     today_exercises_count: int | None = None
     # Chi tiết bữa ăn và bài tập hôm nay
-    today_meals: list[dict] = []
-    today_exercises: list[dict] = []
+    today_meals: list[dict] = Field(default_factory=list)
+    today_exercises: list[dict] = Field(default_factory=list)
 
     @field_validator('health_goal', mode='before')
     @classmethod
@@ -78,6 +98,8 @@ class PlanSummary(BaseModel):
     duration_days: int
     daily_kcal_target: float
     daily_protein_target: float | None = None
+    nutrition_policy_version: str = "LEGACY"
+    nutrition_formula_ids: list[str] = Field(default_factory=list)
     status: Literal["active", "completed", "cancelled"]
     created_at: datetime
 
@@ -206,7 +228,11 @@ class UserProfile(BaseModel):
 
     user_id: str
     age: int = Field(ge=10, le=120)
-    gender: GenderLiteral
+    gender: str | None = None
+    equation_sex: GenderLiteral | None = None
+    nutrition_safety_profile: NutritionSafetyProfilePayload = Field(
+        default_factory=NutritionSafetyProfilePayload
+    )
     height_cm: float = Field(ge=100, le=250)
     weight_kg: float = Field(ge=30, le=300)
     activity_level: ActivityLevelLiteral
@@ -276,6 +302,8 @@ class Plan(BaseModel):
     duration_days: int = Field(ge=3, le=120)
     daily_kcal_target: float = Field(gt=0)
     daily_protein_target: float = Field(gt=0)
+    nutrition_policy_version: str = "LEGACY"
+    nutrition_formula_ids: list[str] = Field(default_factory=list)
     status: PlanStatusLiteral
     created_at: datetime
 

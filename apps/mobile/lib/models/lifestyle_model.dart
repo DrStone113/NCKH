@@ -12,6 +12,7 @@ class LifestyleLog {
   final int stressScore; // 1 (Rất thấp) đến 5 (Cực kỳ cao)
   final double waterIntakeMl; // Lượng nước uống (ml)
   final String notes;
+  final Set<String> observedFields;
 
   const LifestyleLog({
     required this.id,
@@ -23,19 +24,26 @@ class LifestyleLog {
     this.stressScore = 2,
     this.waterIntakeMl = 0.0,
     this.notes = '',
+    this.observedFields = const {},
   });
 
+  bool get hasMoodObservation => observedFields.contains('mood');
+  bool get hasSleepObservation => observedFields.contains('sleep');
+  bool get hasStressObservation => observedFields.contains('stress');
+  bool get hasLifestyleWaterObservation => observedFields.contains('water');
+  bool get hasNotesObservation => observedFields.contains('notes');
+
   Map<String, dynamic> toMap() {
-    return {
+    return <String, dynamic>{
       'id': id,
       'userId': userId,
       'date': date.toIso8601String(),
-      'moodScore': moodScore,
-      'moodLabel': moodLabel,
-      'sleepHours': sleepHours,
-      'stressScore': stressScore,
-      'waterIntakeMl': waterIntakeMl,
-      'notes': notes,
+      if (hasMoodObservation) 'moodScore': moodScore,
+      if (hasMoodObservation) 'moodLabel': moodLabel,
+      if (hasSleepObservation) 'sleepHours': sleepHours,
+      if (hasStressObservation) 'stressScore': stressScore,
+      if (hasLifestyleWaterObservation) 'waterIntakeMl': waterIntakeMl,
+      if (hasNotesObservation) 'notes': notes,
     };
   }
 
@@ -50,6 +58,13 @@ class LifestyleLog {
       stressScore: (map['stressScore'] as num? ?? 2).toInt(),
       waterIntakeMl: (map['waterIntakeMl'] as num? ?? 0.0).toDouble(),
       notes: map['notes'] as String? ?? '',
+      observedFields: {
+        if (map.containsKey('moodScore') || map.containsKey('moodLabel')) 'mood',
+        if (map.containsKey('sleepHours')) 'sleep',
+        if (map.containsKey('stressScore')) 'stress',
+        if (map.containsKey('waterIntakeMl')) 'water',
+        if (map.containsKey('notes')) 'notes',
+      },
     );
   }
 
@@ -63,7 +78,14 @@ class LifestyleLog {
     int? stressScore,
     double? waterIntakeMl,
     String? notes,
+    Set<String>? observedFields,
   }) {
+    final fields = Set<String>.from(observedFields ?? this.observedFields);
+    if (moodScore != null || moodLabel != null) fields.add('mood');
+    if (sleepHours != null) fields.add('sleep');
+    if (stressScore != null) fields.add('stress');
+    if (waterIntakeMl != null) fields.add('water');
+    if (notes != null) fields.add('notes');
     return LifestyleLog(
       id: id ?? this.id,
       userId: userId ?? this.userId,
@@ -74,6 +96,7 @@ class LifestyleLog {
       stressScore: stressScore ?? this.stressScore,
       waterIntakeMl: waterIntakeMl ?? this.waterIntakeMl,
       notes: notes ?? this.notes,
+      observedFields: fields,
     );
   }
 }

@@ -21,6 +21,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from services.nutrition.calculator import (
+    CanonicalNutritionInput,
+    CanonicalValue,
+    InputStatus,
+    NutritionSafetyProfile,
+    SafetyAnswer,
+    calculate_canonical_nutrition,
+)
+
 # Việt Nam là UTC+7 quanh năm (không có DST) nên một offset cố định là đủ và
 # tránh phụ thuộc vào tzdata của hệ điều hành (Windows thường thiếu).
 VN_TZ = timezone(timedelta(hours=7))
@@ -34,6 +43,13 @@ _WEEKDAY_VI = [
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
+
+def _first_present(data: dict[str, Any], *keys: str, fallback: Any = None) -> Any:
+    """Return the first present, non-None value; numeric zero remains valid."""
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    return fallback
 
 def _fact_text(fact: Any) -> str:
     return getattr(fact, "fact", str(fact))
@@ -172,78 +188,79 @@ def _format_tool_catalog(tool_catalog: Any) -> str:
 
 def _calculate_body_metrics(
     age: int | None,
-    gender: str | None,
+    equation_sex: str | None,
     height_cm: float | None,
     weight_kg: float | None,
     activity_level: str | None,
     health_goal: str | None,
+    nutrition_safety_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Calculate BMI, BMR, TDEE, recommended calories, and water goal."""
-    metrics: dict[str, Any] = {}
-    if height_cm and weight_kg and height_cm > 0:
-        h_m = height_cm / 100.0
-        bmi = weight_kg / (h_m * h_m)
-        metrics["bmi"] = round(bmi, 1)
+    """Adapt prompt profile fields to the canonical nutrition calculator."""
 
-        # Tiêu chuẩn BMI cho người Việt Nam / Châu Á (IDI & WPRO)
-        if bmi < 18.5:
-            category = "Gầy (Underweight)"
-        elif bmi < 23.0:
-            category = "Bình thường (Normal / Healthy)"
-        elif bmi < 25.0:
-            category = "Tiền thừa cân (Pre-overweight)"
-        elif bmi < 30.0:
-            category = "Thừa cân / Béo phì độ I (Obese I)"
-        else:
-            category = "Béo phì độ II/III (Obese II+)"
-        metrics["bmi_category"] = category
+    def value(raw: Any, name: str) -> CanonicalValue[Any]:
+        if raw is None:
+            return CanonicalValue.unavailable(
+                InputStatus.MISSING, source=f"chat_profile.{name}"
+            )
+        return CanonicalValue.known(raw, source=f"chat_profile.{name}")
 
-    if age and gender and height_cm and weight_kg:
-        g = str(gender).lower()
-        # Công thức Mifflin-St Jeor chuẩn quốc tế
-        if g in ("male", "nam", "m"):
-            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5
-        else:
-            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161
-        metrics["bmr"] = round(bmr, 0)
-
-        multipliers = {
-            "sedentary": 1.2,
-            "it_van_dong": 1.2,
-            "light": 1.375,
-            "nhe": 1.375,
-            "moderate": 1.55,
-            "vua": 1.55,
-            "active": 1.725,
-            "nhieu": 1.725,
-            "very_active": 1.9,
-            "rat_nhieu": 1.9,
+    state = calculate_canonical_nutrition(
+        CanonicalNutritionInput(
+            age=value(age, "age"),
+            equation_sex=value(equation_sex, "equation_sex"),
+            height_cm=value(height_cm, "height_cm"),
+            weight_kg=value(weight_kg, "weight_kg"),
+            activity_level=value(activity_level, "activity_level"),
+            health_goal=value(health_goal, "health_goal"),
+            safety_profile=_canonical_safety_profile(nutrition_safety_profile),
+        )
+    )
+    result = state.to_dict()
+    result["display"] = state.to_display_dict()
+    result.update(
+        {
+            "bmi_category": state.bmi_classification,
+            "bmi_classification_code": state.bmi_classification_code,
+            "bmr": state.estimated_rmr_kcal_per_day,
+            "tdee": state.estimated_tdee_kcal_per_day,
+            "daily_kcal_target": state.calorie_target_kcal_per_day,
+            "daily_protein_target": (
+                state.protein.planning_g_per_day if state.protein else None
+            ),
+            "daily_water_liters": (
+                state.fluid.approximate_fluid_goal_ml_per_day / 1000.0
+                if state.fluid
+                else None
+            ),
         }
-        act = str(activity_level or "sedentary").lower()
-        mult = multipliers.get(act, 1.2)
-        tdee = bmr * mult
-        metrics["tdee"] = round(tdee, 0)
+    )
+    return result
 
-        # Lượng calo và đạm khuyến nghị theo mục tiêu
-        goal = str(health_goal or "maintain").lower()
-        if "lose" in goal or "giam" in goal:
-            # Thâm hụt an toàn 300-500 kcal, không dưới 1200 kcal/ngày
-            target_kcal = max(1200.0, tdee - 500.0)
-            metrics["daily_kcal_target"] = round(target_kcal, 0)
-            metrics["daily_protein_target"] = round(1.8 * weight_kg, 1)  # Giữ cơ khi thâm hụt
-        elif "gain" in goal or "tang" in goal:
-            # Thặng dư lành mạnh 300-500 kcal
-            target_kcal = tdee + 300.0
-            metrics["daily_kcal_target"] = round(target_kcal, 0)
-            metrics["daily_protein_target"] = round(2.0 * weight_kg, 1)  # Tăng cơ tối ưu
-        else:
-            metrics["daily_kcal_target"] = round(tdee, 0)
-            metrics["daily_protein_target"] = round(1.2 * weight_kg, 1)
 
-    if weight_kg and weight_kg > 0:
-        metrics["daily_water_liters"] = round(weight_kg * 0.033, 1)
+def _canonical_safety_profile(raw: dict[str, Any] | None) -> NutritionSafetyProfile:
+    source = raw if isinstance(raw, dict) else {}
 
-    return metrics
+    def answer(name: str) -> SafetyAnswer:
+        value = source.get(name)
+        if value is None:
+            return SafetyAnswer.NOT_PROVIDED
+        try:
+            return SafetyAnswer(str(value))
+        except ValueError:
+            return SafetyAnswer.UNKNOWN
+
+    return NutritionSafetyProfile(
+        pregnancy=answer("pregnancy"),
+        lactation=answer("lactation"),
+        eating_disorder_risk_or_history=answer("eating_disorder_risk_or_history"),
+        serious_renal_condition=answer("serious_renal_condition"),
+        fluid_restricted_cardiac_condition=answer(
+            "fluid_restricted_cardiac_condition"
+        ),
+        clinically_complex_metabolic_condition=answer(
+            "clinically_complex_metabolic_condition"
+        ),
+    )
 
 
 def _format_profile(user_profile: Any) -> str:
@@ -263,29 +280,46 @@ def _format_profile(user_profile: Any) -> str:
     name = data.get("name") or data.get("user_name")
     age = data.get("age")
     gender = data.get("gender")
-    height = data.get("height") or data.get("height_cm")
-    weight = data.get("weight") or data.get("weight_kg")
-    target_weight = data.get("target_weight") or data.get("targetWeight")
+    equation_sex = data.get("equation_sex")
+    nutrition_safety_profile = data.get("nutrition_safety_profile")
+    height = _first_present(data, "height", "height_cm")
+    weight = _first_present(data, "weight", "weight_kg")
+    target_weight = _first_present(data, "target_weight", "targetWeight")
     activity_level = data.get("activity_level") or data.get("activityLevel")
     health_goal = data.get("health_goal") or data.get("healthGoal")
     dietary_restrictions = data.get("dietary_restrictions") or data.get("dietaryRestrictions")
 
     calculated = _calculate_body_metrics(
         age=int(age) if age is not None else None,
-        gender=str(gender) if gender is not None else None,
+        equation_sex=str(equation_sex) if equation_sex is not None else None,
         height_cm=float(height) if height is not None else None,
         weight_kg=float(weight) if weight is not None else None,
         activity_level=str(activity_level) if activity_level is not None else None,
         health_goal=str(health_goal) if health_goal is not None else None,
+        nutrition_safety_profile=(
+            nutrition_safety_profile
+            if isinstance(nutrition_safety_profile, dict)
+            else None
+        ),
     )
 
-    bmi = data.get("bmi") or calculated.get("bmi")
-    bmi_category = data.get("bmi_category") or data.get("bmiCategory") or calculated.get("bmi_category")
-    bmr = data.get("bmr") or calculated.get("bmr")
-    tdee = data.get("tdee") or calculated.get("tdee")
-    daily_kcal_target = data.get("recommended_calories") or data.get("recommendedCalories") or calculated.get("daily_kcal_target")
-    daily_protein_target = data.get("daily_protein_target") or calculated.get("daily_protein_target")
-    water_goal = data.get("daily_water_goal") or data.get("dailyWaterGoal") or calculated.get("daily_water_liters")
+    # Production prompt values are canonical. Incoming pre-calculated scalar
+    # aliases are intentionally ignored so they cannot override policy-v1.
+    display = calculated.get("display")
+    display = display if isinstance(display, dict) else {}
+    bmi = display.get("bmi")
+    bmi_category = calculated.get("bmi_category")
+    bmi_classification_code = calculated.get("bmi_classification_code")
+    bmr = display.get("estimated_rmr_kcal_per_day")
+    tdee = display.get("estimated_tdee_kcal_per_day")
+    daily_kcal_target = display.get("calorie_target_kcal_per_day")
+    daily_protein_target = display.get("protein_planning_g_per_day")
+    display_fluid_ml = display.get("approximate_fluid_goal_ml_per_day")
+    water_goal = (
+        float(display_fluid_ml) / 1000.0
+        if display_fluid_ml is not None
+        else None
+    )
 
     gender_map = {"male": "Nam", "female": "Nữ"}
     gender_vi = gender_map.get(str(gender).lower(), str(gender) if gender else "")
@@ -319,9 +353,9 @@ def _format_profile(user_profile: Any) -> str:
         basic_parts.append(f"Giới tính: {gender_vi}")
     if height:
         basic_parts.append(f"Chiều cao: {height} cm")
-    if weight:
+    if weight is not None:
         basic_parts.append(f"Cân nặng hiện tại: {weight} kg")
-    if target_weight:
+    if target_weight is not None:
         basic_parts.append(f"Cân nặng mục tiêu: {target_weight} kg")
     if basic_parts:
         lines.append("- Thông tin cơ bản: " + " | ".join(basic_parts))
@@ -329,17 +363,31 @@ def _format_profile(user_profile: Any) -> str:
     metrics_parts = []
     if bmi is not None:
         cat_str = f" ({bmi_category})" if bmi_category else ""
-        metrics_parts.append(f"BMI: {bmi}{cat_str}")
+        metrics_parts.append(f"BMI: {float(bmi):.1f}{cat_str}")
     if bmr is not None:
-        metrics_parts.append(f"BMR: {int(bmr)} kcal")
+        metrics_parts.append(f"RMR ước tính: {int(bmr)} kcal/ngày")
     if tdee is not None:
-        metrics_parts.append(f"TDEE: {int(tdee)} kcal/ngày")
+        metrics_parts.append(f"TDEE ước tính: {int(tdee)} kcal/ngày")
     if act_vi:
         metrics_parts.append(f"Mức vận động: {act_vi}")
     if water_goal is not None:
-        metrics_parts.append(f"Nhu cầu nước: ~{water_goal} L/ngày")
+        metrics_parts.append(f"Mục tiêu dịch gần đúng: ~{float(water_goal):.1f} L/ngày (ước tính)")
     if metrics_parts:
         lines.append("- Chỉ số chuyển hóa & thể chất: " + " | ".join(metrics_parts))
+    if equation_sex is None:
+        lines.append(
+            "- Chưa có equation_sex được xác nhận rõ ràng: không tạo RMR/TDEE "
+            "hoặc mục tiêu năng lượng cá nhân hóa cho đến khi người dùng xác nhận."
+        )
+    if isinstance(nutrition_safety_profile, dict):
+        safety_text = ", ".join(
+            f"{key}={value}" for key, value in sorted(nutrition_safety_profile.items())
+        )
+        if safety_text:
+            lines.append(
+                "- Sàng lọc khả năng áp dụng do người dùng tự khai (không phải chẩn đoán): "
+                + safety_text
+            )
 
     if dietary_restrictions:
         if isinstance(dietary_restrictions, list):
@@ -362,13 +410,13 @@ def _format_profile(user_profile: Any) -> str:
     goal_str = str(health_goal or "").lower()
     if "lose" in goal_str:
         lines.append(
-            "- Hướng dẫn giảm mỡ: Tư vấn thực đơn có thâm hụt calo an toàn (300-500 kcal dưới TDEE, "
-            "tuyệt đối không dưới 1200 kcal/ngày). Ưu tiên đạm và rau củ chất xơ để tạo cảm giác no lâu. "
+            "- Hướng dẫn giảm mỡ: dùng đúng mục tiêu năng lượng từ trạng thái canonical; nếu trạng thái yêu cầu "
+            "hướng dẫn chuyên gia thì không đưa mục tiêu calo thông thường. Ưu tiên đạm và rau củ chất xơ. "
             "Gợi ý bài tập kháng lực (giữ cơ) phối hợp cardio (đốt mỡ); nhắc nhở hạn chế đường ngọt và đồ chiên rán."
         )
     elif "gain" in goal_str:
         lines.append(
-            "- Hướng dẫn tăng cơ: Tư vấn chế độ ăn thặng dư năng lượng nhẹ (300-500 kcal trên TDEE). "
+            "- Hướng dẫn tăng cơ: dùng đúng mục tiêu năng lượng và khoảng protein từ trạng thái canonical. "
             "Ưu tiên nguồn đạm nạc (thịt bò, gà, trứng, cá, đậu phụ) và carb phức. Khuyến khích bài tập "
             "kháng lực tăng tải dần (progressive overload) và ngủ đủ 7-8 tiếng để phục hồi cơ bắp."
         )
@@ -378,25 +426,35 @@ def _format_profile(user_profile: Any) -> str:
             "thực phẩm và duy trì lịch tập luyện đều đặn tối thiểu 150 phút/tuần."
         )
 
-    if bmi is not None and isinstance(bmi, (int, float)):
-        if bmi < 18.5:
-            lines.append(
-                "- Lưu ý thể trạng gầy: Không khuyến khích tập cardio quá sức làm sụt cân thêm; "
-                "chú trọng các bữa phụ giàu năng lượng và dinh dưỡng lành mạnh (hạt, chuối, sữa)."
-            )
-        elif bmi >= 25.0:
-            lines.append(
-                "- Lưu ý thể trạng thừa cân: Ưu tiên các bài tập an toàn cho khớp gối (đi bộ nhanh, đạp xe, bơi lội, máy elip), "
-                "tránh nhảy cao tiếp đất mạnh khi mới bắt đầu."
-            )
+    if bmi_classification_code == "UNDERWEIGHT":
+        lines.append(
+            "- Phân loại BMI canonical cho biết thể trạng thiếu cân: chỉ cung cấp "
+            "ước tính thông tin; không đưa mục tiêu calo hoặc đa lượng thông thường "
+            "và khuyến nghị trao đổi với chuyên gia. Đây không phải chẩn đoán."
+        )
+    elif bmi_classification_code in {"OBESITY_I", "OBESITY_II"}:
+        lines.append(
+            "- Phân loại BMI canonical ở nhóm béo phì sàng lọc: ưu tiên vận động "
+            "an toàn cho khớp và nhắc rõ đây không phải chẩn đoán."
+        )
 
     # Today's Live App Data
+    state_manifest = data.get("state_manifest")
+    stale_fields: list[str] = []
+    if isinstance(state_manifest, dict):
+        stale_fields = [
+            str(field_name)
+            for field_name, envelope in state_manifest.items()
+            if isinstance(envelope, dict) and envelope.get("status") == "STALE"
+        ]
+    today_snapshot_is_stale = any(field.startswith("today.") for field in stale_fields)
     today_consumed = data.get("today_calories_consumed")
     today_meals_count = data.get("today_meals_count")
     today_meals = data.get("today_meals") or []
     today_burned = data.get("today_calories_burned")
     today_exercises_count = data.get("today_exercises_count")
     today_exercises = data.get("today_exercises") or []
+    daily_nutrition_summary = data.get("daily_nutrition_summary")
 
     has_today_data = any(
         x is not None for x in [today_consumed, today_meals_count, today_burned, today_exercises_count]
@@ -404,15 +462,36 @@ def _format_profile(user_profile: Any) -> str:
 
     if has_today_data:
         lines.append("")
-        lines.append("=== NHẬT KÝ THỰC TẾ HÔM NAY TRONG ỨNG DỤNG ===")
-        consumed_val = float(today_consumed or 0)
-        target_val = float(daily_kcal_target or tdee or 2000)
-        remaining_val = max(0.0, target_val - consumed_val)
-
         lines.append(
-            f"- Thực tế đã ăn: {int(consumed_val)} kcal / Mục tiêu {int(target_val)} kcal "
-            f"(Còn lại được ăn: ~{int(remaining_val)} kcal)"
+            "=== SNAPSHOT GỬI ĐẦU LƯỢT (STALE — GỌI TOOL ĐỂ ĐỌC HIỆN TẠI) ==="
+            if today_snapshot_is_stale
+            else "=== NHẬT KÝ THỰC TẾ HÔM NAY TRONG ỨNG DỤNG ==="
         )
+        if today_snapshot_is_stale:
+            lines.append(
+                "- Trạng thái freshness: STALE. Không được gọi snapshot này là dữ liệu mới; "
+                "khi câu trả lời phụ thuộc số liệu hiện tại, phải gọi get_today_meals/get_today_exercises."
+            )
+        if isinstance(daily_nutrition_summary, dict):
+            summary_policy = daily_nutrition_summary.get("policy_version")
+            summary_formula_ids = daily_nutrition_summary.get("formula_ids")
+            lines.append(
+                "- Provenance tá»•ng káº¿t dinh dÆ°á»¡ng: "
+                f"policy_version={summary_policy}; formula_ids={summary_formula_ids}."
+            )
+        consumed_val = float(today_consumed if today_consumed is not None else 0)
+        target_raw = daily_kcal_target
+        if target_raw is not None:
+            target_val = float(target_raw)
+            remaining_val = target_val - consumed_val
+            lines.append(
+                f"- Thực tế đã ăn: {int(consumed_val)} kcal / Mục tiêu {int(target_val)} kcal "
+                f"(Còn lại: ~{int(remaining_val)} kcal; số âm nghĩa là đã vượt mục tiêu)"
+            )
+        else:
+            lines.append(
+                f"- Thực tế đã ăn: {int(consumed_val)} kcal; chưa có mục tiêu năng lượng canonical khả dụng."
+            )
         if today_meals:
             completed_meals = [m for m in today_meals if m.get("is_completed")]
             pending_meals = [m for m in today_meals if not m.get("is_completed")]
@@ -448,7 +527,7 @@ def _format_profile(user_profile: Any) -> str:
         else:
             lines.append("- Bữa ăn hôm nay: Chưa ghi nhận bữa ăn nào")
 
-        burned_val = float(today_burned or 0)
+        burned_val = float(today_burned if today_burned is not None else 0)
         lines.append(f"- Tiêu hao vận động hôm nay: {int(burned_val)} kcal")
         if today_exercises:
             ex_names = []

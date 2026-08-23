@@ -144,8 +144,9 @@ class AccountSettingsScreen extends StatelessWidget {
                         icon: Icons.flag_outlined,
                         color: const Color(0xFFF97316),
                         title: 'Mục tiêu sức khỏe',
-                        subtitle:
-                            '${user.healthGoalText} • ${user.recommendedCalories.toStringAsFixed(0)} kcal/ngày',
+                        subtitle: user.displayRecommendedCalories == null
+                            ? '${user.healthGoalText} • Cần hướng dẫn chuyên gia'
+                            : '${user.healthGoalText} • ${user.displayRecommendedCalories!.toStringAsFixed(0)} kcal/ngày',
                         onTap: () => _open(
                           context,
                           const GoalSettingsScreen(),
@@ -341,14 +342,16 @@ class _ProfileHeader extends StatelessWidget {
               Expanded(
                 child: _HeaderMetric(
                   label: 'BMI',
-                  value: user.bmi.toStringAsFixed(1),
+                  value: user.displayBmi.toStringAsFixed(1),
                 ),
               ),
               const _HeaderDivider(),
               Expanded(
                 child: _HeaderMetric(
-                  label: 'TDEE',
-                  value: '${user.tdee.toStringAsFixed(0)} kcal',
+                  label: 'TDEE ước tính',
+                  value: user.displayTdee == null
+                      ? 'Cần xác nhận đầu vào RMR'
+                      : '${user.displayTdee!.toStringAsFixed(0)} kcal',
                 ),
               ),
               const _HeaderDivider(),

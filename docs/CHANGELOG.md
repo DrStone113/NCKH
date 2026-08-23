@@ -287,3 +287,14 @@
 - **Added:** Backend `orchestrator.py` now parses `{"type": "structured", ...}` JSON from LLM's text stream and routes it via WebSocket.
 - **Fixed (AI Hallucination):** The AI fabricated an excuse ("hệ thống hồ sơ đang tạm thời không phản hồi") to ask the user for profile data manually when asked to create a plan. The system prompt was updated to aggressively enforce calling `get_user_profile` for ALL tasks and strictly forbade it from making excuses or asking the user for profile data.
 - **Lessons Learned (Anti-Repetition):** Always check if the application is running via Docker or natively. When running via Docker, verify if the files being edited are mounted via volumes or baked into the image. If baked in, a full `docker-compose up --build` is required. Also, for LLMs with strong chat instincts (like DeepSeek), ensure stream parsing handles late-arriving tool calls.
+# Development D1 — State correctness and observability (2026-08-23)
+
+- Added production-gated development `ContextTrace` logging.
+- Added typed state freshness/conflict and write-result semantics.
+- Fixed consumed meal logging and persistence verification.
+- Added authoritative chatbot reads and explicit stale snapshot metadata.
+- Removed synthesized lifestyle observations.
+- Added canonical weight precedence/conflict reporting and post-log profile sync.
+- Separated water target, canonical consumed water, and legacy lifestyle water.
+- Split active-plan not-found from read failures.
+- Added synthetic D1 regression scenarios and D2 calculator dependency map.

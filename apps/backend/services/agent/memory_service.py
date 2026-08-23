@@ -119,6 +119,8 @@ class Context:
     pinned_facts: list[Fact] = field(default_factory=list)
     rag_chunks: list[KnowledgeChunk] = field(default_factory=list)
     relevant_history: list[ChatTurn] = field(default_factory=list)
+    rag_requested: bool = False
+    rag_result_status: str = "NOT_REQUESTED"
 
 
 # Categories accepted on ``proposeFact``. Matches the design.md §6 description
@@ -821,6 +823,8 @@ class MemoryService:
 
         rag_chunks: list[KnowledgeChunk] = []
         relevant_history: list[ChatTurn] = []
+        rag_requested = False
+        rag_result_status = "NOT_REQUESTED"
 
         # Skip FTS / RAG when the message is blank or a simple greeting/chitchat
         if user_text.strip() and not is_simple_greeting_or_chitchat(user_text):
@@ -835,6 +839,7 @@ class MemoryService:
             ]
 
             if self._rag_service is not None:
+                rag_requested = True
                 # Query expansion for reference/pronouns to improve pgvector search accuracy
                 rag_query = user_text
                 if history:
@@ -854,15 +859,20 @@ class MemoryService:
                         self.queryRag(rag_query, top_k=settings.rag_top_k),
                         timeout=1.0,
                     )
+                    rag_result_status = "RESULTS_FOUND" if rag_chunks else "NO_RESULTS"
                 except asyncio.TimeoutError:
                     logger.warning("queryRag timed out (>1.0s) for session=%s, skipping RAG context", session_id)
                     rag_chunks = []
+                    rag_result_status = "TIMEOUT"
                 except ValueError as exc:
                     logger.warning(
                         "queryRag rejected rag_query for session=%s: %s",
                         session_id,
                         exc,
                     )
+                    rag_result_status = "ERROR"
+            else:
+                rag_result_status = "NOT_CONFIGURED"
 
         return Context(
             history=history,
@@ -870,6 +880,8 @@ class MemoryService:
             pinned_facts=pinned_facts,
             rag_chunks=rag_chunks,
             relevant_history=relevant_history,
+            rag_requested=rag_requested,
+            rag_result_status=rag_result_status,
         )
 
     async def _load_recent_turns(

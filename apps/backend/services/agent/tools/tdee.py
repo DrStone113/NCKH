@@ -1,89 +1,71 @@
-"""``calculate_tdee`` server-side tool.
+"""Canonical nutrition calculation exposed as the ``calculate_tdee`` tool.
 
-Computes BMR (Mifflin-St Jeor), TDEE (BMR × activity factor) and a goal-adjusted
-``daily_kcal`` for a :class:`UserProfile`.
-
-References
-----------
-- ``backend/.kiro/specs/chatbot-redesign/design.md`` §4.6 (Server-side tools),
-  §5 (Tool catalog), §6.1 (UserProfile constraints).
-- Requirements 4.7, 3.12 in
-  ``backend/.kiro/specs/chatbot-redesign/requirements.md``.
-
-Contract
---------
-``calculate_tdee(profile)`` accepts either an already-validated
-:class:`UserProfile` instance or a plain mapping (the LLM dispatches tool
-arguments as JSON objects, which arrive here as ``dict``). Anything that does
-not conform to §6.1 — missing required fields, values out of range, or an
-unsupported enum literal for ``gender`` / ``activity_level`` / ``health_goal``
-— results in ``ValueError("INVALID_PROFILE")``.
-
-The tool is idempotent: same profile → same result. It is registered with
-``side="server"`` and ``idempotent=True``.
-
-Note
-----
-This module only *defines* :data:`TOOL_DESCRIPTOR`. Registration into the
-shared :class:`ToolRegistry` happens centrally in task 12.1
-(``register_server_tools``).
+The historical tool name is retained for API compatibility. All production
+nutrition values are delegated to ``nutrition-policy-v1.0.1``; research adapters
+use their separately frozen legacy implementation.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 from pydantic import ValidationError
 
 from models.schemas import UserProfile
 from services.agent.tool_registry import ToolDescriptor
+from services.nutrition.calculator import (
+    CanonicalNutritionInput,
+    CanonicalValue,
+    InputStatus,
+    calculate_canonical_nutrition,
+)
+from services.nutrition.registry import POLICY
 
 
-# ---------------------------------------------------------------------------
-# Constants — design.md §4.6 / requirement 4.7
-# ---------------------------------------------------------------------------
-
-#: Activity-level multipliers applied to BMR to produce TDEE.
-ACTIVITY_MULTIPLIERS: dict[str, float] = {
-    "sedentary": 1.2,
-    "light": 1.375,
-    "moderate": 1.55,
-    "active": 1.725,
-    "very_active": 1.9,
-}
-
-#: Health-goal adjustments applied to TDEE to produce ``daily_kcal``.
-GOAL_ADJUSTMENTS: dict[str, float] = {
-    "lose_weight": -500.0,
-    "maintain": 0.0,
-    "gain_muscle": 300.0,
-}
+ACTIVITY_MULTIPLIERS: Mapping[str, float] = MappingProxyType(
+    {key: float(value) for key, value in POLICY["activity"]["factors"].items()}
+)
+HEALTH_GOALS = frozenset({"lose_weight", "maintain", "gain_muscle"})
 
 
-# ---------------------------------------------------------------------------
-# JSON Schema — must mirror UserProfile (design.md §6.1)
-# ---------------------------------------------------------------------------
-
-# Hand-written JSON Schema (rather than ``UserProfile.model_json_schema()``)
-# so the wire format stays stable and small for the LLM. The constraints here
-# MUST stay in sync with ``UserProfile``.
 _USER_PROFILE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "user_id": {"type": "string", "minLength": 1},
         "age": {"type": "integer", "minimum": 10, "maximum": 120},
-        "gender": {"type": "string", "enum": ["male", "female"]},
+        "gender": {"type": ["string", "null"]},
+        "equation_sex": {
+            "type": ["string", "null"],
+            "enum": ["male", "female", None],
+            "description": "Explicit Mifflin input; never inferred from gender.",
+        },
+        "nutrition_safety_profile": {
+            "type": "object",
+            "properties": {
+                field: {
+                    "type": "string",
+                    "enum": ["YES", "NO", "UNKNOWN", "NOT_PROVIDED"],
+                }
+                for field in (
+                    "pregnancy",
+                    "lactation",
+                    "eating_disorder_risk_or_history",
+                    "serious_renal_condition",
+                    "fluid_restricted_cardiac_condition",
+                    "clinically_complex_metabolic_condition",
+                )
+            },
+            "additionalProperties": False,
+        },
         "height_cm": {"type": "number", "minimum": 100, "maximum": 250},
         "weight_kg": {"type": "number", "minimum": 30, "maximum": 300},
         "activity_level": {
             "type": "string",
             "enum": list(ACTIVITY_MULTIPLIERS.keys()),
         },
-        "health_goal": {
-            "type": "string",
-            "enum": list(GOAL_ADJUSTMENTS.keys()),
-        },
+        "health_goal": {"type": "string", "enum": sorted(HEALTH_GOALS)},
         "dietary_restrictions": {
             "type": "array",
             "items": {"type": "string"},
@@ -93,7 +75,6 @@ _USER_PROFILE_SCHEMA: dict[str, Any] = {
     "required": [
         "user_id",
         "age",
-        "gender",
         "height_cm",
         "weight_kg",
         "activity_level",
@@ -103,90 +84,80 @@ _USER_PROFILE_SCHEMA: dict[str, Any] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Implementation
-# ---------------------------------------------------------------------------
-
-
-def _mifflin_st_jeor_bmr(profile: UserProfile) -> float:
-    """Return BMR in kcal/day per the Mifflin-St Jeor equation.
-
-    Male:   ``10*kg + 6.25*cm − 5*age + 5``
-    Female: ``10*kg + 6.25*cm − 5*age − 161``
-    """
-    base = 10.0 * profile.weight_kg + 6.25 * profile.height_cm - 5.0 * profile.age
-    if profile.gender == "male":
-        return base + 5.0
-    # ``UserProfile.gender`` is constrained to {"male", "female"} by the
-    # Pydantic Literal, so the only remaining branch is "female".
-    return base - 161.0
-
-
 def _coerce_to_profile(profile: UserProfile | Mapping[str, Any]) -> UserProfile:
-    """Normalize ``profile`` to a validated :class:`UserProfile`.
-
-    Anything that fails Pydantic validation (missing required field, out of
-    range, wrong type, unknown enum literal) is converted into
-    ``ValueError("INVALID_PROFILE")`` so callers see a single, stable error
-    code regardless of the underlying validator detail.
-    """
     if isinstance(profile, UserProfile):
         return profile
     if not isinstance(profile, Mapping):
         raise ValueError("INVALID_PROFILE")
     try:
         return UserProfile.model_validate(profile)
-    except ValidationError as exc:  # pragma: no cover - exercised in tests
+    except ValidationError as exc:
         raise ValueError("INVALID_PROFILE") from exc
 
 
-def calculate_tdee(profile: UserProfile | Mapping[str, Any]) -> dict[str, float]:
-    """Compute ``{bmr, tdee, daily_kcal}`` for ``profile``.
+def calculate_tdee(profile: UserProfile | Mapping[str, Any]) -> dict[str, Any]:
+    """Return canonical nutrition state plus legacy response aliases.
 
-    Parameters
-    ----------
-    profile:
-        Either a validated :class:`UserProfile` or a raw mapping that can be
-        validated as one (the dispatcher passes ``call.arguments`` as a
-        ``dict``).
-
-    Returns
-    -------
-    dict
-        ``{"bmr": float, "tdee": float, "daily_kcal": float}``.
-
-    Raises
-    ------
-    ValueError
-        With message ``"INVALID_PROFILE"`` whenever any §6.1 constraint is
-        violated.
+    ``bmr``, ``tdee`` and ``daily_kcal`` remain as aliases for existing API
+    consumers. They are outputs of the canonical calculator, never parallel
+    formula implementations. Unsupported or safety-gated targets are ``None``.
     """
     validated = _coerce_to_profile(profile)
-
-    # The Pydantic ``Literal`` types already constrain these enums, but we
-    # double-check here so the contract ("INVALID_PROFILE" on any out-of-range
-    # input") is enforced even if a future schema change relaxes them.
     if validated.activity_level not in ACTIVITY_MULTIPLIERS:
         raise ValueError("INVALID_PROFILE")
-    if validated.health_goal not in GOAL_ADJUSTMENTS:
+    if validated.health_goal not in HEALTH_GOALS:
         raise ValueError("INVALID_PROFILE")
 
-    bmr = _mifflin_st_jeor_bmr(validated)
-    tdee = bmr * ACTIVITY_MULTIPLIERS[validated.activity_level]
-    daily_kcal = tdee + GOAL_ADJUSTMENTS[validated.health_goal]
+    state = calculate_canonical_nutrition(
+        CanonicalNutritionInput(
+            age=CanonicalValue.known(validated.age, source="user_profile"),
+            equation_sex=(
+                CanonicalValue.known(
+                    validated.equation_sex,
+                    source="user_profile.equation_sex",
+                )
+                if validated.equation_sex is not None
+                else CanonicalValue.unavailable(
+                    InputStatus.MISSING,
+                    source="user_profile.equation_sex",
+                )
+            ),
+            height_cm=CanonicalValue.known(
+                validated.height_cm, source="user_profile"
+            ),
+            weight_kg=CanonicalValue.known(
+                validated.weight_kg, source="user_profile"
+            ),
+            activity_level=CanonicalValue.known(
+                validated.activity_level, source="user_profile"
+            ),
+            health_goal=CanonicalValue.known(
+                validated.health_goal, source="user_profile"
+            ),
+            safety_profile=validated.nutrition_safety_profile.to_canonical(),
+        )
+    )
+    result = state.to_dict()
+    result.update(
+        {
+            "bmr": result["estimated_rmr_kcal_per_day"],
+            "tdee": result["estimated_tdee_kcal_per_day"],
+            "daily_kcal": result["calorie_target_kcal_per_day"],
+            "daily_protein": (
+                result["protein"]["planning_g_per_day"]
+                if isinstance(result.get("protein"), dict)
+                else None
+            ),
+        }
+    )
+    return result
 
-    return {"bmr": bmr, "tdee": tdee, "daily_kcal": daily_kcal}
-
-
-# ---------------------------------------------------------------------------
-# Descriptor — consumed by ``register_server_tools`` (task 12.1)
-# ---------------------------------------------------------------------------
 
 TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     name="calculate_tdee",
     description=(
-        "Tính BMR (Mifflin-St Jeor), TDEE (BMR × activity factor) và "
-        "daily_kcal đã điều chỉnh theo health_goal cho một UserProfile."
+        "Tính trạng thái dinh dưỡng chuẩn theo nutrition-policy-v1.0.1, gồm BMI, "
+        "RMR ước tính, TDEE ước tính, mục tiêu năng lượng và dải đa lượng."
     ),
     parameters_schema=_USER_PROFILE_SCHEMA,
     side="server",
@@ -197,7 +168,7 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
 
 __all__ = [
     "ACTIVITY_MULTIPLIERS",
-    "GOAL_ADJUSTMENTS",
+    "HEALTH_GOALS",
     "TOOL_DESCRIPTOR",
     "calculate_tdee",
 ]

@@ -9,6 +9,9 @@ from typing import Any
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
 from services.experiment.config import ExperimentConfig
 from services.experiment.errors import ExperimentError, safe_error_detail
+from services.experiment.legacy_nutrition import (
+    calculate_tdee_research_legacy_v1,
+)
 
 
 CALCULATE_TDEE_SCHEMA: dict[str, Any] = {
@@ -48,24 +51,15 @@ def _calculate_tdee_for_research(
     activity_level: str,
     goal: str,
 ) -> dict[str, float]:
-    """Adapt research profile names to the existing pure TDEE function."""
+    """Execute the immutable pre-D2.1 research nutrition policy."""
 
-    # Keep this import inside the D-only execution path. Importing a submodule
-    # of ``services.agent.tools`` initializes that production package, which A,
-    # B, and C must not need merely to assemble their tool-free contexts.
-    from services.agent.tools.tdee import calculate_tdee
-
-    return calculate_tdee(
-        {
-            "user_id": "research-profile",
-            "age": age,
-            "gender": sex,
-            "height_cm": height_cm,
-            "weight_kg": weight_kg,
-            "activity_level": activity_level,
-            "health_goal": goal,
-            "dietary_restrictions": [],
-        }
+    return calculate_tdee_research_legacy_v1(
+        age=age,
+        sex=sex,
+        height_cm=height_cm,
+        weight_kg=weight_kg,
+        activity_level=activity_level,
+        goal=goal,
     )
 
 

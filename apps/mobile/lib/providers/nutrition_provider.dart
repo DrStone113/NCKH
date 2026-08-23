@@ -6,20 +6,33 @@ import '../models/meal_model.dart';
 import '../constants/firestore_collections.dart';
 import '../services/nutrition_cache_service.dart';
 import '../services/backend_api_service.dart';
+import '../models/app_state_value.dart';
+import '../models/canonical_nutrition.dart';
+import '../services/meal_diary_store.dart';
 
 class NutritionProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
   final NutritionCacheService _cacheService = NutritionCacheService();
+  final MealDiaryStore _mealStore;
+
+  NutritionProvider({MealDiaryStore? mealStore})
+      : _mealStore = mealStore ?? FirestoreMealDiaryStore();
 
   List<MealModel> _todayMeals = [];
   List<MealModel> _allMeals = [];
   DateTime _selectedDate = DateTime.now();
   bool _allMealsLoaded = false;
   bool _isLoading = false;
+  DataStatus _todayMealsStatus = DataStatus.notLoaded;
+  DateTime? _todayMealsObservedAt;
+  ActivePlanStatus _activePlanReadStatus = ActivePlanStatus.readError;
 
   List<MealModel> get todayMeals => _todayMeals;
   DateTime get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
+  DataStatus get todayMealsStatus => _todayMealsStatus;
+  DateTime? get todayMealsObservedAt => _todayMealsObservedAt;
+  ActivePlanStatus get activePlanReadStatus => _activePlanReadStatus;
   bool get isToday {
     final now = DateTime.now();
     return _selectedDate.year == now.year &&
@@ -65,6 +78,35 @@ class NutritionProvider with ChangeNotifier {
       _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.carbs);
   double get consumedFat =>
       _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.fat);
+
+  DailyNutritionSummary canonicalDailySummary(
+      CanonicalNutritionState canonical) {
+    final inputStatus = switch (_todayMealsStatus) {
+      DataStatus.known => NutritionInputStatus.known,
+      DataStatus.missing => NutritionInputStatus.missing,
+      DataStatus.notLoaded => NutritionInputStatus.notLoaded,
+      DataStatus.stale => NutritionInputStatus.stale,
+      DataStatus.error => NutritionInputStatus.error,
+      DataStatus.conflict => NutritionInputStatus.conflict,
+    };
+    final meals = _todayMeals
+        .map((meal) => ConsumedMealNutrition(
+              energyKcal: meal.calories,
+              proteinGrams: meal.protein,
+              carbohydrateGrams: meal.carbs,
+              fatGrams: meal.fat,
+              recordStatus: meal.isCompleted ? 'CONSUMED' : 'PLANNED',
+            ))
+        .toList(growable: false);
+    return summarizeDailyNutrition(
+      CanonicalNutritionValue<List<ConsumedMealNutrition>>(
+        value: inputStatus == NutritionInputStatus.known ? meals : null,
+        source: 'nutrition_provider.today_meals',
+        status: inputStatus,
+      ),
+      canonical,
+    );
+  }
 
   /// Tổng calo & macro dự kiến trong kế hoạch / thực đơn cả ngày (bất kể đã ăn hay chưa)
   double get plannedCalories =>
@@ -177,47 +219,77 @@ class NutritionProvider with ChangeNotifier {
     return result;
   }
 
-  Future<void> addMeal(MealModel meal, {bool replacePendingSlot = true}) async {
+  Future<WriteResult<MealModel>> addMeal(
+    MealModel meal, {
+    bool replacePendingSlot = true,
+  }) async {
     final normType = MealTypeUtils.normalize(meal.mealType);
+    final List<MealModel> pendingToRemove = [];
     if (replacePendingSlot && normType != 'phu') {
       final start = DateTime(meal.date.year, meal.date.month, meal.date.day);
       final end = start.add(const Duration(days: 1));
-      final pendingToRemove = _allMeals.where((m) {
+      pendingToRemove.addAll(_allMeals.where((m) {
         final isSameDate = !m.date.isBefore(start) && m.date.isBefore(end);
         final isSameType = MealTypeUtils.normalize(m.mealType) == normType;
         return isSameDate && isSameType && !m.isCompleted && m.id != meal.id;
-      }).toList();
+      }));
 
       for (final old in pendingToRemove) {
         _allMeals.removeWhere((m) => m.id == old.id);
         _todayMeals.removeWhere((m) => m.id == old.id);
-        _deletedPlanItemIds.add(old.id);
         _cacheService.removeMealFromCache(old.userId, old.date, old.id);
-        _saveDeletedPlanItemIds(old.userId);
-        try {
-          _firestore
-              .collection(FirestoreCollections.mealDiary)
-              .doc(old.id)
-              .delete()
-              .catchError((_) {});
-        } catch (_) {}
       }
     }
 
-    // Optimistic update - add to cache immediately
+    final previousAtSameId = _allMeals.where((m) => m.id == meal.id).toList();
+    _allMeals.removeWhere((m) => m.id == meal.id);
     _allMeals.add(meal);
     _filterByDate(_selectedDate);
     _cacheService.addMealToCache(meal.userId, meal.date, meal);
 
-    // Save to Firestore in background
     try {
-      await _firestore
-          .collection(FirestoreCollections.mealDiary)
-          .doc(meal.id)
-          .set(meal.toMap());
+      await _mealStore.save(meal);
+      final persisted = await _mealStore.read(meal.id);
+      if (persisted == null ||
+          persisted.userId != meal.userId ||
+          persisted.name != meal.name ||
+          persisted.mealType != meal.mealType ||
+          persisted.date.toUtc() != meal.date.toUtc() ||
+          persisted.items.length != meal.items.length ||
+          (persisted.calories - meal.calories).abs() > 0.01 ||
+          persisted.isCompleted != meal.isCompleted) {
+        throw StateError('MEAL_PERSISTENCE_VERIFICATION_FAILED');
+      }
+      for (final old in pendingToRemove) {
+        await _mealStore.delete(old.id);
+      }
+      for (final old in pendingToRemove) {
+        _deletedPlanItemIds.add(old.id);
+        await _saveDeletedPlanItemIds(old.userId);
+      }
+      _todayMealsStatus = DataStatus.known;
+      _todayMealsObservedAt = DateTime.now();
       debugPrint('✅ Meal saved to Firestore: ${meal.id}');
+      return WriteResult.persisted(persisted);
     } catch (e) {
-      debugPrint('⚠️ Meal saved locally/offline: $e');
+      try {
+        await _mealStore.delete(meal.id);
+      } catch (_) {}
+      _allMeals.removeWhere((m) => m.id == meal.id);
+      _allMeals.addAll(previousAtSameId);
+      _allMeals.addAll(pendingToRemove);
+      _filterByDate(_selectedDate);
+      _cacheService.removeMealFromCache(meal.userId, meal.date, meal.id);
+      for (final previous in [...previousAtSameId, ...pendingToRemove]) {
+        _cacheService.addMealToCache(
+          previous.userId,
+          previous.date,
+          previous,
+        );
+      }
+      _todayMealsStatus = DataStatus.error;
+      debugPrint('❌ Meal persistence failed: $e');
+      return const WriteResult.error('MEAL_PERSISTENCE_ERROR');
     }
   }
 
@@ -233,8 +305,12 @@ class NutritionProvider with ChangeNotifier {
   Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
     try {
       await _loadDeletedPlanItemIds(userId);
-      final detail = await BackendApiService().getActivePlanDetail(userId);
-      if (detail == null) return;
+      final read = await BackendApiService().readActivePlanDetail(userId);
+      _activePlanReadStatus = read.status;
+      final detail = read.plan;
+      if (read.status != ActivePlanStatus.activePlanFound || detail == null) {
+        return;
+      }
       final items = detail['items'] as List<dynamic>? ?? [];
       final dateStr =
           '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -326,6 +402,7 @@ class NutritionProvider with ChangeNotifier {
         }
       }
     } catch (e) {
+      _activePlanReadStatus = ActivePlanStatus.readError;
       debugPrint('⚠️ Sync meals from backend plan error: $e');
     }
   }
@@ -335,14 +412,12 @@ class NutritionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final snapshot = await _firestore
-          .collection(FirestoreCollections.mealDiary)
-          .where('userId', isEqualTo: userId)
-          .get();
-      _allMeals =
-          snapshot.docs.map((doc) => MealModel.fromMap(doc.data())).toList();
+      _allMeals = await _mealStore.readForUser(userId);
+      _todayMealsStatus = DataStatus.known;
+      _todayMealsObservedAt = DateTime.now();
     } catch (e) {
       debugPrint('⚠️ Firestore load error (offline/web): $e');
+      _todayMealsStatus = DataStatus.error;
     }
 
     await _syncMealsFromBackendPlan(userId, DateTime.now());
@@ -351,6 +426,36 @@ class NutritionProvider with ChangeNotifier {
     _cacheService.cacheMeals(userId, DateTime.now(), _todayMeals);
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Force a server-backed read for chatbot tools. A cached echo is never
+  /// labelled as fresh by this method.
+  Future<bool> refreshTodayMealsAuthoritatively(
+    String userId, {
+    bool includeActivePlan = true,
+  }) async {
+    _isLoading = true;
+    try {
+      _allMeals = await _mealStore.readForUser(userId);
+      if (includeActivePlan) {
+        await _syncMealsFromBackendPlan(userId, DateTime.now());
+      } else {
+        _activePlanReadStatus = ActivePlanStatus.noActivePlan;
+      }
+      _allMealsLoaded = true;
+      _filterByDate(DateTime.now());
+      _cacheService.cacheMeals(userId, DateTime.now(), _todayMeals);
+      _todayMealsStatus = DataStatus.known;
+      _todayMealsObservedAt = DateTime.now();
+      return true;
+    } catch (e) {
+      _todayMealsStatus = DataStatus.error;
+      debugPrint('❌ Authoritative meal read failed: $e');
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadMealsForDate(String userId, DateTime date) async {
@@ -1130,9 +1235,10 @@ class NutritionProvider with ChangeNotifier {
   // Gợi ý bữa ăn dựa trên mục tiêu calories
   List<Map<String, dynamic>> getMealSuggestions(double targetCalories) {
     final suggestions = <Map<String, dynamic>>[];
-    final breakfastCal = targetCalories * 0.3;
-    final lunchCal = targetCalories * 0.4;
-    final dinnerCal = targetCalories * 0.3;
+    final breakfastCal =
+        targetCalories * NutritionPolicyV1.mealSplit['breakfast']!;
+    final lunchCal = targetCalories * NutritionPolicyV1.mealSplit['lunch']!;
+    final dinnerCal = targetCalories * NutritionPolicyV1.mealSplit['dinner']!;
 
     suggestions.add({
       'title': '🌅 Bữa sáng (~${breakfastCal.toStringAsFixed(0)} kcal)',

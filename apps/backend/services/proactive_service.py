@@ -95,6 +95,10 @@ def _estimate_daily_target(ctx: UserContext) -> float | None:
             "user_id": "nudge",
             "age": ctx.age,
             "gender": ctx.gender,
+            "equation_sex": ctx.equation_sex,
+            "nutrition_safety_profile": ctx.nutrition_safety_profile.model_dump(
+                mode="json"
+            ),
             "height_cm": ctx.height,
             "weight_kg": ctx.weight,
             "activity_level": ctx.activity_level,
@@ -104,6 +108,36 @@ def _estimate_daily_target(ctx: UserContext) -> float | None:
         return float(value) if value else None
     except Exception as exc:  # noqa: BLE001
         logger.debug("TDEE estimate unavailable for nudge: %s", exc)
+        return None
+
+
+def _estimate_approximate_fluid_goal(ctx: UserContext) -> float | None:
+    """Return the policy-v1 heuristic in mL, or no goal when unsupported."""
+    try:
+        from services.agent.tools.tdee import calculate_tdee
+
+        result = calculate_tdee(
+            {
+                "user_id": "nudge",
+                "age": ctx.age,
+                "gender": ctx.gender,
+                "equation_sex": ctx.equation_sex,
+                "nutrition_safety_profile": ctx.nutrition_safety_profile.model_dump(
+                    mode="json"
+                ),
+                "height_cm": ctx.height,
+                "weight_kg": ctx.weight,
+                "activity_level": ctx.activity_level,
+                "health_goal": ctx.health_goal,
+            }
+        )
+        fluid = result.get("fluid")
+        if not isinstance(fluid, dict):
+            return None
+        value = fluid.get("approximate_fluid_goal_ml_per_day")
+        return float(value) if value is not None else None
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Fluid estimate unavailable for nudge: %s", exc)
         return None
 
 
@@ -188,6 +222,7 @@ class ProactiveService:
         exercises = ctx.today_exercises_count or 0
         consumed = ctx.today_calories_consumed or 0.0
         target = _estimate_daily_target(ctx)
+        fluid_goal_ml = _estimate_approximate_fluid_goal(ctx)
 
         # Rotate wording by day so the same topic does not read identically
         # two days running. Seeded by date, so it is stable within a day —
@@ -308,7 +343,11 @@ class ProactiveService:
                     "Tiện tay ghi lại lượng nước đã uống nhé, để mình theo dõi giúp bạn.",
                     "Bạn uống được bao nhiêu nước rồi? Ghi nhanh một chạm thôi.",
                 ]),
-                suggested_action="Mục tiêu khoảng 2 lít mỗi ngày",
+                suggested_action=(
+                    f"Mục tiêu dịch gần đúng khoảng {fluid_goal_ml:.0f} ml/ngày"
+                    if fluid_goal_ml is not None
+                    else "Ghi lượng nước đã uống"
+                ),
                 options=[
                     CheckinQuickOption(id="opt_water_250", label="+250ml 💧",
                                        icon="water_drop", action_type="water_log",

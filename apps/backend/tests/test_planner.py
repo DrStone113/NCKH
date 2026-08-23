@@ -15,6 +15,7 @@ VALID_PROFILE = {
     "user_id": "u1",
     "age": 25,
     "gender": "male",
+    "equation_sex": "male",
     "height_cm": 170,
     "weight_kg": 70,
     "activity_level": "moderate",
@@ -31,7 +32,15 @@ class FakeTools:
 
     async def calculate_tdee(self, **kwargs):
         self.calls.append(("calculate_tdee", kwargs))
-        return {"bmr": 1500, "tdee": 2000, "daily_kcal": 1800}
+        return {
+            "status": "READY",
+            "calorie_target_status": "AVAILABLE",
+            "bmr": 1500,
+            "tdee": 2000,
+            "daily_kcal": 1800,
+            "daily_protein": 105,
+            "formula_ids": ["RMR_MIFFLIN_ST_JEOR_V1"],
+        }
 
     async def create_plan(self, **kwargs):
         self.calls.append(("create_plan", kwargs))
@@ -156,7 +165,15 @@ async def test_planner_resolves_functions_from_the_production_registry():
 
     async def calculate_tdee(profile):
         tools.calls.append(("calculate_tdee", profile))
-        return {"bmr": 1500, "tdee": 2000, "daily_kcal": 1800}
+        return {
+            "status": "READY",
+            "calorie_target_status": "AVAILABLE",
+            "bmr": 1500,
+            "tdee": 2000,
+            "daily_kcal": 1800,
+            "daily_protein": 105,
+            "formula_ids": ["RMR_MIFFLIN_ST_JEOR_V1"],
+        }
 
     functions = {
         "calculate_tdee": calculate_tdee,

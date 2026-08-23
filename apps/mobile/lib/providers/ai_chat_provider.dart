@@ -9,12 +9,15 @@ import '../models/wger_models.dart';
 import '../models/exercise_model.dart';
 import '../models/meal_model.dart';
 import '../models/lifestyle_model.dart';
+import '../models/app_state_value.dart';
+import '../models/canonical_weight.dart';
 import '../constants/ai_chatbot_config.dart';
 import '../services/backend_api_service.dart';
 import 'exercise_provider.dart';
 import 'nutrition_provider.dart';
 import 'lifestyle_provider.dart';
 import 'health_provider.dart';
+import 'user_provider.dart';
 import '../utils/location_helper.dart';
 import '../utils/meal_nutrition_utils.dart';
 import '../utils/streaming_typewriter.dart';
@@ -83,6 +86,7 @@ class AIChatProvider extends ChangeNotifier {
   NutritionProvider? _nutritionProvider;
   LifestyleProvider? _lifestyleProvider;
   HealthProvider? _healthProvider;
+  UserProvider? _userProvider;
 
   /// Callback to navigate screens in Flutter UI
   void Function(String screen)? onNavigateToScreen;
@@ -99,11 +103,13 @@ class AIChatProvider extends ChangeNotifier {
     NutritionProvider? nutritionProvider,
     LifestyleProvider? lifestyleProvider,
     HealthProvider? healthProvider,
+    UserProvider? userProvider,
   }) {
     if (exerciseProvider != null) _exerciseProvider = exerciseProvider;
     if (nutritionProvider != null) _nutritionProvider = nutritionProvider;
     if (lifestyleProvider != null) _lifestyleProvider = lifestyleProvider;
     if (healthProvider != null) _healthProvider = healthProvider;
+    if (userProvider != null) _userProvider = userProvider;
   }
 
   /// Khởi tạo với welcome message và tạo session ID mới
@@ -411,11 +417,20 @@ class AIChatProvider extends ChangeNotifier {
     });
 
     // 3. Gửi ChatRequest JSON qua WebSocket kèm user_context phong phú
+    final canonicalNutrition = user.canonicalNutrition;
+    final dailyNutritionSummary =
+        _nutritionProvider?.canonicalDailySummary(canonicalNutrition);
+    final calculationFormulaIds = <String>{
+      ...canonicalNutrition.formulaIds,
+      ...?dailyNutritionSummary?.formulaIds,
+    }.toList(growable: false);
     final Map<String, dynamic> userContext = {
       'user_id': user.id,
       'name': user.name,
       'age': user.age,
       'gender': user.gender,
+      'equation_sex': user.equationSex,
+      'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
       'height': user.height,
       'weight': user.weight,
       'target_weight': user.targetWeight,
@@ -427,13 +442,73 @@ class AIChatProvider extends ChangeNotifier {
       'tdee': user.tdee,
       'recommended_calories': user.recommendedCalories,
       'daily_water_goal': user.dailyWaterGoal,
+      'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
       'today_calories_consumed': todayCalories,
       'today_meals_count': todayMealsCount,
       'today_calories_burned': todayCaloriesBurned,
       'today_exercises_count': todayExercisesCount,
       'today_meals': todayMeals,
       'today_exercises': todayExercises,
+      'state_manifest': _buildSendTimeStateManifest(
+        user,
+        todayCalories: todayCalories,
+        todayMealsCount: todayMealsCount,
+        todayCaloriesBurned: todayCaloriesBurned,
+        todayExercisesCount: todayExercisesCount,
+        todayMeals: todayMeals,
+        todayExercises: todayExercises,
+      ),
+      'calculation_manifest': {
+        'policy_version': canonicalNutrition.policyVersion,
+        'formula_ids': calculationFormulaIds,
+        'formula_provenance': calculationFormulaIds
+            .map((id) => {
+                  'formula_id': id,
+                  'policy_version': canonicalNutrition.policyVersion,
+                })
+            .toList(growable: false),
+        'inputs': {
+          'weight_kg': user.weight,
+          'height_cm': user.height,
+          'age': user.age,
+          'equation_sex': user.equationSex,
+          'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
+          'activity_level': user.activityLevel,
+          'health_goal': user.healthGoal,
+        },
+        'outputs': {
+          ...canonicalNutrition.toJson(),
+          'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
+        },
+      },
     };
+
+    if (user.id == 'demo') {
+      for (final key in const [
+        'age',
+        'gender',
+        'equation_sex',
+        'nutrition_safety_profile',
+        'height',
+        'weight',
+        'target_weight',
+        'activity_level',
+        'health_goal',
+        'bmi',
+        'bmi_category',
+        'bmr',
+        'tdee',
+        'recommended_calories',
+        'daily_water_goal',
+      ]) {
+        userContext.remove(key);
+      }
+      userContext['calculation_manifest'] = {
+        'inputs': <String, Object?>{},
+        'outputs': <String, Object?>{},
+        'formula_provenance': <Object?>[],
+      };
+    }
 
     final Map<String, dynamic> request = {
       'type': 'chat',
@@ -448,7 +523,7 @@ class AIChatProvider extends ChangeNotifier {
     }
 
     try {
-      debugPrint('📡 [AIChatProvider] Sending request: ${jsonEncode(request)}');
+      debugPrint('📡 [AIChatProvider] Sending chat request');
       _channel!.sink.add(jsonEncode(request));
       debugPrint('✅ [AIChatProvider] Request sent');
     } catch (e) {
@@ -518,49 +593,175 @@ class AIChatProvider extends ChangeNotifier {
 
     switch (name) {
       case 'get_user_profile':
-        if (_lastUser != null) {
+        final profileRead = await _userProvider?.refreshCurrentUser() ?? false;
+        final profile = _userProvider?.currentUser ?? _lastUser;
+        final historyRead = profile == null
+            ? false
+            : await _healthProvider?.loadWeightHistory(profile.id) ?? false;
+        if (profile?.id == 'demo') {
           resultData = {
-            'user_id': _lastUser!.id,
-            'id': _lastUser!.id,
-            'name': _lastUser!.name,
-            'age': _lastUser!.age,
-            'gender': _lastUser!.gender,
-            'height': _lastUser!.height,
-            'weight': _lastUser!.weight,
-            'target_weight': _lastUser!.targetWeight,
-            'activity_level': _lastUser!.activityLevel,
-            'health_goal': _lastUser!.healthGoal,
-            'bmi': _lastUser!.bmi,
-            'bmi_category': _lastUser!.bmiCategory,
-            'bmr': _lastUser!.bmr,
-            'tdee': _lastUser!.tdee,
-            'recommended_calories': _lastUser!.recommendedCalories,
-            'daily_water_goal': _lastUser!.dailyWaterGoal,
-            'today_calories_consumed': _lastTodayCalories,
-            'today_meals_count': _lastTodayMealsCount,
-            'today_calories_burned': _lastTodayCaloriesBurned,
-            'today_exercises_count': _lastTodayExercisesCount,
-            'today_meals': _lastTodayMeals,
-            'today_exercises': _lastTodayExercises,
+            'read_status': 'NOT_LOADED',
+            'state': {
+              'profile': const AppStateValue<Object?>(
+                value: null,
+                source: 'demo_ui_defaults',
+                observedAt: null,
+                status: DataStatus.notLoaded,
+              ).toJson(),
+              'current_weight': const AppStateValue<double>(
+                value: null,
+                source: 'demo_ui_defaults',
+                observedAt: null,
+                status: DataStatus.notLoaded,
+              ).toJson(),
+            },
+          };
+          break;
+        }
+        if (profile != null) {
+          _lastUser = profile;
+          final latest =
+              historyRead && _healthProvider!.weightHistory.isNotEmpty
+                  ? _healthProvider!.weightHistory.last
+                  : null;
+          var canonicalWeight = CanonicalWeightResolver.resolve(
+            profileWeight: profile.id != 'demo' &&
+                    profile.weight >= 30 &&
+                    profile.weight <= 300
+                ? profile.weight
+                : null,
+            latestMeasurement: latest,
+          );
+          if (!historyRead) {
+            final validProfileWeight =
+                profile.weight >= 30 && profile.weight <= 300;
+            canonicalWeight = AppStateValue<double>(
+              value: validProfileWeight ? profile.weight : null,
+              source: profileRead
+                  ? 'profile.current_weight'
+                  : 'send_time_profile_snapshot',
+              observedAt: null,
+              status: validProfileWeight
+                  ? (profileRead ? DataStatus.error : DataStatus.stale)
+                  : DataStatus.missing,
+            );
+          }
+          final effectiveProfile = canonicalWeight.value == null
+              ? profile
+              : profile.copyWith(weight: canonicalWeight.value);
+          final canonicalNutrition = effectiveProfile.canonicalNutrition;
+          resultData = {
+            'read_status': profileRead && historyRead
+                ? 'CURRENT'
+                : profileRead
+                    ? 'PARTIAL'
+                    : 'STALE_SNAPSHOT',
+            'user_id': profile.id,
+            'id': profile.id,
+            'name': profile.name,
+            'age': profile.age,
+            'gender': profile.gender,
+            'equation_sex': profile.equationSex,
+            'nutrition_safety_profile': profile.nutritionSafetyProfile.toJson(),
+            'height': profile.height,
+            'weight': canonicalWeight.value,
+            'profile_weight': profile.weight,
+            'target_weight': profile.targetWeight,
+            'activity_level': profile.activityLevel,
+            'health_goal': profile.healthGoal,
+            'bmi': canonicalNutrition.bmi,
+            'bmi_category': canonicalNutrition.bmiClassification,
+            'bmr': canonicalNutrition.estimatedRmrKcalPerDay,
+            'tdee': canonicalNutrition.estimatedTdeeKcalPerDay,
+            'recommended_calories': canonicalNutrition.calorieTargetKcalPerDay,
+            'daily_water_goal':
+                canonicalNutrition.approximateFluidGoalMlPerDay == null
+                    ? null
+                    : canonicalNutrition.approximateFluidGoalMlPerDay! / 1000,
+            'canonical_nutrition': canonicalNutrition.toJson(),
+            'state': {
+              'current_weight': canonicalWeight.toJson(),
+              'profile': AppStateValue<Map<String, Object?>>(
+                value: {'age': profile.age, 'height_cm': profile.height},
+                source: profileRead
+                    ? 'firestore.users'
+                    : 'send_time_profile_snapshot',
+                observedAt: null,
+                status: profileRead ? DataStatus.known : DataStatus.stale,
+              ).toJson(),
+            },
           };
         } else {
           isOk = false;
-          error = 'No user profile available';
+          error = 'READ_ERROR';
+          resultData = {
+            'read_status': 'READ_ERROR',
+            'state': {
+              'profile': const AppStateValue<Object?>(
+                value: null,
+                source: 'firestore.users',
+                observedAt: null,
+                status: DataStatus.notLoaded,
+              ).toJson(),
+            },
+          };
         }
         break;
       case 'get_today_meals':
-        resultData = {
-          'today_calories_consumed': _lastTodayCalories,
-          'today_meals_count': _lastTodayMealsCount,
-          'today_meals': _lastTodayMeals,
-        };
+        final user = _userProvider?.currentUser ?? _lastUser;
+        final provider = _nutritionProvider;
+        final fresh = user != null && provider != null
+            ? await provider.refreshTodayMealsAuthoritatively(user.id)
+            : false;
+        if (!fresh) {
+          isOk = false;
+          error = 'READ_ERROR';
+          resultData = {
+            'read_status': 'READ_ERROR',
+            'state': {
+              'today_meals': AppStateValue<List<Map<String, dynamic>>>(
+                value: _lastTodayMeals,
+                source: 'send_time_meal_snapshot',
+                observedAt: provider?.todayMealsObservedAt,
+                status: DataStatus.stale,
+              ).toJson(),
+            },
+          };
+        } else {
+          final meals = _serializeTodayMeals(provider.todayMeals);
+          _lastTodayMeals = meals;
+          _lastTodayCalories = provider.consumedCalories;
+          _lastTodayMealsCount = provider.completedMealsCount;
+          resultData = _todayMealsResult(provider, meals);
+        }
         break;
       case 'get_today_exercises':
-        resultData = {
-          'today_calories_burned': _lastTodayCaloriesBurned,
-          'today_exercises_count': _lastTodayExercisesCount,
-          'today_exercises': _lastTodayExercises,
-        };
+        final user = _userProvider?.currentUser ?? _lastUser;
+        final provider = _exerciseProvider;
+        final fresh = user != null && provider != null
+            ? await provider.refreshTodayExercisesAuthoritatively(user.id)
+            : false;
+        if (!fresh) {
+          isOk = false;
+          error = 'READ_ERROR';
+          resultData = {
+            'read_status': 'READ_ERROR',
+            'state': {
+              'today_exercises': AppStateValue<List<Map<String, dynamic>>>(
+                value: _lastTodayExercises,
+                source: 'send_time_exercise_snapshot',
+                observedAt: provider?.todayExercisesObservedAt,
+                status: DataStatus.stale,
+              ).toJson(),
+            },
+          };
+        } else {
+          final exercises = _serializeTodayExercises(provider.todayExercises);
+          _lastTodayExercises = exercises;
+          _lastTodayCaloriesBurned = provider.totalCaloriesBurned;
+          _lastTodayExercisesCount = provider.todayExercises.length;
+          resultData = _todayExercisesResult(provider, exercises);
+        }
         break;
       case 'log_meal':
         final dishName = args['dish_name'] as String? ?? 'Món ăn';
@@ -724,30 +925,22 @@ class AIChatProvider extends ChangeNotifier {
 
         final totalCal = items.fold(0.0, (s, i) => s + i.calories);
 
-        var mealLogged = false;
-        String? mealLogError;
+        WriteResult<MealModel> mealWrite =
+            const WriteResult.rejected('MEAL_SERVICE_UNAVAILABLE');
         if (_nutritionProvider != null && _lastUser != null) {
-          try {
-            final meal = MealModel(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              userId: _lastUser!.id,
-              name: dishName,
-              date: DateTime.now(),
-              mealType: mealType,
-              items: items,
-            );
-            await _nutritionProvider!.addMeal(meal);
-            mealLogged = true;
-            debugPrint('✅ Auto-logged meal: $dishName');
-          } catch (e) {
-            mealLogError = e.toString();
-            debugPrint('❌ Error auto-logging meal: $e');
-          }
-        } else {
-          mealLogError = 'Chưa có hồ sơ người dùng hoặc dịch vụ dinh dưỡng';
+          final meal = MealModel(
+            id: _uuid.v4(),
+            userId: _lastUser!.id,
+            name: dishName,
+            date: DateTime.now(),
+            mealType: mealType,
+            items: items,
+            isCompleted: true,
+          );
+          mealWrite = await _nutritionProvider!.addMeal(meal);
         }
 
-        if (!mealLogged) {
+        if (!mealWrite.isPersisted) {
           _messages.add(AIChatMessage(
             id: _uuid.v4(),
             text:
@@ -757,12 +950,17 @@ class AIChatProvider extends ChangeNotifier {
             timestamp: DateTime.now(),
           ));
           notifyListeners();
-          resultData = {
-            'status': 'error',
-            'error': mealLogError ?? 'Không thể lưu món ăn',
-          };
+          isOk = false;
+          error = mealWrite.status == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = mealWrite.toJson();
           break;
         }
+
+        _lastTodayMeals = _serializeTodayMeals(_nutritionProvider!.todayMeals);
+        _lastTodayCalories = _nutritionProvider!.consumedCalories;
+        _lastTodayMealsCount = _nutritionProvider!.completedMealsCount;
 
         final structuredResponse = StructuredResponse(
           type: 'structured',
@@ -788,9 +986,20 @@ class AIChatProvider extends ChangeNotifier {
         };
 
         resultData = {
-          'status': 'success',
+          'write_status': 'PERSISTED',
+          'meal_record_status': 'CONSUMED',
           'logged_meal': dishName,
-          'calories': totalCal
+          'calories': totalCal,
+          'today_calories_consumed': _lastTodayCalories,
+          'today_consumed_meals_count': _lastTodayMealsCount,
+          'state': {
+            'today_calories_consumed': AppStateValue<double>(
+              value: _lastTodayCalories,
+              source: 'firestore.meal_diary.consumed',
+              observedAt: _nutritionProvider!.todayMealsObservedAt,
+              status: DataStatus.known,
+            ).toJson(),
+          },
         };
         break;
       case 'log_exercise':
@@ -809,6 +1018,7 @@ class AIChatProvider extends ChangeNotifier {
           durationMinutes: duration,
         );
 
+        var exercisePersisted = false;
         if (_exerciseProvider != null && _lastUser != null) {
           try {
             final exercise = ExerciseModel(
@@ -823,11 +1033,29 @@ class AIChatProvider extends ChangeNotifier {
               intensity: 'medium',
             );
             await _exerciseProvider!.addExercise(exercise);
+            exercisePersisted = true;
             debugPrint('✅ Auto-logged exercise: $exName ($duration min)');
           } catch (e) {
             debugPrint('❌ Error auto-logging exercise: $e');
           }
         }
+        if (!exercisePersisted) {
+          isOk = false;
+          error = _exerciseProvider == null || _lastUser == null
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = {
+            'write_status': _exerciseProvider == null || _lastUser == null
+                ? 'REJECTED'
+                : 'ERROR',
+          };
+          break;
+        }
+
+        _lastTodayExercises =
+            _serializeTodayExercises(_exerciseProvider!.todayExercises);
+        _lastTodayCaloriesBurned = _exerciseProvider!.totalCaloriesBurned;
+        _lastTodayExercisesCount = _exerciseProvider!.todayExercises.length;
 
         final structuredResponse = StructuredResponse(
           type: 'structured',
@@ -864,32 +1092,32 @@ class AIChatProvider extends ChangeNotifier {
         };
 
         resultData = {
-          'status': 'success',
+          'write_status': 'PERSISTED',
           'logged_exercise': exName,
           'calories_burned': calBurned
         };
         break;
       case 'get_lifestyle_logs':
-        if (_lifestyleProvider != null) {
-          final log = _lifestyleProvider!.todayLog;
-          resultData = {
-            'today_water_ml': log.waterIntakeMl,
-            'mood_score': log.moodScore,
-            'mood_label': log.moodLabel,
-            'sleep_hours': log.sleepHours,
-            'stress_score': log.stressScore,
-            'notes': log.notes,
-          };
-        } else {
-          resultData = {
-            'today_water_ml': 0,
-            'mood_score': 3,
-            'mood_label': 'Bình thường',
-            'sleep_hours': 7.0,
-            'stress_score': 2,
-            'notes': '',
-          };
+        final user = _userProvider?.currentUser ?? _lastUser;
+        final lifestyle = _lifestyleProvider;
+        final health = _healthProvider;
+        if (user == null || lifestyle == null) {
+          resultData = _unloadedLifestyleResult();
+          break;
         }
+        await lifestyle.loadTodayLogs(user.id);
+        if (lifestyle.loadStatus == DataStatus.notLoaded) {
+          resultData = _unloadedLifestyleResult();
+          break;
+        }
+        if (lifestyle.loadStatus == DataStatus.error) {
+          isOk = false;
+          error = 'READ_ERROR';
+          resultData = _unloadedLifestyleResult(status: DataStatus.error);
+          break;
+        }
+        if (health != null) await health.loadTodayWaterIntake(user.id);
+        resultData = _currentLifestyleResult(user, lifestyle, health);
         break;
       case 'log_lifestyle':
         final logType = args['type'] as String? ?? 'mood';
@@ -908,18 +1136,44 @@ class AIChatProvider extends ChangeNotifier {
             : null;
         final notes = args['notes'] as String? ?? '';
 
-        if (_lifestyleProvider != null && _lastUser != null) {
-          if (moodScore != null) {
-            await _lifestyleProvider!
-                .logMood(_lastUser!.id, moodScore, moodLabel, notes: notes);
+        final user = _userProvider?.currentUser ?? _lastUser;
+        WriteStatus writeStatus = WriteStatus.rejected;
+        String? writeError = 'INVALID_LIFESTYLE_WRITE';
+        if (user != null) {
+          if (logType == 'mood' &&
+              moodScore != null &&
+              _lifestyleProvider != null) {
+            final write = await _lifestyleProvider!
+                .logMood(user.id, moodScore, moodLabel, notes: notes);
+            writeStatus = write.status;
+            writeError = write.errorCode;
+          } else if (logType == 'sleep_stress' &&
+              sleepHours != null &&
+              stressScore != null &&
+              _lifestyleProvider != null) {
+            final write = await _lifestyleProvider!
+                .logSleepAndStress(user.id, sleepHours, stressScore);
+            writeStatus = write.status;
+            writeError = write.errorCode;
+          } else if (logType == 'water' &&
+              waterMl != null &&
+              _healthProvider != null) {
+            final write = await _healthProvider!.recordWater(user.id, waterMl);
+            writeStatus = write.status;
+            writeError = write.errorCode;
           }
-          if (sleepHours != null && stressScore != null) {
-            await _lifestyleProvider!
-                .logSleepAndStress(_lastUser!.id, sleepHours, stressScore);
-          }
-          if (waterMl != null) {
-            await _lifestyleProvider!.addWater(_lastUser!.id, waterMl);
-          }
+        }
+
+        if (writeStatus != WriteStatus.persisted) {
+          isOk = false;
+          error = writeStatus == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = {
+            'write_status': writeStatus.name.toUpperCase(),
+            'error_code': writeError,
+          };
+          break;
         }
 
         _messages.add(AIChatMessage(
@@ -932,7 +1186,11 @@ class AIChatProvider extends ChangeNotifier {
         ));
         notifyListeners();
 
-        resultData = {'status': 'success', 'logged_type': logType};
+        resultData = {
+          'write_status': 'PERSISTED',
+          'logged_type': logType,
+          if (logType == 'water') 'water_source': 'health.water_intake',
+        };
         break;
       case 'set_lifestyle_reminder':
         final title = args['title'] as String? ?? 'Nhắc nhở sinh hoạt';
@@ -940,17 +1198,29 @@ class AIChatProvider extends ChangeNotifier {
         final timeStr = args['time'] as String? ?? '08:00';
         final note = args['note'] as String? ?? '';
 
-        if (_lifestyleProvider != null && _lastUser != null) {
+        WriteResult<LifestyleReminder> reminderWrite =
+            const WriteResult.rejected('REMINDER_SERVICE_UNAVAILABLE');
+        final reminderUser = _userProvider?.currentUser ?? _lastUser;
+        if (_lifestyleProvider != null && reminderUser != null) {
           final reminder = LifestyleReminder(
             id: 'rem_${DateTime.now().millisecondsSinceEpoch}',
-            userId: _lastUser!.id,
+            userId: reminderUser.id,
             title: title,
             type: remType,
             time: timeStr,
             isActive: true,
             note: note,
           );
-          await _lifestyleProvider!.addReminder(_lastUser!.id, reminder);
+          reminderWrite =
+              await _lifestyleProvider!.addReminder(reminderUser.id, reminder);
+        }
+        if (!reminderWrite.isPersisted) {
+          isOk = false;
+          error = reminderWrite.status == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = reminderWrite.toJson();
+          break;
         }
 
         _messages.add(AIChatMessage(
@@ -964,7 +1234,7 @@ class AIChatProvider extends ChangeNotifier {
         notifyListeners();
 
         resultData = {
-          'status': 'success',
+          'write_status': 'PERSISTED',
           'reminder_title': title,
           'time': timeStr
         };
@@ -977,15 +1247,67 @@ class AIChatProvider extends ChangeNotifier {
       // trả lời rất tự tin. Thà báo lỗi để model biết mà nói thật.
       case 'get_weight_history':
         final days = (args['days'] as num?)?.toInt() ?? 30;
+        final weightUser = _userProvider?.currentUser ?? _lastUser;
+        if (weightUser?.id == 'demo') {
+          resultData = {
+            'read_status': 'NOT_LOADED',
+            'state': {
+              'weight_history': const AppStateValue<List<Map<String, dynamic>>>(
+                value: null,
+                source: 'demo_ui_defaults',
+                observedAt: null,
+                status: DataStatus.notLoaded,
+              ).toJson(),
+              'current_weight': const AppStateValue<double>(
+                value: null,
+                source: 'demo_ui_defaults',
+                observedAt: null,
+                status: DataStatus.notLoaded,
+              ).toJson(),
+            },
+          };
+          break;
+        }
         final history = await _fetchWeightHistory(days);
         if (history == null) {
           isOk = false;
-          error = 'TOOL_INTERNAL_ERROR';
-        } else {
+          error = 'READ_ERROR';
           resultData = {
+            'read_status': 'READ_ERROR',
+            'state': {
+              'weight_history': AppStateValue<List<Map<String, dynamic>>>(
+                value: null,
+                source: 'firestore.body_metrics',
+                observedAt: _healthProvider?.weightHistoryObservedAt,
+                status: DataStatus.error,
+              ).toJson(),
+            },
+          };
+        } else {
+          final profile = _userProvider?.currentUser ?? _lastUser;
+          final latest = _healthProvider != null &&
+                  _healthProvider!.weightHistory.isNotEmpty
+              ? _healthProvider!.weightHistory.last
+              : null;
+          final currentWeight = CanonicalWeightResolver.resolve(
+            profileWeight: profile?.id == 'demo' ? null : profile?.weight,
+            latestMeasurement: latest,
+          );
+          resultData = {
+            'read_status': 'CURRENT',
             'days': days,
             'count': history.length,
-            'history': history
+            'history': history,
+            'current_weight': currentWeight.value,
+            'state': {
+              'weight_history': AppStateValue<List<Map<String, dynamic>>>(
+                value: history,
+                source: 'firestore.body_metrics',
+                observedAt: _healthProvider?.weightHistoryObservedAt,
+                status: DataStatus.known,
+              ).toJson(),
+              'current_weight': currentWeight.toJson(),
+            },
           };
         }
         break;
@@ -1020,31 +1342,62 @@ class AIChatProvider extends ChangeNotifier {
         final valueKg = (args['value_kg'] as num?)?.toDouble();
         if (valueKg == null || _lastUser == null) {
           isOk = false;
-          error = 'INVALID_ARGS';
+          error = 'WRITE_REJECTED';
+          resultData =
+              const WriteResult<Object?>.rejected('INVALID_WEIGHT_WRITE')
+                  .toJson();
           break;
         }
-        final saved = await _saveWeight(valueKg, args['date'] as String?);
-        if (!saved) {
-          // Không báo "success" khi chưa ghi được — người dùng sẽ tưởng đã lưu.
+        final weightWrite = await _saveWeight(valueKg, args['date'] as String?);
+        if (!weightWrite.isPersisted) {
           isOk = false;
-          error = 'TOOL_INTERNAL_ERROR';
+          error = weightWrite.status == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = weightWrite.toJson();
         } else {
-          resultData = {'status': 'saved', 'value_kg': valueKg};
+          resultData = {
+            'write_status': 'PERSISTED',
+            'value_kg': valueKg,
+            ...?weightWrite.value,
+          };
         }
         break;
 
       case 'get_active_plan':
-        if (_lastUser != null) {
-          try {
-            final planDetail =
-                await _backendApi.getActivePlanDetail(_lastUser!.id);
-            resultData = {'active_plan': planDetail};
-          } catch (e) {
-            debugPrint('⚠️ [AIChatProvider] get_active_plan error: $e');
-            resultData = {'active_plan': null};
+        final activePlanUser = _userProvider?.currentUser ?? _lastUser;
+        if (activePlanUser != null) {
+          final read =
+              await _backendApi.readActivePlanDetail(activePlanUser.id);
+          switch (read.status) {
+            case ActivePlanStatus.activePlanFound:
+              resultData = {
+                'read_status': 'ACTIVE_PLAN_FOUND',
+                'active_plan': read.plan,
+              };
+              break;
+            case ActivePlanStatus.noActivePlan:
+              resultData = {
+                'read_status': 'NO_ACTIVE_PLAN',
+                'active_plan': null,
+              };
+              break;
+            case ActivePlanStatus.readError:
+              isOk = false;
+              error = 'READ_ERROR';
+              resultData = {
+                'read_status': 'READ_ERROR',
+                'error_code': read.errorCode,
+              };
+              break;
           }
         } else {
-          resultData = {'active_plan': null};
+          isOk = false;
+          error = 'READ_ERROR';
+          resultData = {
+            'read_status': 'READ_ERROR',
+            'error_code': 'USER_PROFILE_NOT_LOADED',
+          };
         }
         break;
 
@@ -1055,18 +1408,23 @@ class AIChatProvider extends ChangeNotifier {
             await _backendApi.updatePlanItemCompletion(
                 itemId: itemId, completed: true);
             resultData = {
-              'status': 'success',
+              'write_status': 'PERSISTED',
               'item_id': itemId,
               'completed': true
             };
           } catch (e) {
             debugPrint('❌ [AIChatProvider] mark_plan_item_complete error: $e');
             isOk = false;
-            error = 'TOOL_INTERNAL_ERROR';
+            error = 'PERSISTENCE_ERROR';
+            resultData =
+                const WriteResult<Object?>.error('PLAN_ITEM_PERSISTENCE_ERROR')
+                    .toJson();
           }
         } else {
           isOk = false;
-          error = 'INVALID_ARGS';
+          error = 'WRITE_REJECTED';
+          resultData =
+              const WriteResult<Object?>.rejected('INVALID_PLAN_ITEM').toJson();
         }
         break;
 
@@ -1089,14 +1447,13 @@ class AIChatProvider extends ChangeNotifier {
       'type': 'tool_result',
       'correlation_id': correlationId,
       'ok': isOk,
-      if (isOk) 'data': resultData,
+      'data': resultData,
       if (isOk && uiMessage != null) 'ui_message': uiMessage,
       if (!isOk) 'error': error,
     };
 
     try {
-      debugPrint(
-          '📡 [AIChatProvider] Sending tool_result: ${jsonEncode(response)}');
+      debugPrint('📡 [AIChatProvider] Sending tool_result for $name: ok=$isOk');
       _channel?.sink.add(jsonEncode(response));
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Send tool_result error: $e');
@@ -1124,7 +1481,8 @@ class AIChatProvider extends ChangeNotifier {
     if (user == null || health == null) return null;
 
     try {
-      await health.loadWeightHistory(user.id);
+      final loaded = await health.loadWeightHistory(user.id);
+      if (!loaded) return null;
       final cutoff = DateTime.now().subtract(Duration(days: days));
       return health.weightHistory
           .where((m) => m.recordedAt.isAfter(cutoff))
@@ -1205,11 +1563,15 @@ class AIChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Ghi cân nặng thật vào Firestore. Trả false nếu không lưu được.
-  Future<bool> _saveWeight(double valueKg, String? dateRaw) async {
+  Future<WriteResult<Map<String, Object?>>> _saveWeight(
+    double valueKg,
+    String? dateRaw,
+  ) async {
     final user = _lastUser;
     final health = _healthProvider;
-    if (user == null || health == null) return false;
+    if (user == null || health == null) {
+      return const WriteResult.rejected('WEIGHT_SERVICE_UNAVAILABLE');
+    }
 
     try {
       final heightM = user.height / 100.0;
@@ -1222,21 +1584,51 @@ class AIChatProvider extends ChangeNotifier {
         bmi: bmi,
         recordedAt: recordedAt,
       );
-      if (ok) {
-        _messages.add(AIChatMessage(
-          id: _uuid.v4(),
-          text: '⚖️ Đã ghi cân nặng **${valueKg.toStringAsFixed(1)} kg** '
-              '(BMI ${bmi.toStringAsFixed(1)}).',
-          isUser: false,
-          isStreaming: false,
-          timestamp: DateTime.now(),
-        ));
-        notifyListeners();
+      if (!ok) {
+        return const WriteResult.error('WEIGHT_PERSISTENCE_ERROR');
       }
-      return ok;
+
+      final latest = health.weightHistory.isEmpty
+          ? null
+          : health.weightHistory
+              .reduce((a, b) => a.recordedAt.isAfter(b.recordedAt) ? a : b);
+      final shouldSyncProfile = !recordedAt.isAfter(DateTime.now()) &&
+          (latest == null ||
+              (!latest.recordedAt.isAfter(recordedAt) &&
+                  (latest.weight - valueKg).abs() <= 0.05));
+      String profileSyncStatus = 'NOT_REQUIRED_BACKDATED_MEASUREMENT';
+      if (shouldSyncProfile && _userProvider != null) {
+        final profileWrite =
+            await _userProvider!.synchronizeWeightFromMeasurement(valueKg);
+        profileSyncStatus = profileWrite.status.name.toUpperCase();
+        if (profileWrite.isPersisted && _userProvider!.currentUser != null) {
+          _lastUser = _userProvider!.currentUser;
+        }
+      } else if (shouldSyncProfile) {
+        profileSyncStatus = 'NOT_LOADED';
+      }
+
+      final canonical = CanonicalWeightResolver.resolve(
+        profileWeight: (_userProvider?.currentUser ?? _lastUser)?.weight,
+        latestMeasurement: latest,
+      );
+      _messages.add(AIChatMessage(
+        id: _uuid.v4(),
+        text: '⚖️ Đã ghi cân nặng **${valueKg.toStringAsFixed(1)} kg** '
+            '(BMI ${bmi.toStringAsFixed(1)}).',
+        isUser: false,
+        isStreaming: false,
+        timestamp: DateTime.now(),
+      ));
+      notifyListeners();
+      return WriteResult.persisted({
+        'profile_sync_status': profileSyncStatus,
+        'current_weight': canonical.value,
+        'state': {'current_weight': canonical.toJson()},
+      });
     } catch (e) {
       debugPrint('❌ [AIChatProvider] _saveWeight failed: $e');
-      return false;
+      return const WriteResult.error('WEIGHT_PERSISTENCE_ERROR');
     }
   }
 
@@ -1623,5 +2015,272 @@ class AIChatProvider extends ChangeNotifier {
         : double.tryParse(value?.toString() ?? '');
     if (parsed == null || !parsed.isFinite || parsed < 0) return 0;
     return parsed;
+  }
+
+  List<Map<String, dynamic>> _serializeTodayMeals(List<MealModel> meals) =>
+      meals
+          .map((meal) => {
+                'name': meal.name,
+                'meal_type': meal.mealType,
+                'record_status': meal.isCompleted ? 'CONSUMED' : 'PLANNED',
+                'calories': meal.calories,
+                'protein': meal.protein,
+                'carbs': meal.carbs,
+                'fat': meal.fat,
+                'is_completed': meal.isCompleted,
+              })
+          .toList();
+
+  Map<String, dynamic> _todayMealsResult(
+    NutritionProvider provider,
+    List<Map<String, dynamic>> meals,
+  ) =>
+      {
+        'read_status':
+            provider.activePlanReadStatus == ActivePlanStatus.readError
+                ? 'PARTIAL'
+                : 'CURRENT',
+        'active_plan_read_status': provider.activePlanReadStatus.name
+            .replaceAllMapped(RegExp(r'([A-Z])'), (m) => '_${m[1]}')
+            .toUpperCase(),
+        'today_calories_consumed': provider.consumedCalories,
+        'today_meals_count': provider.completedMealsCount,
+        'today_meals': meals,
+        'planned_meals_count': provider.pendingMealsCount,
+        'state': {
+          'today_calories_consumed': AppStateValue<double>(
+            value: provider.consumedCalories,
+            source: 'firestore.meal_diary.consumed',
+            observedAt: provider.todayMealsObservedAt,
+            status: DataStatus.known,
+          ).toJson(),
+          'today_meals': AppStateValue<List<Map<String, dynamic>>>(
+            value: meals,
+            source: 'firestore.meal_diary_and_active_plan',
+            observedAt: provider.todayMealsObservedAt,
+            status: provider.activePlanReadStatus == ActivePlanStatus.readError
+                ? DataStatus.error
+                : DataStatus.known,
+          ).toJson(),
+        },
+      };
+
+  List<Map<String, dynamic>> _serializeTodayExercises(
+    List<ExerciseModel> exercises,
+  ) =>
+      exercises
+          .map((exercise) => {
+                'name': exercise.name,
+                'type': exercise.type,
+                'duration_min': exercise.duration,
+                'calories_burned': exercise.caloriesBurned,
+              })
+          .toList();
+
+  Map<String, dynamic> _todayExercisesResult(
+    ExerciseProvider provider,
+    List<Map<String, dynamic>> exercises,
+  ) =>
+      {
+        'read_status': 'CURRENT',
+        'today_calories_burned': provider.totalCaloriesBurned,
+        'today_exercises_count': exercises.length,
+        'today_exercises': exercises,
+        'state': {
+          'today_exercises': AppStateValue<List<Map<String, dynamic>>>(
+            value: exercises,
+            source: 'firestore.exercise_diary',
+            observedAt: provider.todayExercisesObservedAt,
+            status: DataStatus.known,
+          ).toJson(),
+        },
+      };
+
+  Map<String, dynamic> _unloadedLifestyleResult({
+    DataStatus status = DataStatus.notLoaded,
+  }) {
+    AppStateValue<Object?> unavailable(String source) => AppStateValue<Object?>(
+          value: null,
+          source: source,
+          observedAt: null,
+          status: status,
+        );
+    return {
+      'read_status': status == DataStatus.error ? 'READ_ERROR' : 'NOT_LOADED',
+      'mood_score': null,
+      'mood_label': null,
+      'sleep_hours': null,
+      'stress_score': null,
+      'lifestyle_water_logged_today_ml': null,
+      'water_consumed_today_ml': null,
+      'state': {
+        'mood': unavailable('firestore.lifestyle_logs').toJson(),
+        'sleep_hours': unavailable('firestore.lifestyle_logs').toJson(),
+        'stress_score': unavailable('firestore.lifestyle_logs').toJson(),
+        'lifestyle_water_logged_today':
+            unavailable('firestore.lifestyle_logs.legacy_water').toJson(),
+        'water_consumed_today': unavailable('health.water_intake').toJson(),
+      },
+    };
+  }
+
+  Map<String, dynamic> _currentLifestyleResult(
+    UserModel user,
+    LifestyleProvider lifestyle,
+    HealthProvider? health,
+  ) {
+    final log = lifestyle.todayLog;
+    AppStateValue<T> observed<T>(
+      bool hasObservation,
+      T displayValue,
+      String source,
+    ) =>
+        AppStateValue<T>(
+          value: hasObservation ? displayValue : null,
+          source: source,
+          observedAt: hasObservation ? lifestyle.observedAt : null,
+          status: hasObservation ? DataStatus.known : DataStatus.missing,
+        );
+
+    final mood = observed<Map<String, Object?>>(
+      log.hasMoodObservation,
+      {'score': log.moodScore, 'label': log.moodLabel},
+      'firestore.lifestyle_logs',
+    );
+    final sleep = observed<double>(
+      log.hasSleepObservation,
+      log.sleepHours,
+      'firestore.lifestyle_logs',
+    );
+    final stress = observed<int>(
+      log.hasStressObservation,
+      log.stressScore,
+      'firestore.lifestyle_logs',
+    );
+    final legacyWater = observed<double>(
+      log.hasLifestyleWaterObservation,
+      log.waterIntakeMl,
+      'firestore.lifestyle_logs.legacy_water',
+    );
+    final waterStatus = health?.waterStatus ?? DataStatus.notLoaded;
+    final consumedWater = AppStateValue<double>(
+      value: waterStatus == DataStatus.known ? health!.todayWaterIntake : null,
+      source: 'health.water_intake',
+      observedAt: health?.waterObservedAt,
+      status: waterStatus,
+    );
+    final target = AppStateValue<double>(
+      value: user.id != 'demo' && user.dailyWaterGoal != null
+          ? user.dailyWaterGoal! * 1000
+          : null,
+      source: 'profile_weight_derived_target',
+      observedAt: null,
+      status: user.id != 'demo' && user.dailyWaterGoal != null
+          ? DataStatus.known
+          : DataStatus.missing,
+    );
+    return {
+      'read_status': waterStatus == DataStatus.error ? 'PARTIAL' : 'CURRENT',
+      'mood_score': log.hasMoodObservation ? log.moodScore : null,
+      'mood_label': log.hasMoodObservation ? log.moodLabel : null,
+      'sleep_hours': log.hasSleepObservation ? log.sleepHours : null,
+      'stress_score': log.hasStressObservation ? log.stressScore : null,
+      'lifestyle_water_logged_today_ml':
+          log.hasLifestyleWaterObservation ? log.waterIntakeMl : null,
+      'water_consumed_today_ml': consumedWater.value,
+      'water_target_ml': target.value,
+      'notes': log.hasNotesObservation ? log.notes : null,
+      'state': {
+        'mood': mood.toJson(),
+        'sleep_hours': sleep.toJson(),
+        'stress_score': stress.toJson(),
+        'lifestyle_water_logged_today': legacyWater.toJson(),
+        'water_consumed_today': consumedWater.toJson(),
+        'water_target': target.toJson(),
+      },
+    };
+  }
+
+  Map<String, Object?> _buildSendTimeStateManifest(
+    UserModel user, {
+    required double todayCalories,
+    required int todayMealsCount,
+    required double todayCaloriesBurned,
+    required int todayExercisesCount,
+    required List<Map<String, dynamic>> todayMeals,
+    required List<Map<String, dynamic>> todayExercises,
+  }) {
+    final mealObservedAt = _nutritionProvider?.todayMealsObservedAt;
+    final exerciseObservedAt = _exerciseProvider?.todayExercisesObservedAt;
+    final waterProvider = _healthProvider;
+    final waterSnapshotStatus = waterProvider == null
+        ? DataStatus.notLoaded
+        : waterProvider.waterStatus == DataStatus.known
+            ? DataStatus.stale
+            : waterProvider.waterStatus;
+    return {
+      'profile.current_weight': AppStateValue<double>(
+        value: user.id == 'demo' ? null : user.weight,
+        source: user.id == 'demo'
+            ? 'demo_ui_defaults'
+            : 'send_time_profile_snapshot',
+        observedAt: null,
+        status: user.id == 'demo' ? DataStatus.notLoaded : DataStatus.stale,
+      ).toJson(),
+      'today.calories_consumed': AppStateValue<double>(
+        value: todayCalories,
+        source: 'send_time_meal_snapshot',
+        observedAt: mealObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'today.consumed_meal_count': AppStateValue<int>(
+        value: todayMealsCount,
+        source: 'send_time_meal_snapshot',
+        observedAt: mealObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'today.meals': AppStateValue<List<Map<String, dynamic>>>(
+        value: todayMeals,
+        source: 'send_time_meal_snapshot',
+        observedAt: mealObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'today.calories_burned': AppStateValue<double>(
+        value: todayCaloriesBurned,
+        source: 'send_time_exercise_snapshot',
+        observedAt: exerciseObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'today.exercise_count': AppStateValue<int>(
+        value: todayExercisesCount,
+        source: 'send_time_exercise_snapshot',
+        observedAt: exerciseObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'today.exercises': AppStateValue<List<Map<String, dynamic>>>(
+        value: todayExercises,
+        source: 'send_time_exercise_snapshot',
+        observedAt: exerciseObservedAt,
+        status: DataStatus.stale,
+      ).toJson(),
+      'water_target': AppStateValue<double>(
+        value: user.id != 'demo' && user.dailyWaterGoal != null
+            ? user.dailyWaterGoal! * 1000
+            : null,
+        source: 'profile_weight_derived_target',
+        observedAt: null,
+        status: user.id != 'demo' && user.dailyWaterGoal != null
+            ? DataStatus.stale
+            : DataStatus.missing,
+      ).toJson(),
+      'water_consumed_today': AppStateValue<double>(
+        value: waterProvider?.waterStatus == DataStatus.known
+            ? waterProvider!.todayWaterIntake
+            : null,
+        source: 'health.water_intake',
+        observedAt: waterProvider?.waterObservedAt,
+        status: waterSnapshotStatus,
+      ).toJson(),
+    };
   }
 }

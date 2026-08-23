@@ -80,6 +80,16 @@ CREATE_PLAN_SCHEMA: dict[str, Any] = {
             "exclusiveMinimum": 0,
             "description": "Target protein (g) per day; must be strictly positive.",
         },
+        "nutrition_policy_version": {
+            "type": "string",
+            "const": "nutrition-policy-v1.0.1",
+        },
+        "nutrition_formula_ids": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 1,
+            "uniqueItems": True,
+        },
         "request_id": {
             "type": "string",
             "minLength": 1,
@@ -93,6 +103,8 @@ CREATE_PLAN_SCHEMA: dict[str, Any] = {
         "start_date",
         "daily_kcal_target",
         "daily_protein_target",
+        "nutrition_policy_version",
+        "nutrition_formula_ids",
         "request_id",
     ],
     "additionalProperties": False,
@@ -117,7 +129,29 @@ CREATE_LONG_TERM_PLAN_SCHEMA: dict[str, Any] = {
             "properties": {
                 "user_id": {"type": "string", "minLength": 1},
                 "age": {"type": "integer", "minimum": 10, "maximum": 120},
-                "gender": {"type": "string", "enum": ["male", "female"]},
+                "gender": {"type": ["string", "null"]},
+                "equation_sex": {
+                    "type": ["string", "null"],
+                    "enum": ["male", "female", None],
+                },
+                "nutrition_safety_profile": {
+                    "type": "object",
+                    "properties": {
+                        field: {
+                            "type": "string",
+                            "enum": ["YES", "NO", "UNKNOWN", "NOT_PROVIDED"],
+                        }
+                        for field in (
+                            "pregnancy",
+                            "lactation",
+                            "eating_disorder_risk_or_history",
+                            "serious_renal_condition",
+                            "fluid_restricted_cardiac_condition",
+                            "clinically_complex_metabolic_condition",
+                        )
+                    },
+                    "additionalProperties": False,
+                },
                 "height_cm": {"type": "number", "minimum": 100, "maximum": 250},
                 "weight_kg": {"type": "number", "minimum": 30, "maximum": 300},
                 "activity_level": {
@@ -142,7 +176,6 @@ CREATE_LONG_TERM_PLAN_SCHEMA: dict[str, Any] = {
             "required": [
                 "user_id",
                 "age",
-                "gender",
                 "height_cm",
                 "weight_kg",
                 "activity_level",
@@ -334,6 +367,8 @@ async def create_plan(
     start_date: date | str,
     daily_kcal_target: float,
     daily_protein_target: float,
+    nutrition_policy_version: str,
+    nutrition_formula_ids: list[str],
     request_id: str,
 ) -> str:
     """Insert a new ``plans`` row with ``status='active'`` and return its id.
@@ -378,6 +413,14 @@ async def create_plan(
     duration = _validate_duration_days(duration_days)
     kcal = _validate_positive(daily_kcal_target, code="INVALID_KCAL")
     protein = _validate_positive(daily_protein_target, code="INVALID_PROTEIN")
+    if nutrition_policy_version != "nutrition-policy-v1.0.1":
+        raise ValueError("INVALID_NUTRITION_POLICY_VERSION")
+    if (
+        not isinstance(nutrition_formula_ids, list)
+        or not nutrition_formula_ids
+        or any(not isinstance(item, str) or not item for item in nutrition_formula_ids)
+    ):
+        raise ValueError("INVALID_NUTRITION_FORMULA_IDS")
     start = _coerce_date(start_date, field="start_date")
 
     end = start + timedelta(days=duration - 1)
@@ -390,12 +433,14 @@ async def create_plan(
                 id, user_id, goal,
                 start_date, end_date, duration_days,
                 daily_kcal_target, daily_protein_target,
+                nutrition_policy_version, nutrition_formula_ids,
                 status
             )
             VALUES (
                 :id, :user_id, :goal,
                 :start_date, :end_date, :duration_days,
                 :daily_kcal, :daily_protein,
+                :nutrition_policy_version, CAST(:nutrition_formula_ids AS jsonb),
                 'active'
             )
             """
@@ -409,6 +454,8 @@ async def create_plan(
             "duration_days": duration,
             "daily_kcal": kcal,
             "daily_protein": protein,
+            "nutrition_policy_version": nutrition_policy_version,
+            "nutrition_formula_ids": json.dumps(nutrition_formula_ids),
         },
     )
 

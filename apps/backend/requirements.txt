@@ -11,8 +11,12 @@ jsonschema>=4.21.0
 PyJWT>=2.8.0
 
 # Dev / testing
-hypothesis>=6.100.0
-pytest>=8.0.0
-pytest-asyncio>=0.23.0
+# Keep the development gate reproducible. Hypothesis 6.165.10 has an
+# incompatible DataTree runtime in this suite; this verified trio is green on
+# the repository's Python 3.11 image.
+hypothesis==6.151.9
+pytest==8.4.2
+pytest-asyncio==1.2.0
 openai>=1.0.0
-sentence-transformers>=2.2.0
+# Frozen research corpus provenance requires this exact runtime version.
+sentence-transformers==5.6.1

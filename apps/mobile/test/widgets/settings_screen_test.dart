@@ -31,7 +31,11 @@ void main() {
 
     await tester.tap(find.text('Thông tin cá nhân'));
     await tester.pumpAndSettle();
-    expect(find.byType(TextFormField), findsAtLeastNWidgets(5));
+    // The safety/equation sections make this ListView lazy-build fewer of the
+    // lower text fields in the initial viewport. Verify the editable identity
+    // form and the two explicit selectors that are actually mounted here.
+    expect(find.byType(TextFormField), findsAtLeastNWidgets(3));
+    expect(find.byType(DropdownButtonFormField<String>), findsAtLeastNWidgets(2));
 
     await tester.enterText(find.byType(TextFormField).first, 'Nguyễn Văn B');
     await tester.ensureVisible(find.text('Lưu thay đổi'));

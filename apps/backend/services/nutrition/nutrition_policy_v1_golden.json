@@ -1,0 +1,17 @@
+[
+  {
+    "name": "male_moderate_maintenance",
+    "input": {"age":30,"equation_sex":"male","height_cm":175.0,"weight_kg":70.0,"activity_level":"moderate","health_goal":"maintain"},
+    "expected": {"status":"READY","bmi":22.857142857142858,"bmi_classification":"Bình thường","rmr":1648.75,"tdee":2555.5625,"target":2555.5625,"adjustment":0.0,"protein_planning":91.0,"fluid_ml":2310.0}
+  },
+  {
+    "name": "female_sedentary_loss",
+    "input": {"age":28,"equation_sex":"female","height_cm":165.0,"weight_kg":60.0,"activity_level":"sedentary","health_goal":"lose_weight"},
+    "expected": {"status":"READY","bmi":22.03856749311295,"bmi_classification":"Bình thường","rmr":1330.25,"tdee":1596.3,"target":1436.67,"adjustment":-159.63,"protein_planning":90.0,"fluid_ml":1980.0}
+  },
+  {
+    "name": "low_energy_gate_no_clamp",
+    "input": {"age":19,"equation_sex":"female","height_cm":150.0,"weight_kg":30.0,"activity_level":"sedentary","health_goal":"lose_weight"},
+    "expected": {"status":"REQUIRES_SPECIALIST_GUIDANCE","bmi":13.333333333333334,"bmi_classification":"Thiếu cân","rmr":981.5,"tdee":1177.8,"target":null,"adjustment":-117.78,"protein_planning":45.0,"fluid_ml":990.0}
+  }
+]

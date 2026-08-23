@@ -1,0 +1,10 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+build/
+windows/flutter/ephemeral/
+android/.gradle/
+android/.kotlin/
+android/local.properties
+*.log

@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_environment: str = "production"
+    development_context_trace: bool = False
     openai_base_url: str = "https://api.vilao.ai/v1"
     # Secrets have no in-code default: they must come from ``.env`` (which is
     # gitignored) or the process environment. Hardcoding a key here leaks it
@@ -47,6 +49,13 @@ class Settings(BaseSettings):
         env_file=str(Path(__file__).resolve().parents[0] / ".env"),
         extra="ignore",
     )
+
+    @property
+    def context_trace_enabled(self) -> bool:
+        return (
+            self.development_context_trace
+            and self.app_environment.strip().lower() != "production"
+        )
 
 
 settings = Settings()

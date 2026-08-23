@@ -72,7 +72,7 @@ async def test_severe_under_eating_outranks_a_missed_workout():
     """Eating 800 kcal all day matters more than not having exercised."""
     svc = ProactiveService()
     ctx = UserContext(
-        age=25, gender="male", height=175, weight=70,
+        age=25, gender="male", equation_sex="male", height=175, weight=70,
         today_meals_count=2, today_calories_consumed=800,
         today_exercises_count=0,
     )
@@ -86,7 +86,7 @@ async def test_severe_under_eating_outranks_a_missed_workout():
 async def test_over_eating_is_reported_without_shaming():
     svc = ProactiveService()
     ctx = UserContext(
-        age=25, gender="male", height=175, weight=70,
+        age=25, gender="male", equation_sex="male", height=175, weight=70,
         today_meals_count=4, today_calories_consumed=4000,
         today_exercises_count=1,
     )

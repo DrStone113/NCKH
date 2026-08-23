@@ -14,6 +14,14 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
   String? _selectedGoal;
   bool _isLoading = false;
 
+  String? _goalTargetLabel(dynamic user, String goal) {
+    if (user == null) return null;
+    final target = user.canonicalForGoal(goal).displayCalorieTargetKcalPerDay;
+    return target == null
+        ? 'Cần hướng dẫn chuyên gia'
+        : '${target.toStringAsFixed(0)} kcal/ngày';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -172,7 +180,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                             ),
                             _buildStatItem(
                               'BMI',
-                              user.bmi.toStringAsFixed(1),
+                              user.displayBmi.toStringAsFixed(1),
                               Icons.analytics,
                             ),
                             Container(
@@ -181,8 +189,10 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                               color: AppColors.surface,
                             ),
                             _buildStatItem(
-                              'TDEE',
-                              '${user.tdee.toStringAsFixed(0)} kcal',
+                              'TDEE ước tính',
+                              user.displayTdee == null
+                                  ? 'Cần xác nhận đầu vào RMR'
+                                  : '${user.displayTdee!.toStringAsFixed(0)} kcal',
                               Icons.bolt,
                             ),
                           ],
@@ -198,9 +208,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                       'Giảm mỡ, cải thiện vóc dáng',
                       Icons.trending_down,
                       AppColors.error,
-                      user != null
-                          ? '${(user.tdee - 500).toStringAsFixed(0)} kcal/ngày'
-                          : null,
+                      _goalTargetLabel(user, 'lose_weight'),
                     ),
                     const SizedBox(height: 12),
                     _buildGoalCard(
@@ -209,9 +217,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                       'Giữ cân nặng hiện tại',
                       Icons.remove,
                       AppColors.success,
-                      user != null
-                          ? '${user.tdee.toStringAsFixed(0)} kcal/ngày'
-                          : null,
+                      _goalTargetLabel(user, 'maintain'),
                     ),
                     const SizedBox(height: 12),
                     _buildGoalCard(
@@ -220,9 +226,7 @@ class _GoalSettingsScreenState extends State<GoalSettingsScreen> {
                       'Tăng cơ, tăng cân lành mạnh',
                       Icons.trending_up,
                       AppColors.info,
-                      user != null
-                          ? '${(user.tdee + 300).toStringAsFixed(0)} kcal/ngày'
-                          : null,
+                      _goalTargetLabel(user, 'gain_muscle'),
                     ),
                     const SizedBox(height: 24),
 

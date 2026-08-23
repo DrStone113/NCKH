@@ -30,6 +30,7 @@ from services.agent.llm_client import GarbledOutputError, LLMUnavailableError, T
 from services.agent.system_prompt import buildSystemPrompt
 from services.agent.tool_dispatcher import ToolResult
 from services.agent.turn_router import TurnPlan, classify_turn
+from services.agent.context_trace import ContextTraceRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,18 @@ _ERROR_GUIDANCE: dict[str, str] = {
     "TOOL_INTERNAL_ERROR": (
         "Công cụ gặp sự cố khi xử lý dữ liệu. Thông báo trung thực rằng chưa xử lý được mục này, "
         "tuyệt đối không bịa đặt thông tin."
+    ),
+    "READ_ERROR": (
+        "Không đọc được dữ liệu hiện tại từ nguồn lưu trữ. Hãy nói rõ dữ liệu chưa khả dụng; "
+        "không dùng snapshot cũ như thể đó là dữ liệu mới."
+    ),
+    "WRITE_REJECTED": (
+        "Yêu cầu ghi bị từ chối trước khi lưu. Không được nói đã lưu; hãy giải thích ngắn gọn "
+        "rằng dữ liệu chưa được ghi nhận."
+    ),
+    "PERSISTENCE_ERROR": (
+        "Nguồn lưu trữ không xác nhận được thao tác ghi. Tuyệt đối không nói 'đã lưu' hoặc "
+        "'đã ghi nhận'; hãy thông báo thao tác thất bại."
     ),
 }
 
@@ -106,16 +119,23 @@ class AgentOrchestrator:
         gateway = self.gateway
         performed_actions: list[dict[str, Any]] = []
         thought_chunks: list[str] = []
+        trace = ContextTraceRecorder(
+            user_text,
+            enabled=settings.context_trace_enabled,
+        )
+        trace.capture_initial_context(user_context)
         try:
             if gateway is not None and hasattr(gateway, "send_status"):
                 await gateway.send_status("🔍 Đang tải ngữ cảnh và phân tích câu hỏi...")
             context = await self.memory.loadContext(session_id, user_text)
+            trace.capture_rag(context)
             
             if gateway is not None and hasattr(gateway, "send_status"):
                 await gateway.send_status("🧠 Đang lập kế hoạch phản hồi...")
             plan = classify_turn(user_text, history_len=len(context.history))
             llm = self._select_llm(plan)
             tool_schemas = self.tools.schemas() if plan.offer_tools else None
+            trace.capture_tools_offered(tool_schemas)
 
             logger.info(
                 "Turn routed tier=%s heavy=%s tools=%s session=%s",
@@ -161,6 +181,7 @@ class AgentOrchestrator:
                         )
                     if gateway is not None:
                         await gateway.send_done(full_response, performed_actions)
+                    trace.finish(outcome="COMPLETED")
                     self._schedule_memory_update(session_id)
                     return
 
@@ -180,11 +201,14 @@ class AgentOrchestrator:
                 tool_results = await self._dispatch_all(
                     session_id, response.tool_calls, failure_counts
                 )
+                for call in response.tool_calls:
+                    trace.capture_tool_call(call.name, call.arguments)
 
                 if gateway is not None and hasattr(gateway, "send_status"):
                     await gateway.send_status("✅ Đã xử lý xong dữ liệu công cụ. Đang tổng hợp phản hồi...")
 
                 for call, result in tool_results:
+                    trace.capture_tool_result(call.name, result)
                     serialized = self._serialize_result(call, result)
                     await self._append_turn(
                         session_id, "tool", serialized,
@@ -251,9 +275,11 @@ class AgentOrchestrator:
                 performed_actions,
                 thought_chunks,
             )
+            trace.finish(outcome="COMPLETED_WITH_FALLBACK")
             self._schedule_memory_update(session_id)
 
         except LLMUnavailableError:
+            trace.finish(outcome="LLM_UNAVAILABLE")
             logger.warning("LLM unavailable for session=%s", session_id, exc_info=True)
             if gateway is not None:
                 await gateway.send_error(
@@ -262,6 +288,7 @@ class AgentOrchestrator:
                 )
             raise
         except GarbledOutputError:
+            trace.finish(outcome="LLM_ERROR")
             logger.warning("Garbled LLM output for session=%s", session_id)
             if gateway is not None:
                 await gateway.send_error(
@@ -269,6 +296,10 @@ class AgentOrchestrator:
                     "Phản hồi bị lỗi ký tự. Bạn nhắn lại giúp mình nhé.",
                 )
             raise
+        finally:
+            if not trace.trace.final_context_manifest:
+                trace.finish(outcome="ERROR")
+            trace.emit()
 
     # ------------------------------------------------------------- internals
     def _select_llm(self, plan: TurnPlan) -> Any:
@@ -492,6 +523,7 @@ class AgentOrchestrator:
                 "ok": False,
                 "error": code,
                 "tool": call.name,
+                "data": result.data,
                 "huong_dan": _ERROR_GUIDANCE.get(code, _ERROR_GUIDANCE["TOOL_INTERNAL_ERROR"]),
             },
             ensure_ascii=False,

@@ -2,34 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/health_models.dart';
 import '../constants/firestore_collections.dart';
+import '../models/app_state_value.dart';
 
 class HealthProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   List<BodyMetrics> _weightHistory = [];
   double _todayWaterIntake = 0;
+  DataStatus _weightHistoryStatus = DataStatus.notLoaded;
+  DateTime? _weightHistoryObservedAt;
+  DataStatus _waterStatus = DataStatus.notLoaded;
+  DateTime? _waterObservedAt;
 
   List<BodyMetrics> get weightHistory => _weightHistory;
   double get todayWaterIntake => _todayWaterIntake;
+  DataStatus get weightHistoryStatus => _weightHistoryStatus;
+  DateTime? get weightHistoryObservedAt => _weightHistoryObservedAt;
+  DataStatus get waterStatus => _waterStatus;
+  DateTime? get waterObservedAt => _waterObservedAt;
 
-  Future<void> loadWeightHistory(String userId) async {
-    if (userId == 'demo') return;
+  Future<bool> loadWeightHistory(String userId) async {
+    if (userId == 'demo') {
+      _weightHistoryStatus = DataStatus.notLoaded;
+      _weightHistoryObservedAt = null;
+      return false;
+    }
     try {
       QuerySnapshot snapshot = await _firestore
           .collection(FirestoreCollections.bodyMetrics)
           .where('userId', isEqualTo: userId)
           .orderBy('recordedAt', descending: true)
           .limit(30)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       _weightHistory = snapshot.docs
           .map((doc) => BodyMetrics.fromMap(doc.data() as Map<String, dynamic>))
           .toList()
           .reversed
           .toList();
+      _weightHistoryStatus = DataStatus.known;
+      _weightHistoryObservedAt = DateTime.now();
       notifyListeners();
+      return true;
     } catch (e) {
-      _weightHistory = [];
+      _weightHistoryStatus = DataStatus.error;
+      return false;
     }
   }
 
@@ -50,31 +67,33 @@ class HealthProvider with ChangeNotifier {
     if (userId.isEmpty) return false;
     final timestamp = recordedAt ?? DateTime.now();
 
-    // Tài khoản demo không có Firestore — vẫn cập nhật danh sách trong bộ nhớ
-    // để giao diện và chatbot thấy được thay đổi.
+    // Demo has no durable store. An in-memory update must not be reported as a
+    // persisted health measurement.
     if (userId == 'demo') {
-      _weightHistory = [
-        ..._weightHistory,
-        BodyMetrics(
-          id: 'demo-${timestamp.millisecondsSinceEpoch}',
-          userId: userId,
-          weight: weight,
-          bmi: bmi,
-          recordedAt: timestamp,
-        ),
-      ]..sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
-      notifyListeners();
-      return true;
+      return false;
     }
 
     try {
-      await _firestore.collection(FirestoreCollections.bodyMetrics).add({
+      final doc = await _firestore.collection(FirestoreCollections.bodyMetrics).add({
         'userId': userId,
         'weight': weight,
         'bmi': bmi,
         'recordedAt': timestamp.toIso8601String(),
       });
-      await loadWeightHistory(userId);
+      final refreshed = await loadWeightHistory(userId);
+      if (!refreshed) {
+        _weightHistory = [
+          ..._weightHistory.where((item) => item.id != doc.id),
+          BodyMetrics(
+            id: doc.id,
+            userId: userId,
+            weight: weight,
+            bmi: bmi,
+            recordedAt: timestamp,
+          ),
+        ]..sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
+        notifyListeners();
+      }
       return true;
     } catch (e) {
       debugPrint('❌ [HealthProvider] addBodyMetrics failed: $e');
@@ -94,36 +113,51 @@ class HealthProvider with ChangeNotifier {
       return '⚠️ Cảnh báo: Bạn đã uống quá nhiều nước trong ngày (${(newTotal/1000).toStringAsFixed(1)}L). Uống quá nhiều nước có thể gây mất cân bằng điện giải và ảnh hưởng đến sức khỏe.';
     }
     
-    // Update local state first for immediate UI update
-    _todayWaterIntake += amount;
-    notifyListeners();
+    final result = await recordWater(userId, amount);
+    if (!result.isPersisted) return 'Không thể lưu lượng nước lúc này.';
     
+    // Trả về null nếu không có cảnh báo
+    return null;
+  }
+
+  Future<WriteResult<double>> recordWater(String userId, double amount) async {
+    if (userId.isEmpty || userId == 'demo' || amount <= 0) {
+      return const WriteResult.rejected('INVALID_WATER_WRITE');
+    }
     try {
       await _firestore.collection('water_intake').add({
         'userId': userId,
         'amount': amount,
         'date': DateTime.now().toIso8601String(),
       });
+      _todayWaterIntake += amount;
+      _waterStatus = DataStatus.known;
+      _waterObservedAt = DateTime.now();
+      notifyListeners();
       debugPrint('✅ Water intake saved to Firestore: ${amount}ml');
+      return WriteResult.persisted(_todayWaterIntake);
     } catch (e) {
       debugPrint('❌ Error saving water intake to Firestore: $e');
-      // Keep in local state even if Firestore fails (offline support)
+      return const WriteResult.error('WATER_PERSISTENCE_ERROR');
     }
-    
-    // Trả về null nếu không có cảnh báo
-    return null;
   }
 
-  Future<void> loadTodayWaterIntake(String userId) async {
+  Future<bool> loadTodayWaterIntake(String userId) async {
+    if (userId.isEmpty || userId == 'demo') {
+      _waterStatus = DataStatus.missing;
+      _waterObservedAt = null;
+      return true;
+    }
     try {
       debugPrint('🔄 Loading water intake for user: $userId');
       DateTime today = DateTime.now();
       DateTime startOfDay = DateTime(today.year, today.month, today.day);
+      DateTime endOfDay = startOfDay.add(const Duration(days: 1));
 
       QuerySnapshot snapshot = await _firestore
           .collection('water_intake')
           .where('userId', isEqualTo: userId)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       // Filter by date in memory
       _todayWaterIntake = snapshot.docs
@@ -132,15 +166,19 @@ class HealthProvider with ChangeNotifier {
             final dateStr = data['date'] as String?;
             if (dateStr == null) return false;
             final date = DateTime.parse(dateStr);
-            return date.isAfter(startOfDay);
+            return !date.isBefore(startOfDay) && date.isBefore(endOfDay);
           })
           .fold(0.0, (acc, doc) => acc + ((doc.data() as Map<String, dynamic>)['amount'] ?? 0).toDouble());
       
       debugPrint('✅ Loaded water intake: ${_todayWaterIntake}ml from Firestore');
+      _waterStatus = DataStatus.known;
+      _waterObservedAt = DateTime.now();
       notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('❌ Error loading water intake from Firestore: $e');
-      _todayWaterIntake = 0;
+      _waterStatus = DataStatus.error;
+      return false;
     }
   }
 }

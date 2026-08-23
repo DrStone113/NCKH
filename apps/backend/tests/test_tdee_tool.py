@@ -26,7 +26,7 @@ from models.schemas import UserProfile  # noqa: E402
 from services.agent.tool_registry import ToolDescriptor  # noqa: E402
 from services.agent.tools.tdee import (  # noqa: E402
     ACTIVITY_MULTIPLIERS,
-    GOAL_ADJUSTMENTS,
+    HEALTH_GOALS,
     TOOL_DESCRIPTOR,
     calculate_tdee,
 )
@@ -42,6 +42,7 @@ def _profile(**overrides) -> dict:
         "user_id": "u1",
         "age": 30,
         "gender": "male",
+        "equation_sex": "male",
         "height_cm": 175.0,
         "weight_kg": 70.0,
         "activity_level": "moderate",
@@ -62,18 +63,19 @@ def test_male_maintain_moderate_matches_mifflin_st_jeor():
     # TDEE = 1648.75 * 1.55 = 2555.5625
     # daily_kcal = TDEE + 0
     result = calculate_tdee(UserProfile(**_profile()))
-    assert result["bmr"] == pytest.approx(1648.75)
-    assert result["tdee"] == pytest.approx(2555.5625)
-    assert result["daily_kcal"] == pytest.approx(2555.5625)
+    assert result["bmr"] == 1649.0
+    assert result["tdee"] == 2556.0
+    assert result["daily_kcal"] == 2556.0
 
 
 def test_female_lose_weight_sedentary_applies_deficit():
     # BMR(female) = 10*60 + 6.25*165 - 5*28 - 161 = 600 + 1031.25 - 140 - 161 = 1330.25
     # TDEE = 1330.25 * 1.2 = 1596.3
-    # daily_kcal = TDEE - 500 = 1096.3
+    # policy-v1 deficit = 10% of TDEE (below the 500 kcal cap)
     result = calculate_tdee(
         _profile(
             gender="female",
+            equation_sex="female",
             age=28,
             height_cm=165.0,
             weight_kg=60.0,
@@ -81,14 +83,14 @@ def test_female_lose_weight_sedentary_applies_deficit():
             health_goal="lose_weight",
         )
     )
-    assert result["bmr"] == pytest.approx(1330.25)
-    assert result["tdee"] == pytest.approx(1596.3)
-    assert result["daily_kcal"] == pytest.approx(1096.3)
+    assert result["bmr"] == 1330.0
+    assert result["tdee"] == 1596.0
+    assert result["daily_kcal"] == 1437.0
 
 
 def test_gain_muscle_applies_surplus():
     result = calculate_tdee(_profile(health_goal="gain_muscle"))
-    assert result["daily_kcal"] == pytest.approx(result["tdee"] + 300.0)
+    assert result["daily_kcal"] == 2811.0
 
 
 @pytest.mark.parametrize(
@@ -97,28 +99,44 @@ def test_gain_muscle_applies_surplus():
 )
 def test_activity_level_multipliers(level, multiplier):
     result = calculate_tdee(_profile(activity_level=level))
-    assert result["tdee"] == pytest.approx(result["bmr"] * multiplier)
+    assert result["tdee"] == pytest.approx(1648.75 * multiplier, abs=0.5)
 
 
-@pytest.mark.parametrize(
-    "goal,delta",
-    list(GOAL_ADJUSTMENTS.items()),
-)
-def test_health_goal_adjustments(goal, delta):
+@pytest.mark.parametrize("goal", sorted(HEALTH_GOALS))
+def test_health_goal_adjustments(goal):
     result = calculate_tdee(_profile(health_goal=goal))
-    assert result["daily_kcal"] == pytest.approx(result["tdee"] + delta)
+    expected = {"maintain": 2556.0, "lose_weight": 2300.0, "gain_muscle": 2811.0}[goal]
+    assert result["daily_kcal"] == expected
 
 
 def test_accepts_dict_arguments_directly():
     """Dispatcher passes ``call.arguments`` as a plain dict — must be supported."""
     result = calculate_tdee(_profile())
-    assert set(result.keys()) == {"bmr", "tdee", "daily_kcal"}
+    assert {"bmr", "tdee", "daily_kcal", "policy_version", "formula_ids"} <= set(result)
 
 
 def test_accepts_validated_user_profile_instance():
     profile = UserProfile(**_profile())
     result = calculate_tdee(profile)
-    assert set(result.keys()) == {"bmr", "tdee", "daily_kcal"}
+    assert {"bmr", "tdee", "daily_kcal", "policy_version", "formula_ids"} <= set(result)
+
+
+def test_structured_safety_profile_flows_through_tool_boundary():
+    result = calculate_tdee(
+        _profile(nutrition_safety_profile={"pregnancy": "YES"})
+    )
+    assert result["status"] == "UNSUPPORTED"
+    assert result["daily_kcal"] is None
+    assert result["safety_profile"]["pregnancy"] == "YES"
+
+
+def test_unknown_safety_answer_is_not_converted_to_no():
+    result = calculate_tdee(
+        _profile(nutrition_safety_profile={"pregnancy": "UNKNOWN"})
+    )
+    assert result["status"] == "READY"
+    assert result["safety_profile"]["pregnancy"] == "UNKNOWN"
+    assert "SAFETY_SCREENING_INCOMPLETE" in result["warnings"]
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +148,6 @@ def test_accepts_validated_user_profile_instance():
     "missing_field",
     [
         "age",
-        "gender",
         "height_cm",
         "weight_kg",
         "activity_level",
@@ -142,6 +159,19 @@ def test_missing_required_field_raises_invalid_profile(missing_field):
     del bad[missing_field]
     with pytest.raises(ValueError, match=r"^INVALID_PROFILE$"):
         calculate_tdee(bad)
+
+
+@pytest.mark.parametrize("field", ["equation_sex", "gender"])
+def test_optional_identity_fields_may_be_omitted(field):
+    profile = _profile()
+    del profile[field]
+    result = calculate_tdee(profile)
+    if field == "equation_sex":
+        assert result["status"] == "INPUT_UNAVAILABLE"
+        assert result["bmr"] is None
+        assert any("equation_sex:MISSING" in item for item in result["warnings"])
+    else:
+        assert result["status"] == "READY"
 
 
 @pytest.mark.parametrize(
@@ -164,7 +194,7 @@ def test_out_of_range_value_raises_invalid_profile(field, value):
 @pytest.mark.parametrize(
     "field,value",
     [
-        ("gender", "other"),
+        ("equation_sex", "other"),
         ("activity_level", "extreme"),
         ("health_goal", "bulk"),
     ],
@@ -200,7 +230,6 @@ def test_tool_descriptor_schema_matches_user_profile():
     assert {
         "user_id",
         "age",
-        "gender",
         "height_cm",
         "weight_kg",
         "activity_level",
@@ -210,9 +239,10 @@ def test_tool_descriptor_schema_matches_user_profile():
     assert props["age"]["minimum"] == 10 and props["age"]["maximum"] == 120
     assert props["height_cm"]["minimum"] == 100 and props["height_cm"]["maximum"] == 250
     assert props["weight_kg"]["minimum"] == 30 and props["weight_kg"]["maximum"] == 300
-    assert set(props["gender"]["enum"]) == {"male", "female"}
+    assert props["gender"]["type"] == ["string", "null"]
+    assert set(props["equation_sex"]["enum"]) == {"male", "female", None}
     assert set(props["activity_level"]["enum"]) == set(ACTIVITY_MULTIPLIERS.keys())
-    assert set(props["health_goal"]["enum"]) == set(GOAL_ADJUSTMENTS.keys())
+    assert set(props["health_goal"]["enum"]) == set(HEALTH_GOALS)
 
 
 def test_tool_descriptor_schema_validates_via_registry():

@@ -69,7 +69,7 @@ from services.agent.tools.dish import suggest_dish  # noqa: E402
 from services.agent.tools.food import search_food_nutrition  # noqa: E402
 from services.agent.tools.tdee import (  # noqa: E402
     ACTIVITY_MULTIPLIERS,
-    GOAL_ADJUSTMENTS,
+    HEALTH_GOALS,
     calculate_tdee,
 )
 from services.agent.tools.workout import (  # noqa: E402
@@ -90,6 +90,7 @@ _user_profile_strategy = st.fixed_dictionaries(
         "user_id": st.text(min_size=1, max_size=20),
         "age": st.integers(min_value=10, max_value=120),
         "gender": st.sampled_from(["male", "female"]),
+        "equation_sex": st.sampled_from(["male", "female"]),
         "height_cm": st.floats(
             min_value=100.0,
             max_value=250.0,
@@ -103,7 +104,7 @@ _user_profile_strategy = st.fixed_dictionaries(
             allow_infinity=False,
         ),
         "activity_level": st.sampled_from(sorted(ACTIVITY_MULTIPLIERS.keys())),
-        "health_goal": st.sampled_from(sorted(GOAL_ADJUSTMENTS.keys())),
+        "health_goal": st.sampled_from(sorted(HEALTH_GOALS)),
     }
 )
 
@@ -180,7 +181,7 @@ def test_calculate_tdee_idempotent(profile: dict) -> None:
     b = calculate_tdee(profile)
     assert a == b
     # Sanity: the keys promised by the contract are present.
-    assert set(a.keys()) == {"bmr", "tdee", "daily_kcal"}
+    assert {"bmr", "tdee", "daily_kcal", "policy_version", "formula_ids"} <= set(a)
 
 
 # ---------------------------------------------------------------------------
@@ -505,6 +506,7 @@ def test_calculate_tdee_idempotent_concrete_example() -> None:
         "user_id": "u1",
         "age": 30,
         "gender": "male",
+        "equation_sex": "male",
         "height_cm": 175.0,
         "weight_kg": 70.0,
         "activity_level": "moderate",

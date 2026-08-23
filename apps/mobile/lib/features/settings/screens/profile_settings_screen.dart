@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/user_model.dart';
+import '../../../models/canonical_nutrition.dart';
 import '../../../providers/user_provider.dart';
 import '../../../theme/app_theme.dart';
 
@@ -19,7 +20,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late final TextEditingController _heightController;
   late final TextEditingController _weightController;
   late final TextEditingController _targetWeightController;
-  String _gender = 'male';
+  String _gender = 'not_provided';
+  String _equationSex = 'not_provided';
+  late Map<String, NutritionSafetyAnswer> _safetyAnswers;
   String _activityLevel = 'moderate';
   bool _isSaving = false;
 
@@ -29,6 +32,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     'moderate': 'Vận động vừa (3–5 buổi/tuần)',
     'active': 'Vận động nhiều (6–7 buổi/tuần)',
     'very_active': 'Vận động cường độ cao',
+  };
+
+  static const _safetyLabels = <String, String>{
+    'pregnancy': 'Đang mang thai',
+    'lactation': 'Đang cho con bú',
+    'eating_disorder_risk_or_history':
+        'Có nguy cơ hoặc tiền sử rối loạn ăn uống',
+    'serious_renal_condition': 'Có tình trạng thận nghiêm trọng đã biết',
+    'fluid_restricted_cardiac_condition':
+        'Có tình trạng tim cần hạn chế dịch đã biết',
+    'clinically_complex_metabolic_condition':
+        'Có tình trạng chuyển hóa phức tạp đã biết',
   };
 
   @override
@@ -46,7 +61,20 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     _targetWeightController = TextEditingController(
       text: user?.targetWeight?.toStringAsFixed(1) ?? '',
     );
-    _gender = user?.gender == 'female' ? 'female' : 'male';
+    _gender = user?.gender ?? 'not_provided';
+    _equationSex = user?.equationSex ?? 'not_provided';
+    final safety =
+        user?.nutritionSafetyProfile ?? const NutritionSafetyProfile();
+    _safetyAnswers = {
+      'pregnancy': safety.pregnancy,
+      'lactation': safety.lactation,
+      'eating_disorder_risk_or_history': safety.eatingDisorderRiskOrHistory,
+      'serious_renal_condition': safety.seriousRenalCondition,
+      'fluid_restricted_cardiac_condition':
+          safety.fluidRestrictedCardiacCondition,
+      'clinically_complex_metabolic_condition':
+          safety.clinicallyComplexMetabolicCondition,
+    };
     _activityLevel = _normalizeActivity(user?.activityLevel);
   }
 
@@ -123,7 +151,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       final updated = current.copyWith(
         name: _nameController.text.trim(),
         age: int.parse(_ageController.text.trim()),
-        gender: _gender,
+        gender: _gender == 'not_provided' ? null : _gender,
+        equationSex: _equationSex == 'not_provided' ? null : _equationSex,
+        nutritionSafetyProfile: NutritionSafetyProfile(
+          pregnancy: _safetyAnswers['pregnancy']!,
+          lactation: _safetyAnswers['lactation']!,
+          eatingDisorderRiskOrHistory:
+              _safetyAnswers['eating_disorder_risk_or_history']!,
+          seriousRenalCondition: _safetyAnswers['serious_renal_condition']!,
+          fluidRestrictedCardiacCondition:
+              _safetyAnswers['fluid_restricted_cardiac_condition']!,
+          clinicallyComplexMetabolicCondition:
+              _safetyAnswers['clinically_complex_metabolic_condition']!,
+        ),
         height: _parseNumber(_heightController.text)!,
         weight: _parseNumber(_weightController.text)!,
         targetWeight: _targetWeightController.text.trim().isEmpty
@@ -211,6 +251,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         labelText: 'Giới tính',
                       ),
                       items: const [
+                        DropdownMenuItem(
+                            value: 'not_provided',
+                            child: Text('Không cung cấp')),
                         DropdownMenuItem(value: 'male', child: Text('Nam')),
                         DropdownMenuItem(value: 'female', child: Text('Nữ')),
                       ],
@@ -220,6 +263,58 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _equationSex,
+                decoration: const InputDecoration(
+                  labelText: 'Đầu vào phương trình RMR',
+                  helperText:
+                      'Chỉ dùng cho phương trình Mifflin; không suy ra từ giới tính.',
+                  prefixIcon: Icon(Icons.calculate_outlined),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                      value: 'not_provided',
+                      child: Text('Chưa xác nhận / từ chối')),
+                  DropdownMenuItem(value: 'male', child: Text('Hệ số nam')),
+                  DropdownMenuItem(value: 'female', child: Text('Hệ số nữ')),
+                ],
+                onChanged: (value) {
+                  if (value != null) _equationSex = value;
+                },
+              ),
+              const SizedBox(height: 24),
+              const _SectionTitle(
+                title: 'Khả năng áp dụng mục tiêu dinh dưỡng',
+                subtitle:
+                    'Thông tin tự khai để xác định khi nào cần hướng dẫn chuyên gia; không phải chẩn đoán.',
+              ),
+              const SizedBox(height: 12),
+              ..._safetyLabels.entries.map(
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: DropdownButtonFormField<NutritionSafetyAnswer>(
+                    initialValue: _safetyAnswers[entry.key],
+                    decoration: InputDecoration(labelText: entry.value),
+                    items: const [
+                      DropdownMenuItem(
+                          value: NutritionSafetyAnswer.notProvided,
+                          child: Text('Chưa cung cấp')),
+                      DropdownMenuItem(
+                          value: NutritionSafetyAnswer.unknown,
+                          child: Text('Không rõ')),
+                      DropdownMenuItem(
+                          value: NutritionSafetyAnswer.no,
+                          child: Text('Không')),
+                      DropdownMenuItem(
+                          value: NutritionSafetyAnswer.yes, child: Text('Có')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) _safetyAnswers[entry.key] = value;
+                    },
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               const _SectionTitle(
@@ -373,7 +468,7 @@ class _ProfileSummary extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'BMI ${user.bmi.toStringAsFixed(1)} • ${user.bmiCategory}',
+                  'BMI ${user.displayBmi.toStringAsFixed(1)} • ${user.bmiCategory}',
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],

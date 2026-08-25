@@ -1,0 +1,13 @@
+{
+  "acceptance_decision": "NO",
+  "adversarial_first_pass_metrics": null,
+  "adversarial_reason": "PENDING_HUMAN_REVIEW; candidate data is not a frozen independent holdout",
+  "natural_first_pass_metrics": null,
+  "natural_reason": "0 genuine turns collected; minimum is 100; PENDING_HUMAN_REVIEW",
+  "planner_rules_changed_during_first_pass": false,
+  "production_enforcement_enabled": false,
+  "regression_accuracy_is_independent_validation": false,
+  "regression_primary_intent_accuracy": 1.0,
+  "regression_turns": 60,
+  "validation_schema_version": "context-planner-validation-v1"
+}

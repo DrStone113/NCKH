@@ -1,0 +1,17 @@
+{
+  "case_count": 60,
+  "content_sha256": "3ae51bfdf8d77bd671017c208572328e431f1b1deed40f46248f7fab82bda1af",
+  "created_at": "2026-08-25T19:38:29+07:00",
+  "dataset_type": "REGRESSION",
+  "dataset_version": "context-planner-development-v1",
+  "eligible_for_independent_evaluation": false,
+  "lifecycle": "USED_FOR_TUNING",
+  "oracle_review_status": "LEGACY_ENGINEERING_ORACLE",
+  "oracle_sha256": "92ae0e313e7b07176842cba662050a81b854fd3c1b4d0776d90982f40f5ec89d",
+  "oracle_version": "context-planner-development-oracle-v1",
+  "planner_commit": "67c067acddd4736cc4434d5ec404201b9443ebea",
+  "planner_content_sha256": "c1731ae27446d4b9cba7c59e910a7f4d59d79d9825ba283e90327e5dfd1a351f",
+  "planner_version": "context-plan-v1",
+  "used_for_tuning": true,
+  "validation_schema_version": "context-planner-validation-v1"
+}

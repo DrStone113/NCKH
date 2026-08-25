@@ -1,0 +1,17 @@
+{
+  "case_count": 0,
+  "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "created_at": "2026-08-25T19:38:29+07:00",
+  "dataset_type": "NATURAL_SHADOW",
+  "dataset_version": "context-planner-natural-shadow-v1",
+  "eligible_for_independent_evaluation": false,
+  "lifecycle": "COLLECTING",
+  "oracle_review_status": "PENDING_HUMAN_REVIEW",
+  "oracle_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "oracle_version": "context-planner-natural-oracle-v1",
+  "planner_commit": "67c067acddd4736cc4434d5ec404201b9443ebea",
+  "planner_content_sha256": "c1731ae27446d4b9cba7c59e910a7f4d59d79d9825ba283e90327e5dfd1a351f",
+  "planner_version": "context-plan-v1",
+  "used_for_tuning": false,
+  "validation_schema_version": "context-planner-validation-v1"
+}

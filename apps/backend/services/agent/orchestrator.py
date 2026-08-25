@@ -31,8 +31,12 @@ from services.agent.system_prompt import buildSystemPrompt
 from services.agent.tool_dispatcher import ToolResult
 from services.agent.turn_router import TurnPlan, classify_turn
 from services.agent.context_trace import ContextTraceRecorder
+from services.agent.context_planner import ContextPlanner
+from services.agent.context_planner.validation.collector import get_natural_collector
+from services.agent.context_planner.validation.token_measurement import TokenCounter, measure_turn_tokens
 
 logger = logging.getLogger(__name__)
+_shadow_context_planner = ContextPlanner()
 
 
 # Guidance handed to the model when a tool call fails, keyed by the stable
@@ -121,7 +125,7 @@ class AgentOrchestrator:
         thought_chunks: list[str] = []
         trace = ContextTraceRecorder(
             user_text,
-            enabled=settings.context_trace_enabled,
+            enabled=(settings.context_trace_enabled or settings.context_planner_shadow_enabled),
         )
         trace.capture_initial_context(user_context)
         try:
@@ -147,6 +151,46 @@ class AgentOrchestrator:
 
             user_profile: Any = user_context
             messages = self._build_messages(context, user_text, plan, user_profile=user_profile)
+            current_context_size = len(json.dumps(messages, ensure_ascii=False, default=str))
+            if tool_schemas:
+                current_context_size += len(json.dumps(tool_schemas, ensure_ascii=False, default=str))
+            trace.capture_production_router(plan, context_size_characters=current_context_size)
+            if settings.context_planner_shadow_enabled:
+                # Fail-open observation: D3.0 output cannot become an input to
+                # any authoritative production decision in this turn.
+                try:
+                    names_method = getattr(self.tools, "names", None)
+                    available_names = names_method() if callable(names_method) else ()
+                    shadow_result = _shadow_context_planner.plan_shadow(
+                        user_text, user_context=user_context, memory_context=context,
+                        available_tool_names=available_names,
+                        current_production_context_size_characters=current_context_size,
+                    )
+                    trace.capture_shadow(shadow_result)
+                    all_tool_schemas = tool_schemas if tool_schemas is not None else self.tools.schemas()
+                    token_measurements = measure_turn_tokens(
+                        messages=messages,
+                        production_tool_schemas=tool_schemas,
+                        shadow_bundle=shadow_result.bundle.to_dict(),
+                        shadow_tool_names=shadow_result.plan.permitted_tools,
+                        all_tool_schemas=all_tool_schemas,
+                        counter=TokenCounter.from_llm(llm, settings.llm_model),
+                    )
+                    trace.capture_token_measurements(token_measurements)
+                    collection_path = settings.context_planner_natural_collection_path
+                    if collection_path:
+                        history = (
+                            turn.content for turn in getattr(context, "history", ())
+                            if getattr(turn, "role", None) == "user"
+                        )
+                        get_natural_collector(collection_path).collect(
+                            session_id=session_id, query=user_text,
+                            conversational_context=history,
+                            shadow_result=shadow_result,
+                            token_measurements=token_measurements,
+                        )
+                except Exception:
+                    logger.warning("Shadow context planner failed; production turn unchanged", exc_info=True)
             await self._append_turn(session_id, "user", user_text)
 
             # The router proposes a per-turn budget; the constructor's

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,6 +7,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_environment: str = "production"
     development_context_trace: bool = False
+    # D3.0 supports observation only. Literal validation intentionally rejects
+    # an "enforced" value so configuration cannot activate D3.1 behavior.
+    context_planner_mode: Literal["off", "shadow"] = "off"
+    # Optional append-only D3.0.1 natural-shadow artifact. Collection is active
+    # only together with shadow mode; None performs no filesystem writes.
+    context_planner_natural_collection_path: Optional[str] = None
     openai_base_url: str = "https://api.vilao.ai/v1"
     # Secrets have no in-code default: they must come from ``.env`` (which is
     # gitignored) or the process environment. Hardcoding a key here leaks it
@@ -56,6 +62,10 @@ class Settings(BaseSettings):
             self.development_context_trace
             and self.app_environment.strip().lower() != "production"
         )
+
+    @property
+    def context_planner_shadow_enabled(self) -> bool:
+        return self.context_planner_mode == "shadow"
 
 
 settings = Settings()

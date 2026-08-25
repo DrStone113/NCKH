@@ -481,6 +481,7 @@ def _format_profile(user_profile: Any) -> str:
             )
         consumed_val = float(today_consumed if today_consumed is not None else 0)
         target_raw = daily_kcal_target
+        remaining_val: float | None = None
         if target_raw is not None:
             target_val = float(target_raw)
             remaining_val = target_val - consumed_val
@@ -539,8 +540,14 @@ def _format_profile(user_profile: Any) -> str:
                 cal_str = f" ({e_cal} kcal)" if e_cal else ""
                 ex_names.append(f"{e_name}{dur_str}{cal_str}")
             lines.append(f"- Bài tập hôm nay ({len(today_exercises)} bài): " + "; ".join(ex_names))
+        remaining_guidance = (
+            f"Người dùng còn khoảng {int(remaining_val)} kcal cho phần còn lại trong ngày. "
+            if remaining_val is not None
+            else "Chưa có số calo còn lại canonical khả dụng; không được tự suy diễn một con số. "
+        )
         lines.append(
-            f"- QUY TẮC TƯ VẤN BỮA TIẾP THEO & ĐỐI CHIẾU THỰC ĐƠN: Người dùng còn khoảng {int(remaining_val)} kcal cho phần còn lại trong ngày. "
+            "- QUY TẮC TƯ VẤN BỮA TIẾP THEO & ĐỐI CHIẾU THỰC ĐƠN: "
+            f"{remaining_guidance}"
             f"Trước khi gợi ý món ăn, BẮT BUỘC kiểm tra các bữa đã lên lịch ở trên. "
             f"Nếu bữa ăn đó ĐÃ CÓ món được lên lịch sẵn trong kế hoạch (ví dụ: Bữa tối đã có 'Cơm đùi gà nấu nấm'), "
             f"bạn PHẢI nêu rõ món đang có trong thực đơn, đề xuất món mới phù hợp (qua suggest_dish), và HỎI LẠI NGƯỜI DÙNG xem có muốn ĐỔI MÓN sang món mới này không hay giữ món cũ. "

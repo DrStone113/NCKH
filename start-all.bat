@@ -2,6 +2,8 @@
 setlocal EnableExtensions
 title HealthApp - Khoi Dong Tat Ca Service
 
+set "ROOT_DIR=%~dp0"
+set "DEV_COMPOSE=%~dp0docker-compose.dev.yml"
 set "MOBILE_DIR=%~dp0apps\mobile"
 set "WEB_HASH_SCRIPT=%MOBILE_DIR%\tool\web_build_fingerprint.ps1"
 set "WEB_BUILD_HASH=%MOBILE_DIR%\build\web\.source_hash"
@@ -16,15 +18,15 @@ REM 1. Deploy Database Docker
 echo [1/4] Kiem tra va khoi dong Database Postgres (pgvector)...
 
 REM Detect Docker Desktop path
-set DOCKER_CMD=docker
+set "DOCKER_EXE=docker"
 if exist "%USERPROFILE%\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe" (
-    set DOCKER_CMD="%USERPROFILE%\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
+    set "DOCKER_EXE=%USERPROFILE%\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe"
 )
 if exist "C:\Program Files\Docker\Docker\resources\bin\docker.exe" (
-    set DOCKER_CMD="C:\Program Files\Docker\Docker\resources\bin\docker.exe"
+    set "DOCKER_EXE=C:\Program Files\Docker\Docker\resources\bin\docker.exe"
 )
 
-%DOCKER_CMD% compose up -d postgres
+"%DOCKER_EXE%" compose up -d postgres
 if %ERRORLEVEL% NEQ 0 (
     echo [!] Kiem tra Docker Desktop xem da mo chua!
     pause
@@ -67,15 +69,56 @@ if "%WEB_NEEDS_BUILD%"=="1" (
     echo [+] Khong co thay doi. Su dung ban build hien tai.
 )
 
-REM 3. Launch Backend
+REM 3. Launch Backend in the pinned Python 3.11 Docker environment.
+REM The repository-local venv is optional and is not present on every machine.
 echo.
 echo [3/4] Khoi dong Backend FastAPI (Port 8080)...
-start "HealthApp Backend" /min cmd /k "cd /d %~dp0apps\backend && venv\Scripts\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
+pushd "%ROOT_DIR%"
+"%DOCKER_EXE%" compose -f docker-compose.yml -f docker-compose.dev.yml up -d fastapi_backend
+if errorlevel 1 (
+    popd
+    echo [!] Backend Docker khoi dong that bai.
+    pause
+    exit /b 1
+)
+popd
+
+echo [*] Doi Backend san sang...
+for /l %%I in (1,1,90) do (
+    curl.exe -fsS http://localhost:8080/health >nul 2>&1 && goto backend_ready
+    powershell.exe -NoProfile -Command "Start-Sleep -Seconds 1"
+)
+echo [!] Backend khong san sang tren port 8080 sau 90 giay.
+"%DOCKER_EXE%" compose -f docker-compose.yml -f docker-compose.dev.yml logs --tail 80 fastapi_backend
+pause
+exit /b 1
+
+:backend_ready
+echo [+] Backend da san sang.
+start "HealthApp Backend" /min cmd /k "cd /d %ROOT_DIR% && docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f fastapi_backend"
 
 REM 4. Launch Web Server
 echo.
 echo [4/4] Khoi dong Web Server (Port 3000)...
-start "HealthApp Web Server" /min cmd /k "cd /d %~dp0apps\mobile && ..\backend\venv\Scripts\python.exe serve_web.py"
+where python >nul 2>&1
+if errorlevel 1 (
+    echo [!] Khong tim thay Python tren PATH de chay static web server.
+    pause
+    exit /b 1
+)
+start "HealthApp Web Server" /min cmd /k "cd /d %MOBILE_DIR% && python serve_web.py"
+
+echo [*] Doi Web Server san sang...
+for /l %%I in (1,1,30) do (
+    curl.exe -fsS http://localhost:3000 >nul 2>&1 && goto web_ready
+    powershell.exe -NoProfile -Command "Start-Sleep -Seconds 1"
+)
+echo [!] Web Server khong san sang tren port 3000 sau 30 giay.
+pause
+exit /b 1
+
+:web_ready
+echo [+] Web Server da san sang.
 
 echo.
 echo ========================================================
@@ -85,4 +128,5 @@ echo   - Backend API : http://localhost:8080/docs
 echo   - Web App     : http://localhost:3000
 echo.
 echo   Cua so nay se tu dong dong sau 5 giay...
-timeout /t 5 >nul
+powershell.exe -NoProfile -Command "Start-Sleep -Seconds 5"
+exit /b 0

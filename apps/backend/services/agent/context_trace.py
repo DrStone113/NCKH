@@ -84,6 +84,20 @@ class ContextTrace:
     calculation_provenance: list[dict[str, Any]] = field(default_factory=list)
     validation_results: list[dict[str, Any]] = field(default_factory=list)
     final_context_manifest: dict[str, Any] = field(default_factory=dict)
+    production_router_behavior: dict[str, Any] = field(default_factory=dict)
+    production_sources_accessed: list[str] = field(default_factory=list)
+    shadow_primary_intent: str | None = None
+    shadow_secondary_intents: list[str] = field(default_factory=list)
+    shadow_context_plan: dict[str, Any] = field(default_factory=dict)
+    shadow_sources_requested: list[str] = field(default_factory=list)
+    shadow_tools_offered: list[str] = field(default_factory=list)
+    shadow_rag_policy: str | None = None
+    current_context_size_characters: int = 0
+    shadow_context_size_characters: int = 0
+    shadow_missing_required_sources: list[str] = field(default_factory=list)
+    shadow_context_bundle: dict[str, Any] = field(default_factory=dict)
+    planner_latency_ms: float | None = None
+    shadow_token_measurements: dict[str, Any] = field(default_factory=dict)
 
 
 class ContextTraceRecorder:
@@ -128,6 +142,7 @@ class ContextTraceRecorder:
             if source not in self.trace.selected_sources:
                 self.trace.selected_sources.append(source)
         self.trace.available_sources = sorted(available_sources)
+        self.trace.production_sources_accessed = list(self.trace.selected_sources)
 
         calculations = user_context.get("calculation_manifest")
         if isinstance(calculations, dict):
@@ -148,6 +163,16 @@ class ContextTraceRecorder:
         self.trace.rag_result_status = str(
             getattr(context, "rag_result_status", "UNKNOWN")
         )
+        structural_sources = []
+        if getattr(context, "history", None):
+            structural_sources.append("RECENT_CONVERSATION")
+        if getattr(context, "pinned_facts", None):
+            structural_sources.append("CONFIRMED_MEMORY")
+        if self.trace.rag_requested:
+            structural_sources.append("RAG")
+        for source in structural_sources:
+            if source not in self.trace.production_sources_accessed:
+                self.trace.production_sources_accessed.append(source)
 
     def capture_tools_offered(self, schemas: Any) -> None:
         if not self.enabled or not isinstance(schemas, list):
@@ -197,6 +222,8 @@ class ContextTraceRecorder:
                 source = str(envelope.get("source") or "unknown")
                 if source not in self.trace.selected_sources:
                     self.trace.selected_sources.append(source)
+                if source not in self.trace.production_sources_accessed:
+                    self.trace.production_sources_accessed.append(source)
                 if envelope.get("conflict") is not None:
                     self.trace.source_conflicts[key] = _sanitize(
                         envelope["conflict"]
@@ -208,6 +235,42 @@ class ContextTraceRecorder:
                 "error": entry["error"],
             }
         )
+
+    def capture_production_router(self, plan: Any, *, context_size_characters: int) -> None:
+        if not self.enabled:
+            return
+        self.trace.production_router_behavior = {
+            "tier": getattr(plan, "tier", None),
+            "use_heavy_model": bool(getattr(plan, "use_heavy_model", False)),
+            "offer_tools": bool(getattr(plan, "offer_tools", False)),
+            "prompt_mode": getattr(plan, "prompt_mode", None),
+            "max_steps": getattr(plan, "max_steps", None),
+        }
+        self.trace.current_context_size_characters = context_size_characters
+
+    def capture_shadow(self, result: Any) -> None:
+        """Record only structural planner output; never raw bundle values."""
+        if not self.enabled:
+            return
+        classification = result.classification
+        plan = result.plan
+        bundle = result.bundle
+        self.trace.shadow_primary_intent = classification.primary_intent.value
+        self.trace.shadow_secondary_intents = [item.value for item in classification.secondary_intents]
+        self.trace.shadow_context_plan = plan.to_dict()
+        self.trace.shadow_sources_requested = [
+            item.value for item in (*plan.required_sources, *plan.optional_sources)
+        ]
+        self.trace.shadow_tools_offered = list(plan.permitted_tools)
+        self.trace.shadow_rag_policy = plan.rag_policy.value
+        self.trace.shadow_context_size_characters = bundle.planned_context_size_characters
+        self.trace.shadow_missing_required_sources = [item.value for item in bundle.missing_required_sources]
+        self.trace.shadow_context_bundle = bundle.to_dict()
+        self.trace.planner_latency_ms = round(float(result.latency_ms), 3)
+
+    def capture_token_measurements(self, measurements: Any) -> None:
+        if self.enabled:
+            self.trace.shadow_token_measurements = measurements.to_dict()
 
     def finish(self, *, outcome: str) -> None:
         if not self.enabled:

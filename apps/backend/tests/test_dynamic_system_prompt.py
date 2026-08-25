@@ -105,6 +105,24 @@ def test_format_profile_includes_goal_and_today_logs():
     assert "QUY TẮC TƯ VẤN BỮA TIẾP THEO" in formatted
 
 
+def test_format_profile_handles_today_logs_without_canonical_calorie_target():
+    profile = {
+        "name": "Người dùng chưa xác nhận giới tính công thức",
+        "age": 22,
+        "gender": "male",
+        "today_calories_consumed": 0,
+        "today_meals_count": 0,
+        "today_calories_burned": 0,
+        "today_exercises_count": 0,
+    }
+
+    formatted = _format_profile(profile)
+
+    assert "chưa có mục tiêu năng lượng canonical khả dụng" in formatted
+    assert "Chưa có số calo còn lại canonical khả dụng" in formatted
+    assert "không được tự suy diễn một con số" in formatted
+
+
 def test_build_system_prompt_integrates_user_profile():
     profile = {
         "name": "Trần Thị B",

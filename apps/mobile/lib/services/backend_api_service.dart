@@ -45,7 +45,7 @@ class BackendApiService {
     try {
       debugPrint('🌐 BackendAPI: Fetching Vietnamese dishes...');
       final response = await _client
-          .get(Uri.parse('$baseUrl/api/nutrition/vietnamese-dishes'))
+          .get(Uri.parse('$baseUrl/api/nutrition/vietnamese-dishes?limit=500'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

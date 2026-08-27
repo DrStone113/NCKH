@@ -39,6 +39,19 @@ void main() {
     expect(schedule?['day_kind'], 'active_recovery');
   });
 
+  test('reads the evidence-based weekly training summary', () {
+    expect(
+      planWeeklyTrainingSummary({
+        'weekly_training_summary':
+            '2 buổi kháng lực • 3 buổi aerobic • 1 buổi phục hồi',
+      }),
+      '2 buổi kháng lực • 3 buổi aerobic • 1 buổi phục hồi',
+    );
+    expect(planWeeklyTrainingSummary(null), isNull);
+    expect(
+        planWeeklyTrainingSummary({'weekly_training_summary': '  '}), isNull);
+  });
+
   test('formats a roadmap day with weekday and calendar date', () {
     expect(
       formatPlanDayCalendarLabel(

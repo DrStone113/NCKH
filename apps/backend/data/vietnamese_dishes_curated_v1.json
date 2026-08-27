@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "catalog_version": "nin-curated-v1-2026-08-26",
+  "methodology": {
+    "ingredient_source": "Bảng thành phần thực phẩm Việt Nam, Viện Dinh dưỡng - Bộ Y tế (2007)",
+    "recipe_method": "FAO/INFOODS recipe calculation: sum edible ingredient weights and nutrient values; water and broth without a matched nutrient record are not fabricated",
+    "quality_policy": "Only exact food matches are accepted. Substitutions such as fish species for another fish species are not allowed."
+  },
+  "overrides": [
+    {
+      "id": 2,
+      "name": "Phở bò sốt vang",
+      "meal_types": [
+        "breakfast",
+        "lunch"
+      ],
+      "ingredients": [
+        {
+          "name": "Bánh phở",
+          "grams": 180,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt bò loại I",
+          "grams": 150,
+          "category": "protein"
+        },
+        {
+          "name": "Mỡ lợn nước",
+          "grams": 5,
+          "category": "fat"
+        },
+        {
+          "name": "Hành lá (hành hoa)",
+          "grams": 30,
+          "category": "veggie"
+        }
+      ],
+      "estimated_calories": 483,
+      "reference_nutrition": {
+        "calories": 483,
+        "protein": 37.7,
+        "fat": 10.7,
+        "carbohydrates": 59.1,
+        "fiber": 0.3,
+        "sodium_mg": 1835
+      },
+      "catalog_status": "verified_recipe",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "500 món ăn thông dụng - Phở bò sốt vang",
+        "source_url": "https://chuyentrang.viendinhduong.vn/FileUpload/Documents/500%20mon%20an%20thong%20dung/%2814%29%20Pho.PDF",
+        "retrieved_at": "2026-08-26"
+      }
+    },
+    {
+      "id": 7,
+      "name": "Cháo gà",
+      "meal_types": [
+        "breakfast",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 37.5,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt gà ta",
+          "grams": 34,
+          "category": "protein"
+        },
+        {
+          "name": "Mỡ lợn nước",
+          "grams": 3,
+          "category": "fat"
+        },
+        {
+          "name": "Hành lá (hành hoa)",
+          "grams": 5,
+          "category": "veggie"
+        }
+      ],
+      "estimated_calories": 225,
+      "reference_nutrition": {
+        "calories": 225,
+        "protein": 9.8,
+        "fat": 7.8,
+        "carbohydrates": 28.8,
+        "fiber": 0.2,
+        "sodium_mg": 1800
+      },
+      "catalog_status": "verified_recipe",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "500 món ăn thông dụng - Cháo gà",
+        "source_url": "https://chuyentrang.viendinhduong.vn/FileUpload/Documents/500%20mon%20an%20thong%20dung/%2812%29%20Chao%2C%20sup.PDF",
+        "retrieved_at": "2026-08-26"
+      }
+    },
+    {
+      "id": 23,
+      "name": "Phở gà",
+      "meal_types": [
+        "breakfast",
+        "lunch"
+      ],
+      "ingredients": [
+        {
+          "name": "Bánh phở",
+          "grams": 130,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt gà ta",
+          "grams": 70,
+          "category": "protein"
+        },
+        {
+          "name": "Mỡ lợn nước",
+          "grams": 3,
+          "category": "fat"
+        }
+      ],
+      "estimated_calories": 356,
+      "reference_nutrition": {
+        "calories": 356,
+        "protein": 19,
+        "fat": 12.2,
+        "carbohydrates": 42.6,
+        "fiber": 0.5,
+        "sodium_mg": 1664
+      },
+      "catalog_status": "verified_recipe",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "500 món ăn thông dụng - Phở gà 24H",
+        "source_url": "https://chuyentrang.viendinhduong.vn/FileUpload/Documents/500%20mon%20an%20thong%20dung/%2814%29%20Pho.PDF",
+        "retrieved_at": "2026-08-26"
+      }
+    },
+    {
+      "id": 76,
+      "name": "Miến gà",
+      "meal_types": [
+        "breakfast",
+        "lunch"
+      ],
+      "ingredients": [
+        {
+          "name": "Miến dong",
+          "grams": 55,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt gà ta",
+          "grams": 45,
+          "category": "protein"
+        },
+        {
+          "name": "Mỡ lợn nước",
+          "grams": 3,
+          "category": "fat"
+        },
+        {
+          "name": "Hành lá (hành hoa)",
+          "grams": 5,
+          "category": "veggie"
+        }
+      ],
+      "estimated_calories": 300,
+      "reference_nutrition": {
+        "calories": 300,
+        "protein": 9.5,
+        "fat": 9,
+        "carbohydrates": 45.4,
+        "fiber": 0.9,
+        "sodium_mg": 1364
+      },
+      "catalog_status": "verified_recipe",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "500 món ăn thông dụng - Miến gà",
+        "source_url": "https://chuyentrang.viendinhduong.vn/FileUpload/Documents/500%20mon%20an%20thong%20dung/%2813%29%20Hu%20tieu%2C%20mien%2C%20my.PDF",
+        "retrieved_at": "2026-08-26"
+      }
+    }
+  ],
+  "additions": [
+    {
+      "id": 91,
+      "name": "Xôi lạc",
+      "meal_types": [
+        "breakfast",
+        "snack"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo nếp cái",
+          "grams": 50,
+          "category": "carb"
+        },
+        {
+          "name": "Lạc hạt",
+          "grams": 10,
+          "category": "protein"
+        },
+        {
+          "name": "Vừng (đen, trắng)",
+          "grams": 3,
+          "category": "fat"
+        }
+      ],
+      "estimated_calories": 246,
+      "catalog_status": "verified_recipe",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - Xôi lạc",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 92,
+      "name": "Suất cơm sườn, đậu phụ và su su",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 100,
+          "category": "carb"
+        },
+        {
+          "name": "Sườn lợn",
+          "grams": 50,
+          "category": "protein"
+        },
+        {
+          "name": "Đậu phụ",
+          "grams": 20,
+          "category": "protein"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 10,
+          "category": "fat"
+        },
+        {
+          "name": "Su su, quả",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Cải xanh",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Vải",
+          "grams": 150,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 660,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa trưa thứ 2/4/6",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 93,
+      "name": "Suất cơm cá trắm sốt cà chua và cải bắp",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 100,
+          "category": "carb"
+        },
+        {
+          "name": "Cá trắm cỏ",
+          "grams": 70,
+          "category": "protein"
+        },
+        {
+          "name": "Cà chua",
+          "grams": 25,
+          "category": "veggie"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 7,
+          "category": "fat"
+        },
+        {
+          "name": "Thịt lợn nạc",
+          "grams": 20,
+          "category": "protein"
+        },
+        {
+          "name": "Cải bắp",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Bí đao (bí xanh)",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Cam",
+          "grams": 150,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 624,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa trưa thứ 3/5/7",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 94,
+      "name": "Suất cơm bò xào hành tây và củ cải",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 100,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt bò loại I",
+          "grams": 50,
+          "category": "protein"
+        },
+        {
+          "name": "Hành tây",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Cà chua",
+          "grams": 20,
+          "category": "veggie"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 7,
+          "category": "fat"
+        },
+        {
+          "name": "Cá bống",
+          "grams": 20,
+          "category": "protein"
+        },
+        {
+          "name": "Củ cải trắng",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Bí ngô",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Xoài chín",
+          "grams": 100,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 622,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa trưa chủ nhật",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 95,
+      "name": "Suất cơm cá rô phi, mướp đắng trứng",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 75,
+          "category": "carb"
+        },
+        {
+          "name": "Cá rô phi",
+          "grams": 50,
+          "category": "protein"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 12,
+          "category": "fat"
+        },
+        {
+          "name": "Mướp đắng",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Trứng gà",
+          "grams": 20,
+          "category": "protein"
+        },
+        {
+          "name": "Rau ngót",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Dưa hấu",
+          "grams": 150,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 522,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa tối thứ 2/4/6",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 96,
+      "name": "Suất cơm thịt lợn, bầu và mồng tơi",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 75,
+          "category": "carb"
+        },
+        {
+          "name": "Thịt lợn nạc",
+          "grams": 70,
+          "category": "protein"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 7,
+          "category": "fat"
+        },
+        {
+          "name": "Lạc hạt",
+          "grams": 10,
+          "category": "protein"
+        },
+        {
+          "name": "Bầu",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Rau mồng tơi",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Bưởi",
+          "grams": 200,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 570,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa tối thứ 3/5/7",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    },
+    {
+      "id": 97,
+      "name": "Suất cơm tôm, trứng đúc thịt và cải bắp",
+      "meal_types": [
+        "lunch",
+        "dinner"
+      ],
+      "ingredients": [
+        {
+          "name": "Gạo tẻ máy",
+          "grams": 75,
+          "category": "carb"
+        },
+        {
+          "name": "Tôm biển",
+          "grams": 50,
+          "category": "protein"
+        },
+        {
+          "name": "Trứng gà",
+          "grams": 20,
+          "category": "protein"
+        },
+        {
+          "name": "Thịt lợn nạc",
+          "grams": 10,
+          "category": "protein"
+        },
+        {
+          "name": "Dầu thảo mộc (Lạc, vừng, cám...)",
+          "grams": 10,
+          "category": "fat"
+        },
+        {
+          "name": "Cải bắp",
+          "grams": 200,
+          "category": "veggie"
+        },
+        {
+          "name": "Cải xanh",
+          "grams": 50,
+          "category": "veggie"
+        },
+        {
+          "name": "Lựu",
+          "grams": 100,
+          "category": "fruit"
+        }
+      ],
+      "estimated_calories": 572,
+      "catalog_status": "verified_complete_meal",
+      "provenance": {
+        "publisher": "Viện Dinh dưỡng Quốc gia - Bộ Y tế",
+        "source_title": "Thực đơn tham khảo cho người bệnh Gout 1600 kcal - bữa tối chủ nhật",
+        "source_url": "https://chuyentrang.viendinhduong.vn/vi/-395/che-do-an-du-phong-va-dieu-tri-nguoi-bi-benh-gout.html",
+        "retrieved_at": "2026-08-26",
+        "calculation_method": "FAO/INFOODS ingredient-sum calculation using the Vietnam Food Composition Table"
+      }
+    }
+  ]
+}

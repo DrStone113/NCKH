@@ -1,3 +1,38 @@
+## [2026-08-27] — Nâng cấp kế hoạch tập luyện nhiều tuần
+- **Weekly structure:** Thay split tăng cơ chỉ chạm mỗi nhóm cơ một lần bằng 3 buổi full-body không liên tiếp; giảm cân/duy trì dùng 2 buổi full-body, xen aerobic và phục hồi.
+- **Actionable recovery:** Thêm `mobility` và goal `recovery` vào `suggest_workout`; ngày phục hồi nay sinh bài thật từ catalog thay vì chỉ mang nhãn trống.
+- **Progression:** Người ít vận động có một buổi ít hơn trong giai đoạn thích nghi, giữ cường độ dễ khi mới tăng tần suất rồi mới lên intermediate; chỉ tuần cuối của lộ trình từ 4 tuần là deload.
+- **Truthful duration:** Chặn buổi có cấu trúc ở 40 phút để thời lượng kế hoạch luôn khớp tối đa 8 bài × 5 phút mà tool thực sự trả về.
+- **Age-aware:** Metadata tuần phân biệt mục tiêu CDC cho 10–17, 18–64 và 65+; người lớn tuổi có nhắc thêm hoạt động cân bằng.
+- **Mobile:** Màn chi tiết kế hoạch hiển thị tóm tắt số buổi kháng lực, aerobic, phục hồi và ngày nghỉ của tuần.
+- **Evidence:** Đối chiếu ACSM 2026, CDC/HHS Physical Activity Guidelines, talk test và hướng dẫn riêng cho thanh thiếu niên/người từ 65 tuổi.
+- **Verified:** 564 backend tests passed (22 bộ phụ thuộc/môi trường được skip), 95 Flutter tests passed, `flutter analyze` sạch và validator catalog 300 món báo 0 lỗi.
+
+## [2026-08-27] — Chatbot nhận 300 món và gợi ý bài tập theo bằng chứng
+- **Verified integration:** Endpoint dinh dưỡng trả đủ 300 món, `suggest_dish` nạp đủ 300 record và tìm đúng món `normalized_reference_recipe` có ID >97; cả tool món và bài tập đều có trong registry chatbot.
+- **Workout quality:** Không còn coi metadata dụng cụ wger bị rỗng là bodyweight; bổ sung suy luận bảo thủ cho cable, machine, xe đạp, treadmill, dây nhảy, box và các dụng cụ ghi rõ trong tên.
+- **Personalization:** Thêm mục tiêu `general_fitness/strength/muscle_gain/endurance/weight_loss`, liều sets–reps–rest tương ứng và tự dùng cân nặng trong hồ sơ.
+- **Energy honesty:** Thay quy tắc prompt cố định 5/8 kcal/phút bằng ước tính standard MET theo cân nặng; payload ghi rõ phương pháp và giới hạn ước tính.
+- **Safety:** Tool từ chối gợi ý khi có triệu chứng cảnh báo tim mạch/hô hấp; prompt buộc chatbot truyền triệu chứng và không lách rào chắn.
+- **Evidence:** Bám CDC Physical Activity Guidelines, ACSM 2026 Resistance Training Guidelines, 2024 Adult Compendium và cảnh báo từ American Heart Association.
+
+## [2026-08-26] — Mở rộng catalog món Việt từ 97 lên 300
+- **Data:** Thêm 203 `normalized_reference_recipe` từ ViFoodRec (PACLIC 2024), chỉ chọn công thức có nguồn Món Ngon Mỗi Ngày - Ajinomoto Việt Nam; snapshot được khóa bằng commit và SHA-256.
+- **Nutrition:** Không sử dụng trực tiếp trường calo của website. Khối lượng được quy về một khẩu phần và năng lượng được tính lại từ Bảng thành phần thực phẩm Việt Nam; mỗi món giữ tên nguyên liệu nguồn, đạt ít nhất 2 nguyên liệu định lượng và độ phủ khối lượng từ 60%.
+- **Quality tiers:** Giữ riêng 5 `verified_recipe`, 6 `verified_complete_meal` của Viện Dinh dưỡng và 203 món tham khảo đã chuẩn hóa, tránh đánh đồng mức độ bằng chứng.
+- **API/Mobile:** Tăng giới hạn mặc định endpoint món lên 500 và mobile yêu cầu `limit=500`, khắc phục việc catalog lớn hơn nhưng giao diện chỉ nhận 100 món đầu.
+- **Tooling:** Thêm pipeline dựng catalog tái lập, validator nguồn/commit/độ phủ/calo và test hồi quy tổng 300 món.
+- **Verified:** Validator 0 lỗi; 554 test backend không phụ thuộc các bộ môi trường đã biết và 94 test Flutter đều pass; `flutter analyze` không có issue.
+
+## [2026-08-26] — Catalog món Việt có nguồn kiểm chứng v1
+- **Data:** Thêm overlay `vietnamese_dishes_curated_v1.json`; catalog runtime tăng từ 90 lên 97 món, gồm 5 công thức đã kiểm chứng và 6 suất ăn hoàn chỉnh đủ tinh bột–đạm–rau–quả.
+- **Sources:** Công thức/khẩu phần lấy từ Viện Dinh dưỡng Quốc gia; thành phần dinh dưỡng nguyên liệu lấy từ Bảng thành phần thực phẩm Việt Nam; phép tính món hỗn hợp tuân theo phương pháp cộng thành phần của FAO/INFOODS.
+- **Architecture:** Thêm loader merge có cache cho catalog live nhưng giữ nguyên `vietnamese_dishes.json` để không làm thay đổi corpus nghiên cứu offline đã đóng băng.
+- **Safety:** Phân loại hải sản, thịt, trứng và sữa theo mã nhóm thực phẩm chính thức; kết quả `suggest_dish` của món đã kiểm chứng trả kèm provenance.
+- **API:** Endpoint chi tiết món/thực phẩm dùng đúng ID số; `/api/nutrition/stats` báo thêm số công thức và suất ăn đã kiểm chứng.
+- **Validation:** Thêm validator read-only và test hồi quy cho nguồn, exact food match, độ lệch calo ≤2%, nhóm thực phẩm, provenance, dị ứng và API ID.
+- **Verified:** Validator 0 lỗi; 68/68 test trực tiếp và 570 test backend không phụ thuộc property-test/corpus đều pass; compileall pass.
+
 ## [2026-08-20] — Sửa lỗi điều hướng sau khi Đăng xuất và Đăng nhập lại
 - **Fixed:** Sửa lỗi người dùng sau khi đăng xuất và đăng nhập lại bị đứng ở `AuthScreen` và phải reload/F5 trang mới vào được app.
 - **Architecture:** Tách `AuthWrapper` thành module độc lập `auth_wrapper.dart`; chuẩn hóa các luồng đăng xuất trong `HomeScreen` và `AccountSettingsScreen` điều hướng quay về `AuthWrapper` thay vì đè `AuthScreen` trần lên navigation stack.

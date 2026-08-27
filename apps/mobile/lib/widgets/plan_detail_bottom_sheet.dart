@@ -76,6 +76,11 @@ Map<String, dynamic>? planScheduleFromItems(Iterable<dynamic> items) {
   return null;
 }
 
+String? planWeeklyTrainingSummary(Map<String, dynamic>? schedule) {
+  final value = schedule?['weekly_training_summary']?.toString().trim();
+  return value == null || value.isEmpty ? null : value;
+}
+
 /// Nhóm item theo toàn bộ khoảng ngày cần hiển thị.
 ///
 /// Map luôn chứa cả ngày chưa có dữ liệu để UI không làm biến mất các ngày
@@ -550,6 +555,7 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
     var phaseInfo = _getPhaseInfo(_selectedWeek, totalWeeks, goal);
     final schedulePhaseTitle = selectedSchedule?['phase_title']?.toString();
     final scheduleFocus = selectedSchedule?['weekly_focus']?.toString();
+    final trainingSummary = planWeeklyTrainingSummary(selectedSchedule);
     if (schedulePhaseTitle != null && schedulePhaseTitle.isNotEmpty) {
       phaseInfo = {
         ...phaseInfo,
@@ -931,6 +937,17 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
                                     height: 1.3,
                                   ),
                                 ),
+                                if (trainingSummary != null) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '🏃 Lịch vận động: $trainingSummary',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black54,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 12),
                                 Container(
                                   padding: const EdgeInsets.symmetric(

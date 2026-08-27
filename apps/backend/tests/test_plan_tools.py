@@ -182,7 +182,8 @@ async def test_create_long_term_plan_runs_end_to_end_with_real_catalog_tools():
     assert result["total_weeks"] == 1
     assert len(inserts) == 3
     assert {row[0]["day_index"] for row in inserts} == {1, 2, 3}
-    assert [len(rows) for rows in inserts] == [3, 4, 3]
+    # Friday and Saturday are structured aerobic sessions; Sunday is rest.
+    assert [len(rows) for rows in inserts] == [4, 4, 3]
     assert all(
         str(UUID(row["id"])) == row["id"]
         for rows in inserts

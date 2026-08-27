@@ -279,10 +279,138 @@ async def test_sixty_day_plan_follows_weekly_work_rest_rhythm():
             any(item["item_type"] == "exercise" for item in call["items"])
             for call in week_calls
         )
-        assert workout_days == 5
+        assert workout_days == 6
         sunday = week_calls[6]
         assert all(item["item_type"] != "exercise" for item in sunday["items"])
         assert sunday["items"][0]["payload"]["schedule"]["day_kind"] == "rest"
+
+
+@pytest.mark.asyncio
+async def test_gain_muscle_uses_three_nonconsecutive_full_body_days() -> None:
+    tools = FakeTools()
+    profile = {**VALID_PROFILE, "health_goal": "gain_muscle"}
+    await PlannerAgent(tools).createLongTermPlan(
+        "u1", "gain_muscle", 7, profile, date(2026, 1, 5)
+    )
+
+    workout_calls = [
+        arguments for name, arguments in tools.calls if name == "suggest_workout"
+    ]
+    resistance = [
+        call for call in workout_calls if call["muscle_group"] == "full_body"
+    ]
+    recovery = [
+        call for call in workout_calls if call["goal"] == "recovery"
+    ]
+
+    assert len(resistance) == 3
+    assert all(call["goal"] == "muscle_gain" for call in resistance)
+    assert len(recovery) == 1
+    assert recovery[0]["muscle_group"] == "mobility"
+    assert recovery[0]["equipment"] == "none"
+
+
+@pytest.mark.asyncio
+async def test_inactive_adult_adds_frequency_after_adaptation_phase() -> None:
+    tools = FakeTools()
+    profile = {**VALID_PROFILE, "activity_level": "sedentary"}
+    await PlannerAgent(tools).createLongTermPlan(
+        "u1", "lose_weight", 28, profile, date(2026, 1, 5)
+    )
+    append_calls = {
+        arguments["day_index"]: arguments
+        for name, arguments in tools.calls
+        if name == "append_plan_items"
+    }
+
+    first_week = [append_calls[index] for index in range(1, 8)]
+    second_week = [append_calls[index] for index in range(8, 15)]
+    first_count = sum(
+        any(item["item_type"] == "exercise" for item in call["items"])
+        for call in first_week
+    )
+    second_count = sum(
+        any(item["item_type"] == "exercise" for item in call["items"])
+        for call in second_week
+    )
+
+    assert first_count == 5
+    assert second_count == 6
+    assert first_week[5]["items"][0]["payload"]["schedule"]["day_kind"] == "rest"
+    workout_levels = [
+        arguments["level"]
+        for name, arguments in tools.calls
+        if name == "suggest_workout" and arguments["goal"] != "recovery"
+    ]
+    assert workout_levels[0] == "beginner"
+    assert "intermediate" in workout_levels
+
+
+@pytest.mark.asyncio
+async def test_only_final_week_is_marked_deload() -> None:
+    tools = FakeTools()
+    await PlannerAgent(tools).createLongTermPlan(
+        "u1",
+        "gain_muscle",
+        60,
+        {**VALID_PROFILE, "health_goal": "gain_muscle"},
+        date(2026, 1, 5),
+    )
+    append_calls = {
+        arguments["day_index"]: arguments
+        for name, arguments in tools.calls
+        if name == "append_plan_items"
+    }
+
+    week_8 = append_calls[50]["items"][0]["payload"]["schedule"]
+    week_9 = append_calls[57]["items"][0]["payload"]["schedule"]
+    assert week_8["phase_index"] == 4
+    assert week_8["is_deload_week"] is False
+    assert week_9["phase_index"] == 4
+    assert week_9["is_deload_week"] is True
+    assert all(
+        arguments["items"][0]["payload"]["schedule"][
+            "planned_duration_minutes"
+        ]
+        <= 40
+        for arguments in append_calls.values()
+    )
+
+
+@pytest.mark.asyncio
+async def test_age_specific_activity_targets_are_saved_in_schedule() -> None:
+    youth_tools = FakeTools()
+    youth_profile = {**VALID_PROFILE, "age": 16}
+    await PlannerAgent(youth_tools).createLongTermPlan(
+        "u1", "maintain", 7, youth_profile, date(2026, 1, 5)
+    )
+    youth_append = next(
+        arguments
+        for name, arguments in youth_tools.calls
+        if name == "append_plan_items"
+    )
+    youth_schedule = youth_append["items"][0]["payload"]["schedule"]
+    assert youth_schedule["age_band"] == "youth_10_17"
+    assert youth_schedule["weekly_activity_target"][
+        "moderate_to_vigorous_minutes_per_day"
+    ] == 60
+    assert youth_schedule["weekly_activity_target"][
+        "muscle_strengthening_days_per_week"
+    ] == 3
+
+    older_tools = FakeTools()
+    older_profile = {**VALID_PROFILE, "age": 70}
+    await PlannerAgent(older_tools).createLongTermPlan(
+        "u2", "maintain", 7, older_profile, date(2026, 1, 5)
+    )
+    older_append = next(
+        arguments
+        for name, arguments in older_tools.calls
+        if name == "append_plan_items"
+    )
+    older_schedule = older_append["items"][0]["payload"]["schedule"]
+    assert older_schedule["age_band"] == "older_adult_65_plus"
+    assert older_schedule["weekly_activity_target"]["balance_activity"] is True
 
 
 @pytest.mark.asyncio

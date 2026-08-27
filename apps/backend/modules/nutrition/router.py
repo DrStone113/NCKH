@@ -8,6 +8,8 @@ import json
 import logging
 from pathlib import Path
 
+from modules.nutrition.catalog import DishCatalogError, load_dish_catalog
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nutrition", tags=["nutrition"])
@@ -15,7 +17,6 @@ router = APIRouter(prefix="/api/nutrition", tags=["nutrition"])
 # Load data files
 # router.py -> nutrition/ -> modules/ -> backend/
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-DISHES_FILE = DATA_DIR / "vietnamese_dishes.json"
 FOODS_FILE = DATA_DIR / "vietnamese_foods.json"
 
 # Cache
@@ -24,18 +25,17 @@ _foods_cache: List[Dict[str, Any]] = []
 
 
 def load_dishes() -> List[Dict[str, Any]]:
-    """Load Vietnamese dishes from JSON file"""
+    """Load the merged legacy + source-verified Vietnamese dish catalog."""
     global _dishes_cache
     if _dishes_cache:
         return _dishes_cache
 
     try:
-        with open(DISHES_FILE, 'r', encoding='utf-8') as f:
-            _dishes_cache = json.load(f)
+        _dishes_cache = load_dish_catalog()
         logger.info("Loaded %d Vietnamese dishes", len(_dishes_cache))
         return _dishes_cache
-    except Exception as e:
-        logger.error("Error loading dishes from %s: %s", DISHES_FILE, e)
+    except DishCatalogError as e:
+        logger.error("Error loading Vietnamese dish catalog: %s", e)
         return []
 
 
@@ -58,7 +58,7 @@ def load_foods() -> List[Dict[str, Any]]:
 @router.get("/vietnamese-dishes")
 async def get_vietnamese_dishes(
     search: str = None,
-    limit: int = 100
+    limit: int = 500
 ) -> List[Dict[str, Any]]:
     """
     Get Vietnamese dishes
@@ -84,7 +84,7 @@ async def get_vietnamese_dishes(
 
 
 @router.get("/vietnamese-dishes/{dish_id}")
-async def get_dish_by_id(dish_id: str) -> Dict[str, Any]:
+async def get_dish_by_id(dish_id: int) -> Dict[str, Any]:
     """Get a specific Vietnamese dish by ID"""
     dishes = load_dishes()
     
@@ -133,12 +133,12 @@ async def get_vietnamese_foods(
 
 
 @router.get("/vietnamese-foods/{food_id}")
-async def get_food_by_id(food_id: str) -> Dict[str, Any]:
+async def get_food_by_id(food_id: int) -> Dict[str, Any]:
     """Get a specific Vietnamese food by ID"""
     foods = load_foods()
     
     for food in foods:
-        if food.get('id') == food_id:
+        if food.get('ma_so') == food_id or food.get('stt') == food_id:
             return food
     
     raise HTTPException(status_code=404, detail=f"Food {food_id} not found")
@@ -167,4 +167,17 @@ async def get_nutrition_stats() -> Dict[str, Any]:
         "total_dishes": len(dishes),
         "total_foods": len(foods),
         "categories": len(set(food.get('category', '') for food in foods)),
+        "verified_recipes": sum(
+            1 for dish in dishes if dish.get("catalog_status") == "verified_recipe"
+        ),
+        "verified_complete_meals": sum(
+            1
+            for dish in dishes
+            if dish.get("catalog_status") == "verified_complete_meal"
+        ),
+        "normalized_reference_recipes": sum(
+            1
+            for dish in dishes
+            if dish.get("catalog_status") == "normalized_reference_recipe"
+        ),
     }

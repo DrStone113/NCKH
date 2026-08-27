@@ -66,6 +66,26 @@ _RECENT_IDS_MAXLEN = 40
 #: growing without bound if ``cleanup_session`` is never called for a session.
 _RECENT_IDS_MAX_SESSIONS = 512
 
+# Stable domain outcomes that tools intentionally surface to the agent. Other
+# ValueError messages remain internal so implementation details are not leaked.
+_PUBLIC_TOOL_VALUE_ERRORS = frozenset(
+    {
+        "NO_DISH_FOUND",
+        "INVALID_MEAL_TYPE",
+        "INVALID_TARGET_KCAL",
+        "INVALID_DIETARY_RESTRICTIONS",
+        "INVALID_RECENT_DISH_IDS",
+        "NO_EXERCISES_FOUND",
+        "INVALID_MUSCLE_GROUP",
+        "INVALID_DURATION",
+        "INVALID_EQUIPMENT",
+        "INVALID_LEVEL",
+        "INVALID_USER_STATE",
+        "INVALID_GOAL",
+        "UNSAFE_TO_RECOMMEND_WORKOUT",
+    }
+)
+
 
 def _normalise_plan_profile(
     raw: Any, *, user_id: str | None, goal: str | None
@@ -102,6 +122,45 @@ def _normalise_plan_profile(
         or source.get("healthGoal"),
         "dietary_restrictions": restrictions,
     }
+
+
+def _context_value(raw: Any, *keys: str) -> Any:
+    """Read the first populated key from a dict or profile-like object."""
+
+    if isinstance(raw, dict):
+        for key in keys:
+            value = raw.get(key)
+            if value is not None:
+                return value
+        return None
+    for key in keys:
+        value = getattr(raw, key, None)
+        if value is not None:
+            return value
+    return None
+
+
+def _enrich_workout_arguments(arguments: dict[str, Any], context: Any) -> None:
+    """Attach canonical profile data without overwriting explicit user state."""
+
+    if context is None:
+        return
+
+    state = arguments.get("user_state")
+    state = dict(state) if isinstance(state, dict) else {}
+    weight = _context_value(context, "weight_kg", "weight")
+    if weight is not None and state.get("weight_kg") is None:
+        state["weight_kg"] = weight
+    if state:
+        arguments["user_state"] = state
+
+    if arguments.get("goal") is None:
+        health_goal = _context_value(context, "health_goal", "healthGoal")
+        arguments["goal"] = {
+            "lose_weight": "weight_loss",
+            "gain_muscle": "muscle_gain",
+            "maintain": "general_fitness",
+        }.get(health_goal, "general_fitness")
 
 
 # ---------------------------------------------------------------------------- #
@@ -186,6 +245,12 @@ class ToolDispatcher:
                         call.arguments["latitude"] = lat
                     if lng is not None and "longitude" not in call.arguments:
                         call.arguments["longitude"] = lng
+
+                if call.name == "suggest_workout":
+                    _enrich_workout_arguments(
+                        call.arguments,
+                        getattr(self.gateway, "user_context", None),
+                    )
 
                 gateway_user = getattr(self.gateway, "user_id", None)
                 if gateway_user and gateway_user not in ("anonymous", ""):
@@ -619,7 +684,7 @@ class ToolDispatcher:
             raise
         except ValueError as exc:
             msg = str(exc)
-            if msg in ("NO_DISH_FOUND", "INVALID_MEAL_TYPE", "INVALID_TARGET_KCAL", "INVALID_DIETARY_RESTRICTIONS", "INVALID_RECENT_DISH_IDS"):
+            if msg in _PUBLIC_TOOL_VALUE_ERRORS:
                 return ToolResult(ok=False, error=msg)
             logger.exception(
                 "Tool %s raised ValueError (session=%s, call_id=%s)",

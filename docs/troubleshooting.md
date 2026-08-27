@@ -464,3 +464,59 @@
   5. Cập nhật `.gitignore` để giữ lại file `debug.keystore` cho toàn team (`!**/debug.keystore`).
   6. Kết quả: Mọi thành viên clone repo về máy mới đều dùng chung 1 mã ký debug -> Đăng nhập Google hoạt động 100% không cần cấu hình lại.
 
+### 51. Catalog món Việt dùng nguyên liệu thay thế sai và calo không khớp công thức
+- **Triệu chứng**:
+  1. Tên món và thành phần không cùng một thực phẩm, ví dụ cá basa/cá tuyết bị đổi thành cá rô phi, sò điệp thành tôm, khoai mỡ thành khoai lang hoặc gạo lứt thành gạo trắng.
+  2. Nhiều món dùng khối lượng nguyên liệu sống quá lớn nhưng giữ `estimated_calories` thấp; backend phải ép hệ số riêng cho calo trong khi protein/carbs/fat vẫn tính từ nguyên liệu, tạo ra payload không nhất quán.
+  3. Catalog không lưu nguồn nên không thể phân biệt công thức đã kiểm chứng với dữ liệu legacy ước lượng.
+- **Nguyên nhân gốc**:
+  1. `scripts/update_dishes.py` dùng mapping thay thế theo tên để buộc mọi nguyên liệu khớp một dòng trong bảng thực phẩm, kể cả khi hai nguyên liệu khác loài hoặc khác cách chế biến.
+  2. Dữ liệu món và bảng 526 thực phẩm không có lớp kiểm định chung về exact match, độ lệch năng lượng và nguồn công thức.
+  3. `vietnamese_dishes.json` đồng thời là input của corpus nghiên cứu đóng băng, nên sửa trực tiếp sẽ âm thầm làm thay đổi hash/embedding của thí nghiệm.
+- **Cách xử lý**:
+  1. Giữ nguyên catalog 90 món làm nguồn frozen; thêm overlay có phiên bản `vietnamese_dishes_curated_v1.json` cho dữ liệu runtime, chứa URL, nhà xuất bản, ngày truy xuất và trạng thái kiểm chứng.
+  2. Dùng công thức định lượng của Viện Dinh dưỡng Quốc gia cho Phở bò sốt vang, Phở gà, Cháo gà, Miến gà và Xôi lạc; thêm 6 suất cơm đủ nhóm từ thực đơn tham khảo chính thức.
+  3. `modules/nutrition/catalog.py` merge overlay một lần, kiểm tra trùng ID/tên và trả bản sao cho API; `suggest_dish` và Nutrition API dùng cùng catalog 97 món.
+  4. Chỉ chấp nhận tên nguyên liệu khớp chính xác Bảng thành phần thực phẩm Việt Nam. Năng lượng món kiểm chứng phải lệch không quá 2% so với tổng `kcal/100g × grams`.
+  5. Bộ lọc hải sản/thịt/trứng/sữa dùng mã nhóm thực phẩm của Viện Dinh dưỡng (8xxx/7xxx/9xxx/10xxx), không còn phụ thuộc hoàn toàn vào danh sách tên hardcode.
+  6. Sửa route chi tiết món dùng `dish_id: int`; route thực phẩm tra theo `ma_so` hoặc `stt`, khắc phục so sánh ID chuỗi với ID số luôn trả 404.
+  7. Chạy `python scripts/validate_dish_catalog.py` để kiểm tra nguồn tin cậy, exact ingredient match, bốn nhóm của suất ăn hoàn chỉnh và độ lệch calo trước khi merge dữ liệu mới.
+
+### 52. Catalog chỉ có 97 món và tăng dữ liệu nhưng mobile vẫn chỉ thấy 100
+- **Triệu chứng**: Catalog 97 món không đại diện đủ độ rộng ẩm thực Việt; sau khi thêm dữ liệu vượt 100, ứng dụng vẫn chỉ hiển thị 100 món đầu.
+- **Nguyên nhân gốc**:
+  1. Batch v1 cố ý nhỏ vì chỉ nhập thủ công công thức từ Viện Dinh dưỡng, không có pipeline nhập hàng loạt.
+  2. `GET /api/nutrition/vietnamese-dishes` có `limit=100` mặc định và mobile gọi endpoint không truyền `limit`, tạo trần hiển thị ngầm.
+- **Cách xử lý**:
+  1. Dùng snapshot ViFoodRec công bố tại PACLIC 2024 làm chỉ mục công thức; chỉ nhận 1.146 bản ghi có nguồn Món Ngon Mỗi Ngày - Ajinomoto Việt Nam, sau đó chọn 203 bản ghi đạt kiểm định để nâng catalog live lên 300.
+  2. Không nhập mô tả/cách nấu hoặc tin calo có sẵn; chỉ chuẩn hóa nguyên liệu định lượng, quy về một khẩu phần và tính năng lượng từ Bảng thành phần thực phẩm Việt Nam.
+  3. Gắn tầng `normalized_reference_recipe` riêng để không đánh đồng với công thức `verified_*` đối chiếu trực tiếp từ Viện Dinh dưỡng.
+  4. Tăng limit mặc định backend và tham số mobile lên 500; validator bắt buộc catalog có đúng 300 món, không trùng ID/tên và 203 món tham khảo phải giữ đủ provenance/độ phủ.
+
+### 53. Gợi ý bài tập coi cable/machine là bodyweight và calo không theo cân nặng
+- **Triệu chứng**:
+  1. Chọn không có dụng cụ nhưng kết quả có `Biceps Curl With Cable`, `Leg Press Machine` hoặc `Cycling`.
+  2. Hai người có cân nặng khác nhau nhận cùng một số kcal; prompt lại nói cố định tập tạ 5 kcal/phút và cardio 8 kcal/phút.
+  3. Mọi bài kháng lực đều có 3 hiệp × 10–12 lần, không phụ thuộc trình độ hay mục tiêu.
+- **Nguyên nhân gốc**:
+  1. Nhiều record wger có `equipment=[]` dù tên bài ghi rõ cable/machine; loader cũ coi mọi danh sách rỗng là bodyweight.
+  2. `_REFERENCE_WEIGHT_KG=70` được dùng cố định và dispatcher không gắn cân nặng trong hồ sơ vào tool call.
+  3. Tool chưa có tham số mục tiêu và prompt còn mô tả quy tắc calo cũ không khớp implementation MET.
+- **Cách xử lý**:
+  1. Chỉ coi bodyweight khi wger có sentinel rõ ràng hoặc tên là động tác bodyweight đã biết; phục hồi dụng cụ ghi rõ trong tên.
+  2. Dispatcher và planner truyền `weight_kg`; kcal tính theo `MET × 3.5 × kg / 200 × phút` và luôn đánh dấu là ước tính.
+  3. Truyền `goal` để chọn sets–reps–rest; nếu có `warning_symptoms`, tool trả `UNSAFE_TO_RECOMMEND_WORKOUT` thay vì sinh buổi tập.
+  4. Chạy `pytest -q tests/test_agent_catalog_and_workout_quality.py` để kiểm tra tích hợp 300 món, dụng cụ, cân nặng, mục tiêu và rào chắn an toàn.
+
+### 54. Kế hoạch tăng cơ chỉ tập mỗi nhóm một lần và ngày phục hồi không có bài
+- **Triệu chứng**:
+  1. Lịch tăng cơ cũ xếp ngực–lưng–chân–vai–tay; mỗi nhóm chính chỉ được chạm trực tiếp một lần/tuần.
+  2. Ngày ghi `active_recovery` chỉ có metadata, không có exercise item để người dùng thực hiện.
+  3. Toàn bộ giai đoạn củng cố có thể bị giảm thời lượng như deload, kéo dài nhiều tuần.
+  4. Hồ sơ 10–17 và 65+ nhận cùng mục tiêu tuần của người 18–64.
+- **Cách xử lý**:
+  1. Xếp 2–3 buổi full-body không liên tiếp tùy mục tiêu, xen các buổi aerobic/mobility và ngày nghỉ.
+  2. Thêm `mobility + recovery` và chỉ chọn động tác cường độ thấp từ catalog; phục hồi được lưu như exercise item bình thường.
+  3. Dùng `is_deload_week` chỉ cho tuần cuối; người sedentary/light tăng tần suất sau giai đoạn thích nghi.
+  4. Lưu `weekly_activity_target`, `age_band`, `session_type`, `session_intensity`, `planned_duration_minutes` và talk-test cue trong schedule của từng ngày.
+

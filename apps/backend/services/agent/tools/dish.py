@@ -64,6 +64,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
+from modules.nutrition.catalog import DishCatalogError, load_dish_catalog
 from services.agent.tool_registry import ToolDescriptor
 
 logger = logging.getLogger(__name__)
@@ -237,6 +238,8 @@ class _DishRecord:
     contains_land_meat: bool
     contains_egg: bool
     contains_dairy: bool
+    catalog_status: str | None
+    provenance: dict[str, Any] | None
 
 
 # Computed at module import.
@@ -267,7 +270,7 @@ def _build_component(
     food = foods_by_name.get(name)
     if food is None:
         return None
-    base_grams = max(int(grams), 1)
+    base_grams = max(int(round(float(grams))), 1)
     return _ComponentSpec(
         name=name,
         base_grams=base_grams,
@@ -306,6 +309,10 @@ def _build_dish_record(
             components.append(spec)
 
         ingredient_name_set = {c.name for c in components}
+        ingredient_codes = {
+            int(foods_by_name[name].get("ma_so") or 0)
+            for name in ingredient_name_set
+        }
         base_kcal = sum(c.kcal_per_g * c.base_grams for c in components)
         base_protein = sum(c.protein_per_g * c.base_grams for c in components)
         base_carbs = sum(c.carbs_per_g * c.base_grams for c in components)
@@ -344,15 +351,25 @@ def _build_dish_record(
             base_total_fat=base_fat,
             contains_seafood=bool(
                 ingredient_name_set & _SEAFOOD_INGREDIENT_NAMES
-            ),
+            ) or any(8000 <= code < 9000 for code in ingredient_codes),
             contains_land_meat=bool(
                 ingredient_name_set & _LAND_MEAT_INGREDIENT_NAMES
-            ),
+            ) or any(7000 <= code < 8000 for code in ingredient_codes),
             contains_egg=bool(
                 ingredient_name_set & _EGG_INGREDIENT_NAMES
-            ),
+            ) or any(9000 <= code < 10000 for code in ingredient_codes),
             contains_dairy=bool(
                 ingredient_name_set & _DAIRY_INGREDIENT_NAMES
+            ) or any(10000 <= code < 11000 for code in ingredient_codes),
+            catalog_status=(
+                str(dish["catalog_status"])
+                if dish.get("catalog_status")
+                else None
+            ),
+            provenance=(
+                dict(dish["provenance"])
+                if isinstance(dish.get("provenance"), dict)
+                else None
             ),
         )
     except (KeyError, TypeError, ValueError) as exc:
@@ -362,7 +379,6 @@ def _build_dish_record(
 
 def _load_dishes() -> tuple[_DishRecord, ...]:
     base_dir = _data_dir()
-    dishes_path = base_dir / "vietnamese_dishes.json"
     foods_path = base_dir / "vietnamese_foods.json"
 
     try:
@@ -376,10 +392,9 @@ def _load_dishes() -> tuple[_DishRecord, ...]:
     }
 
     try:
-        with dishes_path.open(encoding="utf-8") as fh:
-            dishes_raw = json.load(fh)
-    except FileNotFoundError:
-        logger.error("vietnamese_dishes.json not found at %s", dishes_path)
+        dishes_raw = load_dish_catalog()
+    except DishCatalogError as exc:
+        logger.error("Unable to load merged dish catalog: %s", exc)
         return ()
 
     records: list[_DishRecord] = []
@@ -393,7 +408,7 @@ def _load_dishes() -> tuple[_DishRecord, ...]:
     # Sort by id for stable iteration; selection ties also use id ascending.
     records.sort(key=lambda r: r.id)
     logger.info(
-        "suggest_dish: loaded %d dishes from %s", len(records), dishes_path.name
+        "suggest_dish: loaded %d merged dishes", len(records)
     )
     return tuple(records)
 
@@ -727,7 +742,7 @@ def suggest_dish(
         ),
     )
     rec = best.record
-    return {
+    result: dict[str, Any] = {
         "id": rec.id,
         "name": rec.name,
         "meal_types": sorted(rec.meal_types),
@@ -740,6 +755,11 @@ def suggest_dish(
         "serving_scale": best.scale_factor,
         "region": _get_dish_region(rec.name),
     }
+    if rec.catalog_status:
+        result["catalog_status"] = rec.catalog_status
+    if rec.provenance:
+        result["provenance"] = dict(rec.provenance)
+    return result
 
 
 # ---------------------------------------------------------------------------

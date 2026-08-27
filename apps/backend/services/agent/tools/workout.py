@@ -1,12 +1,13 @@
 """``suggest_workout`` server-side tool.
 
-Selects 2-8 wger exercises matching a muscle group, available equipment, and
-target difficulty ``level``. The selected list satisfies
+Selects 2-8 wger exercises matching a muscle group, available equipment,
+target difficulty ``level``, and training ``goal``. The selected list satisfies
 ``sum(ex.duration_minutes) ≤ duration_min``. When ``user_state.fatigue_level``
 is ``"high"`` or ``"very_high"``, the requested ``level`` is automatically
 downgraded one notch (``advanced → intermediate → beginner``) so a tired user
 gets easier exercises. When ``equipment == "none"`` the tool returns only
-bodyweight exercises.
+confirmed bodyweight exercises. Calorie estimates use the caller's body weight
+when available and remain explicitly marked as estimates.
 
 References
 ----------
@@ -17,7 +18,7 @@ References
 
 Contract
 --------
-``suggest_workout(muscle_group, duration_min, equipment, level, user_state=None) -> dict``
+``suggest_workout(muscle_group, duration_min, equipment, level, user_state=None, goal="general_fitness") -> dict``
 
 Returns a JSON-serialisable workout payload matching
 :class:`models.schemas.ExercisePlanPayload`::
@@ -89,6 +90,8 @@ _MAX_EXERCISES: int = 8
 #: Reference weight used when the caller has not supplied a user profile.
 #: Calories remain an estimate and the payload explicitly marks them as such.
 _REFERENCE_WEIGHT_KG: float = 70.0
+_MIN_WEIGHT_KG: float = 30.0
+_MAX_WEIGHT_KG: float = 300.0
 
 #: Allowed values for ``muscle_group`` (design.md §9.5 preconditions).
 _VALID_MUSCLE_GROUPS: frozenset[str] = frozenset(
@@ -101,6 +104,7 @@ _VALID_MUSCLE_GROUPS: frozenset[str] = frozenset(
         "arms",
         "abs",
         "cardio",
+        "mobility",
     }
 )
 
@@ -114,6 +118,9 @@ _MUSCLE_TO_CATEGORIES: dict[str, frozenset[str]] = {
     "arms": frozenset({"Arms"}),
     "abs": frozenset({"Abs"}),
     "cardio": frozenset({"Cardio"}),
+    "mobility": frozenset(
+        {"Abs", "Arms", "Back", "Calves", "Cardio", "Chest", "Legs", "Shoulders"}
+    ),
     "full_body": frozenset(
         {"Abs", "Arms", "Back", "Calves", "Cardio", "Chest", "Legs", "Shoulders"}
     ),
@@ -133,6 +140,13 @@ _VALID_EQUIPMENT: frozenset[str] = frozenset(
         "pull-up bar",
         "resistance band",
         "gym mat",
+        "cable",
+        "machine",
+        "stationary bike",
+        "jump rope",
+        "box",
+        "punching bag",
+        "suspension trainer",
         "swiss ball",
         "sz-bar",
     }
@@ -156,7 +170,107 @@ _LEVEL_BY_EQUIPMENT: dict[str, str] = {
     "resistance band": "intermediate",
     "swiss ball": "intermediate",
     "gym mat": "beginner",
+    "cable": "intermediate",
+    "machine": "intermediate",
+    "stationary bike": "beginner",
+    "jump rope": "beginner",
+    "box": "intermediate",
+    "punching bag": "intermediate",
+    "suspension trainer": "intermediate",
 }
+
+# Some wger rows have an empty equipment array even though the English name
+# explicitly names a cable or machine.  Empty metadata must not silently turn
+# "Biceps Curl With Cable" into a bodyweight exercise.
+_NAME_EQUIPMENT_HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("barbell", ("barbell",)),
+    ("dumbbell", ("dumbbell",)),
+    ("kettlebell", ("kettlebell",)),
+    ("resistance band", ("resistance band", "elastic band", "with band")),
+    ("pull-up bar", ("pull-up", "pull up", "chin-up", "chin up")),
+    ("cable", ("cable", "lat pull down", "lat pulldown")),
+    ("stationary bike", ("cycling", "stationary bike", "bicicleta estática")),
+    ("jump rope", ("jump rope", "skipping rope")),
+    ("box", ("box jump",)),
+    ("punching bag", ("bag training", "heavy bag")),
+    ("suspension trainer", ("suspended", "suspension trainer", "trx")),
+    (
+        "machine",
+        (
+            "machine",
+            "elliptical",
+            "leg press",
+            "rowing machine",
+            "stair master",
+            "treadmill",
+            "hack squat",
+            "pec deck",
+            "hip adduction",
+            "hip abduction",
+        ),
+    ),
+    ("bench", ("bench press", "on bench", "using bench")),
+    ("gym mat", ("on mat", "gym mat")),
+    ("swiss ball", ("swiss ball", "exercise ball", "ball crunch")),
+)
+
+_BODYWEIGHT_NAME_HINTS: tuple[str, ...] = (
+    "bodyweight",
+    "push-up",
+    "push up",
+    "plank",
+    "crunch",
+    "sit-up",
+    "sit up",
+    "bear walk",
+    "burpee",
+    "jumping jack",
+    "mountain climber",
+    "air squat",
+    "walking",
+    "running",
+    "jog in place",
+    "high knees",
+    "high knee skips",
+    "butt kicks",
+    "talons fesses",
+)
+
+_EXCLUDED_EXERCISE_NAME_HINTS: tuple[str, ...] = (
+    "meditation",
+    "meditación",
+)
+
+_ADVANCED_MOVEMENT_HINTS: tuple[str, ...] = (
+    "clean and jerk",
+    "clean & jerk",
+    "snatch",
+    "muscle-up",
+    "muscle up",
+    "pistol squat",
+    "handstand",
+    "front lever",
+    "back lever",
+)
+
+_RECOVERY_MOVEMENT_HINTS: tuple[str, ...] = (
+    "stretch",
+    "mobility",
+    "rotation",
+    "breathing",
+    "walking",
+    "march in place",
+    "cow-cat",
+    "prayer",
+)
+
+_RECOVERY_EXCLUSION_HINTS: tuple[str, ...] = (
+    "push-up",
+    "push up",
+    "deadlift",
+    "jump",
+    "sprint",
+)
 
 #: Inclusive level pool. ``"intermediate"`` admits beginner exercises so the
 #: candidate pool is non-empty when only easy options exist; ``"advanced"``
@@ -176,6 +290,25 @@ _LEVEL_DOWNGRADE: dict[str, str] = {
 
 _VALID_LEVELS: frozenset[str] = frozenset({"beginner", "intermediate", "advanced"})
 _FATIGUE_DOWNGRADE_TRIGGERS: frozenset[str] = frozenset({"high", "very_high"})
+_VALID_GOALS: frozenset[str] = frozenset(
+    {
+        "general_fitness",
+        "strength",
+        "muscle_gain",
+        "endurance",
+        "weight_loss",
+        "recovery",
+    }
+)
+_WARNING_SYMPTOMS: frozenset[str] = frozenset(
+    {
+        "chest_pain",
+        "severe_shortness_of_breath",
+        "dizziness",
+        "fainting",
+        "irregular_heartbeat",
+    }
+)
 
 #: wger English translation language id. The translations array has one entry
 #: per language; we extract the English name (id=2) as the canonical exercise
@@ -220,6 +353,12 @@ _SUGGEST_WORKOUT_SCHEMA: dict[str, Any] = {
             "enum": sorted(_VALID_LEVELS),
             "description": "Mức độ khó của người tập.",
         },
+        "goal": {
+            "type": "string",
+            "enum": sorted(_VALID_GOALS),
+            "default": "general_fitness",
+            "description": "Mục tiêu để cá nhân hóa số hiệp, số lần và thời gian nghỉ.",
+        },
         "user_state": {
             "type": ["object", "null"],
             "description": (
@@ -230,6 +369,21 @@ _SUGGEST_WORKOUT_SCHEMA: dict[str, Any] = {
                 "fatigue_level": {
                     "type": "string",
                     "enum": ["low", "moderate", "high", "very_high"],
+                },
+                "weight_kg": {
+                    "type": "number",
+                    "minimum": _MIN_WEIGHT_KG,
+                    "maximum": _MAX_WEIGHT_KG,
+                    "description": "Cân nặng hiện tại để cá nhân hóa ước tính kcal.",
+                },
+                "warning_symptoms": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": sorted(_WARNING_SYMPTOMS)},
+                    "uniqueItems": True,
+                    "description": (
+                        "Triệu chứng cảnh báo hiện tại. Nếu có, tool từ chối "
+                        "kê buổi tập và trả UNSAFE_TO_RECOMMEND_WORKOUT."
+                    ),
                 },
             },
             "additionalProperties": True,
@@ -298,12 +452,33 @@ def _english_name(translations: list[dict[str, Any]] | None) -> str | None:
     return None
 
 
-def _derive_level(equipment_tags: tuple[str, ...]) -> str:
-    """Infer the difficulty level of an exercise from its equipment tags.
+def _infer_equipment_from_name(name: str) -> tuple[str, ...]:
+    """Recover explicit equipment named in a row with incomplete metadata."""
 
-    Highest-priority equipment wins (``advanced > intermediate > beginner``).
-    Bodyweight or no-equipment maps to ``beginner``.
+    lowered = name.casefold()
+    return tuple(
+        tag
+        for tag, hints in _NAME_EQUIPMENT_HINTS
+        if any(hint in lowered for hint in hints)
+    )
+
+
+def _looks_bodyweight(name: str) -> bool:
+    lowered = name.casefold()
+    return any(hint in lowered for hint in _BODYWEIGHT_NAME_HINTS)
+
+
+def _derive_level(equipment_tags: tuple[str, ...], name: str = "") -> str:
+    """Infer a conservative difficulty from equipment and movement complexity.
+
+    Equipment is only a proxy because wger does not publish a canonical
+    difficulty field. Technical movement names take precedence, then the
+    highest-priority equipment grade wins.
     """
+    lowered = name.casefold()
+    if any(hint in lowered for hint in _ADVANCED_MOVEMENT_HINTS):
+        return "advanced"
+
     has_advanced = False
     has_intermediate = False
     for tag in equipment_tags:
@@ -334,14 +509,13 @@ def _build_exercise_record(entry: dict[str, Any]) -> _ExerciseRecord | None:
     name = _english_name(entry.get("translations"))
     if not name:
         return None
+    if any(hint in name.casefold() for hint in _EXCLUDED_EXERCISE_NAME_HINTS):
+        return None
 
     raw_equipment = entry.get("equipment") or []
     equipment_tags: list[str] = []
     is_bodyweight = False
-    if not raw_equipment:
-        # No equipment listed → bodyweight by convention.
-        is_bodyweight = True
-    else:
+    if raw_equipment:
         for item in raw_equipment:
             if not isinstance(item, dict):
                 continue
@@ -352,20 +526,21 @@ def _build_exercise_record(entry: dict[str, Any]) -> _ExerciseRecord | None:
                 is_bodyweight = True
                 continue
             equipment_tags.append(tag)
-        # If equipment array contained only the bodyweight sentinel, treat it
-        # the same as an empty array.
-        if not equipment_tags and is_bodyweight:
-            pass
-        elif not equipment_tags and not is_bodyweight:
-            # Nothing usable was decoded → skip.
-            return None
+    # wger contains rows whose empty equipment metadata contradicts names such
+    # as "... With Cable" or "... Leg Press Machine". Recover those explicit
+    # hints and never assume that an empty list means bodyweight.
+    inferred_tags = _infer_equipment_from_name(name)
+    equipment_tags.extend(tag for tag in inferred_tags if tag not in equipment_tags)
+    if not equipment_tags and not is_bodyweight:
+        is_bodyweight = _looks_bodyweight(name)
 
-    derived_level = _derive_level(tuple(equipment_tags))
+    equipment_tuple = tuple(equipment_tags)
+    derived_level = _derive_level(equipment_tuple, name)
     return _ExerciseRecord(
         id=ex_id,
         name=name,
         category=category,
-        equipment=tuple(equipment_tags),
+        equipment=equipment_tuple,
         is_bodyweight=is_bodyweight,
         derived_level=derived_level,
     )
@@ -430,7 +605,10 @@ def _equipment_matches(
 
 
 def _filter_candidates(
-    muscle_group: str, equipment: str, allowed_levels: frozenset[str]
+    muscle_group: str,
+    equipment: str,
+    allowed_levels: frozenset[str],
+    goal: str,
 ) -> list[_ExerciseRecord]:
     """Return all exercises matching ``muscle_group`` × ``equipment`` × levels."""
     categories = _MUSCLE_TO_CATEGORIES[muscle_group]
@@ -440,7 +618,15 @@ def _filter_candidates(
         if ex.category in categories
         and _equipment_matches(ex, equipment)
         and ex.derived_level in allowed_levels
+        and (goal != "recovery" or _is_recovery_exercise(ex))
     ]
+
+
+def _is_recovery_exercise(exercise: _ExerciseRecord) -> bool:
+    name = exercise.name.casefold()
+    return any(hint in name for hint in _RECOVERY_MOVEMENT_HINTS) and not any(
+        hint in name for hint in _RECOVERY_EXCLUSION_HINTS
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -448,9 +634,19 @@ def _filter_candidates(
 # ---------------------------------------------------------------------------
 
 
-def _resolve_user_state_fatigue(
-    user_state: object | None,
-) -> str | None:
+def _user_state_value(user_state: object | None, key: str) -> object | None:
+    """Read a field from a mapping/model and reject primitive state values."""
+
+    if user_state is None:
+        return None
+    if isinstance(user_state, (str, bytes, int, float, bool)):
+        raise ValueError("INVALID_USER_STATE")
+    if isinstance(user_state, Mapping):
+        return user_state.get(key)
+    return getattr(user_state, key, None)
+
+
+def _resolve_user_state_fatigue(user_state: object | None) -> str | None:
     """Read ``fatigue_level`` from a Pydantic model, dataclass, or mapping.
 
     Returns the fatigue string if present, else ``None``. Raises
@@ -458,14 +654,7 @@ def _resolve_user_state_fatigue(
     primitive that clearly cannot carry the field (string, bytes, number).
     Unknown ``fatigue_level`` values are treated as "no downgrade".
     """
-    if user_state is None:
-        return None
-    if isinstance(user_state, (str, bytes, int, float, bool)):
-        raise ValueError("INVALID_USER_STATE")
-    if isinstance(user_state, Mapping):
-        value = user_state.get("fatigue_level")
-    else:
-        value = getattr(user_state, "fatigue_level", None)
+    value = _user_state_value(user_state, "fatigue_level")
     if value is None:
         return None
     if not isinstance(value, str):
@@ -473,10 +662,40 @@ def _resolve_user_state_fatigue(
     return value
 
 
+def _resolve_weight_kg(user_state: object | None) -> float:
+    value = _user_state_value(user_state, "weight_kg")
+    if value is None:
+        return _REFERENCE_WEIGHT_KG
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("INVALID_USER_STATE")
+    weight = float(value)
+    if not _MIN_WEIGHT_KG <= weight <= _MAX_WEIGHT_KG:
+        raise ValueError("INVALID_USER_STATE")
+    return weight
+
+
+def _resolve_warning_symptoms(user_state: object | None) -> frozenset[str]:
+    value = _user_state_value(user_state, "warning_symptoms")
+    if value is None:
+        return frozenset()
+    if not isinstance(value, (list, tuple, set, frozenset)):
+        raise ValueError("INVALID_USER_STATE")
+    symptoms = frozenset(value)
+    if any(not isinstance(item, str) for item in symptoms):
+        raise ValueError("INVALID_USER_STATE")
+    if not symptoms.issubset(_WARNING_SYMPTOMS):
+        raise ValueError("INVALID_USER_STATE")
+    return symptoms
+
+
 def _estimate_met(exercise: _ExerciseRecord) -> float:
     """Estimate exercise intensity without assigning one value to a category."""
     name = exercise.name.lower()
 
+    if any(term in name for term in ("breathing", "stretch", "mobility")):
+        return 2.3
+    if any(term in name for term in ("walking", "march in place", "cow-cat")):
+        return 3.5
     if any(term in name for term in ("sprint", "hiit", "tabata", "burpee")):
         return 11.5
     if any(term in name for term in ("jump rope", "skipping", "box jump")):
@@ -525,25 +744,73 @@ def _estimate_met(exercise: _ExerciseRecord) -> float:
     return round(max(3.0, min(11.0, base + variation)), 1)
 
 
-def _calories_for(exercise: _ExerciseRecord) -> float:
-    met = _estimate_met(exercise)
+def _calories_for(
+    exercise: _ExerciseRecord,
+    weight_kg: float,
+    *,
+    met: float | None = None,
+) -> float:
+    """Estimate gross energy with the standard-MET oxygen-cost equation."""
+
+    resolved_met = _estimate_met(exercise) if met is None else met
     return round(
-        met * _REFERENCE_WEIGHT_KG * (_PER_EXERCISE_MINUTES / 60.0),
+        resolved_met * 3.5 * weight_kg / 200.0 * _PER_EXERCISE_MINUTES,
         2,
     )
 
 
-def _exercise_payload(exercise: _ExerciseRecord) -> dict[str, Any]:
+def _resistance_prescription(level: str, goal: str) -> tuple[int, str, int]:
+    """Return sets, repetitions, and rest seconds for one resistance movement."""
+
+    level_sets = {
+        "beginner": 1,
+        "intermediate": 2,
+        "advanced": 3,
+    }
+    if goal == "recovery":
+        return 1, "30-45 seconds controlled", 15
+    sets = level_sets[level]
+    if goal in {"strength", "muscle_gain"}:
+        # Strength-oriented work starts with at least two working sets. Across
+        # three full-body days, muscle-gain plans then progress toward the
+        # roughly ten weekly sets per muscle group highlighted by ACSM.
+        sets = max(2, sets)
+    prescriptions = {
+        "general_fitness": ("8-12", 60),
+        "strength": ("5-8", 120),
+        "muscle_gain": ("8-12", 90),
+        "endurance": ("12-15", 45),
+        "weight_loss": ("10-15", 45),
+    }
+    reps, rest_seconds = prescriptions[goal]
+    return sets, reps, rest_seconds
+
+
+def _exercise_payload(
+    exercise: _ExerciseRecord,
+    *,
+    level: str,
+    goal: str,
+    weight_kg: float,
+) -> dict[str, Any]:
     is_cardio = exercise.category in _CARDIO_CATEGORIES
+    if is_cardio:
+        sets, reps, rest_seconds = 1, "continuous", 0
+    else:
+        sets, reps, rest_seconds = _resistance_prescription(level, goal)
+    met = _estimate_met(exercise)
+    if goal == "recovery":
+        met = min(met, 3.5)
     return {
         "wger_id": exercise.id,
         "name": exercise.name,
         "category": exercise.category,
         "duration_minutes": _PER_EXERCISE_MINUTES,
-        "sets": 1 if is_cardio else 3,
-        "reps": "continuous" if is_cardio else "10-12",
-        "met": _estimate_met(exercise),
-        "calories_burned": _calories_for(exercise),
+        "sets": sets,
+        "reps": reps,
+        "rest_seconds": rest_seconds,
+        "met": met,
+        "calories_burned": _calories_for(exercise, weight_kg, met=met),
         "calories_estimated": True,
     }
 
@@ -587,6 +854,7 @@ def suggest_workout(
     equipment: str,
     level: str,
     user_state: object | None = None,
+    goal: str = "general_fitness",
 ) -> dict[str, Any]:
     """Build a 2-8 exercise plan honouring the time and equipment budget.
 
@@ -605,10 +873,15 @@ def suggest_workout(
         Difficulty pool: ``"beginner"`` (only beginner exercises),
         ``"intermediate"`` (beginner + intermediate), ``"advanced"`` (all).
     user_state:
-        Optional state object/mapping with a ``fatigue_level`` field. When
+        Optional state object/mapping with ``fatigue_level``, ``weight_kg``,
+        and ``warning_symptoms`` fields. When
         ``fatigue_level ∈ {"high", "very_high"}`` the requested ``level`` is
         downgraded one notch (advanced → intermediate → beginner) before
-        filtering.
+        filtering. Warning symptoms make the tool refuse a workout.
+    goal:
+        One of ``general_fitness``, ``strength``, ``muscle_gain``,
+        ``endurance``, ``weight_loss``, or ``recovery``. Controls sets,
+        repetitions, and rest.
 
     Returns
     -------
@@ -620,7 +893,8 @@ def suggest_workout(
     ValueError
         ``"INVALID_MUSCLE_GROUP"``, ``"INVALID_DURATION"``,
         ``"INVALID_EQUIPMENT"``, ``"INVALID_LEVEL"``,
-        ``"INVALID_USER_STATE"``, or ``"NO_EXERCISES_FOUND"``.
+        ``"INVALID_USER_STATE"``, ``"INVALID_GOAL"``,
+        ``"UNSAFE_TO_RECOMMEND_WORKOUT"``, or ``"NO_EXERCISES_FOUND"``.
     """
     # ---- input validation --------------------------------------------------
     if muscle_group not in _VALID_MUSCLE_GROUPS:
@@ -639,17 +913,31 @@ def suggest_workout(
     if level not in _VALID_LEVELS:
         raise ValueError("INVALID_LEVEL")
 
+    if goal not in _VALID_GOALS:
+        raise ValueError("INVALID_GOAL")
+
     fatigue = _resolve_user_state_fatigue(user_state)
+    weight_kg = _resolve_weight_kg(user_state)
+    warning_symptoms = _resolve_warning_symptoms(user_state)
+    if warning_symptoms:
+        raise ValueError("UNSAFE_TO_RECOMMEND_WORKOUT")
 
     # ---- fatigue downgrade (Requirement 4.6) ------------------------------
     effective_level = level
     if fatigue in _FATIGUE_DOWNGRADE_TRIGGERS:
         effective_level = _LEVEL_DOWNGRADE[level]
+    if goal == "recovery":
+        effective_level = "beginner"
 
     allowed_levels = _LEVEL_POOL[effective_level]
 
     # ---- filter and select -------------------------------------------------
-    candidates = _filter_candidates(muscle_group, equipment, allowed_levels)
+    candidates = _filter_candidates(
+        muscle_group,
+        equipment,
+        allowed_levels,
+        goal,
+    )
     if len(candidates) < _MIN_EXERCISES:
         raise ValueError("NO_EXERCISES_FOUND")
 
@@ -665,7 +953,15 @@ def suggest_workout(
     selected = _select_diverse(candidates, k)
 
     # ---- assemble payload -------------------------------------------------
-    exercises_out = [_exercise_payload(ex) for ex in selected]
+    exercises_out = [
+        _exercise_payload(
+            ex,
+            level=effective_level,
+            goal=goal,
+            weight_kg=weight_kg,
+        )
+        for ex in selected
+    ]
     total_minutes = sum(ex["duration_minutes"] for ex in exercises_out)
     total_calories = round(
         sum(ex["calories_burned"] for ex in exercises_out), 2
@@ -676,6 +972,33 @@ def suggest_workout(
         "exercises": exercises_out,
         "total_duration_minutes": total_minutes,
         "total_calories_burned": total_calories,
+        "effective_level": effective_level,
+        "goal": goal,
+        "calorie_estimate": {
+            "estimated": True,
+            "weight_kg": weight_kg,
+            "method": "standard_MET_x_3.5_x_kg_div_200_x_minutes",
+            "note": "Ước tính quần thể, không phải phép đo tiêu hao cá nhân.",
+        },
+        "guidance": {
+            "progression": (
+                "Tăng dần thời lượng và tần suất trước khi tăng cường độ; "
+                "ưu tiên kỹ thuật và khả năng duy trì đều đặn."
+            ),
+            "weekly_target": (
+                "Người lớn nên hướng tới ít nhất 150 phút aerobic cường độ "
+                "vừa mỗi tuần và tăng cơ từ 2 ngày, tùy khả năng."
+            ),
+            "safety": (
+                "Dừng tập và tìm đánh giá y tế nếu có đau ngực, khó thở bất thường, "
+                "chóng mặt, ngất hoặc nhịp tim nhanh/không đều."
+            ),
+        },
+        "evidence_sources": [
+            "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+            "https://acsm.org/resistance-training-guidelines-update-2026/",
+            "https://pacompendium.com/adult-compendium/",
+        ],
     }
 
 
@@ -687,9 +1010,10 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     name="suggest_workout",
     description=(
         "Gợi ý 2-8 bài tập wger phù hợp với muscle_group, duration_min, "
-        "equipment và level. Tôn trọng ràng buộc "
+        "equipment, level và goal. Tôn trọng ràng buộc "
         "sum(ex.duration_minutes) ≤ duration_min và tự hạ level một nấc "
-        "khi user_state.fatigue_level ∈ {high, very_high}."
+        "khi mệt; dùng user_state.weight_kg để ước tính kcal và từ chối "
+        "gợi ý khi có warning_symptoms."
     ),
     parameters_schema=_SUGGEST_WORKOUT_SCHEMA,
     side="server",

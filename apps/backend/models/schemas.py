@@ -327,6 +327,7 @@ class ExerciseItem(BaseModel):
     duration_minutes: int = Field(ge=0)
     sets: int = Field(ge=0)
     reps: str
+    rest_seconds: int = Field(default=0, ge=0)
     met: float | None = Field(default=None, gt=0)
     calories_burned: float = Field(ge=0)
     calories_estimated: bool = True
@@ -367,6 +368,11 @@ class ExercisePlanPayload(BaseModel):
     exercises: list[ExerciseItem] = Field(min_length=1)
     total_duration_minutes: int = Field(ge=0)
     total_calories_burned: float = Field(ge=0)
+    effective_level: str | None = None
+    goal: str | None = None
+    calorie_estimate: dict = Field(default_factory=dict)
+    guidance: dict = Field(default_factory=dict)
+    evidence_sources: list[str] = Field(default_factory=list)
 
 
 class ChatTurn(BaseModel):

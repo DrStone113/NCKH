@@ -186,13 +186,17 @@ def test_comparator_counts_safe_v2_rejection_as_better_not_regression():
     assert metrics["v2_hard_constraint_violations"] == 0
 
 
-def test_p2_acceptance_dataset_is_frozen_and_distinct_engineering_set():
+def test_p2_acceptance_v1_is_preserved_as_contaminated_development_data():
     root = Path(__file__).resolve().parents[1] / "validation" / "plan_tool_v2_p2"
     raw = (root / "acceptance-v1.json").read_bytes()
     dataset = json.loads(raw)
     manifest = json.loads((root / "acceptance-manifest-v1.json").read_text(encoding="utf-8"))
+    qualification = json.loads((root / "acceptance-v1-qualification-status.json").read_text(encoding="utf-8"))
 
     assert len(dataset["cases"]) >= 120
     assert hashlib.sha256(raw).hexdigest() == manifest["content_sha256"]
     assert manifest["frozen_before_first_acceptance_run"] is True
     assert {case["area"] for case in dataset["cases"]} == set(manifest["distribution"])
+    assert qualification["status"] == "CONTAMINATED"
+    assert qualification["dataset_role"] == "CONTAMINATED_DEVELOPMENT"
+    assert qualification["acceptance_eligible"] is False

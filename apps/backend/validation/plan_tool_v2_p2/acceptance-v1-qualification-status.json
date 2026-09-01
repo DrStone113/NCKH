@@ -1,0 +1,15 @@
+{
+  "dataset_version": "plan-tool-v2-p2-acceptance-v1",
+  "dataset_role": "CONTAMINATED_DEVELOPMENT",
+  "acceptance_eligible": false,
+  "status": "CONTAMINATED",
+  "reason_code": "EXACT_DEVELOPMENT_OVERLAP",
+  "preserved_dataset_path": "acceptance-v1.json",
+  "preserved_content_sha256": "6e5a24ef394eaefd6e254c2155e10dc002763fad21e32056f88c327890b0a712",
+  "row_count": 120,
+  "unique_prompt_count": 50,
+  "exact_overlap_with_natural_development_prompt_count": 120,
+  "duplicate_row_count": 70,
+  "allowed_future_use": ["REGRESSION_ONLY", "LEAKAGE_DETECTION"],
+  "prohibited_future_use": ["INDEPENDENT_ACCEPTANCE", "RELEASE_QUALIFICATION", "THRESHOLD_TUNING"]
+}

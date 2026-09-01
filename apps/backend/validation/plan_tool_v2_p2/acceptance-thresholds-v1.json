@@ -1,0 +1,17 @@
+{
+  "threshold_version": "PLAN_V2_P2_1_ACCEPTANCE_THRESHOLDS_V1",
+  "frozen_before_scored_execution": true,
+  "hard_gates": {
+    "v2_hard_constraint_violations": 0,
+    "planned_to_actual_leakage": 0,
+    "unintended_writes": 0,
+    "invalid_canonical_references": 0,
+    "cross_user_access": 0,
+    "policy_hard_rule_failures": 0
+  },
+  "minimum_rates": {
+    "objectively_comparable_request_semantic_match": 0.95,
+    "reference_chain_and_deterministic_match": 1.0
+  },
+  "note": "Thresholds are frozen protocol data; no P2.1R score has been calculated."
+}

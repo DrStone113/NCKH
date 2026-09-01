@@ -1,0 +1,28 @@
+{
+  "dataset_version": "PLAN_V2_ACCEPTANCE_V2_CANDIDATES_V1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "candidate_source_path": "qualification_candidates_v2.py",
+  "candidate_source_sha256": "75df6acfbe5bf8fb5015b3674de4c66dd2bb644af6350bfaf0d9ec3b7f85f8a2",
+  "candidate_count": 150,
+  "proposed_acceptance_count": 120,
+  "proposed_distribution": {
+    "nutrition": 30,
+    "workout_single_session": 30,
+    "weekly_workout_scheduling": 30,
+    "combined_health": 15,
+    "revision_lifecycle_concurrency_adversarial": 15
+  },
+  "deferred_candidate_count": 30,
+  "authoring_boundary": {
+    "implementation_outputs_inspected": false,
+    "scored_acceptance_run": false,
+    "acceptance_eligible": false
+  },
+  "freeze_prerequisites": [
+    "dedup-protocol-v1.json passes",
+    "development-exclusion-index-v1.json has zero confirmed development overlap",
+    "all semantic candidates have recorded human review dispositions",
+    "oracle review status is HUMAN_REVIEWED",
+    "implementation source freeze is recorded"
+  ]
+}

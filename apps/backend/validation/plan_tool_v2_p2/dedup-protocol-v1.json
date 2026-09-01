@@ -1,0 +1,28 @@
+{
+  "protocol_version": "DEDUP_PROTOCOL_V1",
+  "frozen_before_candidate_review": true,
+  "decision_order": [
+    "EXACT_NORMALIZED_DUPLICATE",
+    "CASEFOLD_DUPLICATE",
+    "WHITESPACE_PUNCTUATION_DUPLICATE",
+    "PARAMETER_ONLY_TEMPLATE_DUPLICATE",
+    "SAME_SCENARIO_STRUCTURE_ENTITY_REPLACEMENT",
+    "SEMANTIC_CANDIDATE_HUMAN_REVIEW"
+  ],
+  "canonicalization": {
+    "unicode_normalization": "NFKD with combining marks removed",
+    "case": "casefold",
+    "punctuation_and_whitespace": "replace with one ASCII space",
+    "numeric_tokens": "retain in exact normalization; replace ISO dates, clock times, and standalone numeric values with typed tokens for template signatures"
+  },
+  "template_signature": {
+    "rule": "Canonical text with date/time/count/duration tokens abstracted; equality is a rejection.",
+    "entity_replacement_rule": "If the remaining clause skeleton is equal after named food, equipment, weekday, or exercise-entity substitution, reject as same scenario structure."
+  },
+  "semantic_candidate_detection": {
+    "rule": "Flag candidate pairs when token Jaccard similarity is at least 0.45 and at least three non-stopword tokens overlap, or when a shared outcome/invariant signature is paired with the same request structure.",
+    "embedding_only_is_sufficient": false,
+    "disposition": "Human review is required; a flagged pair is never silently accepted."
+  },
+  "acceptance_freeze_rule": "No exact, normalized, template, structure, or confirmed semantic development overlap; every flagged semantic candidate has recorded human disposition."
+}

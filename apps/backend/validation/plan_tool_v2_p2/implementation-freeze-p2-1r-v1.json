@@ -1,0 +1,16 @@
+{
+  "freeze_version": "PLAN_V2_IMPLEMENTATION_FREEZE_P2_1R_V1",
+  "baseline_commit": "32abb17d3e50455184c7d48bc80f01b8548513e5",
+  "frozen_before_first_scored_acceptance": true,
+  "sources": {
+    "services/plan_engine/development_scenarios.py": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+    "services/plan_engine/contracts.py": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+    "services/plan_engine/engine.py": "a9f5f5143e794cffdaab1006ee365eb4dc2ba57f64e9909180c0f6bae29e3e2d",
+    "services/plan_engine/comparator.py": "77f52544cc6b07bca9882bb823d1687e85775c5066543db0b6602ae9d7ed711a",
+    "services/plan_engine/weekly_scheduler.py": "e694183a71bbcd49b32988ab03673a8d53361c6337243168d773a6c8867864ff",
+    "services/plan_engine/nutrition_horizon.py": "159e625d851d850080eaf62bd27d03f7745c9fbc48eff3c6eb2601f18e6a025c",
+    "services/plan_engine/persistence.py": "06bd7c9255914cef6c04ca0f1b44372cb9fe85615329df9a620dae20f22eff11",
+    "services/agent/tools/plan_v2.py": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+    "services/agent/pending_user_action.py": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352"
+  }
+}

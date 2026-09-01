@@ -1,0 +1,37 @@
+{
+  "inventory_version": "P1_DEVELOPMENT_V2_INVENTORY",
+  "classification": "USED_FOR_DEVELOPMENT",
+  "historical_documented_count": 103,
+  "actual_count": 106,
+  "source_path": "apps/backend/services/plan_engine/development_scenarios.py",
+  "source_sha256": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+  "repository_history": {
+    "first_available_commit": "32abb17d3e50455184c7d48bc80f01b8548513e5",
+    "first_available_commit_at": "2026-09-01T17:24:54+07:00",
+    "note": "The available repository history introduces the file in one commit; it does not contain per-scenario creation metadata."
+  },
+  "reconciliation": {
+    "status": "UNATTRIBUTED_DELTA",
+    "delta": 3,
+    "note": "The source enumerates 106 valid scenarios. No valid scenario was removed to force the historical count of 103. The exact provenance of the three-count delta cannot be established from the available history."
+  },
+  "scenario_ids": [
+    "P1-nutrition_single_day-normal", "P1-nutrition_single_day-allergy", "P1-nutrition_single_day-dietary_restriction", "P1-nutrition_single_day-food_exclusion", "P1-nutrition_single_day-missing_profile", "P1-nutrition_single_day-specialist_gate",
+    "P1-nutrition_week-normal", "P1-nutrition_week-variety", "P1-nutrition_week-timezone_boundary", "P1-nutrition_week-food_exclusion", "P1-nutrition_week-missing_input", "P1-nutrition_week-policy_provenance",
+    "P1-workout_single-home", "P1-workout_single-gym", "P1-workout_single-equipment_limit", "P1-workout_single-unknown_experience", "P1-workout_single-pain_gate", "P1-workout_single-safety_gate",
+    "P1-workout_week-one_day_available", "P1-workout_week-three_day_available", "P1-workout_week-missing_availability", "P1-workout_week-timezone_boundary", "P1-workout_week-e4_gate", "P1-workout_week-history_context",
+    "P1-combined_reference-nutrition_and_workout", "P1-combined_reference-child_missing", "P1-combined_reference-no_energy_compensation", "P1-combined_reference-independent_validation", "P1-combined_reference-timezone", "P1-combined_reference-read_only",
+    "P1-revision_patch-change_meal", "P1-revision_patch-change_workout", "P1-revision_patch-move_schedule", "P1-revision_patch-cancel_item", "P1-revision_patch-change_time", "P1-revision_patch-change_duration",
+    "P1-lifecycle-draft", "P1-lifecycle-pending_confirmation", "P1-lifecycle-save", "P1-lifecycle-activate", "P1-lifecycle-pause", "P1-lifecycle-resume", "P1-lifecycle-complete", "P1-lifecycle-cancel",
+    "P1-write_integrity-duplicate_confirmation", "P1-write_integrity-network_retry", "P1-write_integrity-two_devices", "P1-write_integrity-stale_revision", "P1-write_integrity-cross_user", "P1-write_integrity-hash_mismatch",
+    "P1-actual_separation-planned_meal_not_consumed", "P1-actual_separation-planned_workout_not_completed", "P1-actual_separation-no_actual_reps", "P1-actual_separation-no_consumed_at", "P1-actual_separation-no_daily_total_mutation", "P1-actual_separation-no_training_history_mutation",
+    "P1-legacy_migration-readable", "P1-legacy_migration-migratable", "P1-legacy_migration-unversioned", "P1-legacy_migration-invalid", "P1-legacy_migration-no_recalculation", "P1-legacy_migration-explicit_edit_only",
+    "P1-trace_presentation-public_read", "P1-trace_presentation-public_revision", "P1-trace_presentation-debug_ids", "P1-trace_presentation-day_cards", "P1-trace_presentation-text_fallback", "P1-trace_presentation-redaction",
+    "P1-policy_invariance-nutrition_v101", "P1-policy_invariance-exercise_v110", "P1-policy_invariance-e2_catalog", "P1-policy_invariance-food_catalog", "P1-policy_invariance-research_a", "P1-policy_invariance-research_b", "P1-policy_invariance-research_c",
+    "P1-context_states-known", "P1-context_states-missing", "P1-context_states-not_loaded", "P1-context_states-stale", "P1-context_states-error", "P1-context_states-conflict", "P1-context_states-unknown",
+    "P1-date_semantics-asia_ho_chi_minh", "P1-date_semantics-utc_boundary", "P1-date_semantics-monday_local", "P1-date_semantics-period_start", "P1-date_semantics-period_end", "P1-date_semantics-invalid_timezone",
+    "P1-validator-canonical_dish", "P1-validator-canonical_exercise", "P1-validator-out_of_period", "P1-validator-duplicate_item", "P1-validator-hard_block", "P1-validator-soft_variety",
+    "P1-tool_surface-no_low_level_create", "P1-tool_surface-no_append_items", "P1-tool_surface-bounded_request", "P1-tool_surface-no_raw_totals", "P1-tool_surface-no_formula_input", "P1-tool_surface-owner_bound",
+    "P1-active_semantics-nutrition_overlap", "P1-active_semantics-workout_overlap", "P1-active_semantics-different_domain", "P1-active_semantics-supersede_old", "P1-active_semantics-active_read", "P1-active_semantics-no_silent_merge"
+  ]
+}

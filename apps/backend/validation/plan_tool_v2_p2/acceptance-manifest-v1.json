@@ -1,0 +1,16 @@
+{
+  "dataset_version": "plan-tool-v2-p2-acceptance-v1",
+  "dataset_path": "acceptance-v1.json",
+  "content_sha256": "6e5a24ef394eaefd6e254c2155e10dc002763fad21e32056f88c327890b0a712",
+  "case_count": 120,
+  "distribution": {
+    "nutrition": 30,
+    "workout_single_session": 30,
+    "weekly_workout_scheduling": 30,
+    "combined_health": 15,
+    "lifecycle_adversarial": 15
+  },
+  "oracle_version": "p2-engineering-oracle-v1",
+  "frozen_before_first_acceptance_run": true,
+  "classification": "engineering_validation_not_research_evidence"
+}

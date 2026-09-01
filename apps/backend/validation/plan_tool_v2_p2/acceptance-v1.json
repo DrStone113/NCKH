@@ -1,0 +1,1687 @@
+{
+  "dataset_version": "plan-tool-v2-p2-acceptance-v1",
+  "oracle_version": "p2-engineering-oracle-v1",
+  "purpose": "Engineering acceptance only; distinct from the P1 103 development scenarios and not research evidence.",
+  "cases": [
+    {
+      "case_id": "p2-nutrition-001",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn 3 ngày, tôi dị ứng đậu phộng và không ăn thịt heo.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-002",
+      "area": "nutrition",
+      "prompt": "Tôi muốn thực đơn hôm nay không có hải sản.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-003",
+      "area": "nutrition",
+      "prompt": "Xếp bữa ăn 7 ngày cho người ăn chay, ưu tiên món Việt.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-004",
+      "area": "nutrition",
+      "prompt": "Tạo thực đơn 3 ngày, loại trừ sữa và trứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-005",
+      "area": "nutrition",
+      "prompt": "Tôi cần kế hoạch ăn 1 ngày, không dùng bò.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-006",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn trong tuần, tôi không ăn gluten.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-007",
+      "area": "nutrition",
+      "prompt": "Gợi ý thực đơn 3 ngày, tránh cá vì dị ứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-008",
+      "area": "nutrition",
+      "prompt": "Tạo kế hoạch ăn 7 ngày nhưng chưa có đủ hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-009",
+      "area": "nutrition",
+      "prompt": "Lập lịch món ăn 3 ngày, tôi không thích các món lặp lại.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-010",
+      "area": "nutrition",
+      "prompt": "Tôi cần thực đơn một ngày cho mục tiêu duy trì cân nặng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-011",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn 3 ngày, tôi dị ứng đậu phộng và không ăn thịt heo.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-012",
+      "area": "nutrition",
+      "prompt": "Tôi muốn thực đơn hôm nay không có hải sản.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-013",
+      "area": "nutrition",
+      "prompt": "Xếp bữa ăn 7 ngày cho người ăn chay, ưu tiên món Việt.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-014",
+      "area": "nutrition",
+      "prompt": "Tạo thực đơn 3 ngày, loại trừ sữa và trứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-015",
+      "area": "nutrition",
+      "prompt": "Tôi cần kế hoạch ăn 1 ngày, không dùng bò.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-016",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn trong tuần, tôi không ăn gluten.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-017",
+      "area": "nutrition",
+      "prompt": "Gợi ý thực đơn 3 ngày, tránh cá vì dị ứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-018",
+      "area": "nutrition",
+      "prompt": "Tạo kế hoạch ăn 7 ngày nhưng chưa có đủ hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-019",
+      "area": "nutrition",
+      "prompt": "Lập lịch món ăn 3 ngày, tôi không thích các món lặp lại.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-020",
+      "area": "nutrition",
+      "prompt": "Tôi cần thực đơn một ngày cho mục tiêu duy trì cân nặng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-021",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn 3 ngày, tôi dị ứng đậu phộng và không ăn thịt heo.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-022",
+      "area": "nutrition",
+      "prompt": "Tôi muốn thực đơn hôm nay không có hải sản.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-023",
+      "area": "nutrition",
+      "prompt": "Xếp bữa ăn 7 ngày cho người ăn chay, ưu tiên món Việt.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-024",
+      "area": "nutrition",
+      "prompt": "Tạo thực đơn 3 ngày, loại trừ sữa và trứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-025",
+      "area": "nutrition",
+      "prompt": "Tôi cần kế hoạch ăn 1 ngày, không dùng bò.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-026",
+      "area": "nutrition",
+      "prompt": "Lập thực đơn trong tuần, tôi không ăn gluten.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-027",
+      "area": "nutrition",
+      "prompt": "Gợi ý thực đơn 3 ngày, tránh cá vì dị ứng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-028",
+      "area": "nutrition",
+      "prompt": "Tạo kế hoạch ăn 7 ngày nhưng chưa có đủ hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-029",
+      "area": "nutrition",
+      "prompt": "Lập lịch món ăn 3 ngày, tôi không thích các món lặp lại.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-nutrition-030",
+      "area": "nutrition",
+      "prompt": "Tôi cần thực đơn một ngày cho mục tiêu duy trì cân nặng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-001",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập 30 phút tại nhà chỉ có thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-002",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập 45 phút ở gym cho mục tiêu tăng cơ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-003",
+      "area": "workout_single_session",
+      "prompt": "Tôi có 60 phút và chỉ có tạ đơn, lập một buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-004",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập sức mạnh 45 phút với thanh đòn.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-005",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập thể lực tổng quát trong 30 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-006",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập tại nhà, không có thiết bị, 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-007",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập nhưng tôi đang đau đáng kể ở đầu gối.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-008",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập sức mạnh khi kinh nghiệm của tôi chưa rõ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-009",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập power nhưng chưa xác nhận kỹ thuật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-010",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập 60 phút ở phòng gym, tránh squat.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-011",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập 30 phút tại nhà chỉ có thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-012",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập 45 phút ở gym cho mục tiêu tăng cơ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-013",
+      "area": "workout_single_session",
+      "prompt": "Tôi có 60 phút và chỉ có tạ đơn, lập một buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-014",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập sức mạnh 45 phút với thanh đòn.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-015",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập thể lực tổng quát trong 30 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-016",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập tại nhà, không có thiết bị, 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-017",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập nhưng tôi đang đau đáng kể ở đầu gối.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-018",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập sức mạnh khi kinh nghiệm của tôi chưa rõ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-019",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập power nhưng chưa xác nhận kỹ thuật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-020",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập 60 phút ở phòng gym, tránh squat.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-021",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập 30 phút tại nhà chỉ có thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-022",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập 45 phút ở gym cho mục tiêu tăng cơ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-023",
+      "area": "workout_single_session",
+      "prompt": "Tôi có 60 phút và chỉ có tạ đơn, lập một buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-024",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập sức mạnh 45 phút với thanh đòn.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-025",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập thể lực tổng quát trong 30 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-026",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập tại nhà, không có thiết bị, 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-027",
+      "area": "workout_single_session",
+      "prompt": "Lập một buổi tập nhưng tôi đang đau đáng kể ở đầu gối.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-028",
+      "area": "workout_single_session",
+      "prompt": "Tạo buổi tập sức mạnh khi kinh nghiệm của tôi chưa rõ.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-029",
+      "area": "workout_single_session",
+      "prompt": "Tôi muốn tập power nhưng chưa xác nhận kỹ thuật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-workout-030",
+      "area": "workout_single_session",
+      "prompt": "Lập buổi tập 60 phút ở phòng gym, tránh squat.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-001",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập lịch 2 buổi tuần này, tôi rảnh thứ 2 và thứ 6.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-002",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 3 buổi/tuần trong 45 phút mỗi buổi.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-003",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tôi tập thứ 2, thứ 4, thứ 6; hãy xếp lịch.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-004",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 4 buổi tuần này, tôi không rảnh thứ 3 và thứ 5.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-005",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 3 buổi liên tiếp thứ 6, thứ 7, chủ nhật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-006",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 2 buổi tập tại nhà chỉ với thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-007",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo 3 buổi gym, mỗi buổi 60 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-008",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 4 buổi với tạ đơn và dây kháng lực.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-009",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 3 buổi, ngày đầu 30 phút, hai ngày sau 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-010",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 2 buổi mục tiêu tăng cơ cho người mới.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-011",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập lịch 2 buổi tuần này, tôi rảnh thứ 2 và thứ 6.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-012",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 3 buổi/tuần trong 45 phút mỗi buổi.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-013",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tôi tập thứ 2, thứ 4, thứ 6; hãy xếp lịch.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-014",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 4 buổi tuần này, tôi không rảnh thứ 3 và thứ 5.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-015",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 3 buổi liên tiếp thứ 6, thứ 7, chủ nhật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-016",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 2 buổi tập tại nhà chỉ với thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-017",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo 3 buổi gym, mỗi buổi 60 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-018",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 4 buổi với tạ đơn và dây kháng lực.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-019",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 3 buổi, ngày đầu 30 phút, hai ngày sau 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-020",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 2 buổi mục tiêu tăng cơ cho người mới.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-021",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập lịch 2 buổi tuần này, tôi rảnh thứ 2 và thứ 6.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-022",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 3 buổi/tuần trong 45 phút mỗi buổi.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-023",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tôi tập thứ 2, thứ 4, thứ 6; hãy xếp lịch.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-024",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 4 buổi tuần này, tôi không rảnh thứ 3 và thứ 5.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-025",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 3 buổi liên tiếp thứ 6, thứ 7, chủ nhật.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-026",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 2 buổi tập tại nhà chỉ với thảm.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-027",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo 3 buổi gym, mỗi buổi 60 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-028",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Xếp 4 buổi với tạ đơn và dây kháng lực.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-029",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Lập 3 buổi, ngày đầu 30 phút, hai ngày sau 45 phút.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-weekly-030",
+      "area": "weekly_workout_scheduling",
+      "prompt": "Tạo lịch 2 buổi mục tiêu tăng cơ cho người mới.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-001",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập 3 ngày tới, không đổi calo vì buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-002",
+      "area": "combined_health",
+      "prompt": "Tạo kế hoạch sức khỏe tuần này gồm thực đơn và lịch tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-003",
+      "area": "combined_health",
+      "prompt": "Tôi cần 3 ngày ăn chay kèm 2 buổi tập tại nhà.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-004",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập khi tôi dị ứng đậu phộng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-005",
+      "area": "combined_health",
+      "prompt": "Tạo một kế hoạch kết hợp nhưng thiếu hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-006",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập 3 ngày tới, không đổi calo vì buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-007",
+      "area": "combined_health",
+      "prompt": "Tạo kế hoạch sức khỏe tuần này gồm thực đơn và lịch tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-008",
+      "area": "combined_health",
+      "prompt": "Tôi cần 3 ngày ăn chay kèm 2 buổi tập tại nhà.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-009",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập khi tôi dị ứng đậu phộng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-010",
+      "area": "combined_health",
+      "prompt": "Tạo một kế hoạch kết hợp nhưng thiếu hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-011",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập 3 ngày tới, không đổi calo vì buổi tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-012",
+      "area": "combined_health",
+      "prompt": "Tạo kế hoạch sức khỏe tuần này gồm thực đơn và lịch tập.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-013",
+      "area": "combined_health",
+      "prompt": "Tôi cần 3 ngày ăn chay kèm 2 buổi tập tại nhà.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-014",
+      "area": "combined_health",
+      "prompt": "Lập kế hoạch ăn và tập khi tôi dị ứng đậu phộng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-combined-015",
+      "area": "combined_health",
+      "prompt": "Tạo một kế hoạch kết hợp nhưng thiếu hồ sơ dinh dưỡng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-001",
+      "area": "lifecycle_adversarial",
+      "prompt": "Đổi bữa tối thứ 5 trong kế hoạch này.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-002",
+      "area": "lifecycle_adversarial",
+      "prompt": "Dời buổi tập này sang thứ 6.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-003",
+      "area": "lifecycle_adversarial",
+      "prompt": "Lưu đúng kế hoạch vừa xem.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-004",
+      "area": "lifecycle_adversarial",
+      "prompt": "Kích hoạt bản kế hoạch đã lưu.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "PLAN_REVISION_CONFLICT",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-005",
+      "area": "lifecycle_adversarial",
+      "prompt": "Tạm dừng kế hoạch đang áp dụng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-006",
+      "area": "lifecycle_adversarial",
+      "prompt": "Tiếp tục kế hoạch đang tạm dừng.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-007",
+      "area": "lifecycle_adversarial",
+      "prompt": "Hủy bản kế hoạch vừa tạo.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-008",
+      "area": "lifecycle_adversarial",
+      "prompt": "Lưu lại cùng một xác nhận sau khi mạng chập chờn.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-009",
+      "area": "lifecycle_adversarial",
+      "prompt": "Sửa kế hoạch từ hai thiết bị cùng lúc.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "PLAN_REVISION_CONFLICT",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-010",
+      "area": "lifecycle_adversarial",
+      "prompt": "Đọc kế hoạch của một tài khoản khác.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-011",
+      "area": "lifecycle_adversarial",
+      "prompt": "Dùng múi giờ không hợp lệ để tạo kế hoạch.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-012",
+      "area": "lifecycle_adversarial",
+      "prompt": "Lưu revision đã cũ sau khi có bản mới.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-013",
+      "area": "lifecycle_adversarial",
+      "prompt": "Kích hoạt hai kế hoạch ăn trùng ngày.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-014",
+      "area": "lifecycle_adversarial",
+      "prompt": "Xác nhận một pending action đã hết hạn.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "PLAN_REVISION_CONFLICT",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-lifecycle-015",
+      "area": "lifecycle_adversarial",
+      "prompt": "Sửa tham chiếu mơ hồ: đổi món này.",
+      "oracle": {
+        "version": "p2-engineering-oracle-v1",
+        "expected_status": "SAFE_STRUCTURED_OUTCOME",
+        "hard_invariants": [
+          "NO_PLANNED_TO_ACTUAL_LEAKAGE",
+          "NO_UNINTENDED_WRITE",
+          "CANONICAL_REFERENCES_ONLY"
+        ]
+      }
+    }
+  ]
+}

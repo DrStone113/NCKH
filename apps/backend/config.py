@@ -1,15 +1,34 @@
 from typing import Literal, Optional
 from pathlib import Path
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_environment: str = "production"
+    app_environment: str = Field(
+        default="production",
+        validation_alias=AliasChoices("APP_ENV", "APP_ENVIRONMENT"),
+    )
+    chat_trace_mode: Literal["public", "debug"] = "public"
     development_context_trace: bool = False
     # D3.0 supports observation only. Literal validation intentionally rejects
     # an "enforced" value so configuration cannot activate D3.1 behavior.
     context_planner_mode: Literal["off", "shadow"] = "off"
+    # E4.1 keeps legacy output authoritative by default while collecting an
+    # E4 comparison. ``enforced`` is available only after an explicit rollout
+    # configuration change; it must never fall back to legacy on a planner
+    # safety, context, or validation failure.
+    workout_planner_mode: Literal["off", "shadow", "enforced"] = "shadow"
+    # Workout writes are a separate consent gate. A recommendation never
+    # writes. Explicit save/result tools are enabled only when this is set to
+    # ``explicit``.
+    workout_write_mode: Literal["off", "explicit"] = "off"
+    # P1 plan V2 begins in an isolated revision store.  ``shadow`` can create
+    # and confirm exact revisions for evaluation but never writes legacy
+    # ``plans`` / ``plan_items`` records or observations.  ``enforced`` is
+    # deliberately a separate rollout switch once SQL persistence gates pass.
+    plan_tool_mode: Literal["off", "shadow", "enforced"] = "shadow"
     # Optional append-only D3.0.1 natural-shadow artifact. Collection is active
     # only together with shadow mode; None performs no filesystem writes.
     context_planner_natural_collection_path: Optional[str] = None
@@ -63,9 +82,41 @@ class Settings(BaseSettings):
             and self.app_environment.strip().lower() != "production"
         )
 
+    def debug_trace_allowed_for(self, *, developer_authenticated: bool) -> bool:
+        """Enforce developer trace availability on the server, never client input."""
+
+        environment = self.app_environment.strip().lower()
+        if self.chat_trace_mode != "debug" or environment == "production":
+            return False
+        if environment == "development":
+            return True
+        # Staging has data closer to production, so an authenticated developer
+        # or admin principal is required even when the server opted in.
+        return environment == "staging" and developer_authenticated
+
     @property
     def context_planner_shadow_enabled(self) -> bool:
         return self.context_planner_mode == "shadow"
+
+    @property
+    def workout_planner_shadow_enabled(self) -> bool:
+        return self.workout_planner_mode == "shadow"
+
+    @property
+    def workout_planner_enforced_enabled(self) -> bool:
+        return self.workout_planner_mode == "enforced"
+
+    @property
+    def workout_write_explicit_enabled(self) -> bool:
+        return self.workout_write_mode == "explicit"
+
+    @property
+    def plan_tool_shadow_enabled(self) -> bool:
+        return self.plan_tool_mode == "shadow"
+
+    @property
+    def plan_tool_enforced_enabled(self) -> bool:
+        return self.plan_tool_mode == "enforced"
 
 
 settings = Settings()

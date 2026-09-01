@@ -13,29 +13,38 @@ def test_tool_catalog_registers_all_tools():
         "get_today_exercises",
         "get_meal_log_range",
         "get_exercise_log_range",
+            "update_workout_profile",
+            "update_nutrition_profile",
         "get_weight_history",
-        "get_active_plan",
         "log_meal",
         "log_exercise",
         "log_weight",
         "get_lifestyle_logs",
         "log_lifestyle",
         "set_lifestyle_reminder",
-        "mark_plan_item_complete",
         "navigate_to_screen",
         "suggest_dish",
-        "suggest_workout",
-        "calculate_tdee",
+            "suggest_workout",
+            "build_personalized_workout",
+            "get_workout_substitutions",
+            "save_workout_plan",
+            "log_workout_result",
+            "calculate_tdee",
         "search_food_nutrition",
-        "create_long_term_plan",
-        "create_plan",
-        "append_plan_items",
+        "build_nutrition_plan",
+        "build_workout_schedule",
+        "get_plan",
+        "get_active_plan_v2",
+        "revise_plan",
+        "save_plan",
+        "set_plan_status",
         "query_rag",
         "search_medical_knowledge",
     }
 
     assert set(registry.names()) == expected
-    assert len(registry.schemas()) == 24
+    assert len(registry.schemas()) == 32
+    assert not {"create_long_term_plan", "create_plan", "append_plan_items", "get_active_plan", "mark_plan_item_complete"}.intersection(registry.names())
 
 
 def test_client_write_tools_require_request_id():
@@ -48,8 +57,8 @@ def test_client_write_tools_require_request_id():
         "log_weight",
         "log_lifestyle",
         "set_lifestyle_reminder",
-        "mark_plan_item_complete",
         "navigate_to_screen",
+        "update_workout_profile",
     }
     for name in write_tools:
         descriptor = registry.get(name)
@@ -64,6 +73,6 @@ def test_server_tool_sides_and_idempotency():
 
     assert registry.get("suggest_dish").side == "server"
     assert registry.get("suggest_dish").idempotent is True
-    assert registry.get("create_long_term_plan").idempotent is False
-    assert registry.get("create_plan").idempotent is False
-    assert registry.get("append_plan_items").idempotent is False
+    assert registry.get("build_nutrition_plan").idempotent is True
+    assert registry.get("save_plan").idempotent is False
+    assert registry.get("set_plan_status").idempotent is False

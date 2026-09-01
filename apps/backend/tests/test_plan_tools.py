@@ -20,6 +20,7 @@ still verifying the SQL and parameters that would be sent.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -31,6 +32,7 @@ from models.schemas import PlanItem
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
 from services.agent.tools import register_server_tools
 from services.agent.tools import plan_tools as pt
+from services.agent.tools.plan_v2 import PlanRuntimeContext, build_nutrition_plan
 
 
 # --------------------------------------------------------------------------- #
@@ -144,20 +146,11 @@ def test_create_long_term_plan_descriptor_generates_every_day_in_one_call():
 
 
 @pytest.mark.asyncio
-async def test_create_long_term_plan_runs_end_to_end_with_real_catalog_tools():
-    start = date(2026, 8, 14)
-    session = _FakeAsyncSession(plan_row=(start, 3))
+async def test_plan_v2_replaces_legacy_long_term_assembly_in_public_catalog():
     registry = ToolRegistry()
-    register_server_tools(registry, db_session=session)
-
-    result = await pt.create_long_term_plan(
-        registry,
-        session,  # type: ignore[arg-type]
-        user_id="user-1",
-        goal="maintain",
-        duration_days=3,
-        start_date=start,
-        profile={
+    register_server_tools(registry)
+    runtime = PlanRuntimeContext(
+        "user-1", "plan-v2-test", {
             "user_id": "user-1",
             "age": 30,
             "gender": "male",
@@ -167,28 +160,19 @@ async def test_create_long_term_plan_runs_end_to_end_with_real_catalog_tools():
             "activity_level": "moderate",
             "health_goal": "maintain",
             "dietary_restrictions": [],
-        },
-        request_id="e2e-plan-1",
+        }, None,
+    )
+    result = await build_nutrition_plan(
+        period_start="2026-08-14", period_end="2026-08-16",
+        timezone="Asia/Ho_Chi_Minh", _runtime_context=runtime,
     )
 
-    inserts = [
-        params
-        for sql, params in session.executed
-        if "INSERT INTO plan_items" in sql
-    ]
-    assert result["days_generated"] == 3
-    assert result["full_weeks"] == 0
-    assert result["remaining_days"] == 3
-    assert result["total_weeks"] == 1
-    assert len(inserts) == 3
-    assert {row[0]["day_index"] for row in inserts} == {1, 2, 3}
-    # Friday and Saturday are structured aerobic sessions; Sunday is rest.
-    assert [len(rows) for rows in inserts] == [4, 4, 3]
-    assert all(
-        str(UUID(row["id"])) == row["id"]
-        for rows in inserts
-        for row in rows
-    )
+    assert {"create_long_term_plan", "create_plan", "append_plan_items"}.isdisjoint(registry.names())
+    assert result["status"] == "READY"
+    assert result["lifecycle_status"] == "DRAFT"
+    assert len(result["plan"]["items"]) == 9
+    assert all(item["canonical_refs"]["dish_id"] for item in result["plan"]["items"])
+    assert result["plan"]["summary"]["planned_not_consumed"] is True
 
 
 # --------------------------------------------------------------------------- #

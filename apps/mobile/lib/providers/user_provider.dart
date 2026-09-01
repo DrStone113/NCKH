@@ -7,6 +7,7 @@ import '../constants/firestore_collections.dart';
 import '../models/app_state_value.dart';
 
 class UserProvider with ChangeNotifier {
+  static const _notSet = Object();
   UserModel? _currentUser;
   bool _isInitialized = false;
   DataStatus _profileStatus = DataStatus.notLoaded;
@@ -17,6 +18,10 @@ class UserProvider with ChangeNotifier {
   bool get isInitialized => _isInitialized;
   DataStatus get profileStatus => _profileStatus;
   DateTime? get profileReadAt => _profileReadAt;
+  bool get needsWorkoutAccountIntake =>
+      _currentUser?.needsWorkoutAccountIntake ?? false;
+  bool get needsAccountHealthIntake =>
+      _currentUser?.needsAccountHealthIntake ?? false;
 
   UserProvider() {
     _restoreSession();
@@ -90,6 +95,9 @@ class UserProvider with ChangeNotifier {
         targetWeight: userData.targetWeight,
         activityLevel: userData.activityLevel,
         healthGoal: userData.healthGoal,
+        nutritionProfile: userData.nutritionProfile,
+        workoutProfile: userData.workoutProfile,
+        healthProfile: userData.healthProfile,
         createdAt: DateTime.now(),
       );
 
@@ -98,6 +106,8 @@ class UserProvider with ChangeNotifier {
           .doc(user.id)
           .set(user.toMap());
       _currentUser = user;
+      _profileStatus = DataStatus.known;
+      _profileReadAt = DateTime.now();
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -218,6 +228,231 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Persist an explicit workout-intake answer captured by the chatbot.
+  ///
+  /// The patch is merged into the existing typed profile before writing, so a
+  /// response about pain cannot erase the previously stored availability or
+  /// equipment. A Firestore write must succeed before the caller may tell the
+  /// user that the answer was remembered.
+  Future<WriteResult<WorkoutProfile>> updateWorkoutProfileFromChat(
+    Map<String, dynamic> patch, {
+    required String mode,
+  }) async {
+    final user = _currentUser;
+    if (user == null) {
+      return const WriteResult.rejected('WORKOUT_PROFILE_USER_UNAVAILABLE');
+    }
+
+    WorkoutProfile updatedProfile;
+    try {
+      updatedProfile = WorkoutProfile.applyChatUpdate(
+        user.workoutProfile,
+        patch,
+        mode: mode,
+      );
+    } on ArgumentError {
+      return const WriteResult.rejected('INVALID_WORKOUT_PROFILE_PATCH');
+    }
+
+    final updatedUser = user.copyWith(workoutProfile: updatedProfile);
+    try {
+      if (user.id != 'demo') {
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(user.id)
+            .set(
+          {'workout_profile': updatedProfile.toJson()},
+          SetOptions(merge: true),
+        );
+      }
+      _currentUser = updatedUser;
+      _profileStatus =
+          user.id == 'demo' ? DataStatus.notLoaded : DataStatus.known;
+      _profileReadAt = user.id == 'demo' ? null : DateTime.now();
+      notifyListeners();
+      return WriteResult.persisted(updatedProfile);
+    } catch (e) {
+      return const WriteResult.error('WORKOUT_PROFILE_PERSISTENCE_ERROR');
+    }
+  }
+
+  /// Save the unified V2 nutrition, workout and safety intake. A failed
+  /// Firestore write leaves the in-memory user unchanged. Workout fields are
+  /// validated only when the user selected exercise support, so a
+  /// nutrition-only account is never forced through a workout form.
+  Future<WriteResult<HealthProfile>> completeAccountHealthIntake({
+    required String primarySupport,
+    Map<String, dynamic> workoutAnswers = const <String, dynamic>{},
+    Object? gender = _notSet,
+    required String? allergyAndAvoidanceNote,
+    required String? foodPreferenceNote,
+    required String? nutritionGoalNote,
+    String? nutritionGoal,
+    List<String>? foodAllergies,
+    List<String>? dietaryRestrictions,
+    List<String>? preferredFoods,
+    List<String>? dislikedFoods,
+    List<String>? preferredCuisines,
+    List<String>? mealPreferences,
+    List<String>? foodExclusions,
+    String? foodDislikesText,
+    String? nutritionNotes,
+  }) async {
+    final user = _currentUser;
+    if (user == null) {
+      return const WriteResult.rejected('HEALTH_PROFILE_USER_UNAVAILABLE');
+    }
+
+    final normalizedSupport = primarySupport.trim().toUpperCase();
+    final requiresWorkout =
+        normalizedSupport == 'EXERCISE' || normalizedSupport == 'BOTH';
+    WorkoutProfile? completedWorkoutProfile = user.workoutProfile;
+    NutritionProfile completedNutritionProfile;
+    HealthProfile completedHealthProfile;
+    try {
+      if (requiresWorkout) {
+        completedWorkoutProfile = WorkoutProfile.completeAccountIntake(
+          user.workoutProfile,
+          workoutAnswers,
+        );
+      }
+      completedNutritionProfile = NutritionProfile.completeAccountIntake(
+        user.nutritionProfile,
+        allergyAndAvoidanceNote: allergyAndAvoidanceNote,
+        foodPreferenceNote: foodPreferenceNote,
+        nutritionGoalNote: nutritionGoalNote,
+        nutritionGoal: nutritionGoal,
+        foodAllergies: foodAllergies,
+        dietaryRestrictions: dietaryRestrictions,
+        preferredFoods: preferredFoods,
+        dislikedFoods: dislikedFoods,
+        preferredCuisines: preferredCuisines,
+        mealPreferences: mealPreferences,
+        foodExclusions: foodExclusions,
+        foodDislikesText: foodDislikesText,
+        nutritionNotes: nutritionNotes,
+      );
+      final previousSafety = user.healthProfile?.safetyProfile;
+      final safety = SafetyProfile(
+        exerciseSafetyProfile: completedWorkoutProfile?.exerciseSafetyProfile ??
+            previousSafety?.exerciseSafetyProfile,
+        nutritionSafetySnapshot: user.nutritionSafetyProfile.toJson(),
+        provenance: <String, String>{
+          ...?previousSafety?.provenance,
+          if (requiresWorkout)
+            'exercise_safety_profile': 'EXPLICIT_UI_SELECTION',
+          'nutrition_safety_snapshot': 'LEGACY',
+        },
+        freshness: <String, String>{
+          ...?previousSafety?.freshness,
+          'nutrition_safety_snapshot': 'STABLE_UNTIL_CHANGED',
+          if (requiresWorkout) 'exercise_safety_profile': 'TIME_SENSITIVE',
+          if (requiresWorkout) 'current_pain_status': 'CURRENT_OBSERVATION',
+        },
+      );
+      completedHealthProfile = HealthProfile.completeAccountIntake(
+        primarySupport: normalizedSupport,
+        nutritionProfile: completedNutritionProfile,
+        workoutProfile: completedWorkoutProfile,
+        safetyProfile: safety,
+      );
+    } on ArgumentError {
+      return const WriteResult.rejected('INVALID_ACCOUNT_HEALTH_INTAKE');
+    }
+
+    final updatedUser = user.copyWith(
+      workoutProfile: completedWorkoutProfile,
+      nutritionProfile: completedNutritionProfile,
+      healthProfile: completedHealthProfile,
+      gender: identical(gender, _notSet) ? user.gender : gender,
+    );
+    try {
+      if (user.id != 'demo') {
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(user.id)
+            .set(
+          {
+            // Keep legacy consumers on the stable top-level paths while new
+            // clients read the versioned health_profile envelope.
+            if (completedWorkoutProfile != null)
+              'workout_profile': completedWorkoutProfile.toJson(),
+            'nutrition_profile': completedNutritionProfile.toJson(),
+            'health_profile': completedHealthProfile.toJson(),
+            if (!identical(gender, _notSet)) 'gender': gender,
+          },
+          SetOptions(merge: true),
+        );
+      }
+      _currentUser = updatedUser;
+      _profileStatus =
+          user.id == 'demo' ? DataStatus.notLoaded : DataStatus.known;
+      _profileReadAt = user.id == 'demo' ? null : DateTime.now();
+      notifyListeners();
+      return WriteResult.persisted(completedHealthProfile);
+    } catch (_) {
+      return const WriteResult.error('HEALTH_PROFILE_PERSISTENCE_ERROR');
+    }
+  }
+
+  /// Persist one explicit nutrition correction without restarting account
+  /// intake. The caller must provide a typed patch matching exactly what the
+  /// user stated; free text stays raw and unknown mappings are rejected.
+  Future<WriteResult<NutritionProfile>> updateNutritionProfileFromChat(
+    Map<String, dynamic> patch,
+  ) async {
+    final user = _currentUser;
+    if (user == null) {
+      return const WriteResult.rejected('NUTRITION_PROFILE_USER_UNAVAILABLE');
+    }
+    NutritionProfile updatedNutrition;
+    try {
+      updatedNutrition = NutritionProfile.applyExplicitUpdate(
+        user.nutritionProfile,
+        patch,
+      );
+    } on ArgumentError {
+      return const WriteResult.rejected('INVALID_NUTRITION_PROFILE_PATCH');
+    }
+    final oldHealth = user.healthProfile;
+    final updatedHealth = oldHealth == null
+        ? null
+        : HealthProfile(
+            schemaVersion: oldHealth.schemaVersion,
+            primarySupport: oldHealth.primarySupport,
+            nutritionProfile: updatedNutrition,
+            workoutProfile: oldHealth.workoutProfile,
+            safetyProfile: oldHealth.safetyProfile,
+            completedAt: oldHealth.completedAt,
+          );
+    final updatedUser = user.copyWith(
+      nutritionProfile: updatedNutrition,
+      healthProfile: updatedHealth,
+    );
+    try {
+      if (user.id != 'demo') {
+        await FirebaseFirestore.instance
+            .collection(FirestoreCollections.users)
+            .doc(user.id)
+            .set(
+          {
+            'nutrition_profile': updatedNutrition.toJson(),
+            if (updatedHealth != null) 'health_profile': updatedHealth.toJson(),
+          },
+          SetOptions(merge: true),
+        );
+      }
+      _currentUser = updatedUser;
+      _profileStatus =
+          user.id == 'demo' ? DataStatus.notLoaded : DataStatus.known;
+      _profileReadAt = user.id == 'demo' ? null : DateTime.now();
+      notifyListeners();
+      return WriteResult.persisted(updatedNutrition);
+    } catch (_) {
+      return const WriteResult.error('NUTRITION_PROFILE_PERSISTENCE_ERROR');
     }
   }
 

@@ -277,17 +277,41 @@ def _format_profile(user_profile: Any) -> str:
     else:
         return f"Hồ sơ người dùng: {user_profile}"
 
+    # The mobile client supplies this compact shared layer for both nutrition
+    # and workout turns. Top-level values remain a backwards-compatible
+    # fallback for older clients and persisted documents.
+    general_profile = data.get("general_profile")
+    general_profile = general_profile if isinstance(general_profile, dict) else {}
     name = data.get("name") or data.get("user_name")
-    age = data.get("age")
+    age = _first_present(general_profile, "age", fallback=data.get("age"))
     gender = data.get("gender")
-    equation_sex = data.get("equation_sex")
+    equation_sex = _first_present(
+        general_profile, "equation_sex", fallback=data.get("equation_sex")
+    )
     nutrition_safety_profile = data.get("nutrition_safety_profile")
-    height = _first_present(data, "height", "height_cm")
-    weight = _first_present(data, "weight", "weight_kg")
+    height = _first_present(
+        general_profile,
+        "height_cm",
+        fallback=_first_present(data, "height", "height_cm"),
+    )
+    weight = _first_present(
+        general_profile,
+        "weight_kg",
+        fallback=_first_present(data, "weight", "weight_kg"),
+    )
     target_weight = _first_present(data, "target_weight", "targetWeight")
-    activity_level = data.get("activity_level") or data.get("activityLevel")
-    health_goal = data.get("health_goal") or data.get("healthGoal")
+    activity_level = _first_present(
+        general_profile,
+        "activity_level",
+        fallback=data.get("activity_level") or data.get("activityLevel"),
+    )
+    health_goal = _first_present(
+        general_profile,
+        "health_goal",
+        fallback=data.get("health_goal") or data.get("healthGoal"),
+    )
     dietary_restrictions = data.get("dietary_restrictions") or data.get("dietaryRestrictions")
+    nutrition_profile = data.get("nutrition_profile")
 
     calculated = _calculate_body_metrics(
         age=int(age) if age is not None else None,
@@ -396,6 +420,129 @@ def _format_profile(user_profile: Any) -> str:
             res_str = str(dietary_restrictions)
         if res_str:
             lines.append(f"- Kiêng cữ / Dị ứng thực phẩm: {res_str}")
+
+    if isinstance(nutrition_profile, dict):
+        structured_parts: list[str] = []
+        profile_goal = nutrition_profile.get("nutrition_goal")
+        if isinstance(profile_goal, str) and profile_goal.strip():
+            structured_parts.append(f"mục tiêu={profile_goal.strip()}")
+        profile_allergies = nutrition_profile.get("food_allergies")
+        if isinstance(profile_allergies, list) and profile_allergies:
+            structured_parts.append(
+                "dị nguyên canonical="
+                + ", ".join(str(item) for item in profile_allergies if item)
+            )
+        profile_restrictions = nutrition_profile.get("dietary_restrictions")
+        if isinstance(profile_restrictions, list) and profile_restrictions:
+            structured_parts.append(
+                "hạn chế canonical="
+                + ", ".join(str(item) for item in profile_restrictions if item)
+            )
+        for key, label in (
+            ("preferred_cuisines", "ẩm thực ưa thích"),
+            ("meal_preferences", "thói quen bữa ăn"),
+        ):
+            value = nutrition_profile.get(key)
+            if isinstance(value, list) and value:
+                structured_parts.append(
+                    f"{label}=" + ", ".join(str(item) for item in value if item)
+                )
+        if structured_parts:
+            lines.append("- Hồ sơ dinh dưỡng có cấu trúc: " + " | ".join(structured_parts))
+
+        nutrition_notes = (
+            ("Cần tránh / dị ứng tự khai", nutrition_profile.get("other_dietary_restrictions_text") or nutrition_profile.get("allergy_and_avoidance_note")),
+            ("Sở thích / thói quen ăn uống", nutrition_profile.get("food_preferences_text") or nutrition_profile.get("food_preference_note")),
+            ("Món không thích", nutrition_profile.get("food_dislikes_text")),
+            ("Mục tiêu / ghi chú dinh dưỡng", nutrition_profile.get("goal_description") or nutrition_profile.get("nutrition_goal_note")),
+            ("Ghi chú sức khỏe / dinh dưỡng thêm", nutrition_profile.get("nutrition_notes")),
+        )
+        supplied_notes = [
+            f"- {label}: {str(value).strip()}"
+            for label, value in nutrition_notes
+            if isinstance(value, str) and value.strip()
+        ]
+        if supplied_notes:
+            lines.append("")
+            lines.append("=== GHI CHÚ DINH DƯỠNG NGƯỜI DÙNG TỰ KHAI ===")
+            lines.extend(supplied_notes)
+            lines.append(
+                "- LƯU Ý: Đây là ghi chú tự do, không phải tag dị ứng canonical đã xác minh. "
+                "Không khẳng định món an toàn chỉ từ ghi chú này; hỏi/chuẩn hóa thêm trước khi gợi ý món có rủi ro dị ứng."
+            )
+        provenance = nutrition_profile.get("provenance")
+        if isinstance(provenance, dict):
+            legacy_or_candidate = [
+                str(field)
+                for field, source in provenance.items()
+                if str(source).upper() in {"LEGACY", "CANDIDATE_FACT"}
+            ]
+            if legacy_or_candidate:
+                lines.append(
+                    "- Các mục cần xác nhận theo ngữ cảnh nếu liên quan: "
+                    + ", ".join(legacy_or_candidate)
+                )
+        field_states = nutrition_profile.get("field_states")
+        if isinstance(field_states, dict):
+            needs_confirmation = [
+                str(field)
+                for field, state in field_states.items()
+                if isinstance(state, dict)
+                and (
+                    str(state.get("status", "")).upper()
+                    in {"LEGACY", "CANDIDATE_FACT"}
+                    or str(state.get("source", "")).upper() == "CANDIDATE_FACT"
+                )
+            ]
+            if needs_confirmation:
+                lines.append(
+                    "- Field provenance cần xác nhận theo đúng ngữ cảnh: "
+                    + ", ".join(needs_confirmation)
+                )
+        candidate_facts = nutrition_profile.get("candidate_facts")
+        if isinstance(candidate_facts, list) and candidate_facts:
+            lines.append(
+                "- Có dữ kiện ứng viên chưa xác nhận: chỉ hỏi lại trường liên quan, không dùng làm ràng buộc cứng."
+            )
+
+    workout_profile = data.get("workout_profile")
+    if isinstance(workout_profile, dict):
+        lines.append("")
+        lines.append("=== HỒ SƠ TẬP NGƯỜI DÙNG TỰ KHAI ===")
+        experience = workout_profile.get("training_experience")
+        experience_detail = workout_profile.get("training_experience_detail")
+        available_days = workout_profile.get("available_days_per_week")
+        duration = workout_profile.get("default_session_duration_minutes")
+        equipment = workout_profile.get("available_equipment")
+        pain = workout_profile.get("current_pain_status")
+        limitations = workout_profile.get("self_reported_limitations")
+        confirmation = str(
+            workout_profile.get("intake_confirmation_status") or "LEGACY_CONFIRMED"
+        ).upper()
+        if experience is not None or experience_detail is not None:
+            lines.append(
+                "- Kinh nghiệm tự khai: "
+                + str(experience_detail or experience)
+                + (f" (mã chính sách: {experience})" if experience_detail and experience else "")
+            )
+        if available_days is not None:
+            lines.append(f"- Thời gian có thể tập: {available_days} ngày/tuần")
+        if duration is not None:
+            lines.append(f"- Thời lượng buổi mặc định: {duration} phút")
+        if isinstance(equipment, list) and equipment:
+            lines.append("- Dụng cụ sẵn có: " + ", ".join(str(item) for item in equipment))
+        if pain is not None:
+            lines.append(f"- Đau/khó chịu đã tự khai: {pain}")
+        if isinstance(limitations, list) and limitations:
+            lines.append("- Hạn chế/chấn thương tự khai: " + "; ".join(str(item) for item in limitations))
+        if confirmation == "PENDING_CONFIRMATION":
+            lines.append(
+                "- BẮT BUỘC XÁC NHẬN: Đây là bản ghi vừa lưu nhưng chưa được người dùng "
+                "xác nhận lại. Với yêu cầu lập bài tập, hãy đọc ngắn gọn đúng các mục trên "
+                "và hỏi liệu chatbot đang nhớ có đúng không; không lập buổi tập trước khi họ xác nhận."
+            )
+        else:
+            lines.append("- Trạng thái ghi nhớ: đã xác nhận hoặc hồ sơ cũ người dùng tự quản lý.")
 
     # Goal & Strategy Directives
     lines.append("")
@@ -625,18 +772,13 @@ Bạn không chỉ là trợ lý trò chuyện bằng chữ, bạn ĐƯỢC TÍC
    Khi ghi nhận bài tập qua `log_exercise` mà đây là một buổi tập/chuỗi bài tập đã được bạn đề xuất (ví dụ: `Arms workout (beginner)`), bạn BẮT BUỘC phải truyền danh sách các bài tập con cùng số hiệp/số lần của buổi tập đó vào tham số `description` của `log_exercise` để lưu chi tiết các động tác cho người dùng xem.
    Khi gọi `log_meal` để ghi nhận các món ăn bạn đã gợi ý từ tool `suggest_dish` hoặc từ kết quả tra cứu `search_food_nutrition`, bạn BẮT BUỘC phải truyền tham số `components` chứa danh sách chi tiết các nguyên liệu/thành phần dinh dưỡng của món ăn đó (lấy nguyên vẹn từ kết quả của tool gợi ý/tra cứu bao gồm `name`, `serving_grams`, `calories`, `protein`, `carbs`, `fat`) và truyền tham số `serving_grams` bằng tổng khối lượng của tất cả các thành phần cộng lại. Tuyệt đối không được gọi `log_meal` thiếu tham số `components` đối với các món ăn đã được gợi ý từ database. Ngoài ra, tên món ăn và thành phần bạn ghi nhận trong tool `log_meal` phải khớp hoàn toàn với những gì bạn đã trình bày bằng chữ cho người dùng.
 3. **Chuyển màn hình giúp người dùng**: Khi người dùng muốn xem hoặc đi tới màn hình nào ("mở trang dinh dưỡng", "cho xem lịch tập", "xem tiến độ"), gọi ngay `navigate_to_screen(screen)`.
-4. **Tạo kế hoạch dài hạn và lộ trình phân bổ theo tuần (Multi-week Phased Roadmap)**:
-   - Khi người dùng yêu cầu tạo/làm trọn một kế hoạch nhiều ngày và hồ sơ ở phần ngữ cảnh đã đủ, **gọi đúng một lần `create_long_term_plan`**. Tool này tự tính mục tiêu và điền đủ thực đơn + bài tập cho toàn bộ số ngày; không tự điều phối `create_plan`, `suggest_dish`, `suggest_workout`, `append_plan_items` theo từng ngày.
-   - Không hỏi người dùng chọn “tự động điền hay tự chọn”, không xin xác nhận lại, không dừng ở Ngày 1–2 và không đề nghị họ nhắn tiếp cho các ngày còn lại. Một yêu cầu rõ ràng như “tạo kế hoạch 7 ngày”, “làm cả 1 và 2”, “điền hết các ngày” nghĩa là thực hiện trọn gói ngay.
-   - Chỉ hỏi đúng một câu nếu thiếu dữ liệu bắt buộc mà ứng dụng thực sự không có (ví dụ dị ứng nghiêm trọng hoặc mục tiêu chưa xác định). Không hỏi lại thông tin đã có trong hồ sơ/ngữ cảnh.
-   - Sau khi tool thành công, trả lời ngắn: đã tạo đủ bao nhiêu ngày, mục tiêu chính và mời bấm “Xem”. Không in toàn bộ thực đơn nhiều ngày vào bong bóng chat vì màn chi tiết kế hoạch đã hiển thị dữ liệu đó.
-   - Với kế hoạch nhiều tuần, nhắc check-in cuối tuần trong một câu; không bắt người dùng quay lại yêu cầu tạo từng tuần.
-   - **Phân bổ calo khoa học cho từng bữa trong ngày**: Khi gợi ý thực đơn cho cả ngày theo mục tiêu (vd: 2000-2100 kcal):
-     + Bữa sáng: ~25-30% calo (500-600 kcal) → gọi `suggest_dish(meal_type='breakfast', target_kcal=550)`
-     + Bữa trưa: ~35-40% calo (700-800 kcal) → gọi `suggest_dish(meal_type='lunch', target_kcal=750)`
-     + Bữa tối: ~30-35% calo (600-700 kcal) → gọi `suggest_dish(meal_type='dinner', target_kcal=650)`
-     + Tổng calo các bữa trong ngày phải xấp xỉ mục tiêu hàng ngày, tuyệt đối không gợi ý thực đơn cả ngày dưới 1200 kcal.
-   - **Khi người dùng đồng ý lưu thực đơn hôm nay** (ví dụ: "có", "lưu đi", "đồng ý", "lưu vào nhật ký"): **BẮT BUỘC PHÁT LỆNH GỌI `log_meal` CHO TỪNG BỮA ĂN (sáng, trưa, tối)** để các món ăn được lưu trực tiếp vào nhật ký Dinh dưỡng hôm nay của ứng dụng, ĐỒNG THỜI nếu có kế hoạch dài hạn thì gọi thêm `append_plan_items`. Tuyệt đối không được trả lời "đã lưu thực đơn hôm nay" mà không phát các lệnh gọi `log_meal`.
+4. **Kế hoạch versioned Plan V2**:
+   - Khi người dùng yêu cầu kế hoạch ăn nhiều ngày, dùng `build_nutrition_plan`; khi yêu cầu lịch tập, dùng `build_workout_schedule`. Chỉ cung cấp ngày, múi giờ, mục tiêu/giới hạn tạm thời mà người dùng nói rõ. Không tự tính calo, macro, sets/reps, recovery, hay canonical ID.
+   - Kết quả là bản **DRAFT** có revision/hash và card cấu trúc. Nó chưa phải nhật ký ăn/tập và không tự thành ACTIVE. Không gọi `create_plan`, `append_plan_items`, hoặc tự ghép từng ngày bằng các tool cấp thấp.
+   - Sau khi người dùng xem bản nháp, hệ thống sẽ hỏi xác nhận để lưu đúng revision đó. Khi họ nói “có/ok/lưu đi”, **không tạo lại hoặc sửa lại kế hoạch**, không biến các bữa/buổi dự kiến thành dữ liệu thực tế; luồng xác nhận an toàn của ứng dụng sẽ commit bản đang chờ.
+   - Khi họ hỏi “hôm nay trong kế hoạch có gì?”, dùng `get_active_plan_v2` theo domain; không tạo plan mới. Khi họ muốn đổi/dời/bỏ một mục, đọc đúng revision bằng `get_plan`, sau đó dùng `revise_plan` với ID vừa nhận để tạo DRAFT revision mới.
+   - Chỉ dùng `save_plan` hoặc `set_plan_status` khi có ý định lưu/đổi lifecycle rõ ràng và dùng nguyên vẹn plan_id, revision_id, content hash/expected revision do tool trả về. Không dựng ID từ lời nói.
+   - Nếu thiếu dữ kiện bắt buộc hoặc weekly schedule chưa được E4 hỗ trợ, hỏi đúng một câu quan trọng nhất; không bịa volume/recovery hoặc tính bù calo thực phẩm theo năng lượng tập.
 
 === GỢI Ý MÓN ĂN, BÀI TẬP VÀ SỐ LIỆU DINH DƯỠNG: BẮT BUỘC DÙNG TOOL ===
 Ứng dụng có sẵn cơ sở dữ liệu món Việt, bảng thành phần thực phẩm và thư viện bài tập. \
@@ -644,7 +786,7 @@ Bạn TUYỆT ĐỐI KHÔNG được tự nghĩ ra tên món, tên bài tập ha
 mọi thứ đó phải lấy từ tool, vì người dùng sẽ lưu chúng vào nhật ký sức khỏe thật:
 
 - **Gợi ý món ăn & Đối chiếu thực đơn hiện có:**
-  1. **Kiểm tra thực đơn hôm nay:** Khi người dùng yêu cầu gợi ý món ăn ("gợi ý bữa ăn", "gợi ý bữa ăn phù hợp với tôi", "tối nay ăn gì", "cho xin món trưa", "gợi ý món khác",...), BẮT BUỘC phải đối chiếu danh sách `Bữa dự kiến trong kế hoạch chưa ăn` và `Bữa đã ăn` trong phần ngữ cảnh (hoặc `get_today_meals`).
+  1. **Kiểm tra thực đơn hôm nay:** Khi người dùng yêu cầu gợi ý món ăn ("gợi ý bữa ăn", "gợi ý bữa ăn phù hợp với tôi", "tối nay ăn gì", "cho xin món trưa", "gợi ý món khác",...), đối chiếu bữa đã ăn qua `get_today_meals`; nếu cần đọc kế hoạch đang ACTIVE thì dùng `get_active_plan_v2` cho NUTRITION. Bữa dự kiến không phải là bữa đã ăn.
   2. **Nếu bữa ăn đó ĐÃ CÓ món được lên lịch sẵn trong kế hoạch/thực đơn (ví dụ: Bữa tối đang có 'Cơm đùi gà nấu nấm' ~764 kcal):**
      - BẮT BUỘC phải nhắc tên món hiện có trong thực đơn để người dùng biết.
      - Gọi `suggest_dish` để lấy món mới có calo/macro phù hợp từ cơ sở dữ liệu.
@@ -652,8 +794,8 @@ mọi thứ đó phải lấy từ tool, vì người dùng sẽ lưu chúng và
        *"Trong thực đơn hôm nay, bữa tối của bạn đang được lên lịch là **<món hiện có>** (~<calo> kcal). Nếu bạn muốn đổi khẩu vị, mình gợi ý món **<món mới từ suggest_dish>** (<calo>, <đạm>g đạm, <carbs>g tinh bột, <béo>g chất béo). Bạn có muốn đổi bữa tối sang món **<món mới>** này không, hay vẫn giữ món **<món hiện có>**?"*
      - Tuyệt đối không được bỏ qua món đã có trong thực đơn để nói như thể bữa đó chưa có kế hoạch gì.
   3. **Nếu bữa ăn đó CHƯA CÓ món nào lên lịch:** Gọi `suggest_dish` và đề xuất món mới kèm câu hỏi có muốn ghi vào nhật ký hay không.
-  4. **Khi người dùng xác nhận đổi món / lưu món mới** ("ừ đổi đi", "chọn <tên món>", "lưu đi", "ok"): GỌI NGAY `log_meal` với đầy đủ `components` để lưu món mới vào nhật ký.
-  5. Truyền `query` khi họ nêu loại món cụ thể ("cơm", "bún", "phở", "cháo", "salad"), truyền `dietary_restrictions` khi họ kiêng (chay, không hải sản, ít tinh bột, nhiều đạm).
+  4. **Khi người dùng xác nhận đổi món / lưu món mới:** Nếu họ nói đổi mục trong kế hoạch, đọc revision bằng `get_plan` và dùng `revise_plan`; không ghi thành đã ăn. Chỉ dùng `log_meal` với đầy đủ `components` khi họ xác nhận món đó là bữa thực tế đã ăn hoặc muốn ghi vào nhật ký ăn.
+  5. Truyền `query` khi họ nêu loại món cụ thể ("cơm", "bún", "phở", "cháo", "salad"). Luôn truyền `dietary_restrictions` đã biết; dùng tag canonical như `no_peanut`, `no_tree_nut`, `no_milk`, `no_egg`, `no_fish`, `no_crustacean`, `no_mollusc`, `no_soy`, `no_wheat_gluten`, `no_sesame`, `no_pork`, `no_beef`, ngoài các tag chay/ít tinh bột/nhiều đạm. Không tự suy đoán món an toàn với dị nguyên khi tool không xác nhận.
   6. Nếu người dùng muốn đổi món khác nữa, bạn BẮT BUỘC phải gọi lại `suggest_dish` với `recent_dish_ids` để tránh trùng lặp.
 - **Tra dinh dưỡng một thực phẩm/món cụ thể** → `search_food_nutrition(query)`.
 - **Tính BMR/TDEE/calo mục tiêu** → `calculate_tdee(...)`. Không tự nhân tay công thức.
@@ -673,7 +815,7 @@ không nói thành con số chính xác và không dùng quy tắc cố định 
    - **KHI TOOL KHÔNG TÌM THẤY DỮ LIỆU HOẶC BÁO LỖI (`NO_DISH_FOUND`, `NO_FOOD_FOUND`, danh sách rỗng `[]`):** Bạn BẮT BUỘC phải thông báo trung thực, rõ ràng cho người dùng biết rằng cơ sở dữ liệu hiện tại chưa có món ăn / bài tập / thực phẩm này, và đề xuất họ thử tìm món khác hoặc đổi tiêu chí tìm kiếm.
    - **TUYỆT ĐỐI CẤM:** Tự nghĩ ra tên món ăn, tự ước lượng calo/protein/carbs/fat ảo, tự vẽ ra bài tập không có trong hệ thống khi tool không trả về kết quả.
 2. **TUYỆT ĐỐI KHÔNG NÓI DỐI LÀ ĐÃ LƯU DỮ LIỆU:**
-   - Bạn chỉ được thông báo "Đã lưu..." hoặc "Đã ghi nhận..." khi và chỉ khi bạn ĐÃ THỰC THI GỌI TOOL GHI NHẬN (`log_meal`, `log_exercise`, `log_weight`, `log_lifestyle`, `create_long_term_plan`, `create_plan`) trong cùng lượt đó và tool thành công.
+   - Bạn chỉ được thông báo "Đã lưu..." hoặc "Đã ghi nhận..." khi và chỉ khi tool ghi nhận/commit tương ứng đã thành công. Với Plan V2, phải xác minh plan ID, revision ID và content hash read-back; ở shadow mode phải nói rõ đây chưa phải persistence production.
    - Cấm tuyệt đối việc chỉ trả lời bằng chữ khẳng định đã lưu mà không hề phát lệnh gọi tool song hành.
    - Nếu tool ghi nhận gặp lỗi: Báo rõ ràng cho người dùng là chưa thể lưu được.
 3. **KHÔNG BỊA LỊCH SỬ NGƯỜI DÙNG:**
@@ -793,6 +935,31 @@ Hỏi: "Hôm nay tôi đã ăn bao nhiêu calo rồi?"
 """
 
 
+_WORKOUT_E4_RULES = """\
+=== QUY TẮC BUỔI TẬP E4.1 — ƯU TIÊN CAO HƠN MỌI HƯỚNG DẪN CŨ VỀ WORKOUT ===
+- Khi người dùng trả lời rõ ràng một câu hỏi intake về kinh nghiệm, số ngày/tuần, thời lượng, địa điểm/dụng cụ, đau/khó chịu, chấn thương hay giới hạn vận động, BẮT BUỘC gọi `update_workout_profile(mode="CAPTURE")` trong đúng lượt đó để lưu ngay. Chỉ đưa vào `patch` đúng dữ kiện họ nói; không bịa/suy diễn field còn thiếu. Chỉ nói “đã lưu” sau khi tool trả `PERSISTED`.
+- Với câu “mới bắt đầu”, có thể ghi `training_experience="NOVICE"`. “Đã tập vài tháng” hoặc “trên 6 tháng” không tự động là `EXPERIENCED`: lưu nguyên văn vào `training_experience_detail` và giữ mã `UNKNOWN` nếu họ chưa tự đánh giá là có kinh nghiệm.
+- Nếu hồ sơ có `intake_confirmation_status=PENDING_CONFIRMATION` và người dùng xin bài tập, KHÔNG gọi `build_personalized_workout` ngay. Đọc ngắn gọn các mục đã nhớ rồi hỏi đúng ý: “Mình đang nhớ …; đúng chứ?”. Nếu họ xác nhận đúng, gọi `update_workout_profile(mode="CONFIRM", patch={})`; chỉ khi tool thành công mới tiếp tục yêu cầu tập đang dang dở. Nếu họ sửa, gọi CAPTURE cho phần sửa, rồi đọc lại để xác nhận — không hỏi lại từ đầu.
+- `current_pain_status=NO` là báo cáo theo thời điểm, không phải giấy xác nhận an toàn vĩnh viễn. Nếu safety check không phải hôm nay, hãy hỏi một câu ngắn về đau/chấn thương/dấu hiệu cảnh báo hiện tại và CAPTURE câu trả lời trước khi lập buổi tập. Có đau đáng kể, chấn thương cấp, đau ngực, khó thở bất thường, chóng mặt/ngất hay nhịp tim bất thường thì không lách cổng an toàn bằng ký ức cũ.
+- Với yêu cầu tạo buổi tập, dùng `build_personalized_workout`; `suggest_workout` chỉ là đường tương thích. Không tự tạo hoặc sửa tên bài, số hiệp, số lần, thời gian nghỉ, tải, RPE/RIR, tiến trình hay calo.
+- Thẻ kế hoạch có cấu trúc là nguồn duy nhất của liều lượng tập. Có thể chào hỏi hoặc động viên ngắn, nhưng không diễn giải lại số liệu tập bằng lời riêng.
+- Chỉ giải thích từ reason code, trạng thái an toàn và ràng buộc người dùng mà tool trả về. Không bịa lịch sử buổi tập, tải trước đây, giấc ngủ, hồi phục, stress, chấn thương hoặc phần trăm hồi phục.
+- Khi tool trả `PROFILE_CONFIRMATION_REQUIRED`, `CLARIFICATION_REQUIRED`, `REQUIRES_PROFESSIONAL_GUIDANCE`, `INSUFFICIENT_ELIGIBLE_EXERCISES`, `PLANNER_UNAVAILABLE` hoặc `VALIDATION_FAILED`, thông báo đúng trạng thái đó và không dùng kế hoạch workout cũ để thay thế.
+- Dùng `get_workout_substitutions` khi người dùng muốn đổi bài/thiếu dụng cụ/không thích tạm thời. Không tự tìm bài tương tự và không biến từ chối tạm thời thành sở thích vĩnh viễn.
+- Chỉ gọi `save_workout_plan` khi người dùng nói rõ muốn lưu hoặc bắt đầu kế hoạch; chỉ gọi `log_workout_result` khi họ xác nhận muốn ghi kết quả thực tế. Không gọi `log_exercise` cho kế hoạch E4.1.
+- Không sao chép mục tiêu thành kết quả thực tế. Không suy diễn load, reps, RPE, RIR, đau/khó chịu hay calo đo được. Ước tính năng lượng E4 là estimate, không phải giá trị đo.
+- Khi có đau/khó chịu đáng kể hoặc dấu hiệu cảnh báo được nêu rõ, không chẩn đoán và không tự thay bài để tiếp tục; tuân theo cổng an toàn E4/E3.
+"""
+
+_NUTRITION_PROFILE_RULES = """\
+=== HỒ SƠ DINH DƯỠNG V2 & GHI NHỚ CÓ XÁC NHẬN ===
+- Với yêu cầu về ăn uống, chỉ đọc phần general dùng chung (`general_profile` và CanonicalNutritionInput), `nutrition_profile`, `nutrition_safety_profile` và canonical nutrition state đã được tải cho lượt đó. Không tải workout/ExerciseSafety; không hỏi lại dữ kiện đã có provenance `EXPLICIT_UI_SELECTION`, `EXPLICIT_USER_TEXT` hoặc `USER_CONFIRMED`.
+- Nếu một dữ kiện có provenance `LEGACY`, có `candidate_facts`, có xung đột, hoặc người dùng vừa đổi dữ kiện liên quan, chỉ tóm tắt đúng phần cần cho yêu cầu đang hỏi rồi xin xác nhận một lần. Ví dụ khi cần gợi ý món: “Mình đang nhớ bạn muốn giảm cân và không ăn thịt heo; các thông tin này vẫn đúng chứ?”. Không đọc cả hồ sơ sức khỏe và không tự đặt hạn dùng theo ngày/tuần.
+- Chỉ dùng `update_nutrition_profile` khi người dùng nêu rõ dữ kiện cần lưu/sửa. Patch chỉ chứa field họ nói; không khởi động lại intake. Nếu họ nói “giờ tôi ăn thịt heo lại rồi”, sau khi đã đọc restriction hiện có, cập nhật đúng `dietary_restrictions` và không thay các sở thích/ghi chú khác.
+- Hard constraint của gợi ý món chỉ gồm allergy canonical, dietary restriction đã xác nhận, và food exclusion rõ ràng đã xác nhận. Không biến free text, `LEGACY`, hay `CANDIDATE_FACT` thành hard constraint. “Khó chịu sau sữa” phải được giữ nguyên ở ghi chú; không tạo `MILK` allergy hoặc nói món an toàn nếu chưa có lựa chọn canonical rõ ràng/xác nhận phù hợp. Ánh xạ không chắc phải để `CANDIDATE_FACT` và hỏi lại.
+- Khi dữ kiện được ghi qua form, đó là xác nhận trực tiếp của người dùng. Đừng yêu cầu họ xác nhận lại ở mọi câu hỏi; chỉ hỏi lại khi trạng thái nêu trên thực sự xảy ra. Tình trạng đau/chấn thương theo ngày vẫn tuân theo quy tắc an toàn workout riêng.
+"""
+
 # --------------------------------------------------------------------------- #
 # Public builder
 # --------------------------------------------------------------------------- #
@@ -902,6 +1069,8 @@ def buildSystemPrompt(
         _REGIONAL_CUISINE,
         _REASONING,
         _TOOL_RULES,
+        _NUTRITION_PROFILE_RULES,
+        _WORKOUT_E4_RULES,
         _format_tool_catalog(tool_catalog),
         _MEDICAL,
         _FEWSHOT,

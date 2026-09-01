@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health_app/features/chat/screens/chatbot_screen.dart';
+import 'package:health_app/models/chat_message.dart';
 
 void main() {
-  testWidgets('history thoughts use the same expanded panel', (tester) async {
+  testWidgets('history public trace uses the same expanded panel', (tester) async {
+    final trace = PublicReasoningTrace.fromJson({
+      'trace_id': 'trace-1',
+      'status': 'COMPLETED',
+      'steps': [
+        {
+          'public_event_type': 'TODAY_NUTRITION_CHECKED',
+          'title': 'raw title must be ignored',
+          'summary': 'analysis: secret tool arguments must be ignored',
+          'order': 1,
+        },
+      ],
+    });
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
           body: AIThoughtsPanel(
-            thoughts: 'Đối chiếu dữ liệu lịch sử.',
+            publicTrace: trace,
             isThinking: false,
           ),
         ),
@@ -16,14 +29,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Xem quá trình suy nghĩ'), findsOneWidget);
+    expect(find.text('Xem cách mình xử lý'), findsOneWidget);
+    expect(find.text('Đã đối chiếu nhật ký hôm nay'), findsOneWidget);
     expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is RichText &&
-            widget.text.toPlainText() == 'Đối chiếu dữ liệu lịch sử.',
-      ),
+      find.text('Mình kiểm tra dữ liệu đã ghi để tránh gợi ý trùng lặp.'),
       findsOneWidget,
     );
+    expect(find.textContaining('analysis:'), findsNothing);
+    expect(find.textContaining('raw title'), findsNothing);
   });
 }

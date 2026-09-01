@@ -1,0 +1,171 @@
+{
+  "schema_version": "canonical-exercise-v1.0.0",
+  "git_commit": "5c5f5a8425886a9454e73c1c3d7e79769364c4bd",
+  "scope": "E2_CANONICAL_EXERCISE_CATALOG_ONLY",
+  "source": {
+    "source_id": "WGER",
+    "publisher": "wger project",
+    "endpoint": "https://wger.de/api/v2/exerciseinfo/",
+    "snapshot_path": "apps/backend/data/wger_exercises_raw.json",
+    "snapshot_sha256": "542cc7a7f7d87938f6c245c3ff23c2a32483c5734039ee953d1dbed9d9e3d226",
+    "snapshot_record_count": 885,
+    "source_code_license": "AGPL-3.0-or-later",
+    "exercise_data_license_policy": "Creative Commons per individual record",
+    "observed_openapi_version": "2.7.0a2",
+    "last_synced_at": null,
+    "last_synced_at_finding": "The legacy snapshot fetch did not write a sync manifest; filesystem timestamps are not treated as source provenance."
+  },
+  "catalog": {
+    "record_count": 885,
+    "content_sha256": "c048fe7a6f73cfdb53961ea151b7c4d624259607e49d028c9d08a02de01df348",
+    "runtime_materialization": "DETERMINISTIC_FROM_FROZEN_SOURCE_SNAPSHOT",
+    "production_recommendation_enabled": false
+  },
+  "field_ownership": {
+    "WGER": [
+      "source_exercise_id",
+      "source_uuid",
+      "name_en",
+      "primary_muscles",
+      "secondary_muscles",
+      "equipment",
+      "category",
+      "instructions",
+      "media",
+      "source_license_metadata"
+    ],
+    "APP_CURATED_RULE": [
+      "movement_pattern",
+      "difficulty",
+      "laterality",
+      "substitution_group"
+    ],
+    "MISSING_NOT_GENERATED": [
+      "name_vi",
+      "last_synced_at"
+    ]
+  },
+  "curation_policy": {
+    "version": "exercise-curation-rules-v1.0.0",
+    "human_reviewed": false,
+    "unknown_values_are_preserved": true,
+    "rule_outputs_are_not_wger_facts": true
+  },
+  "qa": {
+    "record_count": 885,
+    "name_vi_missing": 885,
+    "instructions_missing": 29,
+    "primary_muscles_missing": 194,
+    "equipment_missing": 312,
+    "images_missing": 624,
+    "videos_missing": 839,
+    "last_synced_at_missing": 885,
+    "substitution_group_missing": 438,
+    "review_status_counts": {
+      "SOURCE_NORMALIZED_CURATED_FIELDS_UNREVIEWED": 885
+    },
+    "quality_flag_counts": {
+      "DIFFICULTY_REVIEW_REQUIRED": 861,
+      "INSTRUCTIONS_MISSING": 29,
+      "LAST_SYNCED_AT_MISSING": 885,
+      "LATERALITY_REVIEW_REQUIRED": 822,
+      "MOVEMENT_PATTERN_REVIEW_REQUIRED": 320,
+      "NAME_VI_MISSING": 885,
+      "PRIMARY_MUSCLES_MISSING": 194,
+      "SUBSTITUTION_GROUP_REVIEW_REQUIRED": 438
+    },
+    "movement_pattern_counts": {
+      "CALF_RAISE": 10,
+      "CARDIO_OTHER": 35,
+      "CARRY": 2,
+      "CORE_ANTI_EXTENSION": 18,
+      "CORE_ANTI_ROTATION": 1,
+      "CORE_FLEXION": 30,
+      "ELBOW_EXTENSION": 27,
+      "ELBOW_FLEXION": 69,
+      "HINGE": 35,
+      "HIP_ABDUCTION": 5,
+      "HIP_ADDUCTION": 2,
+      "HORIZONTAL_PULL": 60,
+      "HORIZONTAL_PUSH": 68,
+      "KNEE_EXTENSION": 3,
+      "LOCOMOTION": 8,
+      "MOBILITY": 49,
+      "SHOULDER_ISOLATION": 19,
+      "SQUAT": 74,
+      "UNKNOWN": 320,
+      "VERTICAL_PULL": 37,
+      "VERTICAL_PUSH": 13
+    },
+    "difficulty_counts": {
+      "ADVANCED": 17,
+      "BEGINNER": 7,
+      "UNSPECIFIED": 861
+    },
+    "laterality_counts": {
+      "UNILATERAL": 63,
+      "UNSPECIFIED": 822
+    },
+    "license_counts": {
+      "CC-BY-SA 3": 133,
+      "CC-BY-SA 4": 732,
+      "CC0": 20
+    }
+  },
+  "e1_baseline": {
+    "schema_version": "exercise-data-audit-e1-v1.0.0",
+    "manifest_hash": "c1a088d1e63aa585df425111efa382bf065f7d49a2c296b0651bcdeeaed76360",
+    "file_sha256": "896ec234a4b3f1fa131062aa88bcd3318a7bc44bc3d7ecf2a3141412f9e89e52",
+    "expected_source_snapshot_sha256": "542cc7a7f7d87938f6c245c3ff23c2a32483c5734039ee953d1dbed9d9e3d226",
+    "unchanged": true
+  },
+  "research_identity": {
+    "corpus_version": "offline-v1-636",
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "research_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+    "research_manifest_file_sha256": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "source_artifacts": [
+      {
+        "dataset_file": "vietnamese_foods.json",
+        "expected_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "actual_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "vietnamese_dishes.json",
+        "expected_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "actual_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "nutrition.json",
+        "expected_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "actual_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "exercises.json",
+        "expected_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "actual_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "unchanged": true
+      }
+    ],
+    "experiment_condition_hashes": {
+      "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+      "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+      "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7"
+    },
+    "production_catalog_is_separate": true
+  },
+  "phase_boundary": {
+    "current": "E2_CANONICAL_EXERCISE_CATALOG",
+    "not_implemented": [
+      "exercise prescription policy",
+      "personalized workout planner",
+      "progression engine",
+      "chatbot catalog integration"
+    ],
+    "next": "E3_VERSIONED_EXERCISE_PRESCRIPTION_POLICY"
+  },
+  "manifest_hash": "5ddc484d0338885b6b470a6d435b88c1b6169f1daec74540bd48fb250958e116"
+}

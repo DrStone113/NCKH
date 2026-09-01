@@ -1,0 +1,1078 @@
+{
+  "schema_version": "exercise-prescription-policy-v1.1.0",
+  "creation_commit": "5c5f5a8425886a9454e73c1c3d7e79769364c4bd",
+  "supersedes": {
+    "policy_version": "exercise-prescription-policy-v1.0.0",
+    "artifact": "apps/backend/data/exercise_prescription_policy_v1.json",
+    "reason": "Material semantic corrections for experience, taxonomy, provenance, catalog eligibility, progression and MET mapping."
+  },
+  "scope": "E3_1_PRESCRIPTION_POLICY_SEMANTIC_AND_REPRODUCIBILITY_GATE_ONLY",
+  "reviewed_at": "2026-08-30",
+  "supported_population": {
+    "status": "SUPPORTED",
+    "criteria": [
+      "adult_age_18_or_older",
+      "healthy_general_or_recreational_fitness",
+      "no_current_warning_symptoms",
+      "no_acute_injury_recent_surgery_or_severe_worsening_pain",
+      "no_unresolved_condition_requiring_clinical_prescription"
+    ],
+    "excluded_from_ordinary_planner": [
+      "under_18",
+      "pregnancy_or_postpartum",
+      "clinical_rehabilitation",
+      "known_complex_chronic_condition_without_professional_plan",
+      "acute_injury_or_recent_surgery",
+      "warning_symptoms_or_severe_worsening_pain"
+    ],
+    "source": {
+      "provenance": "SAFETY_SCOPE",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND",
+        "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E"
+      ],
+      "rationale": "The resistance evidence applies to healthy adults; symptomatic or condition-specific exercise requires a different pathway."
+    }
+  },
+  "training_goals": [
+    "GENERAL_FITNESS",
+    "HYPERTROPHY",
+    "MOBILITY",
+    "MUSCULAR_ENDURANCE",
+    "POWER",
+    "STRENGTH",
+    "WEIGHT_MANAGEMENT"
+  ],
+  "goal_taxonomy": {
+    "resistance_domain": [
+      "GENERAL_FITNESS",
+      "HYPERTROPHY",
+      "MOBILITY",
+      "MUSCULAR_ENDURANCE",
+      "POWER",
+      "STRENGTH",
+      "WEIGHT_MANAGEMENT"
+    ],
+    "aerobic_domain": [
+      "AEROBIC_ENDURANCE"
+    ],
+    "ambiguous_terms": [
+      "sức bền",
+      "tăng endurance",
+      "endurance"
+    ],
+    "ambiguous_without_context": "CLARIFICATION_REQUIRED",
+    "endurance_alias_prohibited": true
+  },
+  "experience_policy": {
+    "NOVICE": "User-reported less than six months of consistent resistance training or an explicitly reported long layoff.",
+    "EXPERIENCED": "At least six months of consistent resistance training with stable technique and usable logs.",
+    "UNKNOWN": "The user has not explicitly reported experience; this value remains UNKNOWN regardless of local history availability.",
+    "UNKNOWN_OPERATIONAL_PROFILE": "CONSERVATIVE_DEFAULT",
+    "history_availability_is_experience": false,
+    "explicit_report_and_history_signal_are_separate": true,
+    "conflicting_signals": "EXPOSE_CONFLICT_DO_NOT_SILENTLY_RECLASSIFY",
+    "power_eligibility": {
+      "NOVICE": "REQUIRES_COACHING_OR_SKILL_ASSESSMENT",
+      "EXPERIENCED": "ELIGIBLE_AFTER_SAFETY_AND_TECHNIQUE_SCREEN",
+      "UNKNOWN": "REQUIRES_EXPERIENCE_CONFIRMATION"
+    },
+    "source": {
+      "provenance": "APP_POLICY",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND"
+      ],
+      "rationale": "Experience routing is a conservative product boundary; missing local history is not evidence that a user is a novice."
+    }
+  },
+  "goal_profiles": {
+    "GENERAL_FITNESS": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "load_percent_1rm": [
+        50,
+        75
+      ],
+      "repetition_range": [
+        8,
+        15
+      ],
+      "sets_per_exercise": {
+        "NOVICE": [
+          2,
+          2
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "weekly_sets_per_major_muscle": {
+        "NOVICE": [
+          4,
+          8
+        ],
+        "EXPERIENCED": [
+          6,
+          12
+        ]
+      },
+      "rest_seconds": {
+        "multi_joint": [
+          90,
+          180
+        ],
+        "accessory": [
+          60,
+          120
+        ]
+      },
+      "target_rir": {
+        "NOVICE": [
+          3,
+          4
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "session_duration_minutes": [
+        30,
+        60
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "FULL_BODY_OR_BALANCED_SPLIT_USING_MAJOR_MOVEMENT_PATTERNS"
+    },
+    "STRENGTH": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "load_percent_1rm": {
+        "NOVICE": [
+          60,
+          80
+        ],
+        "EXPERIENCED": [
+          80,
+          90
+        ]
+      },
+      "repetition_range": {
+        "NOVICE": [
+          5,
+          10
+        ],
+        "EXPERIENCED": [
+          3,
+          6
+        ]
+      },
+      "sets_per_exercise": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "weekly_sets_per_priority_muscle": {
+        "NOVICE": [
+          4,
+          8
+        ],
+        "EXPERIENCED": [
+          6,
+          12
+        ]
+      },
+      "rest_seconds": {
+        "priority_lift": [
+          120,
+          300
+        ],
+        "accessory": [
+          60,
+          180
+        ]
+      },
+      "target_rir": {
+        "NOVICE": [
+          3,
+          4
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "session_duration_minutes": [
+        35,
+        75
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "GOAL_PRIORITY_LIFTS_FIRST_WITH_BALANCED_ASSISTANCE"
+    },
+    "HYPERTROPHY": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          3,
+          5
+        ]
+      },
+      "load_percent_1rm": [
+        60,
+        80
+      ],
+      "repetition_range": [
+        6,
+        15
+      ],
+      "sets_per_exercise": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "weekly_sets_per_target_muscle": {
+        "NOVICE": [
+          6,
+          10
+        ],
+        "EXPERIENCED": [
+          10,
+          18
+        ]
+      },
+      "rest_seconds": {
+        "multi_joint": [
+          90,
+          180
+        ],
+        "accessory": [
+          60,
+          120
+        ]
+      },
+      "target_rir": {
+        "NOVICE": [
+          2,
+          4
+        ],
+        "EXPERIENCED": [
+          1,
+          3
+        ]
+      },
+      "session_duration_minutes": [
+        35,
+        75
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "MULTI_JOINT_PLUS_TARGETED_ACCESSORIES_WITHOUT_DUPLICATE_JUNK_VOLUME"
+    },
+    "MUSCULAR_ENDURANCE": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "load_percent_1rm": [
+        30,
+        60
+      ],
+      "repetition_range": [
+        12,
+        20
+      ],
+      "sets_per_exercise": {
+        "NOVICE": [
+          2,
+          2
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "weekly_sets_per_major_muscle": {
+        "NOVICE": [
+          4,
+          8
+        ],
+        "EXPERIENCED": [
+          6,
+          12
+        ]
+      },
+      "rest_seconds": {
+        "multi_joint": [
+          60,
+          120
+        ],
+        "accessory": [
+          45,
+          90
+        ]
+      },
+      "target_rir": {
+        "NOVICE": [
+          3,
+          4
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "session_duration_minutes": [
+        25,
+        60
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "LOWER_SKILL_MOVEMENTS_THAT_PRESERVE_TECHNIQUE_UNDER_FATIGUE"
+    },
+    "WEIGHT_MANAGEMENT": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          3
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "load_percent_1rm": [
+        50,
+        75
+      ],
+      "repetition_range": [
+        8,
+        15
+      ],
+      "sets_per_exercise": {
+        "NOVICE": [
+          2,
+          2
+        ],
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "weekly_sets_per_major_muscle": {
+        "NOVICE": [
+          4,
+          8
+        ],
+        "EXPERIENCED": [
+          6,
+          12
+        ]
+      },
+      "rest_seconds": {
+        "multi_joint": [
+          90,
+          180
+        ],
+        "accessory": [
+          60,
+          120
+        ]
+      },
+      "target_rir": {
+        "NOVICE": [
+          3,
+          4
+        ],
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "session_duration_minutes": [
+        30,
+        60
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "SUSTAINABLE_FULL_BODY_RESISTANCE_PLUS_SEPARATE_AEROBIC_TARGET",
+      "semantic_guardrails": [
+        "HIGHER_REPETITIONS_DO_NOT_IMPLY_GREATER_FAT_LOSS",
+        "SHORTER_REST_DOES_NOT_IMPLY_BETTER_WEIGHT_LOSS",
+        "RESISTANCE_TRAINING_DOES_NOT_REPLACE_AEROBIC_OR_NUTRITION_CONTEXT"
+      ],
+      "field_provenance": {
+        "frequency_days_per_week": "EVIDENCE_BASED_POLICY",
+        "load_percent_1rm": "PRODUCT_HEURISTIC",
+        "repetition_range": "PRODUCT_HEURISTIC",
+        "sets_per_exercise": "PRODUCT_HEURISTIC",
+        "weekly_sets_per_major_muscle": "PRODUCT_HEURISTIC",
+        "rest_seconds": "PRODUCT_HEURISTIC",
+        "target_rir": "PRODUCT_HEURISTIC",
+        "session_duration_minutes": "PRODUCT_HEURISTIC",
+        "exercise_order": "PRODUCT_HEURISTIC",
+        "selection": "PRODUCT_HEURISTIC",
+        "semantic_guardrails": "EVIDENCE_BASED_POLICY"
+      }
+    },
+    "MOBILITY": {
+      "frequency_days_per_week": {
+        "NOVICE": [
+          2,
+          7
+        ],
+        "EXPERIENCED": [
+          2,
+          7
+        ]
+      },
+      "load_percent_1rm": null,
+      "repetition_range": null,
+      "sets_per_exercise": {
+        "NOVICE": [
+          1,
+          3
+        ],
+        "EXPERIENCED": [
+          1,
+          3
+        ]
+      },
+      "weekly_sets_per_major_muscle": null,
+      "rest_seconds": {
+        "as_needed": [
+          15,
+          60
+        ]
+      },
+      "target_rir": null,
+      "session_duration_minutes": [
+        10,
+        30
+      ],
+      "exercise_order": [
+        "LOW_INTENSITY_WARMUP",
+        "CONTROLLED_MOBILITY",
+        "COOLDOWN"
+      ],
+      "selection": "PAIN_FREE_CONTROLLED_RANGE_OF_MOTION_ONLY",
+      "field_provenance": {
+        "frequency_days_per_week": "PRODUCT_HEURISTIC",
+        "load_percent_1rm": "REQUIRES_DECISION",
+        "repetition_range": "REQUIRES_DECISION",
+        "sets_per_exercise": "PRODUCT_HEURISTIC",
+        "weekly_sets_per_major_muscle": "REQUIRES_DECISION",
+        "rest_seconds": "PRODUCT_HEURISTIC",
+        "target_rir": "REQUIRES_DECISION",
+        "session_duration_minutes": "PRODUCT_HEURISTIC",
+        "exercise_order": "PRODUCT_HEURISTIC",
+        "selection": "PRODUCT_HEURISTIC"
+      },
+      "evidence_scope": "PAIN_FREE_GENERAL_MOBILITY_ONLY_NO_ACSM_RESISTANCE_INHERITANCE"
+    },
+    "POWER": {
+      "frequency_days_per_week": {
+        "NOVICE": null,
+        "EXPERIENCED": [
+          2,
+          3
+        ]
+      },
+      "load_percent_1rm": {
+        "EXPERIENCED": [
+          30,
+          70
+        ]
+      },
+      "repetition_range": {
+        "EXPERIENCED": [
+          3,
+          6
+        ]
+      },
+      "sets_per_exercise": {
+        "NOVICE": null,
+        "EXPERIENCED": [
+          2,
+          4
+        ]
+      },
+      "weekly_repetitions_times_sets_cap": 24,
+      "rest_seconds": {
+        "power_lift": [
+          120,
+          300
+        ]
+      },
+      "target_rir": {
+        "EXPERIENCED": [
+          3,
+          5
+        ]
+      },
+      "session_duration_minutes": [
+        30,
+        60
+      ],
+      "exercise_order": [
+        "TECHNICAL_OR_POWER_MOVEMENTS_IF_ELIGIBLE",
+        "GOAL_PRIORITY_MULTI_JOINT",
+        "OTHER_MULTI_JOINT",
+        "SINGLE_JOINT_OR_ACCESSORY",
+        "CORE_CARRY_OR_COOLDOWN"
+      ],
+      "selection": "HIGH_SKILL_POWER_WORK_REQUIRES_EXPERIENCE_AND_TECHNIQUE_SCREEN",
+      "eligibility": {
+        "NOVICE": "REQUIRES_COACHING_OR_SKILL_ASSESSMENT",
+        "EXPERIENCED": "ELIGIBLE_AFTER_SAFETY_AND_TECHNIQUE_SCREEN",
+        "UNKNOWN": "REQUIRES_EXPERIENCE_CONFIRMATION"
+      }
+    }
+  },
+  "prescription_provenance": {
+    "frequency": {
+      "provenance": "EVIDENCE_BOUND_PLUS_APP_RANGE",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND",
+        "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E"
+      ],
+      "rationale": "At least two weekly resistance exposures are evidence-bound; wider goal-specific ranges are app defaults."
+    },
+    "load_sets_weekly_volume": {
+      "provenance": "EVIDENCE_BOUND_PLUS_APP_RANGE",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND"
+      ],
+      "rationale": "Strength benefits from heavier loads and 2-3 sets; hypertrophy benefits from about 10 or more weekly sets, with diminishing returns around 18-20."
+    },
+    "repetition_ranges": {
+      "provenance": "APP_POLICY",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND"
+      ],
+      "rationale": "Rep ranges operationalize load and goal but are not presented as uniquely optimal ACSM mandates."
+    },
+    "rest_intervals": {
+      "provenance": "APP_POLICY",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND",
+        "SINGER_2024_INTERSET_REST"
+      ],
+      "rationale": "Defaults preserve set performance; evidence does not establish one universally optimal interval."
+    },
+    "rir_rpe": {
+      "provenance": "APP_AUTOREGULATION_POLICY",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND",
+        "ROBINSON_2024_PROXIMITY_TO_FAILURE"
+      ],
+      "rationale": "Failure is not required by default; RIR estimates are useful but imprecise and goal dependent."
+    },
+    "exercise_order": {
+      "provenance": "EVIDENCE_BOUND_PLUS_APP_ORDER",
+      "evidence_ids": [
+        "ACSM_2026_POSITION_STAND"
+      ],
+      "rationale": "Priority strength movements benefit from early placement; remaining order is a deterministic app convention."
+    },
+    "session_duration": {
+      "provenance": "APP_POLICY",
+      "evidence_ids": [],
+      "rationale": "Duration bands are feasibility budgets, not physiological dose thresholds."
+    }
+  },
+  "weekly_structure": {
+    "major_muscle_exposure": {
+      "target_days_per_week": [
+        2,
+        3
+      ],
+      "minimum_for_general_health": 2,
+      "volume_distribution": "Prefer spreading target-muscle sets across at least two days when schedule allows.",
+      "constraint_class": "SOFT_PLANNING_TARGET",
+      "source": {
+        "provenance": "EVIDENCE_BOUND",
+        "evidence_ids": [
+          "ACSM_2026_POSITION_STAND",
+          "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E"
+        ],
+        "rationale": "Healthy adults should train all major muscle groups at least twice weekly."
+      }
+    },
+    "movement_pattern_balance": {
+      "primary_weekly_patterns": [
+        "SQUAT",
+        "HINGE",
+        "HORIZONTAL_PUSH",
+        "HORIZONTAL_PULL",
+        "VERTICAL_PUSH",
+        "VERTICAL_PULL",
+        "CORE_ANTI_EXTENSION_OR_ANTI_ROTATION"
+      ],
+      "conditional_patterns": [
+        "LOCOMOTION",
+        "CARRY",
+        "UNILATERAL_LOWER_BODY"
+      ],
+      "rule": "Balance is evaluated across the week, not forced into every session.",
+      "constraint_class": "PRODUCT_HEURISTIC",
+      "not_a_universal_medical_requirement": true,
+      "source": {
+        "provenance": "APP_POLICY",
+        "evidence_ids": [],
+        "rationale": "Movement balance is an explainable planner constraint; ACSM specifies major muscles, not this exact taxonomy."
+      }
+    },
+    "hard_constraints": [
+      {
+        "rule_id": "BALANCE_SAFETY_GATE_FIRST",
+        "constraint_class": "HARD_CONSTRAINT",
+        "rule": "No weekly-balance target may override safety or available-equipment constraints."
+      }
+    ]
+  },
+  "exercise_selection_and_substitution": {
+    "selection_order": [
+      "PASS_SAFETY_GATE",
+      "MATCH_AVAILABLE_EQUIPMENT",
+      "MATCH_GOAL_AND_EXPERIENCE",
+      "COVER_WEEKLY_MUSCLE_AND_MOVEMENT_GAPS",
+      "HONOR_PREFERENCES_AND_DISLIKES",
+      "FIT_SESSION_TIME"
+    ],
+    "session_exercise_count": {
+      "resistance": [
+        4,
+        8
+      ],
+      "mobility": [
+        2,
+        8
+      ]
+    },
+    "substitution_required_match": [
+      "same_movement_pattern",
+      "overlapping_primary_muscle",
+      "available_equipment",
+      "appropriate_reviewed_difficulty",
+      "no_limitation_or_safety_conflict"
+    ],
+    "unreviewed_e2_metadata": "REVIEW_REQUIRED_NOT_AUTO_SUBSTITUTABLE",
+    "source": {
+      "provenance": "APP_CATALOG_POLICY",
+      "evidence_ids": [],
+      "rationale": "Substitutions are faithful only when the source and candidate constraints actually match."
+    }
+  },
+  "catalog_eligibility": {
+    "policy_version": "exercise-prescription-policy-v1.1.0",
+    "statuses": [
+      "PRESCRIPTION_ELIGIBLE",
+      "SEARCH_ONLY",
+      "INSTRUCTION_INCOMPLETE",
+      "MUSCLE_UNKNOWN",
+      "MOVEMENT_UNKNOWN",
+      "SUBSTITUTION_UNAVAILABLE",
+      "REQUIRES_EXPERIENCE_CONFIRMATION"
+    ],
+    "missing_metadata_is_filled": false,
+    "classification_summary": {
+      "record_count": 885,
+      "status_counts": {
+        "PRESCRIPTION_ELIGIBLE": 430,
+        "SEARCH_ONLY": 455,
+        "INSTRUCTION_INCOMPLETE": 29,
+        "MUSCLE_UNKNOWN": 194,
+        "MOVEMENT_UNKNOWN": 320,
+        "SUBSTITUTION_UNAVAILABLE": 438,
+        "REQUIRES_EXPERIENCE_CONFIRMATION": 878
+      }
+    },
+    "source": {
+      "provenance": "E2_STRUCTURAL_ELIGIBILITY_POLICY",
+      "evidence_ids": [],
+      "rationale": "Eligibility is derived only from frozen E2 fields; structural eligibility does not bypass safety, experience or human review."
+    }
+  },
+  "effort_policy": {
+    "rir_to_rpe_approximation": {
+      "0": 10,
+      "1": 9,
+      "2": 8,
+      "3": 7,
+      "4": 6
+    },
+    "mapping_warning": "Approximate only; user-reported RIR/RPE is not a direct physiological measurement.",
+    "failure_default": "NOT_REQUIRED",
+    "failure_exception": "Experienced users may optionally use 0-1 RIR on a final set of a stable low-risk isolation movement; never required.",
+    "failure_prohibited": [
+      "novice_default",
+      "technical_or_power_movements",
+      "free_weight_compounds_without_safeties",
+      "pain_fatigue_or_form_breakdown"
+    ]
+  },
+  "adaptation_policy": {
+    "progression": {
+      "rule_id": "E3_1_DOUBLE_PROGRESSION_LOAD",
+      "policy_version": "exercise-prescription-policy-v1.1.0",
+      "method": "DOUBLE_PROGRESSION",
+      "evidence_status": "PRODUCT_HEURISTIC",
+      "uniquely_optimal_claim": false,
+      "required_observations": [
+        "prior_prescription_and_result_available",
+        "all_prescribed_sets_completed_at_top_of_rep_range",
+        "target_rir_met",
+        "stable_technique",
+        "no_pain_or_warning_symptoms",
+        "two_consecutive_successful_exposures"
+      ],
+      "no_prior_history": "PROGRESSION_UNAVAILABLE",
+      "failure_behavior": "HOLD_CURRENT_PRESCRIPTION_UNLESS_REGRESSION_OR_SAFETY_RULE_APPLIES",
+      "load_increase_percent": {
+        "upper_body": [
+          2.5,
+          5.0
+        ],
+        "lower_body": [
+          2.5,
+          7.5
+        ]
+      },
+      "source": {
+        "provenance": "APP_POLICY",
+        "evidence_ids": [
+          "ACSM_2026_POSITION_STAND"
+        ],
+        "rationale": "Progressive overload is evidence-informed; double progression and exact increments are app operational choices, not uniquely optimal."
+      }
+    },
+    "regression": {
+      "triggers": [
+        "two_consecutive_exposures_below_minimum_reps",
+        "repeated_zero_rir_or_technique_breakdown",
+        "completion_rate_below_80_percent",
+        "return_after_extended_layoff"
+      ],
+      "load_reduction_percent": [
+        5,
+        10
+      ],
+      "volume_reduction_percent": [
+        20,
+        30
+      ],
+      "pain_action": "SAFETY_GATE_NOT_AUTOMATIC_REGRESSION"
+    },
+    "missed_session": {
+      "one_session": "Resume the next planned session; do not double sessions or chase missed volume.",
+      "two_or_more_or_seven_days": "Resume with 20-30% less volume and optionally 5-10% less load, then reassess.",
+      "illness_injury_or_warning_symptoms": "Do not auto-reschedule; route through safety gate.",
+      "source": {
+        "provenance": "APP_POLICY",
+        "evidence_ids": [],
+        "rationale": "Missed-session rules prioritize adherence and avoid unsafe compensatory volume."
+      }
+    }
+  },
+  "pain_and_safety_boundary": {
+    "states": [
+      "SUPPORTED",
+      "NEEDS_CLARIFICATION",
+      "REQUIRES_PROFESSIONAL_GUIDANCE",
+      "STOP_AND_SEEK_MEDICAL_EVALUATION"
+    ],
+    "warning_symptoms": [
+      "CHEST_PAIN_OR_PRESSURE",
+      "FAST_OR_UNEVEN_HEARTBEAT",
+      "LIGHTHEADED_DIZZY_OR_CONFUSED",
+      "SEVERE_OR_UNUSUAL_SHORTNESS_OF_BREATH",
+      "SYNCOPE_OR_FAINTING"
+    ],
+    "pain_rule": "New sharp, severe, worsening, gait-altering or persistent pain is not handled by swapping exercises or lowering load.",
+    "llm_override_allowed": false,
+    "source": {
+      "provenance": "SAFETY_BOUNDARY",
+      "evidence_ids": [
+        "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E"
+      ],
+      "rationale": "Symptoms and condition-specific plans require clinical evaluation or professional guidance outside an ordinary fitness planner."
+    }
+  },
+  "aerobic_activity_policy": {
+    "weekly_moderate_minutes": [
+      150,
+      300
+    ],
+    "weekly_vigorous_minutes": [
+      75,
+      150
+    ],
+    "combination_allowed": true,
+    "equivalence_rule": "One vigorous minute counts approximately as two moderate minutes for guideline accounting.",
+    "inactive_start": "Start with small tolerable amounts and progress duration/frequency before vigorous intensity.",
+    "resistance_replacement_allowed": false,
+    "weight_management_note": "Weight-management goals do not authorize extreme aerobic volume or punitive exercise.",
+    "source": {
+      "provenance": "EVIDENCE_BOUND",
+      "evidence_ids": [
+        "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E"
+      ],
+      "rationale": "Federal adult guidelines specify aerobic minutes plus at least two muscle-strengthening days."
+    }
+  },
+  "estimated_exercise_energy_expenditure": {
+    "method": "SESSION_ACTIVITY_LEVEL_MET_ESTIMATE",
+    "formula": "MET * 3.5 * weight_kg / 200 * duration_minutes",
+    "adult_compendium_age_range": [
+      19,
+      59
+    ],
+    "activity_codes": {
+      "02040": {
+        "activity": "Circuit training, including kettlebells and minimal rest",
+        "met": 7.5
+      },
+      "02050": {
+        "activity": "Resistance training, vigorous effort",
+        "met": 6.0
+      },
+      "02054": {
+        "activity": "Resistance training, multiple exercises, 8-15 repetitions",
+        "met": 3.5
+      },
+      "02056": {
+        "activity": "Body-weight resistance exercise, general",
+        "met": 3.0
+      },
+      "02057": {
+        "activity": "Body-weight resistance exercise, high intensity",
+        "met": 6.5
+      }
+    },
+    "activity_to_compendium_mapping": {
+      "RESISTANCE_MULTIPLE_EXERCISES_8_15_REPS": {
+        "compendium_code": "02054",
+        "mapping_status": "DIRECT_SUPPORTED_MAPPING",
+        "rationale": "The activity description directly matches Compendium code 02054."
+      },
+      "RESISTANCE_VIGOROUS_EFFORT": {
+        "compendium_code": "02050",
+        "mapping_status": "DIRECT_SUPPORTED_MAPPING",
+        "rationale": "The activity description directly matches Compendium code 02050."
+      },
+      "BODYWEIGHT_RESISTANCE_GENERAL": {
+        "compendium_code": "02056",
+        "mapping_status": "DIRECT_SUPPORTED_MAPPING",
+        "rationale": "The activity description directly matches Compendium code 02056."
+      },
+      "BODYWEIGHT_RESISTANCE_HIGH_INTENSITY": {
+        "compendium_code": "02057",
+        "mapping_status": "DIRECT_SUPPORTED_MAPPING",
+        "rationale": "The activity description directly matches Compendium code 02057."
+      },
+      "WGER_RESISTANCE_SESSION_GENERAL": {
+        "compendium_code": "02054",
+        "mapping_status": "APP_CURATED_MAPPING",
+        "rationale": "Wger identifies exercises, not session effort; the app maps a confirmed general multi-exercise session to code 02054."
+      },
+      "WGER_RESISTANCE_SESSION_VIGOROUS": {
+        "compendium_code": "02050",
+        "mapping_status": "APP_CURATED_MAPPING",
+        "rationale": "The app maps a separately confirmed vigorous resistance session to code 02050; exercise names alone are insufficient."
+      }
+    },
+    "mapping_statuses": [
+      "DIRECT_SUPPORTED_MAPPING",
+      "APP_CURATED_MAPPING",
+      "UNMAPPED_ACTIVITY"
+    ],
+    "wger_mapping_boundary": "Wger exercise metadata never supplies MET; session context must be mapped explicitly.",
+    "no_compendium_code": "NO_CALORIE_ESTIMATE",
+    "forbidden": [
+      "per_set_calorie_claim",
+      "exact_calories_burned_label",
+      "invented_exercise_specific_met",
+      "use_outside_source_age_range_without_age_appropriate_table"
+    ],
+    "output_label": "estimated_energy_expenditure_kcal",
+    "source": {
+      "provenance": "EVIDENCE_SOURCE_PLUS_ESTIMATION_FORMULA",
+      "evidence_ids": [
+        "ADULT_COMPENDIUM_2024"
+      ],
+      "rationale": "Compendium MET values standardize population estimates and are not individual measurements."
+    }
+  },
+  "evidence_registry": {
+    "ACSM_2026_POSITION_STAND": {
+      "title": "ACSM Position Stand: Resistance Training Prescription for Muscle Function, Hypertrophy, and Physical Performance in Healthy Adults",
+      "year": 2026,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41843416/",
+      "doi": "10.1249/MSS.0000000000003897",
+      "population": "healthy adults age 18 or older"
+    },
+    "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E": {
+      "title": "Physical Activity Guidelines for Americans, Second Edition",
+      "year": 2018,
+      "url": "https://odphp.health.gov/sites/default/files/2019-09/Physical_Activity_Guidelines_2nd_edition.pdf",
+      "publisher": "U.S. Department of Health and Human Services"
+    },
+    "ADULT_COMPENDIUM_2024": {
+      "title": "2024 Adult Compendium of Physical Activities",
+      "year": 2024,
+      "url": "https://pacompendium.com/adult-compendium/",
+      "doi": "10.1016/j.jshs.2023.10.010",
+      "population": "adults age 19-59"
+    },
+    "ROBINSON_2024_PROXIMITY_TO_FAILURE": {
+      "title": "Dose-response relationship between estimated proximity to failure, strength gain, and hypertrophy",
+      "year": 2024,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38970765/",
+      "doi": "10.1007/s40279-024-02069-2"
+    },
+    "SINGER_2024_INTERSET_REST": {
+      "title": "Give it a rest: inter-set rest duration and muscle hypertrophy",
+      "year": 2024,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/39205815/",
+      "doi": "10.3389/fspor.2024.1429789"
+    }
+  },
+  "source_registry": {
+    "schema_version": "exercise-policy-source-registry-v1.0.0",
+    "evidence_source_ids": [
+      "ACSM_2026_POSITION_STAND",
+      "HHS_PHYSICAL_ACTIVITY_GUIDELINES_2E",
+      "ADULT_COMPENDIUM_2024",
+      "ROBINSON_2024_PROXIMITY_TO_FAILURE",
+      "SINGER_2024_INTERSET_REST"
+    ],
+    "catalog_source": {
+      "source_id": "E2_CANONICAL_EXERCISE_CATALOG",
+      "manifest_path": "apps/backend/data/canonical_exercise_catalog_manifest_v1.json",
+      "manifest_sha256": "52cf7808ea817107132d3dfe20e673aa2124babf509dc9045d7a92b9d8c21d4f",
+      "catalog_content_sha256": "c048fe7a6f73cfdb53961ea151b7c4d624259607e49d028c9d08a02de01df348"
+    },
+    "nutrition_policy_used": false,
+    "research_conditions_modified": false
+  },
+  "e2_baseline": {
+    "schema_version": "canonical-exercise-v1.0.0",
+    "manifest_hash": "5ddc484d0338885b6b470a6d435b88c1b6169f1daec74540bd48fb250958e116",
+    "file_sha256": "52cf7808ea817107132d3dfe20e673aa2124babf509dc9045d7a92b9d8c21d4f",
+    "catalog_sha256": "c048fe7a6f73cfdb53961ea151b7c4d624259607e49d028c9d08a02de01df348",
+    "production_recommendation_enabled": false
+  },
+  "research_identity": {
+    "corpus_version": "offline-v1-636",
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "research_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+    "research_manifest_file_sha256": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "source_artifacts": [
+      {
+        "dataset_file": "vietnamese_foods.json",
+        "expected_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "actual_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "vietnamese_dishes.json",
+        "expected_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "actual_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "nutrition.json",
+        "expected_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "actual_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "exercises.json",
+        "expected_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "actual_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "unchanged": true
+      }
+    ],
+    "experiment_condition_hashes": {
+      "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+      "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+      "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7"
+    },
+    "production_catalog_is_separate": true
+  },
+  "phase_boundary": {
+    "current": "E3_1_PRESCRIPTION_POLICY_SEMANTIC_AND_REPRODUCIBILITY_GATE",
+    "runtime_chatbot_behavior_changed": false,
+    "not_implemented": [
+      "personalized training-state planner",
+      "workout log schema migration",
+      "progression persistence",
+      "context planner and chatbot integration"
+    ],
+    "next": "E4_PERSONALIZED_WORKOUT_PLANNER"
+  },
+  "content_sha256": "b25bee0f3cfda41f6a457cac18e0e1191f212ad6f048d8863ec03c7cb1cc8a01",
+  "manifest_sha256": "7b9143056af26a2ae458677a223d99e28b77464a9772d544335ceba109f0c0ed"
+}

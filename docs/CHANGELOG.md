@@ -1,3 +1,86 @@
+## [2026-08-31] — Persisted workout-intake memory
+
+- **Account intake V2:** Added versioned `HealthProfile` (`NutritionProfile`, `WorkoutProfile`, `SafetyProfile`) with nutrition-first priority selection, canonical allergy/restriction chips, optional multiline food/workout notes, conditional exercise questions, and a V1-to-V2 prefilled upgrade path. Nutrition-only users are no longer required to finish the workout questionnaire.
+- **Context & corrections:** Chat now scopes profile context to the requested domain, derives dish-tool restriction tags only from explicit canonical selections, and can apply an explicit one-field nutrition correction without restarting intake. Free text is preserved with provenance and is never silently treated as an allergy or diagnosis.
+
+- **Account intake:** New registrations now complete a typed nutrition, training, and safety screen before Home; existing accounts with an absent/older intake version see the same prefilled screen at login. Nutrition supports optional free-text allergy/avoidance, food-preference, and goal notes; it is supplied to chat without pretending prose is a verified allergy tag. Raising the relevant `WorkoutProfile` or `NutritionProfile` intake version makes later required questions auditable and deployable without silently assuming an answer.
+- **Chat memory:** Explicit answers about training experience, availability, duration, equipment, pain, injuries, and limitations are now stored immediately in the typed Firestore `workout_profile` through a client tool rather than waiting for unstructured chat-summary extraction.
+- **Confirmation:** Each captured revision is recapped and requires an explicit confirmation before the E4 planner may use it; corrections supersede the pending revision instead of restarting the intake.
+- **Safety:** A remembered no-pain answer is valid only for its check date. E4 converts an older safety answer to `UNKNOWN` and asks again, so saved data cannot act as lasting clearance.
+
+## [2026-08-31] — E4.1 full personalized workout integration
+
+- **Integration:** Added authoritative nullable workout-profile and server-read legacy-history adapters, E4 high-level tools, deterministic response presentation/validation, and `off|shadow|enforced` compatibility routing with default `shadow`.
+- **Writes:** Added explicit-only PostgreSQL workout plan/result lifecycle storage, idempotency/read-back semantics, separated energy estimates from device/user reports, and Flutter structured workout/result UI.
+- **Safety:** E4 prescription failures never fall back to legacy in enforced mode; no recommendation writes without explicit intent and `WORKOUT_WRITE_MODE=explicit`.
+
+## [2026-08-31] — E4.0 deterministic personalized workout planner (shadow)
+- **Runtime:** Giữ dự án trên CPython 3.10 và chuẩn hóa verification tại 3.10.21; khóa toàn bộ resolution trong `requirements-e4-py310.lock` với pip 26.2.1, pytest 8.4.2 và Hypothesis 6.151.9. Lỗi dataclasses/Hypothesis của 3.10.0 không còn tái hiện, không có repository shim và không migrate 3.11.
+- **Contracts/history:** Thêm immutable `ExerciseProfile`, `TrainingState`, `WorkoutRequest`, `SessionRequirement` và `WorkoutPlan`; giữ `UNKNOWN` tường minh, phân lớp coverage legacy và không tạo giả sets/reps/load/RPE/RIR/pain.
+- **Planning:** Chạy E3.1 safety/applicability trước selection, lọc 885 E2 records theo hard constraints với exact counts, xếp hạng bằng reason-coded components và dựng session trực tiếp trong time budget bằng model có version.
+- **Policy:** Đọc sets/reps/rest/effort/progression/MET trực tiếp từ E3.1; progression chỉ chạy khi đủ observations, substitution theo cấu trúc movement/muscle/equipment/experience và aerobic endurance thiếu dosage được handoff.
+- **Validation/shadow:** Validator độc lập chặn hard violation; `WORKOUT_PLANNER_MODE=off|shadow` mặc định `off`; comparator không thay response, không ghi user state và chưa nối chatbot.
+- **Evaluation:** 104 development-only scenarios, 7 sensitivity pairs và 2 irrelevant-input pairs đạt 100%; safety/equipment/catalog/time/progression/history/calorie hard violations đều 0; median/p95/max latency 9.972/13.820/18.587 ms.
+- **Isolation:** E2, E3.1, `suggest_workout`, `nutrition-policy-v1.0.1`, `offline-v1-636`, research manifest và A/B/C không đổi; E4.1 chưa triển khai.
+- **Verified:** E4 34 passed; property/Hypothesis 16 passed; full backend 761 passed, 1 skipped bằng `python -m pytest -q`; E1/E2/E3.1/D4.1 verifiers và food validator pass.
+
+## [2026-08-30] — E3.1 prescription semantic & reproducibility gate
+- **Versioning:** Phát hành `exercise-prescription-policy-v1.1.0` trong artifact mới, giữ nguyên v1.0.0; identity có semantic content SHA-256, manifest SHA-256, source registry và creation commit.
+- **Experience:** Xóa hoàn toàn suy luận “không có history → novice”; `UNKNOWN` giữ nguyên output/provenance và chỉ dùng `CONSERVATIVE_DEFAULT`, còn user report/history availability/history signal được tách riêng và conflict được phơi bày.
+- **Taxonomy:** Tách `MUSCULAR_ENDURANCE` khỏi `AEROBIC_ENDURANCE`; câu “sức bền/endurance” thiếu context trả `CLARIFICATION_REQUIRED`.
+- **Goal semantics:** Weight-management không còn hàm ý higher reps/short rest đốt mỡ tốt hơn; mọi convention riêng được gắn `PRODUCT_HEURISTIC`. Từng mobility field có provenance riêng và không tự thừa kế citation resistance.
+- **Eligibility:** Power unknown trả `REQUIRES_EXPERIENCE_CONFIRMATION`; 885 E2 records được phân lớp thành 430 structurally prescription-eligible và 455 search-only, kèm cờ instruction/muscle/movement/substitution/experience mà không điền dữ liệu thiếu.
+- **Balance/progression:** Muscle exposure là `SOFT_PLANNING_TARGET`, taxonomy movement là `PRODUCT_HEURISTIC`; double progression có rule identity/observations/failure behavior và thiếu prior history trả `PROGRESSION_UNAVAILABLE`.
+- **MET:** Phân biệt `DIRECT_SUPPORTED_MAPPING`, `APP_CURATED_MAPPING`, `UNMAPPED_ACTIVITY`; không có Compendium code thì không có calorie estimate.
+- **Isolation:** Không sửa E2, `suggest_workout`, research A/B/C hay `nutrition-policy-v1.0.1`; chưa triển khai E4.
+- **Verified:** 17 E3.1 tests và 134 test E1–E3/nutrition/research trực tiếp pass; full backend đạt 727 passed, 1 skipped sau khi cài dependency khóa và áp dụng runtime-only shim cho bug slots của Python 3.10.0; E1/E2/E3.1/D4.1 verifier, food validator, compileall và `git diff --check` pass.
+
+## [2026-08-30] — E3 versioned exercise prescription policy
+- **Policy scope:** Đóng băng policy tự hash cho healthy general adults với 7 goal, novice/experienced/unknown routing và đầy đủ frequency, selection/order, load, reps, sets, weekly volume, rest, RIR/RPE, duration, progression/regression, missed sessions và substitutions.
+- **Evidence boundary:** Dùng ACSM 2026 cho resistance training, HHS Physical Activity Guidelines cho aerobic/safety, 2024 Adult Compendium cho MET, cùng review RIR và rest; tách rõ `EVIDENCE_BOUND` khỏi các khoảng `APP_POLICY`.
+- **Safety:** Thêm bốn trạng thái `SUPPORTED/NEEDS_CLARIFICATION/REQUIRES_PROFESSIONAL_GUIDANCE/STOP_AND_SEEK_MEDICAL_EVALUATION`; pain/red flags không được xử lý bằng auto-substitution hoặc giảm tải đơn giản, LLM không được override.
+- **Progression:** Double progression cần hai exposure liên tiếp đạt top reps, target RIR, kỹ thuật ổn và không đau; repeated misses mới regression, còn missed session không bao giờ được gộp bù volume.
+- **Substitution:** Bắt buộc cùng movement pattern, overlap primary muscle, đúng equipment/difficulty và qua safety; E2 metadata chưa human-review chỉ trả `REVIEW_REQUIRED`.
+- **Energy/aerobic:** Giữ mục tiêu 150–300 phút moderate hoặc 75–150 phút vigorous; kcal chỉ là session-level Compendium estimate và từ chối bảng tuổi 19–59 khi user nằm ngoài phạm vi.
+- **Isolation:** E3 chưa đổi `suggest_workout`, Context Planner hay chatbot; bước kế tiếp là E4 Personalized Workout Planner.
+- **Verified:** 40 test E1–E3 pass; toàn backend đạt 643 passed, 22 skipped; E1/E2/E3/D4.1 verifier, food validator, compileall và research identity đều pass.
+
+## [2026-08-30] — E2 canonical exercise catalog + provenance
+- **Canonical layer:** Chuẩn hóa offline-first đủ 885/885 Wger records với stable ID dựa trên UUID, Wger integer ID, muscle, equipment, category, instructions và source timestamps; catalog có content hash tái lập.
+- **Provenance:** Tách rõ field do Wger cung cấp, field `APP_CURATED_RULE` và field `MISSING_NOT_GENERATED`; `name_vi` và `last_synced_at` giữ `null` thay vì suy đoán.
+- **Licensing:** Giữ riêng metadata license/author ở cấp exercise, English translation, image và video; không đánh đồng license nội dung từng record với AGPL của Wger application code.
+- **Curated taxonomy:** Thêm movement pattern, difficulty, laterality và substitution group theo rule versioned, kèm confidence/rationale/`human_reviewed=false`; unknown/unspecified được giữ trung thực.
+- **QA debt:** Manifest ghi rõ 29 bài thiếu hướng dẫn, 194 thiếu primary muscle, 320 movement chưa phân loại, 438 chưa đủ dữ liệu tạo substitution group, 861 difficulty và 822 laterality chưa xác định.
+- **Phase isolation:** Chưa đổi `suggest_workout`, prescription, progression, energy hay chatbot path; E1 snapshot và `offline-v1-636` vẫn được verifier giữ nguyên.
+- **Verified:** 21 test E1+E2 pass; toàn backend đạt 624 passed, 22 skipped; E1/E2/D4.1 manifest verifier, food validator và compileall đều pass.
+
+## [2026-08-30] — E1 Wger và exercise-data audit
+- **Frozen audit:** Thêm manifest tự hash cho hai snapshot Wger byte-identical: 885 rows, SHA-256 `542cc7a7...d226`; agent thực tế nạp 884 rows và chỉ giữ 6 field.
+- **Field/license coverage:** Thống kê muscles, equipment, descriptions, 345 images, 78 videos cùng license riêng ở exercise/translation/media; không đánh đồng data license với AGPL của application code.
+- **Live verification:** Đối chiếu OpenAPI Wger `2.7.0a2`: `/exerciseinfo/` trả 862 records, còn `/exercise/search/` đã bị gỡ và proxy search hiện tại gọi endpoint 404.
+- **Personalization gap:** Xác nhận `WORKOUT_RECOMMENDATION` không được gọi `get_exercise_log_range`; agent bỏ muscle/media/provenance và chỉ được dispatcher tự bổ sung weight + goal.
+- **Logging/energy gap:** Log chưa có set-level load/reps/RPE-RIR/pain/completion; MET hiện do app suy luận tên/category và áp lên block 5 phút, không phải dữ liệu Wger hay phép đo kcal chính xác.
+- **Isolation:** E1 chỉ audit read-only, chưa thay prescription behavior; `offline-v1-636` và production food catalog vẫn được verifier giữ nguyên.
+- **Verified:** 10 E1 audit tests và 24 test trực tiếp Wger/workout pass; toàn bộ backend đạt 613 passed, 22 skipped; compileall, D4.1 verifier, food validator và `git diff --check` đều pass.
+
+## [2026-08-30] — D4.1 auditable catalog batch ingestion
+- **Frozen production:** Thêm manifest tự kiểm hash cho 526 canonical foods, 300 live dishes, source registry, validator và QA summary; Git base commit được ghi riêng với danh tính corpus nghiên cứu.
+- **Research isolation:** Khóa và kiểm lại `offline-v1-636`, bốn source artifact cùng config hash A/B/C; production staging không được runtime loader đọc và không ghi vào corpus đông lạnh.
+- **Review debt:** Xuất queue có cấu trúc cho 70 legacy serving sizes và 3 energy QA warnings; mỗi item có reason, severity, source, review status, resolution và evidence.
+- **Staging gates:** Thêm lifecycle `RAW_IMPORTED → NORMALIZED → MATCHED → QA_REVIEW → APPROVED|REJECTED`, source approval gate, giới hạn 50 foods/30 dishes và batch manifest tự hash.
+- **Matching/provenance:** Chỉ `EXACT` tự đủ điều kiện; non-exact cần reviewer và phê duyệt có tài liệu. Mỗi nutrient giữ source edition, original value/unit/basis, normalized value/unit/basis và normalization rule; missing vẫn là `null`.
+- **QA:** Chặn negative/non-finite, unit anomaly, extreme outlier, duplicate IDs và raw/cooked mismatch; 4/4/9 chỉ là engineering signal, không ghi đè source energy.
+- **Verified:** D4.1 baseline/research verification pass; validator catalog 0 lỗi; 603 backend tests passed, 22 bộ phụ thuộc/môi trường được skip; compileall và `git diff --check` pass.
+
+## [2026-08-30] — Canonical ingredient catalog và provenance theo field
+- **Source hierarchy:** Thêm registry 10 nguồn theo priority; chỉ Vietnam FCT đang `ACTIVE`, FAO/INFOODS là methodology-only và mọi fallback còn lại bị chặn đến khi duyệt food matching/license.
+- **Canonical foods:** Enrich 526 source rows bằng stable `food_id`, canonical key, raw/cooked/dried state, provenance cho từng nutrient và QA năng lượng 4/4/9.
+- **Matching gate:** Chuẩn hóa 5 mức `EXACT/CLOSE_VARIANT/GENERIC_PARENT/SUBSTITUTED_WITH_JUSTIFICATION/UNRESOLVED`; D4.1 siết auto-publish xuống chỉ `EXACT`.
+- **Recipe honesty:** 300 món giữ exact ingredient links; chatbot tính lại năng lượng từ canonical ingredients thay vì ép kcal khớp số legacy. 70 khẩu phần legacy được đánh dấu cần review, không che chênh lệch.
+- **Safety:** Dị nguyên dùng canonical IDs thay cho LLM/name-list đơn thuần; thêm restriction cho peanut, tree nut, milk, egg, fish, crustacean, mollusc, soy, wheat/gluten, sesame, pork và beef.
+- **Provenance:** Serving không đủ dữ liệu giữ `recipe_total_weight_g/number_of_servings=null`; yield/retention chưa review được ghi `false`; region chỉ được công bố khi có official cultural source.
+- **Verified:** Validator catalog báo 0 lỗi; 585 backend tests passed, 22 bộ phụ thuộc/môi trường được skip; compileall pass. Bộ mobile không đổi và kết quả gần nhất vẫn là 95 Flutter tests passed, `flutter analyze` sạch.
+
 ## [2026-08-27] — Nâng cấp kế hoạch tập luyện nhiều tuần
 - **Weekly structure:** Thay split tăng cơ chỉ chạm mỗi nhóm cơ một lần bằng 3 buổi full-body không liên tiếp; giảm cân/duy trì dùng 2 buổi full-body, xen aerobic và phục hồi.
 - **Actionable recovery:** Thêm `mobility` và goal `recovery` vào `suggest_workout`; ngày phục hồi nay sinh bài thật từ catalog thay vì chỉ mang nhãn trống.

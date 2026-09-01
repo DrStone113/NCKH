@@ -226,16 +226,15 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
         : _allExercises.last;
 
     final phaseTitle = _getCurrentPhaseTitle();
-    final primaryColor =
-        _isResting ? const Color(0xFF00ACC1) : AppColors.primary;
+    final primaryColor = _isResting ? AppColors.info : AppColors.primary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D111A),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D111A),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           tooltip: 'Thoát',
           onPressed: _showExitConfirmationDialog,
         ),
@@ -248,16 +247,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               'Bài ${_currentExerciseIndex + 1} / ${_allExercises.length} · ${_formatTime(_totalWorkoutElapsedSeconds)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: primaryColor,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -265,7 +264,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white70),
+            icon: const Icon(Icons.info_outline, color: AppColors.textPrimary),
             tooltip: 'Hướng dẫn động tác',
             onPressed: () => _showExerciseDetailSheet(currentEx),
           ),
@@ -278,7 +277,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
             Container(
               height: 4,
               width: double.infinity,
-              color: Colors.white10,
+              color: AppColors.surfaceLight,
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: _overallProgress,
@@ -287,7 +286,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                     gradient: LinearGradient(
                       colors: [
                         AppColors.primary,
-                        Color(0xFF00E676),
+                        AppColors.accent,
                       ],
                     ),
                   ),
@@ -306,16 +305,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white12),
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(color: AppColors.surfaceLight),
                       ),
                       child: Text(
                         phaseTitle,
                         style: const TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white70,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -332,7 +331,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                     const SizedBox(height: 16),
 
                     // Thẻ thông tin bài tập hiện tại
-                    _buildExerciseHeaderCard(currentEx, primaryColor),
+                    _buildExerciseHeaderCard(currentEx),
 
                     const SizedBox(height: 16),
 
@@ -358,14 +357,20 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
     );
   }
 
-  Widget _buildExerciseHeaderCard(
-      WorkoutExerciseStep currentEx, Color primaryColor) {
+  Widget _buildExerciseHeaderCard(WorkoutExerciseStep currentEx) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161D2B),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.surfaceLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,16 +387,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     if (currentEx.vietnameseName.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         currentEx.vietnameseName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
-                          color: primaryColor,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -403,10 +408,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3)),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
                   '${currentEx.sets} hiệp × ${currentEx.reps}',
@@ -428,11 +431,11 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
             runSpacing: 6,
             children: [
               _infoBadge(Icons.fitness_center, currentEx.equipment,
-                  Colors.blueGrey.shade300),
+                  AppColors.textSecondary),
               _infoBadge(Icons.accessibility_new, currentEx.targetMusclesText,
-                  Colors.orange.shade300),
+                  AppColors.warning),
               _infoBadge(Icons.timer_outlined, 'Nghỉ ${currentEx.restSeconds}s',
-                  Colors.teal.shade300),
+                  AppColors.info),
             ],
           ),
 
@@ -443,7 +446,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
             children: [
               const Text(
                 'Tiến độ hiệp: ',
-                style: TextStyle(fontSize: 12, color: Colors.white70),
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               const SizedBox(width: 6),
               ...List.generate(currentEx.sets, (index) {
@@ -456,13 +459,13 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   height: 24,
                   decoration: BoxDecoration(
                     color: isDone
-                        ? const Color(0xFF00E676)
+                        ? AppColors.accent
                         : isCurrent
                             ? AppColors.primary
-                            : Colors.white12,
-                    borderRadius: BorderRadius.circular(6),
+                            : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     border: isCurrent
-                        ? Border.all(color: Colors.white, width: 1.5)
+                        ? Border.all(color: AppColors.primary, width: 1.5)
                         : null,
                   ),
                   child: Center(
@@ -475,7 +478,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                             ? Colors.black
                             : isCurrent
                                 ? Colors.white
-                                : Colors.white60,
+                                : AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -516,14 +519,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1E283C),
-            Color(0xFF161F30),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.surfaceLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -536,17 +541,17 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.8,
-                  color: Colors.white70,
+                  color: AppColors.textSecondary,
                 ),
               ),
               Text(
                 _isTimedExercise
                     ? 'Đếm thời gian'
                     : 'Mục tiêu: ${currentEx.reps}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: primaryColor,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -566,7 +571,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                         ? _timedSecondsRemaining / currentEx.durationSeconds!
                         : 0.0,
                     strokeWidth: 8,
-                    backgroundColor: Colors.white12,
+                    backgroundColor: AppColors.surfaceLight,
                     valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                   ),
                 ),
@@ -578,12 +583,13 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                       style: const TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const Text(
                       'giây',
-                      style: TextStyle(fontSize: 12, color: Colors.white60),
+                      style: TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -603,11 +609,11 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                     ),
                     label: Text(_isTimerRunning ? 'Tạm dừng' : 'Tiếp tục'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.textPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Colors.white24),
+                      side: const BorderSide(color: AppColors.textPrimary),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.pill)),
                     ),
                   ),
                 ),
@@ -618,11 +624,11 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                     icon: const Icon(Icons.check_circle_outline, size: 20),
                     label: const Text('Xong hiệp'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00E676),
-                      foregroundColor: Colors.black,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(AppRadius.pill)),
                     ),
                   ),
                 ),
@@ -636,14 +642,14 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.repeat_rounded,
-                      color: Colors.white60, size: 24),
+                      color: AppColors.textSecondary, size: 24),
                   const SizedBox(width: 8),
                   Text(
                     currentEx.reps,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -667,8 +673,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 4,
+                      borderRadius: BorderRadius.circular(AppRadius.pill)),
+                  elevation: 0,
                 ),
               ),
             ),
@@ -682,19 +688,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0E3042), Color(0xFF0A2230)],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: const Color(0xFF00ACC1).withValues(alpha: 0.4)),
+        color: AppColors.info.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.22)),
       ),
       child: Column(
         children: [
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.bedtime_outlined, color: Color(0xFF80DEEA), size: 18),
+              Icon(Icons.bedtime_outlined, color: AppColors.info, size: 18),
               SizedBox(width: 8),
               Text(
                 'NGHỈ NGƠI & HỒI SỨC',
@@ -702,7 +705,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
-                  color: Color(0xFF80DEEA),
+                  color: AppColors.info,
                 ),
               ),
             ],
@@ -719,9 +722,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 child: CircularProgressIndicator(
                   value: _restSecondsRemaining / 45.0,
                   strokeWidth: 6,
-                  backgroundColor: Colors.white12,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Color(0xFF00ACC1)),
+                  backgroundColor: AppColors.surfaceLight,
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.info),
                 ),
               ),
               Column(
@@ -732,12 +734,13 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const Text(
                     'giây',
-                    style: TextStyle(fontSize: 11, color: Colors.white60),
+                    style: TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -753,11 +756,11 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               icon: const Icon(Icons.fast_forward_rounded, size: 20),
               label: const Text('Bỏ qua nghỉ & Tập tiếp'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00ACC1),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(AppRadius.pill)),
               ),
             ),
           ),
@@ -770,9 +773,9 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        color: const Color(0xFFFFF8E1),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +801,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 : 'Giữ thân người thẳng, hít thở sâu và gồng chắc cơ lõi.',
             style: const TextStyle(
               fontSize: 12.5,
-              color: Colors.white70,
+              color: AppColors.textSecondary,
               height: 1.4,
             ),
           ),
@@ -810,9 +813,16 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
   Widget _buildBottomNavigationBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-      decoration: const BoxDecoration(
-        color: Color(0xFF101622),
-        border: Border(top: BorderSide(color: Colors.white10)),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: const Border(top: BorderSide(color: AppColors.surfaceLight)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -820,8 +830,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
           IconButton(
             onPressed: _currentExerciseIndex > 0 ? _previousExercise : null,
             icon: const Icon(Icons.skip_previous_rounded),
-            color: Colors.white,
-            disabledColor: Colors.white24,
+            color: AppColors.textPrimary,
+            disabledColor: AppColors.textHint,
             tooltip: 'Bài trước',
           ),
           Text(
@@ -829,7 +839,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: Colors.white70,
+              color: AppColors.textSecondary,
             ),
           ),
           IconButton(
@@ -837,8 +847,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 ? _nextExercise
                 : null,
             icon: const Icon(Icons.skip_next_rounded),
-            color: Colors.white,
-            disabledColor: Colors.white24,
+            color: AppColors.textPrimary,
+            disabledColor: AppColors.textHint,
             tooltip: 'Bài tiếp theo',
           ),
         ],
@@ -854,7 +864,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
-          color: Color(0xFF171F2E),
+          color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -866,7 +876,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: AppColors.textHint,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -877,21 +887,22 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Nhóm cơ: ${ex.targetMusclesText}',
-              style: const TextStyle(fontSize: 13, color: AppColors.primary),
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary),
             ),
-            const Divider(color: Colors.white12, height: 24),
+            const Divider(color: AppColors.surfaceLight, height: 24),
             const Text(
               '📋 Hướng dẫn thực hiện:',
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
@@ -899,7 +910,9 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   ? ex.instructions
                   : 'Thực hiện động tác đúng kỹ thuật, kiểm soát nhịp phát lực.',
               style: const TextStyle(
-                  fontSize: 13, color: Colors.white70, height: 1.6),
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.6),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -907,14 +920,14 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
               ex.breathingCue.isNotEmpty
                   ? ex.breathingCue
                   : 'Hít sâu khi hạ tạ, thở ra dứt khoát khi dùng lực đẩy/kéo.',
-              style: const TextStyle(fontSize: 13, color: Colors.tealAccent),
+              style: const TextStyle(fontSize: 13, color: AppColors.info),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -925,7 +938,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(AppRadius.pill)),
                 ),
                 child: const Text('Đã hiểu, quay lại tập'),
               ),
@@ -940,12 +953,12 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2232),
+        backgroundColor: AppColors.surface,
         title: const Text('Tạm dừng buổi tập?',
-            style: TextStyle(color: Colors.white)),
+            style: TextStyle(color: AppColors.textPrimary)),
         content: const Text(
           'Tiến độ của bạn sẽ được giữ lại. Bạn có chắc muốn thoát ra ngoài không?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -957,7 +970,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Thoát'),
           ),
         ],
@@ -974,7 +987,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF151D2C),
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -983,11 +996,11 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                color: AppColors.accent.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.emoji_events_rounded,
-                  color: Color(0xFF00E676), size: 40),
+                  color: AppColors.accent, size: 40),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -995,14 +1008,15 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Bạn đã hoàn thành trọn vẹn giáo án "${widget.routine.title}"',
-              style: const TextStyle(fontSize: 13, color: Colors.white70),
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -1011,21 +1025,21 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _statItem('Thời gian', '$elapsedMinutes phút',
-                      Icons.timer_outlined, Colors.blue),
+                      Icons.timer_outlined, AppColors.info),
                   _statItem(
                       'Calo đốt',
                       '~${burnedCalories.toStringAsFixed(0)} kcal',
                       Icons.local_fire_department,
-                      Colors.orange),
+                      AppColors.warning),
                   _statItem('Số bài tập', '${_allExercises.length} bài',
-                      Icons.fitness_center, Colors.teal),
+                      Icons.fitness_center, AppColors.accentDark),
                 ],
               ),
             ),
@@ -1050,7 +1064,7 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(AppRadius.pill)),
                 ),
               ),
             ),
@@ -1061,7 +1075,8 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
                 Navigator.pop(context);
               },
               child:
-                  const Text('Đóng', style: TextStyle(color: Colors.white60)),
+                  const Text('Đóng',
+                      style: TextStyle(color: AppColors.textSecondary)),
             ),
           ],
         ),
@@ -1079,12 +1094,13 @@ class _WorkoutSimulationScreenState extends State<WorkoutSimulationScreen>
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: Colors.white60),
+          style: const TextStyle(
+              fontSize: 11, color: AppColors.textSecondary),
         ),
       ],
     );

@@ -4,20 +4,18 @@ Provides endpoints for Vietnamese food and dish data
 """
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any
-import json
 import logging
-from pathlib import Path
 
 from modules.nutrition.catalog import DishCatalogError, load_dish_catalog
+from modules.nutrition.canonical_foods import (
+    CanonicalFoodError,
+    load_canonical_food_catalog,
+    load_source_registry,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nutrition", tags=["nutrition"])
-
-# Load data files
-# router.py -> nutrition/ -> modules/ -> backend/
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-FOODS_FILE = DATA_DIR / "vietnamese_foods.json"
 
 # Cache
 _dishes_cache: List[Dict[str, Any]] = []
@@ -40,18 +38,17 @@ def load_dishes() -> List[Dict[str, Any]]:
 
 
 def load_foods() -> List[Dict[str, Any]]:
-    """Load Vietnamese foods from JSON file"""
+    """Load canonical Vietnamese foods with source-level provenance."""
     global _foods_cache
     if _foods_cache:
         return _foods_cache
 
     try:
-        with open(FOODS_FILE, 'r', encoding='utf-8') as f:
-            _foods_cache = json.load(f)
+        _foods_cache = load_canonical_food_catalog()
         logger.info("Loaded %d Vietnamese foods", len(_foods_cache))
         return _foods_cache
-    except Exception as e:
-        logger.error("Error loading foods from %s: %s", FOODS_FILE, e)
+    except CanonicalFoodError as e:
+        logger.error("Error loading canonical Vietnamese foods: %s", e)
         return []
 
 
@@ -157,15 +154,30 @@ async def get_food_categories() -> List[str]:
     return sorted(list(categories))
 
 
+@router.get("/food-sources")
+async def get_food_source_registry() -> Dict[str, Any]:
+    """Expose source priority, ingestion status and license-review state."""
+
+    return load_source_registry()
+
+
 @router.get("/stats")
 async def get_nutrition_stats() -> Dict[str, Any]:
     """Get nutrition database statistics"""
     dishes = load_dishes()
     foods = load_foods()
+    source_registry = load_source_registry()
     
     return {
         "total_dishes": len(dishes),
         "total_foods": len(foods),
+        "canonical_foods": sum(bool(food.get("food_id")) for food in foods),
+        "active_nutrient_sources": [
+            source["source_id"]
+            for source in source_registry["sources"]
+            if source.get("kind") == "NUTRIENT_DATABASE"
+            and source.get("ingestion_status") == "ACTIVE"
+        ],
         "categories": len(set(food.get('category', '') for food in foods)),
         "verified_recipes": sum(
             1 for dish in dishes if dish.get("catalog_status") == "verified_recipe"

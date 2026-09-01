@@ -1,0 +1,57 @@
+{
+  "schema_version": "production-catalog-manifest-v1.0.0",
+  "catalog_version": "production-catalog-v1.0.0",
+  "git_commit": "5c5f5a8425886a9454e73c1c3d7e79769364c4bd",
+  "food_count": 526,
+  "dish_count": 300,
+  "food_content_hash": "361a385b5613358a56198f90e94f038f92bee36e7076d412fd1d4049cbfa2fa5",
+  "dish_content_hash": "cdc827c30b6613baca784d5f3ac689f20340fc46087d3dae01e47de0406c520d",
+  "source_registry_hash": "8399cb8e19ed8341cd04ff95a6992ad4b8d7daee8314e6574ed3a3df8adca4b4",
+  "hash_algorithm": "SHA-256 over canonical UTF-8 JSON unless a file hash is named",
+  "validator_version": "catalog-ingestion-d4.1.0",
+  "qa_summary": {
+    "validator_errors": 0,
+    "exact_dish_ingredient_matches": true,
+    "legacy_serving_review_open": 70,
+    "energy_qa_review_open": 3
+  },
+  "research_identity": {
+    "corpus_version": "offline-v1-636",
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "research_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+    "research_manifest_file_sha256": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "source_artifacts": [
+      {
+        "dataset_file": "vietnamese_foods.json",
+        "expected_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "actual_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "vietnamese_dishes.json",
+        "expected_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "actual_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "nutrition.json",
+        "expected_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "actual_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "exercises.json",
+        "expected_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "actual_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "unchanged": true
+      }
+    ],
+    "experiment_condition_hashes": {
+      "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+      "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+      "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7"
+    },
+    "production_catalog_is_separate": true
+  },
+  "manifest_hash": "7f941b60324623251a3e00fed2b1502ee52b091256b707a530be480d558c1dad"
+}

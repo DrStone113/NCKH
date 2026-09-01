@@ -98,6 +98,7 @@ class ContextTrace:
     shadow_context_bundle: dict[str, Any] = field(default_factory=dict)
     planner_latency_ms: float | None = None
     shadow_token_measurements: dict[str, Any] = field(default_factory=dict)
+    workout_integration: list[dict[str, Any]] = field(default_factory=list)
 
 
 class ContextTraceRecorder:
@@ -235,6 +236,48 @@ class ContextTraceRecorder:
                 "error": entry["error"],
             }
         )
+
+    def capture_workout_integration(
+        self, outcome: dict[str, Any], *, presentation_path: str
+    ) -> None:
+        """Record E4.1 structural telemetry without profile/history contents."""
+        if not self.enabled:
+            return
+        presentation = outcome.get("presentation")
+        plan = outcome.get("plan")
+        validation = outcome.get("validation")
+        data = {
+            "mode": "E4_1",
+            "status": outcome.get("status"),
+            "error_code": outcome.get("error_code"),
+            "planner_version": (
+                presentation.get("planner_version") if isinstance(presentation, dict) else None
+            ),
+            "catalog_version": (
+                presentation.get("catalog_version") if isinstance(presentation, dict) else None
+            ),
+            "exercise_policy_version": (
+                presentation.get("exercise_policy_version") if isinstance(presentation, dict) else None
+            ),
+            "selected_canonical_exercise_ids": (
+                [item.get("canonical_exercise_id") for item in presentation.get("exercises", [])]
+                if isinstance(presentation, dict) else []
+            ),
+            "reason_codes": (
+                {
+                    "selection": presentation.get("selection_reason_codes", []),
+                    "history": presentation.get("history_reason_codes", []),
+                    "policy": presentation.get("policy_reason_codes", []),
+                }
+                if isinstance(presentation, dict) else {}
+            ),
+            "profile_source_statuses": outcome.get("profile_source_statuses", {}),
+            "training_state_coverage": outcome.get("training_state_coverage", {}),
+            "validator": validation if isinstance(validation, dict) else {},
+            "latency_ms": outcome.get("latency_ms", {}),
+            "presentation_path": presentation_path,
+        }
+        self.trace.workout_integration.append(_sanitize(data))
 
     def capture_production_router(self, plan: Any, *, context_size_characters: int) -> None:
         if not self.enabled:

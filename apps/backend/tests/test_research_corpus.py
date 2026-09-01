@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Sequence
 from pathlib import Path
@@ -11,13 +12,23 @@ from services.experiment.corpus import (
     APPROVED_EMBEDDING_REVISION,
     APPROVED_RECORD_COUNT,
     APPROVED_SENTENCE_TRANSFORMERS_VERSION,
+    DEFAULT_MANIFEST_PATH,
+    OPERATIONAL_PROVENANCE_DIFFERENCE,
+    ResearchCorpusManifest,
+    SCIENTIFIC_IDENTITY_MATCH,
+    SCIENTIFIC_IDENTITY_MISMATCH,
     SourceDatasetFile,
     canonical_json_bytes,
     collect_approved_chunks,
+    compare_scientific_identity,
     corpus_content_hash,
     create_manifest,
+    scientific_identity_hash,
+    scientific_identity_projection,
+    verify_manifest_integrity,
     write_research_corpus_transaction,
 )
+from services.experiment.errors import ExperimentError
 from services.experiment.errors import ExperimentError
 
 
@@ -79,6 +90,102 @@ def test_manifest_hash_is_canonical_and_self_verifiable(
     manifest_hash = payload.pop("manifest_hash")
     assert hashlib.sha256(canonical_json_bytes(payload)).hexdigest() == manifest_hash
     assert manifest.corpus_hash == corpus_content_hash(list(reversed(chunks)))
+
+
+def _frozen_manifest() -> ResearchCorpusManifest:
+    return ResearchCorpusManifest.model_validate_json(
+        DEFAULT_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+
+def _operational_copy(
+    manifest: ResearchCorpusManifest, **updates: Any
+) -> ResearchCorpusManifest:
+    payload = manifest.model_dump(mode="json")
+    payload.update(updates)
+    payload.pop("manifest_hash", None)
+    payload["manifest_hash"] = hashlib.sha256(canonical_json_bytes(payload)).hexdigest()
+    return ResearchCorpusManifest.model_validate(payload)
+
+
+def test_identity_projection_is_deterministic_and_excludes_provenance() -> None:
+    frozen = _frozen_manifest()
+    operational = _operational_copy(
+        frozen,
+        created_at="2026-08-23T06:13:40.268473+00:00",
+        ingestion_git_commit=None,
+        ingestion_worktree_clean=None,
+    )
+
+    comparison = compare_scientific_identity(frozen, operational)
+
+    assert comparison.identity_version == "research-corpus-identity-v1"
+    assert comparison.scientific_identity_status == SCIENTIFIC_IDENTITY_MATCH
+    assert comparison.operational_provenance_status == OPERATIONAL_PROVENANCE_DIFFERENCE
+    assert comparison.valid_for_frozen_experiment is True
+    assert comparison.scientific_identity_hash == scientific_identity_hash(frozen)
+    assert comparison.scientific_identity_hash == comparison.operational_scientific_identity_hash
+    assert comparison.frozen_manifest_hash != comparison.operational_manifest_hash
+    assert comparison.operational_provenance_differences == (
+        "created_at",
+        "ingestion_git_commit",
+        "ingestion_worktree_clean",
+        "manifest_hash",
+    )
+    projection = scientific_identity_projection(frozen)
+    assert projection["frozen_retrieval_config"] == {
+        "rag_top_k": 5,
+        "rag_threshold": 0.6,
+    }
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"corpus_hash": "0" * 64},
+        {"embedding_model_revision": "1" * 40},
+        {"embedding_dimension": 768},
+        {"ingestion_code_version": "different-frozen-builder"},
+        {"inserted_chunk_count": 635, "embedding_count": 635},
+        {"dynamic_rows_allowed": True},
+    ],
+)
+def test_scientific_identity_rejects_relevant_manifest_changes(
+    updates: dict[str, Any],
+) -> None:
+    comparison = compare_scientific_identity(
+        _frozen_manifest(), _operational_copy(_frozen_manifest(), **updates)
+    )
+
+    assert comparison.scientific_identity_status == SCIENTIFIC_IDENTITY_MISMATCH
+    assert comparison.valid_for_frozen_experiment is False
+
+
+def test_scientific_identity_rejects_dataset_hash_change() -> None:
+    frozen = _frozen_manifest()
+    changed_source = frozen.source_dataset_files[0].model_copy(
+        update={"sha256": "f" * 64}
+    )
+    operational = _operational_copy(
+        frozen,
+        source_dataset_files=[
+            changed_source.model_dump(mode="json"),
+            *(source.model_dump(mode="json") for source in frozen.source_dataset_files[1:]),
+        ],
+    )
+
+    comparison = compare_scientific_identity(frozen, operational)
+
+    assert comparison.scientific_identity_status == SCIENTIFIC_IDENTITY_MISMATCH
+    assert "source_dataset_files" in comparison.scientific_identity_differences[0]
+
+
+def test_manifest_hash_self_integrity_remains_strict() -> None:
+    frozen = _frozen_manifest()
+    tampered = frozen.model_copy(update={"created_at": "2026-01-01T00:00:00+00:00"})
+
+    with pytest.raises(ExperimentError, match="EXPERIMENT_MANIFEST_HASH_MISMATCH"):
+        verify_manifest_integrity(tampered)
 
 
 class _Transaction:

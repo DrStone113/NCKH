@@ -14,6 +14,12 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from modules.nutrition.canonical_foods import (
+    CanonicalFoodError,
+    clear_canonical_food_cache,
+    enrich_dish_quality,
+)
+
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 BASE_DISHES_FILE = DATA_DIR / "vietnamese_dishes.json"
@@ -91,7 +97,13 @@ def _load_dish_catalog_cached() -> tuple[dict[str, Any], ...]:
                 raise DishCatalogError(f"DUPLICATE_DISH_ADDITION:{dish_id}")
             dishes_by_id[dish_id] = deepcopy(item)
 
-    catalog = tuple(dishes_by_id[dish_id] for dish_id in sorted(dishes_by_id))
+    try:
+        catalog = tuple(
+            enrich_dish_quality(dishes_by_id[dish_id])
+            for dish_id in sorted(dishes_by_id)
+        )
+    except CanonicalFoodError as exc:
+        raise DishCatalogError("INVALID_CANONICAL_FOOD_LAYER") from exc
     names = [str(item.get("name", "")).strip().casefold() for item in catalog]
     if any(not name for name in names) or len(names) != len(set(names)):
         raise DishCatalogError("INVALID_OR_DUPLICATE_DISH_NAME")
@@ -108,6 +120,7 @@ def clear_dish_catalog_cache() -> None:
     """Clear the process cache for tests or an explicit administrative reload."""
 
     _load_dish_catalog_cached.cache_clear()
+    clear_canonical_food_cache()
 
 
 __all__ = [

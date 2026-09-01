@@ -505,6 +505,31 @@ class ExerciseProvider with ChangeNotifier {
     }
   }
 
+  /// Read a range from Firestore's server source for an E4 recommendation.
+  /// A cache result must never be presented to the backend as current history.
+  Future<AuthoritativeExerciseHistory> loadExercisesForDateRangeAuthoritatively(
+    String userId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestoreCollections.exerciseDiary)
+          .where('userId', isEqualTo: userId)
+          .get(const GetOptions(source: Source.server));
+      final exercises = snapshot.docs
+          .map((doc) => ExerciseModel.fromMap(doc.data()))
+          .where((exercise) =>
+              !exercise.date.isBefore(startDate) && exercise.date.isBefore(endDate))
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+      return AuthoritativeExerciseHistory.known(exercises, DateTime.now());
+    } catch (error) {
+      debugPrint('❌ E4 authoritative exercise-history read failed: $error');
+      return const AuthoritativeExerciseHistory.error();
+    }
+  }
+
   // Get exercises for a specific date
   Future<List<ExerciseModel>> loadExercisesForDate(
       String userId, DateTime date) async {
@@ -532,4 +557,21 @@ class ExerciseProvider with ChangeNotifier {
   int get pendingCount => _todayExercises.where((ex) => !ex.isCompleted).length;
   double get completionRate =>
       _todayExercises.isEmpty ? 0.0 : completedCount / _todayExercises.length;
+}
+
+class AuthoritativeExerciseHistory {
+  final List<ExerciseModel> exercises;
+  final DataStatus status;
+  final DateTime? observedAt;
+
+  const AuthoritativeExerciseHistory._(this.exercises, this.status, this.observedAt);
+
+  factory AuthoritativeExerciseHistory.known(
+          List<ExerciseModel> exercises, DateTime observedAt) =>
+      AuthoritativeExerciseHistory._(exercises, DataStatus.known, observedAt);
+
+  const AuthoritativeExerciseHistory.error()
+      : exercises = const [],
+        status = DataStatus.error,
+        observedAt = null;
 }

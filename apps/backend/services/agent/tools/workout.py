@@ -67,7 +67,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
+from config import settings
 from services.agent.tool_registry import ToolDescriptor
+from services.workout_planner.integration import (
+    WorkoutIntegrationService,
+    WorkoutRuntimeContext,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1002,6 +1007,83 @@ def suggest_workout(
     }
 
 
+_LEGACY_TO_E4_GOAL = {
+    "general_fitness": "GENERAL_FITNESS",
+    "weight_loss": "WEIGHT_MANAGEMENT",
+    "muscle_gain": "HYPERTROPHY",
+    "strength": "STRENGTH",
+    "endurance": "MUSCULAR_ENDURANCE",
+    "recovery": "MOBILITY",
+}
+
+
+async def suggest_workout_facade(
+    muscle_group: str,
+    duration_min: int,
+    equipment: str,
+    level: str,
+    user_state: object | None = None,
+    goal: str = "general_fitness",
+    _runtime_context: WorkoutRuntimeContext | None = None,
+) -> dict[str, Any]:
+    """Keep the legacy surface while selecting its authority by rollout mode.
+
+    ``off`` and ``shadow`` intentionally preserve the exact legacy response.
+    In ``enforced`` this is only a compatibility entry point for the one E4
+    prescription path; an E4 failure is returned as a typed result rather
+    than falling back to the older generic algorithm.
+    """
+    # A newly captured chat-intake revision is intentionally not a usable
+    # prescription profile until the user has heard and confirmed the recap.
+    # Apply this guard to the compatibility route as well as the E4 route so a
+    # future prompt/model change cannot sidestep the confirmation boundary.
+    if isinstance(_runtime_context, WorkoutRuntimeContext):
+        context = _runtime_context.user_context
+        profile = context.get("workout_profile") if isinstance(context, Mapping) else None
+        if (
+            isinstance(profile, Mapping)
+            and str(profile.get("intake_confirmation_status")).upper()
+            == "PENDING_CONFIRMATION"
+        ):
+            return {
+                "status": "PROFILE_CONFIRMATION_REQUIRED",
+                "error_code": "WORKOUT_PROFILE_RECAP_REQUIRED",
+            }
+    if settings.workout_planner_mode in {"off", "shadow"}:
+        legacy = suggest_workout(
+            muscle_group, duration_min, equipment, level, user_state, goal
+        )
+        if settings.workout_planner_shadow_enabled and isinstance(_runtime_context, WorkoutRuntimeContext):
+            try:
+                comparison = await WorkoutIntegrationService(_runtime_context.db_session).build(
+                    _runtime_context,
+                    goal_override=_LEGACY_TO_E4_GOAL.get(goal),
+                    requested_duration_minutes=duration_min,
+                    available_equipment_override=(equipment,),
+                    requested_body_area=muscle_group,
+                )
+                logger.info(
+                    "E4.1 shadow comparison status=%s planner=%s validation_hard=%s",
+                    comparison.status,
+                    comparison.plan.planner_version if comparison.plan is not None else None,
+                    comparison.validation.get("hard_violation_count"),
+                )
+            except Exception:
+                # Shadow observation must not alter a legacy caller's result.
+                logger.exception("E4.1 shadow workout comparison failed")
+        return legacy
+
+    runtime = _runtime_context or WorkoutRuntimeContext(None, None, None, None)
+    outcome = await WorkoutIntegrationService(runtime.db_session).build(
+        runtime,
+        goal_override=_LEGACY_TO_E4_GOAL.get(goal),
+        requested_duration_minutes=duration_min,
+        available_equipment_override=(equipment,),
+        requested_body_area=muscle_group,
+    )
+    return outcome.to_tool_payload()
+
+
 # ---------------------------------------------------------------------------
 # Descriptor — consumed by ``register_server_tools`` (task 12.1)
 # ---------------------------------------------------------------------------
@@ -1017,7 +1099,7 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     ),
     parameters_schema=_SUGGEST_WORKOUT_SCHEMA,
     side="server",
-    fn=suggest_workout,
+    fn=suggest_workout_facade,
     idempotent=True,
 )
 
@@ -1025,4 +1107,5 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
 __all__ = [
     "TOOL_DESCRIPTOR",
     "suggest_workout",
+    "suggest_workout_facade",
 ]

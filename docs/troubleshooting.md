@@ -1,5 +1,30 @@
 # 04. Sổ Tay Sửa Lỗi (Troubleshooting Guide)
 
+### 57. FastAPI Docker container starts but cannot serve port 8080
+
+- **Symptoms:** `docker compose` reports the container as running, but
+  `GET /health` closes the connection and `start-all.bat` never begins step
+  4/4 (the Flutter static server).
+- **Root cause:** The D4.1/E2/E3 modules derived the repository root with a
+  fixed `Path.parents[index]`. Local source has `<repo>/apps/backend`, but the
+  Docker development override mounts the backend directly at `/app`. The
+  import of the workout planner then raised `IndexError` before FastAPI startup
+  completed.
+- **Resolution:** Derive `BACKEND_DIR` first and use the checkout root only
+  when it is actually available; otherwise use the mounted backend directory.
+  This preserves local Git provenance while container runtime imports do not
+  depend on inaccessible parents.
+- **Regression check:** Confirm `GET http://localhost:8080/health` returns
+  `200` before starting the Flutter server. The 2026-08-31 smoke test verified
+  the port-3000 web shell plus nutrition and Wger API responses.
+
+## E4.1: Kế hoạch tập không tạo được hoặc không lưu được
+
+- Nếu card trả `CLARIFICATION_REQUIRED`, kiểm tra `workout_profile` có mục tiêu, thời lượng, dụng cụ, pain status và safety screen rõ ràng. Các profile cũ được giữ unknown, không được tự gán mức novice/dụng cụ.
+- Nếu legacy history không tải được từ Firestore server, E4 nhận `ERROR` thay vì cache. Người dùng có thể thử lại; đừng diễn giải là tuần này có 0 buổi.
+- `WORKOUT_WRITE_MODE=off` là mặc định và mọi nút lưu/ghi kết quả sẽ trả `WORKOUT_WRITE_DISABLED`. Chỉ bật `explicit` sau khi API có ràng buộc user ID với principal đã xác thực.
+- Kết quả E4 chỉ được ghi khi người dùng bấm hành động rõ ràng. Actual reps/load/RPE/RIR/pain để trống là unknown, không được lấy từ mục tiêu bài tập.
+
 ## D1: chatbot báo lưu bữa ăn nhưng consumed totals không đổi
 
 - **Nguyên nhân gốc:** `log_meal` tạo `MealModel` với mặc định
@@ -520,3 +545,33 @@
   3. Dùng `is_deload_week` chỉ cho tuần cuối; người sedentary/light tăng tần suất sau giai đoạn thích nghi.
   4. Lưu `weekly_activity_target`, `age_band`, `session_type`, `session_intensity`, `planned_duration_minutes` và talk-test cue trong schedule của từng ngày.
 
+### 55. Nhiều nguồn nutrient bị merge ngầm, calo legacy ép hệ số và dị nguyên dựa vào tên
+- **Triệu chứng**:
+  1. Không biết một nutrient đến từ Vietnam FCT, USDA hay nguồn fallback; thêm nguồn mới có thể ghi đè canonical row.
+  2. `suggest_dish` nhân riêng kcal của component để khớp `estimated_calories`, trong khi protein/carbs/fat vẫn lấy từ nguyên liệu, làm cùng payload tự mâu thuẫn.
+  3. Raw/cooked không có state, ingredient không có stable food ID/match quality; `UNRESOLVED` có nguy cơ bị thay bằng nguyên liệu gần giống.
+  4. Bộ lọc dị nguyên dựa vào vài tên hard-code và region được suy từ tên món mà không có source/confidence.
+- **Cách xử lý**:
+  1. Dùng `food_source_registry_v1.json`; validator chỉ cho nutrient source trạng thái `ACTIVE` tham gia runtime và coi fallback là lựa chọn thay thế, không phải merge.
+  2. `canonical_foods.py` tạo 526 stable IDs, field-level provenance, food state, 5 mức matching, allergen/objective taxonomy và QA `4P+4C+9F`.
+  3. Enrich 300 món lúc load; ingredient không exact/close không được publish. Bỏ calorie factor legacy, giữ cả số catalog lẫn recipe-calculated và gắn `catalog_energy_alignment` để audit.
+  4. Region chỉ có giá trị khi kèm official cultural URL/confidence; món không có nguồn trả `Unknown`. Yield/retention chưa review được công khai là chưa áp dụng.
+  5. Chạy `py -3.10 scripts/validate_dish_catalog.py` và `py -3.10 -m pytest -q tests/test_canonical_food_provenance.py`.
+
+### 56. Hypothesis/dataclasses lỗi trên Python 3.10.0 khi chạy full backend suite
+- **Triệu chứng**: Property test dùng immutable dataclass có `slots=True` và
+  field `init=False` lỗi trong môi trường Python 3.10.0 dù logic sản phẩm không
+  thay đổi; trước đây phải thử runtime-only initializer để xác minh riêng.
+- **Nguyên nhân gốc**: Python 3.10.0 là patch đầu tiên, đã lỗi thời; hành vi slots
+  của bản này không tương thích với cách Hypothesis 6.151.9 dựng instance trong
+  test. Đây là giới hạn của tổ hợp runtime, không phải hành vi business của app.
+- **Cách xử lý**:
+  1. Giữ major/minor của dự án ở Python 3.10, nâng runtime verification lên
+     CPython 3.10.21 thay vì migrate sang 3.11.
+  2. Tạo môi trường sạch từ `apps/backend/requirements-e4-py310.lock` và xác
+     nhận pip 26.2.1, pytest 8.4.2, Hypothesis 6.151.9.
+  3. Chạy lệnh bình thường `python -m pytest -q`; kết quả E4 là 34 passed,
+     property tests là 16 passed và full backend là 761 passed, 1 skipped.
+  4. Không thêm compatibility shim vào repository và không sửa behavioral code
+     chỉ để phục vụ test runtime. Xem runtime artifact
+     `apps/backend/data/workout_planner_e4_runtime_v1.json`.

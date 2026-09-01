@@ -17,14 +17,14 @@ def test_get_region_from_gps():
     assert _get_region_from_gps(0.0, 0.0) is None
 
 def test_get_dish_region():
-    assert _get_dish_region("Phở bò") == "North"
+    assert _get_dish_region("Phở bò") == "National"
     assert _get_dish_region("Bún chả") == "North"
     assert _get_dish_region("Bún bò Huế") == "Central"
     assert _get_dish_region("Cao lầu") == "Central"
     assert _get_dish_region("Cơm tấm sườn") == "South"
     assert _get_dish_region("Hủ tiếu") == "South"
-    assert _get_dish_region("Cơm gà") == "National"
-    assert _get_dish_region("Sữa chua") == "National"
+    assert _get_dish_region("Cơm gà") == "Unknown"
+    assert _get_dish_region("Sữa chua") == "Unknown"
 
 def test_suggest_dish_regional_filtering():
     # South location should prefer South or National dishes, not North
@@ -35,7 +35,7 @@ def test_suggest_dish_regional_filtering():
         latitude=10.8231,
         longitude=106.6297
     )
-    assert res_south["region"] in ("South", "National")
+    assert res_south["region"] == "South"
     assert res_south["region"] != "North"
 
     # North location should prefer North or National dishes, not South

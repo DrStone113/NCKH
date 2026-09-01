@@ -19,6 +19,11 @@ from services.experiment.errors import ExperimentError, safe_error_detail
 
 CORPUS_VERSION = "offline-v1-636"
 CORPUS_CODE_VERSION = "phase2-research-corpus-v1"
+SCIENTIFIC_IDENTITY_VERSION = "research-corpus-identity-v1"
+SCIENTIFIC_IDENTITY_MATCH = "SCIENTIFIC_IDENTITY_MATCH"
+SCIENTIFIC_IDENTITY_MISMATCH = "SCIENTIFIC_IDENTITY_MISMATCH"
+OPERATIONAL_PROVENANCE_MATCH = "OPERATIONAL_PROVENANCE_MATCH"
+OPERATIONAL_PROVENANCE_DIFFERENCE = "OPERATIONAL_PROVENANCE_DIFFERENCE"
 APPROVED_EMBEDDING_MODEL = "BAAI/bge-m3"
 APPROVED_EMBEDDING_REVISION = "5617a9f61b028005a4858fdac845db406aefb181"
 APPROVED_EMBEDDING_DIMENSION = 1024
@@ -64,6 +69,154 @@ class ResearchCorpusManifest(BaseModel):
     dynamic_rows_allowed: bool
     corpus_hash: str
     manifest_hash: str
+
+
+class ResearchCorpusIdentityVerification(BaseModel):
+    """Comparison of frozen scientific identity and rebuild provenance.
+
+    This deliberately keeps the historical full-manifest hash intact while
+    separating volatile materialization details from the corpus identity used
+    by frozen experiments.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    identity_version: str
+    scientific_identity_status: str
+    operational_provenance_status: str
+    valid_for_frozen_experiment: bool
+    scientific_identity_hash: str
+    operational_scientific_identity_hash: str
+    frozen_manifest_hash: str
+    operational_manifest_hash: str
+    scientific_identity_differences: tuple[str, ...]
+    operational_provenance_differences: tuple[str, ...]
+
+
+def _frozen_retrieval_config_projection() -> dict[str, Any]:
+    """Return only protocol fields that change corpus retrieval semantics."""
+
+    # Keep these values sourced from the frozen experiment configuration rather
+    # than copying them into the research manifest or making them environment
+    # dependent.  Condition C is the RAG-enabled frozen protocol condition.
+    from services.experiment.config import ExperimentConfig
+
+    config = ExperimentConfig(condition="C")
+    return {
+        "rag_top_k": config.rag_top_k,
+        "rag_threshold": config.rag_threshold,
+    }
+
+
+def scientific_identity_projection(manifest: ResearchCorpusManifest) -> dict[str, Any]:
+    """Canonical, non-volatile identity for a frozen research corpus.
+
+    `created_at`, Git/worktree details, and the hash of the full operational
+    manifest are intentionally excluded. They identify a materialization, not
+    the corpus content or the retrieval semantics of the experiment.
+    """
+
+    source_files = sorted(
+        (source.model_dump(mode="json") for source in manifest.source_dataset_files),
+        key=lambda source: str(source["dataset_file"]),
+    )
+    return {
+        "identity_version": SCIENTIFIC_IDENTITY_VERSION,
+        "corpus_version": manifest.corpus_version,
+        "corpus_hash": manifest.corpus_hash,
+        "expected_record_count": manifest.expected_record_count,
+        "inserted_chunk_count": manifest.inserted_chunk_count,
+        "embedding_count": manifest.embedding_count,
+        "dynamic_rows_allowed": manifest.dynamic_rows_allowed,
+        "source_dataset_files": source_files,
+        "embedding_model": manifest.embedding_model,
+        "embedding_model_revision": manifest.embedding_model_revision,
+        "sentence_transformers_version": manifest.sentence_transformers_version,
+        "embedding_dimension": manifest.embedding_dimension,
+        "normalization_behavior": manifest.normalization_behavior,
+        "chunking_strategy": manifest.chunking_strategy,
+        "ingestion_code_version": manifest.ingestion_code_version,
+        "frozen_retrieval_config": _frozen_retrieval_config_projection(),
+    }
+
+
+def scientific_identity_hash(manifest: ResearchCorpusManifest) -> str:
+    """Hash the versioned scientific-identity projection, never its provenance."""
+
+    return hashlib.sha256(
+        canonical_json_bytes(scientific_identity_projection(manifest))
+    ).hexdigest()
+
+
+def operational_provenance_projection(
+    manifest: ResearchCorpusManifest,
+) -> dict[str, Any]:
+    """Fields retained for audit but excluded from scientific identity."""
+
+    return {
+        "created_at": manifest.created_at,
+        "ingestion_git_commit": manifest.ingestion_git_commit,
+        "ingestion_worktree_clean": manifest.ingestion_worktree_clean,
+        "manifest_hash": manifest.manifest_hash,
+    }
+
+
+def _difference_paths(expected: Any, actual: Any, path: str = "") -> tuple[str, ...]:
+    """Return stable field paths for audit output without altering either value."""
+
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        differences: list[str] = []
+        for key in sorted(set(expected) | set(actual)):
+            child_path = f"{path}.{key}" if path else str(key)
+            if key not in expected or key not in actual:
+                differences.append(child_path)
+            else:
+                differences.extend(_difference_paths(expected[key], actual[key], child_path))
+        return tuple(differences)
+    return () if expected == actual else (path or "<root>",)
+
+
+def compare_scientific_identity(
+    frozen_manifest: ResearchCorpusManifest,
+    operational_manifest: ResearchCorpusManifest,
+) -> ResearchCorpusIdentityVerification:
+    """Strictly compare identity while reporting provenance independently."""
+
+    frozen_identity = scientific_identity_projection(frozen_manifest)
+    operational_identity = scientific_identity_projection(operational_manifest)
+    identity_differences = _difference_paths(frozen_identity, operational_identity)
+    frozen_provenance = operational_provenance_projection(frozen_manifest)
+    operational_provenance = operational_provenance_projection(operational_manifest)
+    provenance_differences = _difference_paths(
+        frozen_provenance, operational_provenance
+    )
+    scientific_status = (
+        SCIENTIFIC_IDENTITY_MATCH
+        if not identity_differences
+        else SCIENTIFIC_IDENTITY_MISMATCH
+    )
+    provenance_status = (
+        OPERATIONAL_PROVENANCE_MATCH
+        if not provenance_differences
+        else OPERATIONAL_PROVENANCE_DIFFERENCE
+    )
+    return ResearchCorpusIdentityVerification(
+        identity_version=SCIENTIFIC_IDENTITY_VERSION,
+        scientific_identity_status=scientific_status,
+        operational_provenance_status=provenance_status,
+        valid_for_frozen_experiment=scientific_status
+        == SCIENTIFIC_IDENTITY_MATCH,
+        scientific_identity_hash=hashlib.sha256(
+            canonical_json_bytes(frozen_identity)
+        ).hexdigest(),
+        operational_scientific_identity_hash=hashlib.sha256(
+            canonical_json_bytes(operational_identity)
+        ).hexdigest(),
+        frozen_manifest_hash=frozen_manifest.manifest_hash,
+        operational_manifest_hash=operational_manifest.manifest_hash,
+        scientific_identity_differences=identity_differences,
+        operational_provenance_differences=provenance_differences,
+    )
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -253,6 +406,15 @@ def embedding_dimension(model: Any) -> int:
 
 def _manifest_hash(payload_without_hash: dict[str, Any]) -> str:
     return hashlib.sha256(canonical_json_bytes(payload_without_hash)).hexdigest()
+
+
+def verify_manifest_integrity(manifest: ResearchCorpusManifest) -> None:
+    """Keep byte-level integrity of each historical/operational manifest strict."""
+
+    payload = manifest.model_dump(mode="json")
+    stored_manifest_hash = payload.pop("manifest_hash")
+    if _manifest_hash(payload) != stored_manifest_hash:
+        raise ExperimentError("EXPERIMENT_MANIFEST_HASH_MISMATCH")
 
 
 def create_manifest(
@@ -553,10 +715,7 @@ async def verify_research_corpus(
             if isinstance(raw_manifest, str)
             else ResearchCorpusManifest.model_validate(dict(raw_manifest))
         )
-        manifest_payload = manifest.model_dump(mode="json")
-        stored_manifest_hash = manifest_payload.pop("manifest_hash")
-        if _manifest_hash(manifest_payload) != stored_manifest_hash:
-            raise ExperimentError("EXPERIMENT_MANIFEST_HASH_MISMATCH")
+        verify_manifest_integrity(manifest)
         if manifest.corpus_version != version:
             raise ExperimentError("EXPERIMENT_CORPUS_VERSION_MISMATCH")
         if str(row["corpus_hash"]).strip() != manifest.corpus_hash:
@@ -638,17 +797,27 @@ __all__ = [
     "CORPUS_VERSION",
     "DEFAULT_MANIFEST_PATH",
     "NORMALIZATION_BEHAVIOR",
+    "OPERATIONAL_PROVENANCE_DIFFERENCE",
+    "OPERATIONAL_PROVENANCE_MATCH",
     "ResearchCorpusManifest",
+    "ResearchCorpusIdentityVerification",
+    "SCIENTIFIC_IDENTITY_MATCH",
+    "SCIENTIFIC_IDENTITY_MISMATCH",
+    "SCIENTIFIC_IDENTITY_VERSION",
     "SourceDatasetFile",
     "canonical_json_bytes",
     "collect_approved_chunks",
+    "compare_scientific_identity",
     "corpus_content_hash",
     "corpus_content_hash_from_rows",
     "create_manifest",
     "discover_embedding_revision",
     "embedding_dimension",
     "rebuild_research_corpus",
+    "scientific_identity_hash",
+    "scientific_identity_projection",
     "stored_chunk_payload",
+    "verify_manifest_integrity",
     "verify_research_corpus",
     "write_research_corpus_transaction",
 ]

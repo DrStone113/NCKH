@@ -23,6 +23,7 @@ class ChatTurn:
     tool_name: str | None = None
     thoughts: str = ""
     structured_data: dict | None = None
+    public_trace: dict | None = None
 
 
 @dataclass
@@ -58,7 +59,11 @@ class SessionStore:
         tool_name: str | None = None,
         thoughts: str = "",
         structured_data: dict | None = None,
+        public_trace: dict | None = None,
     ) -> None:
+        # ``thoughts`` is a legacy column argument retained for call-site
+        # compatibility. Raw model reasoning is never retained in memory.
+        thoughts = ""
         with self._lock:
             session = self._store.get(session_id)
             if session is None or self._is_expired(session):
@@ -72,6 +77,7 @@ class SessionStore:
                     tool_name=tool_name,
                     thoughts=thoughts,
                     structured_data=structured_data,
+                    public_trace=public_trace,
                 )
             )
             session.last_active = datetime.now(timezone.utc)
@@ -85,6 +91,7 @@ class SessionStore:
         tool_name: str | None = None,
         thoughts: str = "",
         structured_data: dict | None = None,
+        public_trace: dict | None = None,
     ) -> None:
         self.append_turn(
             session_id,
@@ -94,6 +101,7 @@ class SessionStore:
             tool_name,
             thoughts,
             structured_data,
+            public_trace,
         )
 
     def get_history(self, session_id: str, max_turns: int = 10) -> list[ChatTurn]:
@@ -133,7 +141,11 @@ class DbSessionStore:
         tool_name: str | None = None,
         thoughts: str = "",
         structured_data: dict | None = None,
+        public_trace: dict | None = None,
     ) -> str:
+        # Never allow a caller to turn the legacy column back into a
+        # chain-of-thought store. Public trace has its own JSONB column.
+        thoughts = ""
         # Always record in memory cache so conversation history works in standalone mode
         session_store.append_turn(
             session_id,
@@ -143,6 +155,7 @@ class DbSessionStore:
             tool_name,
             thoughts,
             structured_data,
+            public_trace,
         )
         msg_id = str(uuid4())
         if self.db_session is None:
@@ -154,10 +167,10 @@ class DbSessionStore:
                     """
                     INSERT INTO chat_messages (
                         id, session_id, role, content, tool_call_id, tool_name,
-                        thoughts, structured_data
+                        thoughts, structured_data, public_trace
                     ) VALUES (
                         :id, :session_id, :role, :content, :tool_call_id, :tool_name,
-                        :thoughts, CAST(:structured_data AS JSONB)
+                        :thoughts, CAST(:structured_data AS JSONB), CAST(:public_trace AS JSONB)
                     )
                     """
                 ),
@@ -172,6 +185,11 @@ class DbSessionStore:
                     "structured_data": (
                         json.dumps(structured_data, ensure_ascii=False)
                         if structured_data is not None
+                        else None
+                    ),
+                    "public_trace": (
+                        json.dumps(public_trace, ensure_ascii=False)
+                        if public_trace is not None
                         else None
                     ),
                 },

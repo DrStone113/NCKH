@@ -591,11 +591,20 @@ class StructuredResponse {
   final String? mealName; // tên món ăn khi gợi ý dinh dưỡng
   final List<ActionItem> actions;
 
+  /// Canonical E4 payload kept separate from generic ActionItem calories.
+  final Map<String, dynamic>? personalizedWorkout;
+
+  /// Immutable P1 plan revision; it is rendered directly rather than asking
+  /// the model to recreate a weekly table in Markdown.
+  final Map<String, dynamic>? versionedPlan;
+
   StructuredResponse({
     required this.type,
     required this.text,
     this.mealName,
     required this.actions,
+    this.personalizedWorkout,
+    this.versionedPlan,
   });
 
   factory StructuredResponse.fromJson(Map<String, dynamic> json) {
@@ -604,6 +613,16 @@ class StructuredResponse {
       text: json['text'] ?? '',
       mealName: json['meal_name'] as String?,
       actions: ActionItem.parseActions(json['actions'] as List<dynamic>?),
+      personalizedWorkout: json['type'] == 'personalized_workout'
+          ? Map<String, dynamic>.from(json)
+          : json['personalized_workout'] is Map
+              ? Map<String, dynamic>.from(json['personalized_workout'] as Map)
+              : null,
+      versionedPlan: json['versioned_plan'] is Map
+          ? Map<String, dynamic>.from(json['versioned_plan'] as Map)
+          : json['type'] == 'versioned_plan'
+              ? Map<String, dynamic>.from(json)
+              : null,
     );
   }
 
@@ -613,6 +632,9 @@ class StructuredResponse {
       'text': text,
       if (mealName != null) 'meal_name': mealName,
       'actions': actions.map((a) => a.toJson()).toList(),
+      if (personalizedWorkout != null)
+        'personalized_workout': personalizedWorkout,
+      if (versionedPlan != null) 'versioned_plan': versionedPlan,
     };
   }
 

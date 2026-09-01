@@ -139,10 +139,12 @@ from modules.off.router import router as off_router
 from modules.nutrition.router import router as nutrition_router
 from modules.plans.router import router as plans_router
 from modules.checkin.router import router as checkin_router
+from modules.workouts.router import router as workouts_router
 app.include_router(chat_router)
 app.include_router(wger_router)
 app.include_router(off_router)
 app.include_router(nutrition_router)
 app.include_router(plans_router)
 app.include_router(checkin_router)
+app.include_router(workouts_router)
 

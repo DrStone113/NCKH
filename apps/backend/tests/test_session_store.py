@@ -25,12 +25,24 @@ def test_session_store_append_turn_keeps_tool_metadata():
     assert turn.tool_name == "get_today_meals"
 
 
+def test_session_store_discards_legacy_raw_thoughts() -> None:
+    store = SessionStore()
+    store.appendTurn("s1", "assistant", "answer", thoughts="private scratchpad")
+
+    assert store.get_history("s1")[0].thoughts == ""
+
+
 @pytest.mark.asyncio
 async def test_db_session_store_append_turn_inserts_only():
     db = FakeDb()
     store = DbSessionStore(db)
+    public_trace = {
+        "trace_id": "trace-1",
+        "status": "COMPLETED",
+        "steps": [{"public_event_type": "PROFILE_CONTEXT_USED"}],
+    }
     msg_id = await store.appendTurn(
-        "s1", "assistant", "answer", None, None, "reasoning"
+        "s1", "assistant", "answer", None, None, "private scratchpad", None, public_trace
     )
     assert msg_id
     assert db.rows == [
@@ -41,8 +53,9 @@ async def test_db_session_store_append_turn_inserts_only():
             "content": "answer",
             "tool_call_id": None,
             "tool_name": None,
-            "thoughts": "reasoning",
+            "thoughts": "",
             "structured_data": None,
+            "public_trace": json.dumps(public_trace, ensure_ascii=False),
         }
     ]
 

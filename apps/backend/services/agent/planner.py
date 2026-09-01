@@ -299,6 +299,13 @@ class PlannerAgent:
                         dish_name=dish["name"],
                         components=dish["components"],
                         total_calories=dish["total_calories"],
+                        nutrition_method=dish.get("nutrition_method"),
+                        allergen_ids=dish.get("allergen_ids") or [],
+                        dietary_tags=dish.get("dietary_tags") or {},
+                        quality=dish.get("quality") or {},
+                        serving=dish.get("serving") or {},
+                        provenance=dish.get("provenance") or {},
+                        region_metadata=dish.get("region_metadata") or {},
                     )
                     meal_payload = payload.model_dump(mode="json")
                     meal_payload["schedule"] = schedule

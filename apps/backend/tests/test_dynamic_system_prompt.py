@@ -123,6 +123,82 @@ def test_format_profile_handles_today_logs_without_canonical_calorie_target():
     assert "không được tự suy diễn một con số" in formatted
 
 
+def test_format_profile_exposes_free_text_nutrition_notes_without_tag_claims():
+    formatted = _format_profile(
+        {
+            "nutrition_profile": {
+                "allergy_and_avoidance_note": "Dị ứng tôm; không uống sữa",
+                "food_preference_note": "Thích món Việt, ít cay",
+                "nutrition_goal_note": "Muốn ăn đủ đạm",
+            }
+        }
+    )
+
+    assert "GHI CHÚ DINH DƯỠNG NGƯỜI DÙNG TỰ KHAI" in formatted
+    assert "Dị ứng tôm; không uống sữa" in formatted
+    assert "Thích món Việt, ít cay" in formatted
+    assert "không phải tag dị ứng canonical" in formatted
+
+
+def test_format_profile_v2_keeps_structured_allergens_distinct_from_free_text():
+    formatted = _format_profile(
+        {
+            "nutrition_profile": {
+                "nutrition_goal": "LOSE_WEIGHT",
+                "food_allergies": ["PEANUT"],
+                "dietary_restrictions": ["no_pork"],
+                "food_dislikes_text": "Không thích rau mùi",
+                "nutrition_notes": "Khó chịu sau khi uống sữa",
+                "provenance": {
+                    "food_allergies": "EXPLICIT_UI_SELECTION",
+                    "nutrition_notes": "EXPLICIT_USER_TEXT",
+                },
+            }
+        }
+    )
+
+    assert "dị nguyên canonical=PEANUT" in formatted
+    assert "hạn chế canonical=no_pork" in formatted
+    assert "Khó chịu sau khi uống sữa" in formatted
+    assert "không phải tag dị ứng canonical" in formatted
+
+
+def test_profile_v21_uses_shared_general_layer_and_marks_candidate_field_state():
+    formatted = _format_profile(
+        {
+            "general_profile": {
+                "age": 31,
+                "height_cm": 165.0,
+                "weight_kg": 61.0,
+                "equation_sex": "female",
+                "activity_level": "light",
+                "health_goal": "maintain",
+            },
+            "nutrition_profile": {
+                "field_states": {
+                    "food_exclusions": {
+                        "value": ["beef"],
+                        "status": "CANDIDATE_FACT",
+                        "source": "CANDIDATE_FACT",
+                    }
+                }
+            },
+        }
+    )
+
+    assert "31" in formatted
+    assert "Field provenance cần xác nhận" in formatted
+
+    prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        user_profile={"general_profile": {"age": 31}},
+    )
+    assert "general_profile" in prompt
+    assert "food exclusion" in prompt
+
+
 def test_build_system_prompt_integrates_user_profile():
     profile = {
         "name": "Trần Thị B",

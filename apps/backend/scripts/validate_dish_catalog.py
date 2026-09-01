@@ -21,12 +21,21 @@ from modules.nutrition.catalog import (  # noqa: E402
     REFERENCE_DISHES_FILE,
     load_dish_catalog,
 )
+from modules.nutrition.canonical_foods import (  # noqa: E402
+    AUTO_PUBLISH_MATCH_QUALITIES,
+    load_canonical_food_catalog,
+    load_source_registry,
+)
+from modules.nutrition.catalog_ingestion import (  # noqa: E402
+    CatalogIngestionError,
+    validate_source_registry,
+    verify_frozen_baseline,
+)
 from scripts.build_reference_dish_catalog import (  # noqa: E402
     principal_ingredients_present,
 )
 
 
-FOODS_FILE = BACKEND_DIR / "data" / "vietnamese_foods.json"
 TRUSTED_SOURCE_PREFIXES = (
     "https://chuyentrang.viendinhduong.vn/",
     "https://viendinhduong.vn/",
@@ -62,10 +71,17 @@ def validate() -> list[str]:
     catalog = load_dish_catalog()
     overlay = _read_json(CURATED_DISHES_FILE)
     reference_overlay = _read_json(REFERENCE_DISHES_FILE)
-    foods = _read_json(FOODS_FILE)
+    foods = load_canonical_food_catalog()
     foods_by_name = {food["name"]: food for food in foods}
+    source_registry = load_source_registry()
     curated = [*overlay.get("overrides", []), *overlay.get("additions", [])]
     references = reference_overlay.get("additions", [])
+
+    try:
+        validate_source_registry(source_registry)
+        verify_frozen_baseline()
+    except CatalogIngestionError as exc:
+        errors.append(f"D4.1 audit baseline failed: {exc}")
 
     ids = [int(dish["id"]) for dish in catalog]
     names = [str(dish["name"]).strip().casefold() for dish in catalog]
@@ -75,6 +91,78 @@ def validate() -> list[str]:
         errors.append("duplicate live dish name")
     if len(catalog) != 300:
         errors.append(f"expected 300 live dishes, found {len(catalog)}")
+
+    source_ids = [source["source_id"] for source in source_registry["sources"]]
+    if source_ids[:4] != [
+        "VIETNAM_FCT",
+        "FAO_INFOODS",
+        "ASEANFOODS",
+        "USDA_FDC",
+    ]:
+        errors.append("food source priority does not start with the approved hierarchy")
+    active_sources = {
+        source["source_id"]
+        for source in source_registry["sources"]
+        if source.get("kind") == "NUTRIENT_DATABASE"
+        and source.get("ingestion_status") == "ACTIVE"
+    }
+    if active_sources != {"VIETNAM_FCT"}:
+        errors.append(f"unexpected active nutrient sources {sorted(active_sources)}")
+
+    food_ids = [food.get("food_id") for food in foods]
+    if len(foods) != 526 or len(food_ids) != len(set(food_ids)):
+        errors.append("canonical food catalog must contain 526 unique food IDs")
+    for food in foods:
+        label = f"food_id={food.get('food_id')} name={food.get('name')}"
+        source = food.get("source") or {}
+        if source.get("dataset") not in active_sources:
+            errors.append(f"{label}: nutrient source is not active")
+        if source.get("match_quality") != "EXACT":
+            errors.append(f"{label}: imported source row is not EXACT")
+        for nutrient in food.get("nutrients_per_100g", {}).values():
+            if nutrient.get("source_id") != source.get("dataset"):
+                errors.append(f"{label}: nutrient field lost source provenance")
+                break
+            required_provenance = {
+                "source_record_id",
+                "source_edition",
+                "original_value",
+                "original_unit",
+                "normalized_value",
+                "normalized_unit",
+                "normalization_rule",
+                "review_status",
+            }
+            if not required_provenance <= set(nutrient):
+                errors.append(f"{label}: nutrient field provenance is incomplete")
+                break
+            if nutrient.get("data_status") == "MISSING" and nutrient.get(
+                "value"
+            ) is not None:
+                errors.append(f"{label}: missing nutrient was fabricated")
+                break
+
+    for dish in catalog:
+        label = f"id={dish.get('id')} name={dish.get('name')}"
+        quality = dish.get("quality") or {}
+        if not quality.get("ingredient_match_complete"):
+            errors.append(f"{label}: incomplete canonical ingredient matching")
+        if not quality.get("publishable_for_nutrition_calculation"):
+            errors.append(f"{label}: dish is not publishable for calculation")
+        if quality.get("nutrition_consistency", {}).get("status") == "FAIL":
+            errors.append(f"{label}: macro-energy QA failed")
+        for ingredient in dish.get("ingredients") or []:
+            match = ingredient.get("match") or {}
+            if match.get("quality") not in AUTO_PUBLISH_MATCH_QUALITIES:
+                errors.append(
+                    f"{label}: non-publishable ingredient match "
+                    f"{ingredient.get('name')}={match.get('quality')}"
+                )
+        region = dish.get("region_metadata") or {}
+        if region.get("region") != "Unknown" and (
+            not region.get("source_url") or not region.get("confidence")
+        ):
+            errors.append(f"{label}: sourced region metadata is incomplete")
 
     for dish in curated:
         label = f"id={dish.get('id')} name={dish.get('name')}"
@@ -172,12 +260,25 @@ def validate() -> list[str]:
         dish.get("catalog_status") == "normalized_reference_recipe"
         for dish in catalog
     )
+    food_energy_review = sum(
+        food.get("verification", {}).get("energy_qa", {}).get("status")
+        in {"REVIEW", "FAIL"}
+        for food in foods
+    )
+    legacy_serving_review = sum(
+        dish.get("quality", {}).get("review_status")
+        == "LEGACY_SERVING_REVIEW_REQUIRED"
+        for dish in catalog
+    )
     print(
         "dish catalog:",
         f"live={len(catalog)}",
         f"verified_recipes={verified_recipes}",
         f"verified_complete_meals={complete_meals}",
         f"normalized_reference_recipes={reference_recipes}",
+        f"canonical_foods={len(foods)}",
+        f"food_energy_review={food_energy_review}",
+        f"legacy_serving_review={legacy_serving_review}",
         f"errors={len(errors)}",
     )
     return errors

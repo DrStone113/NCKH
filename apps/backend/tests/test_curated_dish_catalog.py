@@ -53,11 +53,11 @@ def test_live_catalog_preserves_frozen_base_and_applies_curated_overlay():
     by_id = {dish["id"]: dish for dish in merged}
     assert by_id[2]["name"] == "Phở bò sốt vang"
     assert by_id[7]["estimated_calories"] == 225
-    assert by_id[76]["ingredients"][0] == {
-        "name": "Miến dong",
-        "grams": 55,
-        "category": "carb",
-    }
+    assert by_id[76]["ingredients"][0]["name"] == "Miến dong"
+    assert by_id[76]["ingredients"][0]["grams"] == 55
+    assert by_id[76]["ingredients"][0]["category"] == "carb"
+    assert by_id[76]["ingredients"][0]["food_id"] == "VN_FCT_02015"
+    assert by_id[76]["ingredients"][0]["match"]["quality"] == "EXACT"
     assert by_id[97]["catalog_status"] == "verified_complete_meal"
     assert by_id[98]["catalog_status"] == "normalized_reference_recipe"
     assert by_id[300]["catalog_status"] == "normalized_reference_recipe"

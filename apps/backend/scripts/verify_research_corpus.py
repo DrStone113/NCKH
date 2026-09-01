@@ -14,7 +14,10 @@ from services.experiment.config import ExperimentConfig
 from services.experiment.corpus import (
     DEFAULT_MANIFEST_PATH,
     ResearchCorpusManifest,
+    SCIENTIFIC_IDENTITY_MATCH,
+    compare_scientific_identity,
     verify_research_corpus,
+    verify_manifest_integrity,
 )
 from services.experiment.errors import ExperimentError
 
@@ -33,6 +36,10 @@ async def _run(args: argparse.Namespace) -> int:
         file_manifest = ResearchCorpusManifest.model_validate_json(
             args.manifest.read_text(encoding="utf-8")
         )
+        # A frozen artifact still has strict byte-level self-integrity. This
+        # check is intentionally separate from comparing it with a later DB
+        # materialization that may have different operational provenance.
+        verify_manifest_integrity(file_manifest)
         if file_manifest.corpus_version != args.corpus_version:
             raise ExperimentError("EXPERIMENT_CORPUS_VERSION_MISMATCH")
         if file_manifest.corpus_hash != args.corpus_hash:
@@ -41,27 +48,25 @@ async def _run(args: argparse.Namespace) -> int:
             expected_version=args.corpus_version,
             expected_hash=args.corpus_hash,
         )
-        if db_manifest != file_manifest:
-            raise ExperimentError("EXPERIMENT_MANIFEST_FILE_DB_MISMATCH")
     except (OSError, ValidationError, ExperimentError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
         return 1
 
-    print(
-        json.dumps(
-            {
-                "ok": True,
-                "corpus_version": db_manifest.corpus_version,
-                "corpus_hash": db_manifest.corpus_hash,
-                "manifest_hash": db_manifest.manifest_hash,
-                "chunks": db_manifest.inserted_chunk_count,
-                "embeddings": db_manifest.embedding_count,
-                "dynamic_rows": 0,
-            },
-            ensure_ascii=False,
-            sort_keys=True,
-        )
-    )
+    comparison = compare_scientific_identity(file_manifest, db_manifest)
+    payload = {
+        "ok": comparison.valid_for_frozen_experiment,
+        "corpus_version": db_manifest.corpus_version,
+        "corpus_hash": db_manifest.corpus_hash,
+        "chunks": db_manifest.inserted_chunk_count,
+        "embeddings": db_manifest.embedding_count,
+        "dynamic_rows": 0,
+        **comparison.model_dump(mode="json"),
+    }
+    if comparison.scientific_identity_status != SCIENTIFIC_IDENTITY_MATCH:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+        return 1
+
+    print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
     return 0
 
 

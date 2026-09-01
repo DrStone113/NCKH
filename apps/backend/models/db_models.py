@@ -44,6 +44,7 @@ class ChatMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     thoughts: Mapped[str] = mapped_column(Text, nullable=False, default="")
     structured_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    public_trace: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -2,6 +2,7 @@ fastapi>=0.111.0
 uvicorn[standard]>=0.29.0
 pydantic>=2.7.0
 pydantic-settings>=2.2.0
+tzdata==2026.3
 sqlalchemy[asyncio]>=2.0.0
 asyncpg>=0.29.0
 pgvector>=0.3.0
@@ -11,9 +12,8 @@ jsonschema>=4.21.0
 PyJWT>=2.8.0
 
 # Dev / testing
-# Keep the development gate reproducible. Hypothesis 6.165.10 has an
-# incompatible DataTree runtime in this suite; this verified trio is green on
-# the repository's Python 3.11 image.
+# Keep the development gate reproducible. This verified trio is green on the
+# project's CPython 3.10.21 runtime without a compatibility shim.
 hypothesis==6.151.9
 pytest==8.4.2
 pytest-asyncio==1.2.0

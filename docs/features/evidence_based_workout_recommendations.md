@@ -1,5 +1,36 @@
 # Gợi ý bài tập có cá nhân hóa và rào chắn an toàn
 
+Audit dữ liệu và đường đi thực tế của 885 Wger records được khóa riêng tại
+[E1 — Wger and exercise-data audit](e1_wger_exercise_data_audit.md). E1 chỉ
+đo hiện trạng; `derived_level` và MET vẫn là metadata do app suy luận, chưa
+phải canonical exercise policy.
+
+Lớp chuẩn hóa offline-first tiếp theo được mô tả tại
+[E2 — Canonical exercise catalog and provenance](e2_canonical_exercise_catalog.md).
+E2 giữ đủ 885 record, UUID, muscle, media và license theo từng cấp; các field
+movement/difficulty/laterality/substitution do app suy luận đều mang provenance
+riêng và chưa được nối vào `suggest_workout`.
+
+Quy tắc kê buổi tập đã được tách riêng và đóng băng tại
+[E3 — Versioned exercise prescription policy](e3_exercise_prescription_policy.md).
+E3 định nghĩa population, goal, frequency, load, volume, rest, RIR/RPE,
+progression/regression, missed session, substitution, safety, aerobic và
+session-level energy estimate; hành vi chatbot hiện tại vẫn chưa đổi cho đến
+khi Personalized Workout Planner E4 được hoàn thành.
+
+Semantic/reproducibility baseline cuối cùng nằm tại
+[E3.1 — Prescription Policy Gate](e3_1_prescription_policy_gate.md). E3.1 giữ
+`UNKNOWN` đúng nghĩa, tách muscular/aerobic endurance, đóng băng catalog
+eligibility và MET mapping provenance, đồng thời phát hành policy v1.1.0 thay
+vì ghi đè artifact v1.0.0.
+
+Planner cá nhân hóa xác định đã được triển khai độc lập tại
+[E4.0 — Personalized Workout Planner shadow mode](e4_personalized_workout_planner_shadow.md).
+E4.0 chuẩn hóa profile/history, chạy safety gate trước lọc, lập buổi tập theo
+ngân sách thời gian, áp dụng trực tiếp E3.1 và kiểm định plan bằng reason codes.
+Nó vẫn ở shadow mode, mặc định `off`, chưa thay `suggest_workout` và chưa nối
+vào chatbot; đó là ranh giới dành cho E4.1.
+
 ## Mục tiêu
 
 `suggest_workout` tạo buổi tập từ catalog wger, giữ giới hạn 2–8 động tác và không vượt quá thời lượng người dùng yêu cầu. Phiên bản này cá nhân hóa liều tập theo mục tiêu, dùng cân nặng thật cho ước tính năng lượng và từ chối kê buổi tập khi có triệu chứng cảnh báo.

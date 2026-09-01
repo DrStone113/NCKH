@@ -58,13 +58,16 @@ module import time per Requirement 7.8.
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 from modules.nutrition.catalog import DishCatalogError, load_dish_catalog
+from modules.nutrition.canonical_foods import (
+    CanonicalFoodError,
+    load_canonical_food_catalog,
+    resolve_dish_region,
+)
 from services.agent.tool_registry import ToolDescriptor
 
 logger = logging.getLogger(__name__)
@@ -91,49 +94,39 @@ _VALID_MEAL_TYPES: frozenset[str] = frozenset(
 
 #: Allowed dietary restriction tags (Requirement 4.4).
 _VALID_RESTRICTIONS: frozenset[str] = frozenset(
-    {"vegetarian", "vegan", "low_carb", "high_protein", "no_seafood"}
+    {
+        "vegetarian",
+        "vegan",
+        "low_carb",
+        "high_protein",
+        "no_seafood",
+        "no_pork",
+        "no_beef",
+        "no_peanut",
+        "no_tree_nut",
+        "no_milk",
+        "no_egg",
+        "no_fish",
+        "no_crustacean",
+        "no_mollusc",
+        "no_soy",
+        "no_wheat_gluten",
+        "no_sesame",
+    }
 )
 
-# --- Ingredient-name based dietary classification ---------------------------
-#
-# The bundled ``vietnamese_dishes.json`` does not tag dishes with explicit
-# dietary attributes, so we classify by ingredient name. Lists below are
-# anchored to the exact strings used in
-# ``backend/data/vietnamese_dishes.json`` and ``vietnamese_foods.json``.
-
-_SEAFOOD_INGREDIENT_NAMES: frozenset[str] = frozenset({
-    "Cua bể",
-    "Cá hồi",
-    "Cá ngừ",
-    "Cá rô phi",
-    "Cá thu",
-    "Mực tươi",
-    "Tôm biển",
-})
-
-_LAND_MEAT_INGREDIENT_NAMES: frozenset[str] = frozenset({
-    "Chả lợn",
-    "Giò lụa",
-    "Giò thủ lợn",
-    "Lòng lợn (ruột non)",
-    "Sườn lợn",
-    "Thịt bò loại I",
-    "Thịt gà ta",
-    "Thịt lợn nạc",
-    "Thịt lợn nửa nạc, nửa mỡ",
-    "Thịt vịt",
-    "Xúc xích",
-})
-
-_EGG_INGREDIENT_NAMES: frozenset[str] = frozenset({
-    "Trứng gà",
-    "Trứng vịt",
-})
-
-_DAIRY_INGREDIENT_NAMES: frozenset[str] = frozenset({
-    "Sữa bò tươi",
-    "Sữa chua (từ sữa bò)",
-})
+_ALLERGEN_RESTRICTIONS: dict[str, str] = {
+    "no_peanut": "PEANUT",
+    "no_tree_nut": "TREE_NUT",
+    "no_milk": "MILK",
+    "no_egg": "EGG",
+    "no_fish": "FISH",
+    "no_crustacean": "CRUSTACEAN",
+    "no_mollusc": "MOLLUSC",
+    "no_soy": "SOY",
+    "no_wheat_gluten": "WHEAT_GLUTEN",
+    "no_sesame": "SESAME",
+}
 
 #: ratio thresholds used by ``low_carb`` / ``high_protein`` filters. The
 #: design does not pin numeric thresholds, so reasonable nutrition-science
@@ -169,8 +162,8 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
             "uniqueItems": True,
             "default": [],
             "description": (
-                "Tập con của "
-                "{vegetarian, vegan, low_carb, high_protein, no_seafood}."
+                "Các hạn chế ăn uống/dị nguyên canonical; ví dụ vegetarian, "
+                "vegan, no_seafood, no_peanut, no_milk, no_egg hoặc no_soy."
             ),
         },
         "recent_dish_ids": {
@@ -185,15 +178,24 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
         "query": {
             "type": "string",
             "default": "",
-            "description": "Từ khóa tìm kiếm tên món ăn (ví dụ: 'cơm', 'bún', 'phở', 'cháo', 'mì', 'miến', 'salad').",
+            "description": (
+                "Từ khóa tìm kiếm tên món ăn (ví dụ: 'cơm', 'bún', 'phở', "
+                "'cháo', 'mì', 'miến', 'salad')."
+            ),
         },
         "latitude": {
             "type": "number",
-            "description": "Vĩ độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn theo vùng miền).",
+            "description": (
+                "Vĩ độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn "
+                "theo vùng miền)."
+            ),
         },
         "longitude": {
             "type": "number",
-            "description": "Kinh độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn theo vùng miền).",
+            "description": (
+                "Kinh độ GPS của người dùng (tùy chọn, dùng để gợi ý món ăn "
+                "theo vùng miền)."
+            ),
         },
     },
     "required": ["meal_type", "target_kcal"],
@@ -220,6 +222,12 @@ class _ComponentSpec:
     protein_per_g: float
     carbs_per_g: float
     fat_per_g: float
+    food_id: str
+    food_state: str
+    allergen_ids: tuple[str, ...]
+    source_id: str
+    source_record_id: int | None
+    match_quality: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,17 +246,17 @@ class _DishRecord:
     contains_land_meat: bool
     contains_egg: bool
     contains_dairy: bool
+    allergen_ids: frozenset[str]
+    objective_tags: frozenset[str]
     catalog_status: str | None
     provenance: dict[str, Any] | None
+    quality: dict[str, Any]
+    serving: dict[str, Any]
+    source_catalog_calories: float
 
 
 # Computed at module import.
 _DISHES: tuple[_DishRecord, ...] = ()
-
-
-def _data_dir() -> Path:
-    # backend/services/agent/tools/dish.py → backend/data
-    return Path(__file__).resolve().parent.parent.parent.parent / "data"
 
 
 def _safe_float(value: Any) -> float:
@@ -278,6 +286,14 @@ def _build_component(
         protein_per_g=_safe_float(food.get("protein")) / 100.0,
         carbs_per_g=_safe_float(food.get("carbohydrates")) / 100.0,
         fat_per_g=_safe_float(food.get("fat")) / 100.0,
+        food_id=str(ingredient.get("food_id") or food.get("food_id") or ""),
+        food_state=str(ingredient.get("food_state") or "UNKNOWN"),
+        allergen_ids=tuple(sorted(ingredient.get("allergen_ids") or [])),
+        source_id=str((ingredient.get("match") or {}).get("source_id") or ""),
+        source_record_id=(ingredient.get("match") or {}).get("source_record_id"),
+        match_quality=str(
+            (ingredient.get("match") or {}).get("quality") or "UNRESOLVED"
+        ),
     )
 
 
@@ -308,11 +324,6 @@ def _build_dish_record(
                 return None
             components.append(spec)
 
-        ingredient_name_set = {c.name for c in components}
-        ingredient_codes = {
-            int(foods_by_name[name].get("ma_so") or 0)
-            for name in ingredient_name_set
-        }
         base_kcal = sum(c.kcal_per_g * c.base_grams for c in components)
         base_protein = sum(c.protein_per_g * c.base_grams for c in components)
         base_carbs = sum(c.carbs_per_g * c.base_grams for c in components)
@@ -320,25 +331,21 @@ def _build_dish_record(
         if base_kcal <= 0:
             # Cannot scale a dish with zero energy.
             return None
+        quality = dict(dish.get("quality") or {})
+        if quality.get("publishable_for_nutrition_calculation") is False:
+            return None
 
-        # `estimated_calories` là tổng kcal được hiển thị trong catalog món
-        # Việt. Phân bổ hệ số này về components để catalog, suggest_dish và
-        # mobile không còn cho ba kết quả khác nhau với cùng một khẩu phần.
-        catalog_kcal = _safe_float(dish.get("estimated_calories"))
-        if catalog_kcal > 0:
-            calorie_factor = catalog_kcal / base_kcal
-            components = [
-                _ComponentSpec(
-                    name=c.name,
-                    base_grams=c.base_grams,
-                    kcal_per_g=c.kcal_per_g * calorie_factor,
-                    protein_per_g=c.protein_per_g,
-                    carbs_per_g=c.carbs_per_g,
-                    fat_per_g=c.fat_per_g,
-                )
-                for c in components
-            ]
-            base_kcal = catalog_kcal
+        # Never force ingredient energy to match a legacy dish-level estimate.
+        # Nutrition is calculated from canonical food records; disagreement
+        # remains visible in quality.catalog_energy_alignment for review.
+        objective_tags = frozenset(
+            (dish.get("dietary_tags") or {}).get("objective") or []
+        )
+        allergen_ids = frozenset(
+            allergen
+            for component in components
+            for allergen in component.allergen_ids
+        )
 
         return _DishRecord(
             id=dish_id,
@@ -349,18 +356,12 @@ def _build_dish_record(
             base_total_protein=base_protein,
             base_total_carbs=base_carbs,
             base_total_fat=base_fat,
-            contains_seafood=bool(
-                ingredient_name_set & _SEAFOOD_INGREDIENT_NAMES
-            ) or any(8000 <= code < 9000 for code in ingredient_codes),
-            contains_land_meat=bool(
-                ingredient_name_set & _LAND_MEAT_INGREDIENT_NAMES
-            ) or any(7000 <= code < 8000 for code in ingredient_codes),
-            contains_egg=bool(
-                ingredient_name_set & _EGG_INGREDIENT_NAMES
-            ) or any(9000 <= code < 10000 for code in ingredient_codes),
-            contains_dairy=bool(
-                ingredient_name_set & _DAIRY_INGREDIENT_NAMES
-            ) or any(10000 <= code < 11000 for code in ingredient_codes),
+            contains_seafood="contains_seafood" in objective_tags,
+            contains_land_meat="contains_land_meat" in objective_tags,
+            contains_egg="contains_egg" in objective_tags,
+            contains_dairy="contains_dairy" in objective_tags,
+            allergen_ids=allergen_ids,
+            objective_tags=objective_tags,
             catalog_status=(
                 str(dish["catalog_status"])
                 if dish.get("catalog_status")
@@ -371,6 +372,9 @@ def _build_dish_record(
                 if isinstance(dish.get("provenance"), dict)
                 else None
             ),
+            quality=quality,
+            serving=dict(dish.get("serving") or {}),
+            source_catalog_calories=_safe_float(dish.get("estimated_calories")),
         )
     except (KeyError, TypeError, ValueError) as exc:
         logger.warning("Skipping malformed dish entry: %s (%s)", dish, exc)
@@ -378,14 +382,10 @@ def _build_dish_record(
 
 
 def _load_dishes() -> tuple[_DishRecord, ...]:
-    base_dir = _data_dir()
-    foods_path = base_dir / "vietnamese_foods.json"
-
     try:
-        with foods_path.open(encoding="utf-8") as fh:
-            foods_raw = json.load(fh)
-    except FileNotFoundError:
-        logger.error("vietnamese_foods.json not found at %s", foods_path)
+        foods_raw = load_canonical_food_catalog()
+    except CanonicalFoodError as exc:
+        logger.error("Unable to load canonical food catalog: %s", exc)
         return ()
     foods_by_name = {
         str(f["name"]): f for f in foods_raw if isinstance(f, dict) and "name" in f
@@ -436,7 +436,17 @@ def _passes_dietary_restrictions(
       - ``high_protein``: protein contributes ≥ 25% of base kcal
         (``4 * total_protein / total_calories ≥ 0.25``).
     """
+    if any(
+        allergen_id in dish.allergen_ids
+        for restriction, allergen_id in _ALLERGEN_RESTRICTIONS.items()
+        if restriction in restrictions
+    ):
+        return False
     if "no_seafood" in restrictions and dish.contains_seafood:
+        return False
+    if "no_pork" in restrictions and "contains_pork" in dish.objective_tags:
+        return False
+    if "no_beef" in restrictions and "contains_beef" in dish.objective_tags:
         return False
     if "vegetarian" in restrictions and (
         dish.contains_land_meat or dish.contains_seafood
@@ -524,6 +534,12 @@ def _scale_dish(
         components_out.append(
             {
                 "name": c.name,
+                "food_id": c.food_id,
+                "food_state": c.food_state,
+                "allergen_ids": list(c.allergen_ids),
+                "source_id": c.source_id,
+                "source_record_id": c.source_record_id,
+                "match_quality": c.match_quality,
                 "serving_grams": scaled_g,
                 "calories": round(kcal_i, 2),
                 "protein": round(protein_i, 2),
@@ -613,15 +629,14 @@ def _remove_accents(text: str) -> str:
     return "".join(res)
 
 
+def _get_dish_region_metadata(dish_name: str) -> dict[str, Any]:
+    return resolve_dish_region(dish_name)
+
+
 def _get_dish_region(dish_name: str) -> str:
-    normalized = _remove_accents(dish_name.lower().strip())
-    if any(k in normalized for k in ["pho bo", "bun cha", "bun rieu", "banh cuon", "pho ga"]):
-        return "North"
-    if any(k in normalized for k in ["bun bo hue", "mi quang", "cao lau"]):
-        return "Central"
-    if any(k in normalized for k in ["com tam suon", "hu tieu", "canh chua ca", "ca kho to", "bun thit nuong"]):
-        return "South"
-    return "National"
+    """Compatibility helper backed only by curated region metadata."""
+
+    return str(_get_dish_region_metadata(dish_name)["region"])
 
 
 def _get_region_from_gps(lat: float, lng: float) -> str | None:
@@ -654,7 +669,7 @@ def suggest_dish(
         Target calories for the dish; must be strictly positive.
     dietary_restrictions:
         Optional subset of
-        ``{"vegetarian", "vegan", "low_carb", "high_protein", "no_seafood"}``.
+        Canonical dietary/allergen restrictions listed in the tool schema.
     recent_dish_ids:
         Optional iterable of dish ids recently chosen — the tool prefers a
         dish whose ``id`` is not in this set whenever another fitting
@@ -716,7 +731,7 @@ def suggest_dish(
         # Region filter: only apply if the user did NOT type an explicit query
         if user_region and not clean_query:
             dish_region = _get_dish_region(dish.name)
-            if dish_region != "National" and dish_region != user_region:
+            if dish_region not in {"Unknown", "National", user_region}:
                 continue
 
         scaled = _scale_dish(dish, target_kcal_f)
@@ -736,6 +751,15 @@ def suggest_dish(
     best = min(
         candidates,
         key=lambda s: (
+            (
+                0
+                if not user_region
+                or clean_query
+                or _get_dish_region(s.record.name) == user_region
+                else 1
+                if _get_dish_region(s.record.name) == "National"
+                else 2
+            ),
             abs(s.scale_factor - 1.0),
             abs(s.total_calories - target_kcal_f),
             s.record.id,
@@ -751,9 +775,19 @@ def suggest_dish(
         "total_protein": best.total_protein,
         "total_carbs": best.total_carbs,
         "total_fat": best.total_fat,
-        "catalog_calories": round(rec.base_total_calories, 2),
+        "catalog_calories": round(rec.source_catalog_calories, 2),
+        "recipe_calculated_calories": round(rec.base_total_calories, 2),
         "serving_scale": best.scale_factor,
         "region": _get_dish_region(rec.name),
+        "region_metadata": _get_dish_region_metadata(rec.name),
+        "allergen_ids": sorted(rec.allergen_ids),
+        "dietary_tags": {
+            "objective": sorted(rec.objective_tags),
+            "heuristic": [],
+        },
+        "quality": dict(rec.quality),
+        "serving": dict(rec.serving),
+        "nutrition_method": "RECIPE_CALCULATED_FROM_CANONICAL_INGREDIENTS",
     }
     if rec.catalog_status:
         result["catalog_status"] = rec.catalog_status

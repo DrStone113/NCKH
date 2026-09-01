@@ -1,0 +1,20 @@
+{
+  "schema_version": "catalog-staging-index-v1.0.0",
+  "policy": {
+    "production_loader_reads_staging": false,
+    "external_records_must_follow_lifecycle": [
+      "RAW_IMPORTED",
+      "NORMALIZED",
+      "MATCHED",
+      "QA_REVIEW",
+      "APPROVED_or_REJECTED"
+    ],
+    "auto_approval_match_quality": [
+      "EXACT"
+    ],
+    "maximum_food_records_without_override": 50,
+    "maximum_dish_records_without_override": 30
+  },
+  "batches": [],
+  "index_hash": "5c80d7473f20760c963393f70fb1707751c22acc93a101433da81cd0c3004148"
+}

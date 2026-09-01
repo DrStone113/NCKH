@@ -48,3 +48,9 @@ pytest -q tests/test_curated_dish_catalog.py
 - Suất ăn `verified_complete_meal`: 6.
 - Công thức phủ rộng `normalized_reference_recipe`: 203.
 - Catalog legacy vẫn được phục vụ để bảo toàn độ phủ; các batch tiếp theo cần lần lượt thay thế hoặc ngừng phục vụ những món có mapping sai đã biết.
+
+## Canonical ingredient layer v3
+
+Từ 2026-08-30, catalog được enrich qua `canonical_foods.py`: 526 thực phẩm có stable `food_id`, provenance tới từng nutrient, food state, allergen taxonomy và energy QA. Mọi ingredient của 300 món live hiện resolve `EXACT` tới Vietnam FCT; source hierarchy có 10 nguồn nhưng chỉ `VIETNAM_FCT` được phép cấp nutrient values tại runtime.
+
+Xem thiết kế, license gates và số liệu audit tại [Canonical ingredient catalog và provenance theo field](canonical_food_provenance.md).

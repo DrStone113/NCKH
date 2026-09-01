@@ -149,6 +149,55 @@ class BackendApiService {
     }
   }
 
+  /// Explicit E4.1 write. The backend independently rejects it unless
+  /// WORKOUT_WRITE_MODE=explicit; this method is never called on plan render.
+  Future<Map<String, dynamic>> savePersonalizedWorkoutPlan({
+    required String userId,
+    required String planId,
+    required String requestId,
+    bool activate = false,
+  }) => _postWorkout(
+        '/workouts/plans/$planId/save',
+        {
+          'user_id': userId,
+          'request_id': requestId,
+          'activate': activate,
+        },
+      );
+
+  Future<Map<String, dynamic>> logPersonalizedWorkoutResult({
+    required String userId,
+    required String planId,
+    required String requestId,
+    required String sessionCompletionStatus,
+    required String painDiscomfortStatus,
+    List<Map<String, dynamic>> exerciseResults = const [],
+  }) => _postWorkout(
+        '/workouts/plans/$planId/results',
+        {
+          'user_id': userId,
+          'request_id': requestId,
+          'session_completion_status': sessionCompletionStatus,
+          'pain_discomfort_status': painDiscomfortStatus,
+          'exercise_results': exerciseResults,
+        },
+      );
+
+  Future<Map<String, dynamic>> _postWorkout(
+      String path, Map<String, dynamic> payload) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 15));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    }
+    throw Exception('Workout write failed: ${response.statusCode}');
+  }
+
   /// Clear cache
   void clearCache() {
     _cachedDishes = null;

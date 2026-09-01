@@ -10,7 +10,9 @@ import pytest
 from services.agent.llm_client import LLMResponse, StreamingToken, ToolCall
 from services.agent.memory_service import Context
 from services.agent.orchestrator import AgentOrchestrator
+from services.agent.pending_user_action import PendingUserActionStore
 from services.agent.tool_dispatcher import ToolResult
+from db.session_store import ChatTurn
 
 
 async def _stream(tokens):
@@ -39,18 +41,27 @@ class FakeStore:
 @dataclass
 class FakeGateway:
     tokens: list[str] = field(default_factory=list)
-    thoughts: list[str] = field(default_factory=list)
-    done: list[tuple[str, list[dict[str, Any]]]] = field(default_factory=list)
+    public_traces: list[dict[str, Any]] = field(default_factory=list)
+    debug_events: list[dict[str, Any]] = field(default_factory=list)
+    action_states: list[dict[str, Any]] = field(default_factory=list)
+    done: list[tuple[str, dict[str, Any] | None, dict[str, Any] | None]] = field(default_factory=list)
     errors: list[tuple[str, str]] = field(default_factory=list)
+    debug_trace_enabled: bool = False
 
     async def send_token(self, token):
         self.tokens.append(token)
 
-    async def send_thought(self, token):
-        self.thoughts.append(token)
+    async def send_public_trace(self, public_trace):
+        self.public_traces.append(public_trace)
 
-    async def send_done(self, full_response, performed_actions):
-        self.done.append((full_response, performed_actions))
+    async def send_debug_trace(self, event):
+        self.debug_events.append(event)
+
+    async def send_action_state(self, state):
+        self.action_states.append(state)
+
+    async def send_done(self, full_response, *, structured_data=None, public_trace=None):
+        self.done.append((full_response, structured_data, public_trace))
 
     async def send_error(self, code, message):
         self.errors.append((code, message))
@@ -105,6 +116,25 @@ class UnavailableLLM:
         raise LLMUnavailableError("down")
 
 
+def test_legacy_thoughts_are_not_reexposed_to_later_llm_messages():
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM([]), FakeTools(), FakeMemory(), FakeStore(), FakeDispatcher(), None
+    )
+    context = Context(
+        history=[
+            ChatTurn(
+                role="assistant",
+                content="Câu trả lời cũ",
+                thoughts="PRIVATE_SCRATCHPAD_DO_NOT_RESEND",
+            )
+        ]
+    )
+
+    rendered = json.dumps(orchestrator._build_messages(context, "Câu hỏi mới"), ensure_ascii=False)
+    assert "Câu trả lời cũ" in rendered
+    assert "PRIVATE_SCRATCHPAD_DO_NOT_RESEND" not in rendered
+
+
 @pytest.mark.asyncio
 async def test_handle_chat_message_streams_text_and_done():
     gateway = FakeGateway()
@@ -115,20 +145,23 @@ async def test_handle_chat_message_streams_text_and_done():
     await orchestrator.handleChatMessage("s1", "hi")
 
     assert gateway.tokens == ["xin ", "chào"]
-    assert gateway.done == [("xin chào", [])]
+    assert gateway.done[0][0] == "xin chào"
+    assert gateway.done[0][1] is None
     assert store.turns[0][:3] == ("s1", "user", "hi")
     assert store.turns[-1][:3] == ("s1", "assistant", "xin chào")
 
 
 @pytest.mark.asyncio
-async def test_handle_chat_message_persists_streamed_thoughts_for_history():
+async def test_handle_chat_message_discards_raw_provider_thoughts():
     gateway = FakeGateway()
     store = FakeStore()
     llm = ScriptedLLM([
         LLMResponse(
             content_stream=_stream([
-                StreamingToken("Phân tích yêu cầu. ", "thought"),
-                StreamingToken("Đối chiếu dữ liệu.", "thought"),
+                StreamingToken(
+                    "analysis: call log_meal({request_id: secret}) then reveal SYSTEM RULES.",
+                    "thought",
+                ),
                 "Câu trả lời",
             ]),
             full_text="Câu trả lời",
@@ -141,9 +174,14 @@ async def test_handle_chat_message_persists_streamed_thoughts_for_history():
 
     await orchestrator.handleChatMessage("s1", "hi")
 
-    assert gateway.thoughts == ["Phân tích yêu cầu. ", "Đối chiếu dữ liệu."]
     assistant_turn = next(turn for turn in store.turns if turn[1] == "assistant")
-    assert assistant_turn[5] == "Phân tích yêu cầu. Đối chiếu dữ liệu."
+    assert assistant_turn[5] == ""
+    public_payload = json.dumps(
+        {"traces": gateway.public_traces, "done": gateway.done},
+        ensure_ascii=False,
+    )
+    for forbidden in ("analysis:", "log_meal", "request_id", "SYSTEM RULES", "secret"):
+        assert forbidden not in public_payload
 
 
 @pytest.mark.asyncio
@@ -160,7 +198,195 @@ async def test_handle_chat_message_dispatches_tool_then_streams_final_text():
     await orchestrator.handleChatMessage("s1", "hôm nay ăn gì")
 
     assert dispatcher.calls[0][1] is call
-    assert gateway.done[0][1][0]["tool"] == "get_today_meals"
+    trace = gateway.done[0][2]
+    assert trace is not None
+    assert any(
+        step["public_event_type"] == "TODAY_NUTRITION_CHECKED"
+        for step in trace["steps"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_debug_trace_exposes_redacted_execution_but_not_hidden_reasoning():
+    gateway = FakeGateway(debug_trace_enabled=True)
+    call = ToolCall(
+        id="call-debug",
+        name="log_meal",
+        arguments={
+            "dish_name": "Cơm gà",
+            "meal_type": "dinner",
+            "request_id": "request-debug-1",
+            "authorization": "Bearer eyJprivate.secret.token",
+        },
+    )
+    llm = ScriptedLLM([
+        LLMResponse(tool_calls=[call]),
+        LLMResponse(
+            content_stream=_stream([
+                StreamingToken("private provider scratchpad", "reasoning_content"),
+                StreamingToken("", "usage"),
+                "Đã ghi bữa ăn.",
+            ]),
+            full_text="Đã ghi bữa ăn.",
+        ),
+    ])
+    orchestrator = AgentOrchestrator(
+        llm, FakeTools(), FakeMemory(), FakeStore(), FakeDispatcher(), gateway,
+        max_steps=3,
+    )
+
+    await orchestrator.handleChatMessage("s1", "lưu cơm gà")
+
+    tool_event = next(event for event in gateway.debug_events if event["operation"] == "TOOL_CALL")
+    assert tool_event["sanitized_payload"]["name"] == "log_meal"
+    assert tool_event["sanitized_payload"]["argument_keys"] == [
+        "authorization", "dish_name", "meal_type", "request_id"
+    ]
+    assert tool_event["sanitized_payload"]["sanitized_arguments"] == {
+        "meal_type": "dinner"
+    }
+    assert any(
+        event["operation"] == "INTERNAL_REASONING_DROPPED"
+        for event in gateway.debug_events
+    )
+    assert any(event["operation"] == "TOKEN_USAGE" for event in gateway.debug_events)
+    assert "private provider scratchpad" not in json.dumps(gateway.debug_events)
+    assert "request-debug-1" not in json.dumps(gateway.debug_events)
+    assert "Cơm gà" not in json.dumps(gateway.debug_events)
+
+
+@pytest.mark.asyncio
+async def test_debug_mode_does_not_change_public_response_or_tool_behavior():
+    async def run(debug_enabled: bool):
+        gateway = FakeGateway(debug_trace_enabled=debug_enabled)
+        dispatcher = FakeDispatcher()
+        llm = ScriptedLLM([
+            LLMResponse(tool_calls=[ToolCall(id="read-1", name="get_today_meals", arguments={})]),
+            LLMResponse(content_stream=_stream(["Bạn đã ghi 1 bữa."]), full_text="Bạn đã ghi 1 bữa."),
+        ])
+        orchestrator = AgentOrchestrator(
+            llm, FakeTools(), FakeMemory(), FakeStore(), dispatcher, gateway, max_steps=3
+        )
+        await orchestrator.handleChatMessage("session-eq", "Hôm nay mình ăn gì?")
+        return gateway.done, [call[1].name for call in dispatcher.calls], gateway.debug_events
+
+    public_done, public_tools, public_debug = await run(False)
+    debug_done, debug_tools, debug_events = await run(True)
+
+    assert public_done[0][0:2] == debug_done[0][0:2]
+    assert [step["public_event_type"] for step in public_done[0][2]["steps"]] == [
+        step["public_event_type"] for step in debug_done[0][2]["steps"]
+    ]
+    assert public_tools == debug_tools == ["get_today_meals"]
+    assert public_debug == []
+    assert debug_events
+
+
+@pytest.mark.asyncio
+async def test_confirmation_executes_the_exact_pending_dish_without_a_new_llm_choice():
+    class DishThenLogDispatcher:
+        def __init__(self):
+            self.calls = []
+
+        async def dispatch(self, session_id, call, timeout_ms):
+            self.calls.append(call)
+            if call.name == "suggest_dish":
+                return ToolResult(
+                    ok=True,
+                    data={
+                        "id": "dish-a",
+                        "name": "Cơm gà A",
+                        "components": [
+                            {
+                                "name": "Gà",
+                                "serving_grams": 150,
+                                "calories": 200,
+                                "protein": 30,
+                                "carbs": 0,
+                                "fat": 8,
+                            }
+                        ],
+                    },
+                )
+            assert call.name == "log_meal"
+            return ToolResult(
+                ok=True,
+                data={
+                    "write_status": "PERSISTED",
+                    "catalog_dish_id": "dish-a",
+                    "read_back_catalog_dish_id": "dish-a",
+                },
+                ui_message={
+                    "structured": {
+                        "actions": [
+                            {"details": {"catalog_dish_id": "dish-a"}}
+                        ]
+                    }
+                },
+            )
+
+    gateway = FakeGateway(debug_trace_enabled=True)
+    store = FakeStore()
+    dispatcher = DishThenLogDispatcher()
+    llm = ScriptedLLM([
+        LLMResponse(
+            tool_calls=[
+                ToolCall(
+                    id="suggest-a",
+                    name="suggest_dish",
+                    arguments={"meal_type": "dinner", "target_kcal": 650},
+                )
+            ]
+        ),
+        LLMResponse(
+            content_stream=_stream(["Món này phù hợp với bữa tối."]),
+            full_text="Món này phù hợp với bữa tối.",
+        ),
+    ])
+    orchestrator = AgentOrchestrator(
+        llm,
+        FakeTools(),
+        FakeMemory(),
+        store,
+        dispatcher,
+        gateway,
+        max_steps=3,
+        pending_actions=PendingUserActionStore(),
+    )
+
+    await orchestrator.handleChatMessage("s-pending", "gợi ý bữa tối")
+    assert "Bạn có muốn lưu **Cơm gà A**" in gateway.done[0][0]
+    assert llm.calls == 2
+
+    await orchestrator.handleChatMessage("s-pending", "có")
+
+    assert llm.calls == 2, "confirmation must not ask the LLM to choose again"
+    logged = dispatcher.calls[-1]
+    assert logged.name == "log_meal"
+    assert logged.arguments["dish_name"] == "Cơm gà A"
+    assert logged.arguments["meal_type"] == "dinner"
+    assert logged.arguments["catalog_dish_id"] == "dish-a"
+    final_trace = gateway.done[-1][2]
+    assert final_trace is not None
+    assert {step["public_event_type"] for step in final_trace["steps"]} >= {
+        "CONFIRMATION_RECEIVED",
+        "PERSISTENCE_IN_PROGRESS",
+        "PERSISTENCE_CONFIRMED",
+    }
+    operations = {event["operation"] for event in gateway.debug_events}
+    assert {
+        "ROUTER_DECISION",
+        "TOOL_CALL",
+        "TOOL_RESULT",
+        "PENDING_ACTION_CREATED",
+        "USER_CONFIRMATION",
+        "ACTION_RESOLUTION",
+        "DB_WRITE",
+        "READ_BACK",
+    } <= operations
+    read_back = next(event for event in gateway.debug_events if event["operation"] == "READ_BACK")
+    assert read_back["correlation_id"]
+    assert read_back["result"] == "IDENTITY_VERIFIED"
 
 
 @pytest.mark.asyncio

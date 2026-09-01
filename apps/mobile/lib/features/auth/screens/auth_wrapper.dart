@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../home/screens/home_screen.dart';
 import 'auth_screen.dart';
+import 'workout_account_intake_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -27,6 +28,12 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (userProvider.isAuthenticated) {
+          // A new registration reaches this gate immediately. Existing users
+          // re-enter it only when an account-intake version gains a question
+          // they have not explicitly answered yet.
+          if (userProvider.needsAccountHealthIntake) {
+            return const WorkoutAccountIntakeScreen();
+          }
           return const HomeScreen();
         }
         return const AuthScreen();

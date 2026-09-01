@@ -24,20 +24,34 @@ class ChatGateway:
         self.latitude: float | None = None
         self.longitude: float | None = None
         self.user_context: Any | None = None
+        self.developer_authenticated = False
+        self.authenticated_principal = False
+        self.debug_trace_enabled = False
 
-    async def _ensure_session_exists(self) -> None:
+    async def _ensure_session_exists(self) -> bool:
         from db.db_status import is_db_offline, mark_db_offline
         if not self.db_session or self._session_ensured or is_db_offline():
-            return
+            return True
         try:
             import uuid
             uuid.UUID(self.session_id)
         except ValueError:
             logger.warning(f"Cannot ensure session: {self.session_id} is not a valid UUID")
-            return
+            return True
 
         from sqlalchemy import text
         try:
+            existing = await self.db_session.execute(
+                text("SELECT user_id FROM chat_sessions WHERE id = :id"),
+                {"id": self.session_id},
+            )
+            existing_user_id = existing.scalar_one_or_none()
+            if (
+                existing_user_id is not None
+                and str(existing_user_id) != str(self.user_id)
+            ):
+                logger.warning("Rejected chat session owner mismatch for session=%s", self.session_id)
+                return False
             await self.db_session.execute(
                 text(
                     """
@@ -50,10 +64,12 @@ class ChatGateway:
             )
             await self.db_session.commit()
             self._session_ensured = True
+            return True
         except Exception as e:
             mark_db_offline(60.0)
             logger.error(f"Error ensuring session exists: {e}")
             await self.db_session.rollback()
+            return True
 
     async def authenticate(self) -> bool:
         """Bypass authentication for now, but validate JWT if provided."""
@@ -64,11 +80,27 @@ class ChatGateway:
             try:
                 payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
                 self.user_id = payload.get("sub") or "anonymous"
+                self.authenticated_principal = True
+                roles = payload.get("roles") or payload.get("role") or []
+                if isinstance(roles, str):
+                    roles = [roles]
+                normalized_roles = {str(role).strip().lower() for role in roles}
+                self.developer_authenticated = bool(
+                    payload.get("is_admin")
+                    or payload.get("is_developer")
+                    or normalized_roles.intersection({"admin", "developer"})
+                )
             except jwt.PyJWTError:
                 await self.websocket.close(code=4401)
                 return False
         else:
             self.user_id = "anonymous"
+            self.authenticated_principal = False
+
+        from config import settings
+        self.debug_trace_enabled = settings.debug_trace_allowed_for(
+            developer_authenticated=self.developer_authenticated
+        )
 
         try:
             import uuid
@@ -92,7 +124,11 @@ class ChatGateway:
                 if msg_type in ("chat", "chat_message"):
                     # Extract session_id from JSON payload if present and valid
                     session_id_from_data = data.get("session_id") if isinstance(data, dict) else None
-                    if session_id_from_data and session_id_from_data != self.session_id:
+                    if (
+                        not self.authenticated_principal
+                        and session_id_from_data
+                        and session_id_from_data != self.session_id
+                    ):
                         try:
                             import uuid
                             uuid.UUID(session_id_from_data)
@@ -103,7 +139,12 @@ class ChatGateway:
 
                     # Extract user_id from JSON payload if present and valid
                     user_id_from_data = data.get("user_id") if isinstance(data, dict) else None
-                    if user_id_from_data and isinstance(user_id_from_data, str) and user_id_from_data.strip():
+                    if (
+                        not self.authenticated_principal
+                        and user_id_from_data
+                        and isinstance(user_id_from_data, str)
+                        and user_id_from_data.strip()
+                    ):
                         new_user_id = str(user_id_from_data).strip()
                         if self.user_id != new_user_id:
                             self.user_id = new_user_id
@@ -118,7 +159,12 @@ class ChatGateway:
                             self.user_context = incoming_context
 
                     # Ensure the session exists in the database
-                    await self._ensure_session_exists()
+                    if not await self._ensure_session_exists():
+                        await self.send_error(
+                            "SESSION_FORBIDDEN",
+                            "Phiên trò chuyện này không thuộc về tài khoản hiện tại.",
+                        )
+                        continue
 
                     try:
                         self.latitude = float(data["latitude"]) if data.get("latitude") is not None else None
@@ -151,7 +197,10 @@ class ChatGateway:
                                     await self.db_session.rollback()
                                 except Exception:
                                     pass
-                            await self.send_error("INTERNAL_ERROR", str(e))
+                            await self.send_error(
+                                "INTERNAL_ERROR",
+                                "Không thể xử lý yêu cầu lúc này. Bạn thử lại giúp mình nhé.",
+                            )
                             
                     import asyncio
                     asyncio.create_task(_handle_chat_task(self.session_id, message, self.user_context))
@@ -166,7 +215,10 @@ class ChatGateway:
                     except Exception as e:
                         import traceback
                         traceback.print_exc()
-                        await self.send_error("INTERNAL_ERROR", str(e))
+                        await self.send_error(
+                            "INTERNAL_ERROR",
+                            "Không thể xử lý yêu cầu lúc này. Bạn thử lại giúp mình nhé.",
+                        )
                 else:
                     await self.send_error("BAD_MESSAGE", "Unsupported message type.")
         except WebSocketDisconnect:
@@ -178,8 +230,19 @@ class ChatGateway:
     async def send_status(self, content: str) -> None:
         await self.websocket.send_json({"type": "status", "content": content})
 
-    async def send_thought(self, content: str) -> None:
-        await self.websocket.send_json({"type": "thought", "content": content})
+    async def send_public_trace(self, public_trace: dict[str, Any]) -> None:
+        """Send an allowlisted, user-safe trace snapshot to the UI."""
+        await self.websocket.send_json({"type": "public_trace", "trace": public_trace})
+
+    async def send_debug_trace(self, debug_trace: dict[str, Any]) -> None:
+        """Server-gated execution telemetry for authorised developer builds."""
+        if not self.debug_trace_enabled:
+            return
+        await self.websocket.send_json({"type": "debug_trace", "event": debug_trace})
+
+    async def send_action_state(self, action_state: dict[str, Any]) -> None:
+        """Normal-channel, human-readable pending/persistence state only."""
+        await self.websocket.send_json({"type": "action_state", "state": action_state})
 
     async def send_tool_call(
         self, correlation_id: str, name: str, args: dict[str, Any], timeout_ms: int
@@ -194,14 +257,21 @@ class ChatGateway:
             }
         )
 
-    async def send_done(self, full_response: str, performed_actions: list[dict[str, Any]], structured_data: dict[str, Any] | None = None) -> None:
+    async def send_done(
+        self,
+        full_response: str,
+        *,
+        structured_data: dict[str, Any] | None = None,
+        public_trace: dict[str, Any] | None = None,
+    ) -> None:
         payload: dict[str, Any] = {
             "type": "done",
             "full_response": full_response,
-            "performed_actions": performed_actions,
         }
         if structured_data is not None:
             payload["structured"] = structured_data
+        if public_trace is not None:
+            payload["public_trace"] = public_trace
         await self.websocket.send_json(payload)
 
     async def send_error(self, code: str, message: str) -> None:

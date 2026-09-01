@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     content     TEXT NOT NULL,
     thoughts    TEXT NOT NULL DEFAULT '',
     structured_data JSONB,
+    public_trace JSONB,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -119,3 +120,86 @@ CREATE TABLE IF NOT EXISTS plan_items (
 
 CREATE INDEX IF NOT EXISTS plans_user_status_idx ON plans(user_id, status, created_at DESC);
 CREATE INDEX IF NOT EXISTS plan_items_plan_day_idx ON plan_items(plan_id, day_index, plan_date);
+
+-- P1 Plan V2 tables are created by migration 010 for existing databases.  The
+-- clean-install schema keeps the same isolated planned-state model so it
+-- cannot be confused with legacy plans or actual meal/workout observations.
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+CREATE TABLE IF NOT EXISTS plan_v2_plans (
+    id UUID PRIMARY KEY,
+    owner_user_id TEXT NOT NULL,
+    domain TEXT NOT NULL CHECK (domain IN ('NUTRITION', 'WORKOUT', 'COMBINED_HEALTH')),
+    plan_schema_version TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS plan_v2_revisions (
+    id UUID PRIMARY KEY,
+    plan_id UUID NOT NULL REFERENCES plan_v2_plans(id) ON DELETE RESTRICT,
+    owner_user_id TEXT NOT NULL,
+    domain TEXT NOT NULL CHECK (domain IN ('NUTRITION', 'WORKOUT', 'COMBINED_HEALTH')),
+    revision_number INTEGER NOT NULL CHECK (revision_number >= 1),
+    parent_revision_id UUID REFERENCES plan_v2_revisions(id) ON DELETE RESTRICT,
+    lifecycle_status TEXT NOT NULL CHECK (lifecycle_status IN ('DRAFT', 'PENDING_CONFIRMATION', 'SAVED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'CANCELLED', 'SUPERSEDED')),
+    validation_status TEXT NOT NULL CHECK (validation_status IN ('READY', 'CLARIFICATION_REQUIRED', 'REQUIRES_SPECIALIST_GUIDANCE', 'INVALID')),
+    hard_violation_count INTEGER NOT NULL DEFAULT 0 CHECK (hard_violation_count >= 0),
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    timezone TEXT NOT NULL,
+    request_payload JSONB NOT NULL,
+    policy_versions JSONB NOT NULL,
+    catalog_versions JSONB NOT NULL,
+    goal_snapshot JSONB NOT NULL,
+    constraint_snapshot JSONB NOT NULL,
+    summary JSONB NOT NULL,
+    explanation_metadata JSONB NOT NULL,
+    provenance JSONB NOT NULL,
+    content_hash CHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT plan_v2_revision_period_valid CHECK (period_end >= period_start),
+    CONSTRAINT plan_v2_revision_identity_unique UNIQUE (plan_id, revision_number),
+    CONSTRAINT plan_v2_active_requires_ready CHECK (lifecycle_status <> 'ACTIVE' OR (validation_status = 'READY' AND hard_violation_count = 0))
+);
+
+ALTER TABLE plan_v2_revisions DROP CONSTRAINT IF EXISTS plan_v2_active_period_exclusion;
+ALTER TABLE plan_v2_revisions ADD CONSTRAINT plan_v2_active_period_exclusion
+    EXCLUDE USING gist (owner_user_id WITH =, domain WITH =, daterange(period_start, period_end, '[]') WITH &&)
+    WHERE (lifecycle_status = 'ACTIVE');
+
+CREATE TABLE IF NOT EXISTS plan_v2_items (
+    id UUID PRIMARY KEY,
+    revision_id UUID NOT NULL REFERENCES plan_v2_revisions(id) ON DELETE RESTRICT,
+    plan_item_id UUID NOT NULL,
+    item_order INTEGER NOT NULL DEFAULT 0,
+    scheduled_date DATE NOT NULL,
+    schedule_slot TEXT NOT NULL,
+    item_type TEXT NOT NULL CHECK (item_type IN ('MEAL', 'WORKOUT_SESSION')),
+    status TEXT NOT NULL CHECK (status IN ('PLANNED', 'CANCELLED', 'SUPERSEDED')),
+    canonical_refs JSONB NOT NULL,
+    reason_codes JSONB NOT NULL,
+    policy_provenance JSONB NOT NULL,
+    planned_content JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS plan_v2_write_actions (
+    owner_user_id TEXT NOT NULL,
+    action_id TEXT NOT NULL,
+    operation TEXT NOT NULL CHECK (operation IN ('SAVE', 'SET_STATUS')),
+    plan_id UUID NOT NULL,
+    revision_id UUID NOT NULL,
+    content_hash CHAR(64),
+    result_status TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (owner_user_id, action_id)
+);
+
+CREATE TABLE IF NOT EXISTS legacy_plan_v2_classification (
+    legacy_plan_id UUID PRIMARY KEY,
+    classification TEXT NOT NULL CHECK (classification IN ('LEGACY_READABLE', 'MIGRATABLE', 'LEGACY_UNVERSIONED', 'INVALID')),
+    assessed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    notes TEXT
+);
+
+GRANT ALL PRIVILEGES ON plan_v2_plans, plan_v2_revisions, plan_v2_items, plan_v2_write_actions, legacy_plan_v2_classification TO health;

@@ -9,6 +9,7 @@ import '../../../providers/health_provider.dart';
 import '../../../models/chat_message.dart';
 import '../../../models/wger_models.dart';
 import '../../../models/meal_model.dart';
+import '../../../models/app_state_value.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/action_card_widget.dart';
@@ -17,6 +18,11 @@ import '../../../widgets/plan_detail_bottom_sheet.dart';
 import '../../../services/backend_api_service.dart';
 import '../../../widgets/formatted_markdown_text.dart';
 import '../../../widgets/meal_summary_card.dart';
+import '../../../widgets/personalized_workout_card.dart';
+import '../../../widgets/versioned_plan_card.dart';
+
+const bool _developerTraceBuild =
+    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: false);
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key, this.showBackButton = true});
@@ -625,9 +631,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!message.isUser && message.thoughts.isNotEmpty) ...[
+                    if (!message.isUser &&
+                        (message.publicTrace?.hasSteps ?? false)) ...[
                       AIThoughtsPanel(
-                        thoughts: message.thoughts,
+                        publicTrace: message.publicTrace!,
                         isThinking: false,
                       ),
                       const SizedBox(height: 10),
@@ -666,6 +673,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         if (!message.isUser && message.structuredResponse != null)
           ..._buildActionCards(message),
 
+        if (!message.isUser &&
+            _developerTraceBuild &&
+            message.developerTrace.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 44, top: 4, right: 10),
+            child: DeveloperTracePanel(events: message.developerTrace),
+          ),
+
         // Suggestions / flow options
         if (!message.isUser &&
             message.status == MessageStatus.done &&
@@ -679,9 +694,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  /// Chỉ hiện quá trình reasoning thật; không hiện các status trung gian.
+  /// Chỉ hiện PublicReasoningTrace có allowlist, không hiển thị raw reasoning.
   Widget _buildThinkingBubble(AIChatMessage message) {
-    if (message.thoughts.trim().isEmpty) {
+    final publicTrace = message.publicTrace;
+    if (publicTrace == null || !publicTrace.hasSteps) {
       return const SizedBox.shrink();
     }
 
@@ -709,7 +725,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: AIThoughtsPanel(
-              thoughts: message.thoughts,
+              publicTrace: publicTrace,
               isThinking: true,
             ),
           ),
@@ -722,6 +738,75 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   List<Widget> _buildActionCards(AIChatMessage message) {
     final structuredResponse = message.structuredResponse!;
     final widgets = <Widget>[];
+    final personalizedWorkout = structuredResponse.personalizedWorkout;
+    final versionedPlan = structuredResponse.versionedPlan;
+    if (versionedPlan != null) {
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
+        child: VersionedPlanCard(
+          plan: versionedPlan,
+          onSave: () => _sendMessage('Lưu đúng kế hoạch này.'),
+          onActivate: () => _sendMessage('Kích hoạt kế hoạch này.'),
+          onEdit: () => _sendMessage('Tôi muốn chỉnh sửa kế hoạch này.'),
+          onPause: () => _sendMessage('Tạm dừng kế hoạch này.'),
+          onResume: () => _sendMessage('Tiếp tục kế hoạch này.'),
+          onCancel: () => _sendMessage('Hủy kế hoạch này.'),
+        ),
+      ));
+    }
+    if (personalizedWorkout != null) {
+      final planId = personalizedWorkout['plan_id'] as String?;
+      final user =
+          Provider.of<UserProvider>(context, listen: false).currentUser;
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
+        child: PersonalizedWorkoutCard(
+          workout: personalizedWorkout,
+          onSubstitute: planId == null
+              ? null
+              : (exerciseId) => _sendMessage(
+                  'Đổi bài $exerciseId trong kế hoạch $planId cho tôi.'),
+          onSave: planId == null || user == null
+              ? null
+              : () async {
+                  final result = await _backendApi.savePersonalizedWorkoutPlan(
+                    userId: user.id,
+                    planId: planId,
+                    requestId:
+                        'workout-save-${DateTime.now().microsecondsSinceEpoch}',
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(result['write_status'] == 'PERSISTED'
+                          ? 'Đã lưu kế hoạch.'
+                          : 'Chưa lưu: ${result['status'] ?? 'không xác định'}'),
+                    ));
+                  }
+                },
+          onLog: planId == null || user == null
+              ? null
+              : (status, pain, actualExercises) async {
+                  final result = await _backendApi.logPersonalizedWorkoutResult(
+                    userId: user.id,
+                    planId: planId,
+                    requestId:
+                        'workout-result-${DateTime.now().microsecondsSinceEpoch}',
+                    sessionCompletionStatus: status,
+                    painDiscomfortStatus: pain,
+                    exerciseResults: actualExercises,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(result['write_status'] == 'PERSISTED'
+                          ? 'Đã ghi nhận kết quả thực tế.'
+                          : 'Chưa ghi nhận: ${result['status'] ?? 'không xác định'}'),
+                    ));
+                  }
+                },
+        ),
+      ));
+    }
+
     final foodActions = structuredResponse.foodActions;
     final exerciseActions = structuredResponse.exerciseActions;
     final bool showSaveButton = !message.text.contains('✅') &&
@@ -1652,7 +1737,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _sendMessage(text);
   }
 
-  void _sendMessage(String text) {
+  Future<void> _sendMessage(String text) async {
     _textController.clear();
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null) return;
@@ -1661,6 +1746,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         Provider.of<NutritionProvider>(context, listen: false);
     final exerciseProvider =
         Provider.of<ExerciseProvider>(context, listen: false);
+
+    // E4 must receive a current server-backed legacy history or an explicit
+    // ERROR status. Cached records are never relabelled as authoritative.
+    final now = DateTime.now();
+    final history =
+        await exerciseProvider.loadExercisesForDateRangeAuthoritatively(
+      user.id,
+      now.subtract(const Duration(days: 28)),
+      now.add(const Duration(days: 1)),
+    );
+    if (!mounted) return;
 
     // Chuyển bữa ăn hôm nay thành dạng gọn để gửi lên AI
     final todayMeals = nutritionProvider.todayMeals.map((meal) {
@@ -1688,7 +1784,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       };
     }).toList();
 
-    Provider.of<AIChatProvider>(context, listen: false).sendMessage(
+    await Provider.of<AIChatProvider>(context, listen: false).sendMessage(
       text,
       user,
       todayCalories: nutritionProvider.consumedCalories,
@@ -1697,6 +1793,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       todayExercisesCount: exerciseProvider.todayExercises.length,
       todayMeals: todayMeals,
       todayExercises: todayExercises,
+      exerciseHistory:
+          history.exercises.map((exercise) => exercise.toMap()).toList(),
+      exerciseHistoryStatus: history.status.wireName,
+      exerciseHistoryObservedAt: history.observedAt,
     );
   }
 }
@@ -1755,12 +1855,12 @@ class _MealActionCard extends StatelessWidget {
 }
 
 class AIThoughtsPanel extends StatefulWidget {
-  final String thoughts;
+  final PublicReasoningTrace publicTrace;
   final bool isThinking;
 
   const AIThoughtsPanel({
     super.key,
-    required this.thoughts,
+    required this.publicTrace,
     required this.isThinking,
   });
 
@@ -1781,7 +1881,7 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.thoughts.trim().isEmpty) return const SizedBox.shrink();
+    if (!widget.publicTrace.hasSteps) return const SizedBox.shrink();
 
     final isLive = widget.isThinking;
     return Container(
@@ -1813,14 +1913,30 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
                         : AppColors.primary.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    isLive ? 'AI đang suy nghĩ...' : 'Xem quá trình suy nghĩ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isLive
-                          ? AppColors.primary
-                          : AppColors.primary.withValues(alpha: 0.8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isLive
+                              ? 'Đang xử lý yêu cầu...'
+                              : 'Xem cách mình xử lý',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isLive
+                                ? AppColors.primary
+                                : AppColors.primary.withValues(alpha: 0.8),
+                          ),
+                        ),
+                        const Text(
+                          'Tóm tắt các bước hệ thống đã thực hiện',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (isLive) ...[
@@ -1852,17 +1968,148 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
             secondChild: Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: FormattedMarkdownText(
-                text: widget.thoughts.trim(),
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                  height: 1.45,
-                ),
+              child: Column(
+                children: widget.publicTrace.steps
+                    .map(
+                      (step) => Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              step.publicEventType == 'PERSISTENCE_IN_PROGRESS'
+                                  ? Icons.more_horiz
+                                  : Icons.check_circle_outline,
+                              color: step.publicEventType ==
+                                      'PERSISTENCE_IN_PROGRESS'
+                                  ? AppColors.primary
+                                  : AppColors.success,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    step.title,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    step.summary,
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      color: AppColors.textSecondary,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
               ),
             ),
             crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// This panel can be reached only in a build compiled with CHAT_DEBUG_TRACE.
+/// Server-side policy still decides whether debug_trace events are sent.
+class DeveloperTracePanel extends StatefulWidget {
+  final List<DeveloperTraceEvent> events;
+
+  const DeveloperTracePanel({super.key, required this.events});
+
+  @override
+  State<DeveloperTracePanel> createState() => _DeveloperTracePanelState();
+}
+
+class _DeveloperTracePanelState extends State<DeveloperTracePanel> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.textHint.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.build_outlined,
+                      size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Debug trace',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Column(
+                children: widget.events
+                    .map(
+                      (event) => Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: SelectableText(
+                            '[${event.timestamp}] ${event.operation}\n'
+                            '${event.sanitizedPayload}',
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 10.5,
+                              color: AppColors.textSecondary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
+            ),
+            crossFadeState: _expanded
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 200),

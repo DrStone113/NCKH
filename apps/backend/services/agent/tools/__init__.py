@@ -8,13 +8,20 @@ from typing import Any
 from services.agent.rag_service import QUERY_RAG_DESCRIPTOR, RAGService
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
 from services.agent.tools import dish, food, tdee, workout
-from services.agent.tools.plan_tools import (
-    APPEND_PLAN_ITEMS_DESCRIPTOR,
-    CREATE_LONG_TERM_PLAN_DESCRIPTOR,
-    CREATE_PLAN_DESCRIPTOR,
-    append_plan_items,
-    create_long_term_plan,
-    create_plan,
+from services.agent.tools.personalized_workout import (
+    BUILD_PERSONALIZED_WORKOUT_DESCRIPTOR,
+    GET_WORKOUT_SUBSTITUTIONS_DESCRIPTOR,
+    LOG_WORKOUT_RESULT_DESCRIPTOR,
+    SAVE_WORKOUT_PLAN_DESCRIPTOR,
+)
+from services.agent.tools.plan_v2 import (
+    BUILD_NUTRITION_PLAN_DESCRIPTOR,
+    BUILD_WORKOUT_SCHEDULE_DESCRIPTOR,
+    GET_ACTIVE_PLAN_V2_DESCRIPTOR,
+    GET_PLAN_DESCRIPTOR,
+    REVISE_PLAN_DESCRIPTOR,
+    SAVE_PLAN_DESCRIPTOR,
+    SET_PLAN_STATUS_DESCRIPTOR,
 )
 from services.agent.tools.web_knowledge import (
     SEARCH_MEDICAL_KNOWLEDGE_DESCRIPTOR,
@@ -43,6 +50,10 @@ def register_server_tools(
     """Register all server-side tool descriptors."""
     registry.register(dish.TOOL_DESCRIPTOR)
     registry.register(workout.TOOL_DESCRIPTOR)
+    registry.register(BUILD_PERSONALIZED_WORKOUT_DESCRIPTOR)
+    registry.register(GET_WORKOUT_SUBSTITUTIONS_DESCRIPTOR)
+    registry.register(SAVE_WORKOUT_PLAN_DESCRIPTOR)
+    registry.register(LOG_WORKOUT_RESULT_DESCRIPTOR)
     registry.register(tdee.TOOL_DESCRIPTOR)
     registry.register(
         _clone_descriptor(
@@ -51,19 +62,20 @@ def register_server_tools(
         )
     )
 
-    if db_session is not None:
-        registry.register(_clone_descriptor(CREATE_PLAN_DESCRIPTOR, fn=partial(create_plan, db_session)))
-        registry.register(_clone_descriptor(APPEND_PLAN_ITEMS_DESCRIPTOR, fn=partial(append_plan_items, db_session)))
-        registry.register(
-            _clone_descriptor(
-                CREATE_LONG_TERM_PLAN_DESCRIPTOR,
-                fn=partial(create_long_term_plan, registry, db_session),
-            )
-        )
-    else:
-        registry.register(CREATE_PLAN_DESCRIPTOR)
-        registry.register(APPEND_PLAN_ITEMS_DESCRIPTOR)
-        registry.register(CREATE_LONG_TERM_PLAN_DESCRIPTOR)
+    # Legacy create_plan/append_plan_items remain available only to historical
+    # REST internals.  They are intentionally *not* registered in the LLM
+    # catalog: Plan V2 accepts a bounded request and creates an auditable
+    # revision rather than allowing arbitrary rows/totals to be assembled.
+    from config import settings
+
+    if settings.plan_tool_mode != "off":
+        registry.register(BUILD_NUTRITION_PLAN_DESCRIPTOR)
+        registry.register(BUILD_WORKOUT_SCHEDULE_DESCRIPTOR)
+        registry.register(GET_PLAN_DESCRIPTOR)
+        registry.register(GET_ACTIVE_PLAN_V2_DESCRIPTOR)
+        registry.register(REVISE_PLAN_DESCRIPTOR)
+        registry.register(SAVE_PLAN_DESCRIPTOR)
+        registry.register(SET_PLAN_STATUS_DESCRIPTOR)
 
     if rag_service is not None and db_session is not None:
         async def query_rag(query: str, top_k: int = 5):
@@ -106,6 +118,10 @@ def _schema(properties: dict[str, Any], required: list[str] | None = None) -> di
 
 _DATE = {"type": "string", "format": "date"}
 _REQUEST_ID = {"type": "string", "minLength": 1}
+_ARRAY_OF_STRINGS = {
+    "type": "array",
+    "items": {"type": "string", "minLength": 1},
+}
 
 
 def register_client_tools(registry: ToolRegistry) -> None:
@@ -136,6 +152,11 @@ def register_client_tools(registry: ToolRegistry) -> None:
                     "minLength": 1,
                     "description": "Tên món tiếng Việt, vd 'phở bò tái'"
                 },
+                "catalog_dish_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Mã món từ catalog; dùng khi lưu món vừa được gợi ý để client đọc lại đúng tham chiếu."
+                },
                 "serving_grams": {
                     "type": "number",
                     "description": "Tổng khối lượng món ăn tính bằng gram (nếu có)"
@@ -163,9 +184,79 @@ def register_client_tools(registry: ToolRegistry) -> None:
             idempotent=False
         ),
 
+        ToolDescriptor(
+            "update_nutrition_profile",
+            "Cập nhật ĐÚNG một hoặc vài dữ kiện dinh dưỡng người dùng vừa nói rõ. Chỉ dùng patch cho câu nói trực tiếp/có ánh xạ chắc chắn; không chuyển ghi chú kiểu 'khó chịu sau sữa' thành dị ứng. Với sửa một hạn chế, chỉ cập nhật dietary_restrictions và không khởi động lại intake. request_id là chuỗi ngẫu nhiên duy nhất.",
+            _schema({
+                "patch": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "properties": {
+                        "nutrition_goal": {"type": "string", "enum": ["LOSE_WEIGHT", "MAINTAIN", "GAIN_WEIGHT", "GAIN_MUSCLE", "IMPROVE_HABITS", "UNKNOWN", "NOT_PROVIDED"]},
+                        "food_allergies": {"type": "array", "items": {"type": "string", "enum": ["CRUSTACEAN", "MOLLUSC", "FISH", "EGG", "MILK", "PEANUT", "TREE_NUT", "SOY", "WHEAT_GLUTEN", "SESAME"]}, "uniqueItems": True},
+                        "dietary_restrictions": {"type": "array", "items": {"type": "string", "enum": ["vegetarian", "vegan", "no_seafood", "no_pork", "no_beef", "low_carb", "high_protein"]}, "uniqueItems": True},
+                        "preferred_foods": _ARRAY_OF_STRINGS,
+                        "disliked_foods": _ARRAY_OF_STRINGS,
+                        "preferred_cuisines": _ARRAY_OF_STRINGS,
+                        "meal_preferences": _ARRAY_OF_STRINGS,
+                        "food_exclusions": _ARRAY_OF_STRINGS,
+                        "goal_description": {"type": "string", "maxLength": 600},
+                        "food_preferences_text": {"type": "string", "maxLength": 600},
+                        "food_dislikes_text": {"type": "string", "maxLength": 600},
+                        "other_dietary_restrictions_text": {"type": "string", "maxLength": 600},
+                        "nutrition_notes": {"type": "string", "maxLength": 600},
+                    },
+                    "additionalProperties": False,
+                },
+                "request_id": _REQUEST_ID,
+            }, ["patch", "request_id"]),
+            "client",
+            idempotent=False,
+        ),
+
         # Domain 2: Thể chất (Physical Fitness)
         ToolDescriptor("get_today_exercises", "Đọc các bài tập đã ghi hôm nay kèm thời lượng và calo đốt. Gọi khi cần đối chiếu calo nạp vào / đốt ra, hoặc trước khi gợi ý buổi tập tiếp theo.", _schema({}), "client", idempotent=True),
         ToolDescriptor("get_exercise_log_range", "Đọc nhật ký tập luyện trong khoảng ngày (YYYY-MM-DD). Gọi khi phân tích tần suất tập, khối lượng tập nhiều ngày, hoặc khi người dùng hỏi 'tuần này mình tập thế nào'.", _schema({"from_date": _DATE, "to_date": _DATE}, ["from_date", "to_date"]), "client", idempotent=True),
+        ToolDescriptor(
+            "update_workout_profile",
+            "Lưu ngay câu trả lời RÕ RÀNG của người dùng về hồ sơ tập (kinh nghiệm, số ngày có thể tập, thời lượng, dụng cụ, đau/chấn thương). mode=CAPTURE chỉ ghi đúng field người dùng vừa nêu và tạo bản cần xác nhận; mode=CONFIRM chỉ dùng khi họ xác nhận bản tóm tắt đang nhớ là đúng, patch phải rỗng. Không gọi dựa trên suy đoán. request_id là chuỗi ngẫu nhiên duy nhất.",
+            _schema({
+                "mode": {"type": "string", "enum": ["CAPTURE", "CONFIRM"]},
+                "patch": {
+                    "type": "object",
+                    "properties": {
+                        "training_experience": {"type": "string", "enum": ["NOVICE", "EXPERIENCED", "UNKNOWN"]},
+                        "training_experience_detail": {"type": "string", "minLength": 1, "maxLength": 160},
+                        "available_days_per_week": {"type": "integer", "minimum": 1, "maximum": 7},
+                        "preferred_training_days": _ARRAY_OF_STRINGS,
+                        "default_session_duration_minutes": {"type": "integer", "minimum": 10, "maximum": 180},
+                        "training_location": {"type": "string", "minLength": 1, "maxLength": 160},
+                        "available_equipment": _ARRAY_OF_STRINGS,
+                        "preferred_exercises": _ARRAY_OF_STRINGS,
+                        "disliked_exercises": _ARRAY_OF_STRINGS,
+                        "exercise_exclusions": _ARRAY_OF_STRINGS,
+                        "self_reported_limitations": _ARRAY_OF_STRINGS,
+                        "current_pain_status": {"type": "string", "enum": ["YES", "NO", "UNKNOWN"]},
+                        "exercise_safety_profile": {
+                            "type": "object",
+                            "properties": {
+                                "health_state": {"type": "string", "minLength": 1},
+                                "pregnancy_status": {"type": "string", "minLength": 1},
+                                "warning_symptoms": _ARRAY_OF_STRINGS,
+                                "acute_injury": {"type": "boolean"},
+                                "recent_surgery": {"type": "boolean"},
+                                "technique_screen_confirmed": {"type": "boolean"},
+                            },
+                            "additionalProperties": False,
+                        },
+                    },
+                    "additionalProperties": False,
+                },
+                "request_id": _REQUEST_ID,
+            }, ["mode", "request_id"]),
+            "client",
+            idempotent=False,
+        ),
         ToolDescriptor("get_weight_history", "Đọc lịch sử cân nặng N ngày gần nhất. BẮT BUỘC gọi khi người dùng nói cân không giảm / không tăng / bị chững, để xem xu hướng thật thay vì đoán.", _schema({"days": {"type": "integer", "minimum": 1, "maximum": 365, "description": "Số ngày cần xem, vd 30 cho một tháng"}}, ["days"]), "client", idempotent=True),
         ToolDescriptor("log_exercise", "Ghi một buổi tập vào nhật ký. Gọi ngay khi người dùng kể vừa tập gì (vd 'sáng nay chạy 30 phút'). request_id là chuỗi ngẫu nhiên duy nhất bạn tự sinh.", _schema({"exercise_name": {"type": "string", "minLength": 1, "description": "Tên bài tập, vd 'chạy bộ', 'squat'"}, "duration_min": {"type": "integer", "minimum": 1, "description": "Thời lượng tính bằng phút"}, "description": {"type": "string", "description": "Mô tả chi tiết hoặc danh sách các động tác trong buổi tập"}, "request_id": _REQUEST_ID}, ["exercise_name", "duration_min", "request_id"]), "client", idempotent=False),
         ToolDescriptor("log_weight", "Ghi số cân nặng mới. Gọi khi người dùng báo cân nặng hiện tại (vd 'sáng nay mình 68kg'). date theo định dạng YYYY-MM-DD, mặc định là hôm nay.", _schema({"value_kg": {"type": "number", "minimum": 30, "maximum": 300}, "date": _DATE, "request_id": _REQUEST_ID}, ["value_kg", "date", "request_id"]), "client", idempotent=False),
@@ -180,7 +271,13 @@ def register_client_tools(registry: ToolRegistry) -> None:
         ToolDescriptor("mark_plan_item_complete", "Đánh dấu một mục trong kế hoạch là đã hoàn thành. Cần item_id lấy từ get_active_plan.", _schema({"item_id": {"type": "string", "minLength": 1}, "request_id": _REQUEST_ID}, ["item_id", "request_id"]), "client", idempotent=False),
         ToolDescriptor("navigate_to_screen", "Mở một màn hình trong ứng dụng giúp người dùng. Chỉ gọi khi họ muốn đi tới đâu đó ('mở trang dinh dưỡng'), không dùng để trả lời câu hỏi thông tin.", _schema({"screen": {"type": "string", "minLength": 1, "description": "dashboard | nutrition | workout | profile | plan"}, "params": {"type": "object"}, "request_id": _REQUEST_ID}, ["screen", "request_id"]), "client", idempotent=False),
     ]
+    # These client implementations remain for the historical REST/Flutter
+    # screen but cannot be selected by the LLM.  V2 reads authoritative
+    # revisions server-side and never turns a planned item into a completion.
+    legacy_plan_client_tools = {"get_active_plan", "mark_plan_item_complete"}
     for descriptor in client_tools:
+        if descriptor.name in legacy_plan_client_tools:
+            continue
         registry.register(descriptor)
 
 
@@ -191,19 +288,21 @@ def register_client_tools(registry: ToolRegistry) -> None:
 DOMAIN_MODULE_MAP = {
     "nutrition": [
         "get_today_meals", "get_meal_log_range", "log_meal",
-        "calculate_tdee", "search_food_nutrition", "suggest_dish"
+        "update_nutrition_profile", "calculate_tdee", "search_food_nutrition", "suggest_dish"
     ],
     "fitness": [
         "get_today_exercises", "get_exercise_log_range", "log_exercise",
-        "log_weight", "get_weight_history", "suggest_workout"
+        "log_weight", "get_weight_history", "update_workout_profile", "suggest_workout",
+        "build_personalized_workout", "get_workout_substitutions",
+        "save_workout_plan", "log_workout_result"
     ],
     "lifestyle": [
         "get_lifestyle_logs", "log_lifestyle", "set_lifestyle_reminder"
     ],
     "general": [
-        "get_user_profile", "get_active_plan", "create_long_term_plan", "create_plan",
-        "append_plan_items", "query_rag", "search_medical_knowledge",
-        "navigate_to_screen", "mark_plan_item_complete"
+        "get_user_profile", "get_plan", "get_active_plan_v2",
+        "build_nutrition_plan", "build_workout_schedule", "revise_plan", "save_plan",
+        "set_plan_status", "query_rag", "search_medical_knowledge", "navigate_to_screen",
     ]
 }
 

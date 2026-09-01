@@ -49,7 +49,7 @@ def test_suggest_dish_keeps_large_target_portion_practical():
     """Không kéo một món cụ thể thành khẩu phần hơn 1 kg để đủ target."""
     result = suggest_dish(
         meal_type="lunch",
-        target_kcal=900.0,
+        target_kcal=600.0,
         query="bún cá",
     )
 
@@ -57,6 +57,7 @@ def test_suggest_dish_keeps_large_target_portion_practical():
     assert result["serving_scale"] <= 1.60
     assert sum(c["serving_grams"] for c in result["components"]) <= 650
     assert result["catalog_calories"] == pytest.approx(500.0)
+    assert result["recipe_calculated_calories"] != result["catalog_calories"]
 
 
 # ===========================================================================

@@ -8,6 +8,7 @@ import 'package:health_app/providers/user_provider.dart';
 import 'package:health_app/widgets/workout_simulation_painter.dart';
 import 'package:health_app/widgets/detail_bottom_sheet.dart';
 import 'package:health_app/features/exercise/screens/workout_simulation_screen.dart';
+import 'package:health_app/theme/app_theme.dart';
 
 void main() {
   test('resolves exercise names to biomechanically distinct movements', () {
@@ -170,6 +171,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verify header and simulation
+    final screen = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(screen.backgroundColor, AppColors.background);
     expect(find.text('Full Body workout'), findsOneWidget);
     expect(find.byType(WorkoutSimulationWidget), findsOneWidget);
     expect(find.textContaining('HIỆP 1'), findsOneWidget);

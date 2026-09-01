@@ -1,0 +1,306 @@
+{
+  "set_version": "plan-tool-v2-p2-natural-development-v1",
+  "purpose": "Controlled natural-language engineering prompts; never independent research evidence.",
+  "prompts": [
+    {
+      "prompt_id": "p2-natural-001",
+      "prompt": "Lập thực đơn 3 ngày, tôi dị ứng đậu phộng và không ăn thịt heo.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-002",
+      "prompt": "Tôi muốn thực đơn hôm nay không có hải sản.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-003",
+      "prompt": "Xếp bữa ăn 7 ngày cho người ăn chay, ưu tiên món Việt.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-004",
+      "prompt": "Tạo thực đơn 3 ngày, loại trừ sữa và trứng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-005",
+      "prompt": "Tôi cần kế hoạch ăn 1 ngày, không dùng bò.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-006",
+      "prompt": "Lập thực đơn trong tuần, tôi không ăn gluten.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-007",
+      "prompt": "Gợi ý thực đơn 3 ngày, tránh cá vì dị ứng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-008",
+      "prompt": "Tạo kế hoạch ăn 7 ngày nhưng chưa có đủ hồ sơ dinh dưỡng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-009",
+      "prompt": "Lập lịch món ăn 3 ngày, tôi không thích các món lặp lại.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-010",
+      "prompt": "Tôi cần thực đơn một ngày cho mục tiêu duy trì cân nặng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-011",
+      "prompt": "Lập một buổi tập 30 phút tại nhà chỉ có thảm.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-012",
+      "prompt": "Tạo buổi tập 45 phút ở gym cho mục tiêu tăng cơ.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-013",
+      "prompt": "Tôi có 60 phút và chỉ có tạ đơn, lập một buổi tập.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-014",
+      "prompt": "Lập buổi tập sức mạnh 45 phút với thanh đòn.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-015",
+      "prompt": "Tạo buổi tập thể lực tổng quát trong 30 phút.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-016",
+      "prompt": "Tôi muốn tập tại nhà, không có thiết bị, 45 phút.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-017",
+      "prompt": "Lập một buổi tập nhưng tôi đang đau đáng kể ở đầu gối.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-018",
+      "prompt": "Tạo buổi tập sức mạnh khi kinh nghiệm của tôi chưa rõ.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-019",
+      "prompt": "Tôi muốn tập power nhưng chưa xác nhận kỹ thuật.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-020",
+      "prompt": "Lập buổi tập 60 phút ở phòng gym, tránh squat.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-021",
+      "prompt": "Lập lịch 2 buổi tuần này, tôi rảnh thứ 2 và thứ 6.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-022",
+      "prompt": "Tạo lịch 3 buổi/tuần trong 45 phút mỗi buổi.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-023",
+      "prompt": "Tôi tập thứ 2, thứ 4, thứ 6; hãy xếp lịch.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-024",
+      "prompt": "Lập 4 buổi tuần này, tôi không rảnh thứ 3 và thứ 5.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-025",
+      "prompt": "Xếp 3 buổi liên tiếp thứ 6, thứ 7, chủ nhật.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-026",
+      "prompt": "Lập 2 buổi tập tại nhà chỉ với thảm.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-027",
+      "prompt": "Tạo 3 buổi gym, mỗi buổi 60 phút.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-028",
+      "prompt": "Xếp 4 buổi với tạ đơn và dây kháng lực.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-029",
+      "prompt": "Lập 3 buổi, ngày đầu 30 phút, hai ngày sau 45 phút.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-030",
+      "prompt": "Tạo lịch 2 buổi mục tiêu tăng cơ cho người mới.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-031",
+      "prompt": "Lập kế hoạch ăn và tập 3 ngày tới, không đổi calo vì buổi tập.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-032",
+      "prompt": "Tạo kế hoạch sức khỏe tuần này gồm thực đơn và lịch tập.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-033",
+      "prompt": "Tôi cần 3 ngày ăn chay kèm 2 buổi tập tại nhà.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-034",
+      "prompt": "Lập kế hoạch ăn và tập khi tôi dị ứng đậu phộng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-035",
+      "prompt": "Tạo một kế hoạch kết hợp nhưng thiếu hồ sơ dinh dưỡng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-036",
+      "prompt": "Đổi bữa tối thứ 5 trong kế hoạch này.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-037",
+      "prompt": "Dời buổi tập này sang thứ 6.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-038",
+      "prompt": "Lưu đúng kế hoạch vừa xem.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-039",
+      "prompt": "Kích hoạt bản kế hoạch đã lưu.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-040",
+      "prompt": "Tạm dừng kế hoạch đang áp dụng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-041",
+      "prompt": "Tiếp tục kế hoạch đang tạm dừng.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-042",
+      "prompt": "Hủy bản kế hoạch vừa tạo.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-043",
+      "prompt": "Lưu lại cùng một xác nhận sau khi mạng chập chờn.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-044",
+      "prompt": "Sửa kế hoạch từ hai thiết bị cùng lúc.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-045",
+      "prompt": "Đọc kế hoạch của một tài khoản khác.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-046",
+      "prompt": "Dùng múi giờ không hợp lệ để tạo kế hoạch.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-047",
+      "prompt": "Lưu revision đã cũ sau khi có bản mới.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-048",
+      "prompt": "Kích hoạt hai kế hoạch ăn trùng ngày.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-049",
+      "prompt": "Xác nhận một pending action đã hết hạn.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    },
+    {
+      "prompt_id": "p2-natural-050",
+      "prompt": "Sửa tham chiếu mơ hồ: đổi món này.",
+      "classification": "development_only",
+      "not_independent_acceptance": true
+    }
+  ]
+}

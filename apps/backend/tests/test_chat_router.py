@@ -31,19 +31,32 @@ class _FakeDb:
 
 
 @pytest.mark.asyncio
-async def test_session_history_returns_persisted_thoughts() -> None:
+async def test_session_history_returns_only_safe_public_trace() -> None:
     created_at = datetime(2026, 8, 14, tzinfo=timezone.utc)
     row = SimpleNamespace(
         id="message-id",
         session_id="session-id",
         role="assistant",
         content="Câu trả lời",
-        thoughts="Đối chiếu dữ liệu.",
+        thoughts="raw provider reasoning must never leave storage",
         structured_data={
             "type": "structured",
             "text": "",
             "meal_name": "Cơm sườn",
             "actions": [],
+        },
+        public_trace={
+            "trace_id": "trace-1",
+            "status": "COMPLETED",
+            "steps": [
+                {
+                    "public_event_type": "TODAY_NUTRITION_CHECKED",
+                    "title": "Đã đối chiếu nhật ký hôm nay",
+                    "summary": "Mình kiểm tra dữ liệu đã ghi để tránh gợi ý trùng lặp.",
+                    "order": 1,
+                    "timestamp": "2026-08-14T00:00:00+00:00",
+                }
+            ],
         },
         created_at=created_at,
     )
@@ -51,7 +64,8 @@ async def test_session_history_returns_persisted_thoughts() -> None:
 
     messages = await get_session_messages("session-id", db=db)  # type: ignore[arg-type]
 
-    assert "thoughts" in db.sql
+    assert "thoughts" not in db.sql
+    assert "public_trace" in db.sql
     assert db.params == {"sid": "session-id"}
     assert messages == [
         {
@@ -59,13 +73,13 @@ async def test_session_history_returns_persisted_thoughts() -> None:
             "session_id": "session-id",
             "role": "assistant",
             "content": "Câu trả lời",
-            "thoughts": "Đối chiếu dữ liệu.",
             "structured": {
                 "type": "structured",
                 "text": "",
                 "meal_name": "Cơm sườn",
                 "actions": [],
             },
+            "public_trace": row.public_trace,
             "created_at": created_at.isoformat(),
         }
     ]

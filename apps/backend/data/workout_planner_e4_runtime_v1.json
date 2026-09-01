@@ -1,0 +1,27 @@
+{
+  "schema_version": "workout-planner-e4-runtime-v1",
+  "python_requirement": "3.10.x",
+  "python_exact_version_verified": "3.10.21",
+  "platform_verified": "Windows x86_64",
+  "pytest_version": "8.4.2",
+  "hypothesis_version": "6.151.9",
+  "pip_version": "26.2.1",
+  "uv_version": "0.12.5",
+  "dependency_resolution": {
+    "direct_requirements": "apps/backend/requirements.txt",
+    "resolved_lock": "apps/backend/requirements-e4-py310.lock",
+    "resolved_lock_sha256": "01bfc1348cfcf12306f8cdd79f716ccb1776e50c4fd6dfc7af18071cde806102",
+    "mechanism": "uv-managed CPython 3.10.21 plus a seeded venv; requirements.txt installed with uv pip and the resolved environment captured with pip freeze in requirements-e4-py310.lock",
+    "requirements_sha256": "cfbeedc303bf3e9f21d05147bef0f67270501499533dc2cd7f08ea6b16ba3a6e"
+  },
+  "verification": {
+    "command": "python -m pytest -q",
+    "full_suite_passed": 761,
+    "full_suite_skipped": 1,
+    "e4_tests_passed": 34,
+    "property_tests_passed": 16,
+    "runtime_only_compatibility_shim_used": false
+  },
+  "python_3_10_0_note": "The prior dataclasses(slots=True, init=False)/Hypothesis failure was limited to the obsolete Python 3.10.0 patch environment. Verification now uses Python 3.10.21 without a runtime shim.",
+  "repository_compatibility_shim_added": false
+}

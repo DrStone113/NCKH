@@ -37,6 +37,8 @@ from sqlalchemy import text
 
 from .llm_client import ToolCall
 from .tool_registry import ToolDescriptor, ToolRegistry
+from services.workout_planner.integration import WorkoutRuntimeContext
+from services.agent.tools.plan_v2 import PLAN_V2_TOOL_NAMES, PlanRuntimeContext
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,16 @@ logger = logging.getLogger(__name__)
 #: planner passed it, but plain chat never did.
 _RECENT_IDS_ARG = "recent_dish_ids"
 _RECENT_IDS_TOOLS = frozenset({"suggest_dish"})
+_E4_RUNTIME_TOOLS = frozenset(
+    {
+        "suggest_workout",
+        "build_personalized_workout",
+        "get_workout_substitutions",
+        "save_workout_plan",
+        "log_workout_result",
+    }
+)
+_PLAN_V2_RUNTIME_TOOLS = PLAN_V2_TOOL_NAMES
 
 #: FIFO window size for chat-driven diversification.
 #:
@@ -83,6 +95,16 @@ _PUBLIC_TOOL_VALUE_ERRORS = frozenset(
         "INVALID_USER_STATE",
         "INVALID_GOAL",
         "UNSAFE_TO_RECOMMEND_WORKOUT",
+        "PLAN_NOT_FOUND",
+        "PLAN_REVISION_CONFLICT",
+        "PLAN_ITEM_NOT_FOUND",
+        "PLAN_NOT_READY",
+        "PLAN_CONTENT_HASH_MISMATCH",
+        "INVALID_PLAN_SAVE_TRANSITION",
+        "INVALID_PLAN_LIFECYCLE_TRANSITION",
+        "INVALID_PLAN_PATCH",
+        "PLAN_PATCH_OPERATION_REQUIRES_DOMAIN_RESOLUTION",
+        "E4_WEEKLY_SCHEDULE_CAPABILITY_REQUIRED",
     }
 )
 
@@ -340,8 +362,27 @@ class ToolDispatcher:
             result: ToolResult
             if descriptor.side == "server":
                 self._apply_recent_ids(session_id, call)
+                # Preserve ``call.arguments`` exactly for invocation audit and
+                # LLM transcripts. Profile/history snapshots travel only in
+                # this ephemeral private copy after schema validation.
+                server_arguments = dict(call.arguments)
+                if descriptor.name in _E4_RUNTIME_TOOLS:
+                    server_arguments["_runtime_context"] = WorkoutRuntimeContext(
+                        user_id=getattr(self.gateway, "user_id", None),
+                        session_id=session_id,
+                        user_context=getattr(self.gateway, "user_context", None),
+                        db_session=self.db_session,
+                    )
+                if descriptor.name in _PLAN_V2_RUNTIME_TOOLS:
+                    server_arguments["_runtime_context"] = PlanRuntimeContext(
+                        user_id=getattr(self.gateway, "user_id", None),
+                        session_id=session_id,
+                        user_context=getattr(self.gateway, "user_context", None),
+                        db_session=self.db_session,
+                        authenticated_principal=bool(getattr(self.gateway, "authenticated_principal", False)),
+                    )
                 result = await self._dispatch_server(
-                    descriptor, call, timeout_s, session_id
+                    descriptor, call, timeout_s, session_id, server_arguments
                 )
                 self._remember_result_id(session_id, call, result)
             elif descriptor.side == "client":
@@ -392,7 +433,25 @@ class ToolDispatcher:
                 call.arguments,
                 int(timeout_s * 1000),
             )
-            return await asyncio.wait_for(future, timeout=timeout_s)
+            result = await asyncio.wait_for(future, timeout=timeout_s)
+            # The Flutter client is authoritative for Firestore-backed workout
+            # intake. Reflect its read-back-verified patch in this connection
+            # immediately so a following confirmation or E4 tool call uses the
+            # exact persisted revision rather than the stale turn snapshot.
+            if (
+                result.ok
+                and descriptor.name == "update_workout_profile"
+                and self.gateway is not None
+                and isinstance(result.data, dict)
+                and isinstance(result.data.get("workout_profile"), dict)
+            ):
+                existing = getattr(self.gateway, "user_context", None)
+                if isinstance(existing, dict):
+                    self.gateway.user_context = {
+                        **existing,
+                        "workout_profile": dict(result.data["workout_profile"]),
+                    }
+            return result
         except asyncio.TimeoutError:
             self._pending_calls.pop(call.id, None)
             return ToolResult(ok=False, error="TIMEOUT")
@@ -642,6 +701,7 @@ class ToolDispatcher:
         call: ToolCall,
         timeout_s: float,
         session_id: str,
+        arguments: dict[str, Any] | None = None,
     ) -> ToolResult:
         """Run a server-side tool under a wall-clock timeout."""
         fn = descriptor.fn
@@ -652,7 +712,7 @@ class ToolDispatcher:
             return ToolResult(ok=False, error="TOOL_INTERNAL_ERROR")
 
         try:
-            awaitable = self._build_awaitable(fn, call.arguments)
+            awaitable = self._build_awaitable(fn, arguments if arguments is not None else call.arguments)
         except Exception:
             # Building the call (signature inspection / argument binding)
             # should not normally fail because ``registry.validate`` already

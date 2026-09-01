@@ -249,6 +249,12 @@ class FoodComponent(BaseModel):
     protein: float = Field(ge=0)
     carbs: float = Field(ge=0)
     fat: float = Field(ge=0)
+    food_id: str | None = None
+    food_state: str | None = None
+    allergen_ids: list[str] = Field(default_factory=list)
+    source_id: str | None = None
+    source_record_id: int | None = None
+    match_quality: str | None = None
 
 
 class Meal(BaseModel):
@@ -345,6 +351,13 @@ class MealPlanPayload(BaseModel):
     dish_name: str
     components: list[FoodComponent] = Field(min_length=1)
     total_calories: float = Field(ge=0)
+    nutrition_method: str | None = None
+    allergen_ids: list[str] = Field(default_factory=list)
+    dietary_tags: dict = Field(default_factory=dict)
+    quality: dict = Field(default_factory=dict)
+    serving: dict = Field(default_factory=dict)
+    provenance: dict = Field(default_factory=dict)
+    region_metadata: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _check_total_calories_matches_components(self) -> "MealPlanPayload":
@@ -384,7 +397,7 @@ class ChatTurn(BaseModel):
     content: str
     tool_call_id: str | None = None
     tool_name: str | None = None
-    thoughts: str = ""
+    public_trace: dict | None = None
     created_at: datetime
 
 

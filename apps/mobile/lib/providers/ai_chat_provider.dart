@@ -22,6 +22,11 @@ import '../utils/location_helper.dart';
 import '../utils/meal_nutrition_utils.dart';
 import '../utils/streaming_typewriter.dart';
 
+enum _ProfileContextScope { nutrition, workout, both, general }
+
+const bool _developerTraceBuild =
+    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: false);
+
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
@@ -31,7 +36,6 @@ class AIChatProvider extends ChangeNotifier {
   String? _errorMessage;
   Timer? _timeoutTimer;
   late final StreamingTypewriter _responseTypewriter;
-  late final StreamingTypewriter _thoughtTypewriter;
   Map<String, dynamic>? _pendingDoneData;
   String _deferredResponseText = '';
   final _uuid = const Uuid();
@@ -39,16 +43,11 @@ class AIChatProvider extends ChangeNotifier {
   final BackendApiService _backendApi = BackendApiService();
   double? _latitude;
   double? _longitude;
+  _ProfileContextScope _activeProfileScope = _ProfileContextScope.general;
 
   AIChatProvider({
     Duration typewriterInterval = const Duration(milliseconds: 18),
   }) {
-    _thoughtTypewriter = StreamingTypewriter(
-      interval: typewriterInterval,
-      batchMultiplier: 2,
-      onChunk: _appendThoughtTypewriterChunk,
-      onIdle: _onThoughtTypewriterIdle,
-    );
     _responseTypewriter = StreamingTypewriter(
       interval: typewriterInterval,
       onChunk: _appendTypewriterChunk,
@@ -166,7 +165,13 @@ class AIChatProvider extends ChangeNotifier {
       final role = raw['role'] ?? 'user';
       final isUser = role == 'user';
       final text = raw['content'] ?? '';
-      final thoughts = raw['thoughts']?.toString() ?? '';
+      PublicReasoningTrace? publicTrace;
+      final rawTrace = raw['public_trace'];
+      if (!isUser && rawTrace is Map) {
+        publicTrace = PublicReasoningTrace.fromJson(
+          Map<String, dynamic>.from(rawTrace),
+        );
+      }
       final timeStr = raw['created_at'];
       DateTime ts = DateTime.now();
       if (timeStr != null) {
@@ -199,7 +204,7 @@ class AIChatProvider extends ChangeNotifier {
         timestamp: ts,
         status: MessageStatus.done,
         structuredResponse: structuredResponse,
-        thoughts: thoughts,
+        publicTrace: publicTrace,
       ));
     }
     debugPrint(
@@ -361,6 +366,9 @@ class AIChatProvider extends ChangeNotifier {
     int todayExercisesCount = 0,
     List<Map<String, dynamic>> todayMeals = const [],
     List<Map<String, dynamic>> todayExercises = const [],
+    List<Map<String, dynamic>> exerciseHistory = const [],
+    String exerciseHistoryStatus = 'NOT_LOADED',
+    DateTime? exerciseHistoryObservedAt,
   }) async {
     debugPrint('📤 [AIChatProvider] Sending message: $text');
     debugPrint('👤 [AIChatProvider] User: ${user.name}, age: ${user.age}');
@@ -391,7 +399,6 @@ class AIChatProvider extends ChangeNotifier {
     ));
 
     // 2. Tạo streaming message placeholder — status: thinking
-    _thoughtTypewriter.clear();
     _responseTypewriter.clear();
     _pendingDoneData = null;
     _deferredResponseText = '';
@@ -424,13 +431,22 @@ class AIChatProvider extends ChangeNotifier {
       ...canonicalNutrition.formulaIds,
       ...?dailyNutritionSummary?.formulaIds,
     }.toList(growable: false);
+    final profileScope = _scopeForMessage(text);
+    _activeProfileScope = profileScope;
     final Map<String, dynamic> userContext = {
       'user_id': user.id,
       'name': user.name,
+      // Shared general values are a compact typed view of the authoritative
+      // user root. They are available to both domain flows without injecting
+      // the full HealthProfile envelope.
+      'general_profile': user.generalProfile.toJson(),
       'age': user.age,
       'gender': user.gender,
       'equation_sex': user.equationSex,
       'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
+      'nutrition_profile': user.nutritionProfile?.toJson(),
+      'dietary_restrictions':
+          user.nutritionProfile?.canonicalDietaryRestrictions,
       'height': user.height,
       'weight': user.weight,
       'target_weight': user.targetWeight,
@@ -449,6 +465,20 @@ class AIChatProvider extends ChangeNotifier {
       'today_exercises_count': todayExercisesCount,
       'today_meals': todayMeals,
       'today_exercises': todayExercises,
+      // E4.1 fields are separate from the frozen nutrition state manifest.
+      // A caller supplies legacy history only after a Firestore server read.
+      'workout_profile': user.workoutProfile?.toJson(),
+      'training_state': {
+        'workout_profile_present': user.workoutProfile != null,
+        'exercise_history_status': exerciseHistoryStatus,
+        'exercise_history_observed_at':
+            exerciseHistoryObservedAt?.toUtc().toIso8601String(),
+      },
+      'exercise_history': exerciseHistory,
+      'exercise_history_status': exerciseHistoryStatus,
+      'exercise_history_loaded': exerciseHistoryStatus == 'KNOWN',
+      'exercise_history_observed_at':
+          exerciseHistoryObservedAt?.toUtc().toIso8601String(),
       'state_manifest': _buildSendTimeStateManifest(
         user,
         todayCalories: todayCalories,
@@ -483,9 +513,124 @@ class AIChatProvider extends ChangeNotifier {
       },
     };
 
+    // Only attach the profile domain needed by this turn. This prevents an
+    // unrelated nutrition request from repeatedly exposing workout/safety
+    // details (and vice versa) while retaining the exact safety data needed by
+    // each deterministic policy.
+    userContext['profile_context_domains'] = switch (profileScope) {
+      _ProfileContextScope.nutrition => const [
+          'general',
+          'nutrition',
+          'nutrition_safety',
+          'canonical_nutrition'
+        ],
+      _ProfileContextScope.workout => const [
+          'general',
+          'workout',
+          'exercise_safety',
+          'training_state'
+        ],
+      _ProfileContextScope.both => const [
+          'general',
+          'nutrition',
+          'nutrition_safety',
+          'canonical_nutrition',
+          'workout',
+          'exercise_safety',
+          'training_state'
+        ],
+      _ProfileContextScope.general => const ['general'],
+    };
+
+    // `state_manifest` is a mixed send-time snapshot. Prune it alongside the
+    // top-level payload so a nutrition turn never receives exercise details
+    // and a workout turn never receives meal/nutrition details by accident.
+    void pruneStateManifest(Iterable<String> keys) {
+      final raw = userContext['state_manifest'];
+      if (raw is! Map) return;
+      final scoped = Map<String, dynamic>.from(raw);
+      for (final key in keys) {
+        scoped.remove(key);
+      }
+      userContext['state_manifest'] = scoped;
+    }
+
+    switch (profileScope) {
+      case _ProfileContextScope.nutrition:
+        for (final key in const [
+          'workout_profile',
+          'training_state',
+          'exercise_history',
+          'exercise_history_status',
+          'exercise_history_loaded',
+          'exercise_history_observed_at',
+          'today_calories_burned',
+          'today_exercises_count',
+          'today_exercises',
+        ]) {
+          userContext.remove(key);
+        }
+        pruneStateManifest(const [
+          'today.calories_burned',
+          'today.exercise_count',
+          'today.exercises',
+        ]);
+      case _ProfileContextScope.workout:
+        for (final key in const [
+          'nutrition_profile',
+          'dietary_restrictions',
+          'nutrition_safety_profile',
+          'daily_nutrition_summary',
+          'today_calories_consumed',
+          'today_meals_count',
+          'today_meals',
+          'calculation_manifest',
+          'bmi',
+          'bmi_category',
+          'bmr',
+          'tdee',
+          'recommended_calories',
+          'daily_water_goal',
+        ]) {
+          userContext.remove(key);
+        }
+        pruneStateManifest(const [
+          'today.calories_consumed',
+          'today.consumed_meal_count',
+          'today.meals',
+          'water_target',
+          'water_consumed_today',
+        ]);
+      case _ProfileContextScope.general:
+        for (final key in const [
+          'nutrition_profile',
+          'dietary_restrictions',
+          'nutrition_safety_profile',
+          'daily_nutrition_summary',
+          'workout_profile',
+          'training_state',
+          'exercise_history',
+          'exercise_history_status',
+          'exercise_history_loaded',
+          'exercise_history_observed_at',
+          'today_calories_consumed',
+          'today_meals_count',
+          'today_meals',
+          'today_calories_burned',
+          'today_exercises_count',
+          'today_exercises',
+          'calculation_manifest',
+        ]) {
+          userContext.remove(key);
+        }
+      case _ProfileContextScope.both:
+        break;
+    }
+
     if (user.id == 'demo') {
       for (final key in const [
         'age',
+        'general_profile',
         'gender',
         'equation_sex',
         'nutrition_safety_profile',
@@ -534,9 +679,6 @@ class AIChatProvider extends ChangeNotifier {
 
   /// Xử lý message nhận từ WebSocket
   void _handleMessage(dynamic raw) {
-    debugPrint(
-        '📥 [AIChatProvider] Received message: ${raw.toString().substring(0, raw.toString().length > 100 ? 100 : raw.toString().length)}...');
-
     try {
       final data = jsonDecode(raw as String) as Map<String, dynamic>;
       final type = data['type'] as String?;
@@ -548,7 +690,21 @@ class AIChatProvider extends ChangeNotifier {
           _onTokenReceived(data['content'] as String? ?? '');
           break;
         case 'thought':
-          _onThoughtReceived(data['content'] as String? ?? '');
+          // Legacy/raw reasoning is intentionally ignored. It must never be
+          // added to a message, history, or developer panel.
+          break;
+        case 'public_trace':
+          _onPublicTraceReceived(data['trace']);
+          break;
+        case 'debug_trace':
+          if (_developerTraceBuild) {
+            _onDebugTraceReceived(data['event']);
+          }
+          break;
+        case 'action_state':
+          // Human-readable state is already reflected by the final assistant
+          // response; keep it as a stream heartbeat, never as raw tool data.
+          _onStatusReceived();
           break;
         case 'status':
           _onStatusReceived();
@@ -584,7 +740,8 @@ class AIChatProvider extends ChangeNotifier {
       return;
     }
 
-    debugPrint('🛠️ [AIChatProvider] Handling tool_call: $name');
+    // Client action RPC is transport-only. Do not log its implementation name
+    // or arguments into Flutter diagnostics / user-visible trace surfaces.
 
     Map<String, dynamic> resultData = {};
     Map<String, dynamic>? uiMessage;
@@ -659,16 +816,25 @@ class AIChatProvider extends ChangeNotifier {
             'user_id': profile.id,
             'id': profile.id,
             'name': profile.name,
+            'general_profile': effectiveProfile.generalProfile.toJson(),
             'age': profile.age,
             'gender': profile.gender,
             'equation_sex': profile.equationSex,
             'nutrition_safety_profile': profile.nutritionSafetyProfile.toJson(),
+            'nutrition_profile': profile.nutritionProfile?.toJson(),
+            'dietary_restrictions':
+                profile.nutritionProfile?.canonicalDietaryRestrictions,
             'height': profile.height,
             'weight': canonicalWeight.value,
             'profile_weight': profile.weight,
             'target_weight': profile.targetWeight,
             'activity_level': profile.activityLevel,
             'health_goal': profile.healthGoal,
+            'workout_profile': profile.workoutProfile?.toJson(),
+            'training_state': {
+              'workout_profile_present': profile.workoutProfile != null,
+              'exercise_history_status': historyRead ? 'KNOWN' : 'NOT_LOADED',
+            },
             'bmi': canonicalNutrition.bmi,
             'bmi_category': canonicalNutrition.bmiClassification,
             'bmr': canonicalNutrition.estimatedRmrKcalPerDay,
@@ -691,6 +857,69 @@ class AIChatProvider extends ChangeNotifier {
               ).toJson(),
             },
           };
+          switch (_activeProfileScope) {
+            case _ProfileContextScope.nutrition:
+              resultData.remove('workout_profile');
+              resultData.remove('training_state');
+            case _ProfileContextScope.workout:
+              for (final key in const [
+                'nutrition_safety_profile',
+                'nutrition_profile',
+                'dietary_restrictions',
+                'bmi',
+                'bmi_category',
+                'bmr',
+                'tdee',
+                'recommended_calories',
+                'daily_water_goal',
+                'canonical_nutrition',
+              ]) {
+                resultData.remove(key);
+              }
+            case _ProfileContextScope.general:
+              for (final key in const [
+                'nutrition_safety_profile',
+                'nutrition_profile',
+                'dietary_restrictions',
+                'workout_profile',
+                'training_state',
+                'bmi',
+                'bmi_category',
+                'bmr',
+                'tdee',
+                'recommended_calories',
+                'daily_water_goal',
+                'canonical_nutrition',
+              ]) {
+                resultData.remove(key);
+              }
+            case _ProfileContextScope.both:
+              break;
+          }
+          resultData['profile_context_domains'] = switch (_activeProfileScope) {
+            _ProfileContextScope.nutrition => const [
+                'general',
+                'nutrition',
+                'nutrition_safety',
+                'canonical_nutrition'
+              ],
+            _ProfileContextScope.workout => const [
+                'general',
+                'workout',
+                'exercise_safety',
+                'training_state'
+              ],
+            _ProfileContextScope.both => const [
+                'general',
+                'nutrition',
+                'nutrition_safety',
+                'canonical_nutrition',
+                'workout',
+                'exercise_safety',
+                'training_state'
+              ],
+            _ProfileContextScope.general => const ['general'],
+          };
         } else {
           isOk = false;
           error = 'READ_ERROR';
@@ -706,6 +935,70 @@ class AIChatProvider extends ChangeNotifier {
             },
           };
         }
+        break;
+      case 'update_nutrition_profile':
+        final rawPatch = args['patch'];
+        final patch = rawPatch is Map
+            ? Map<String, dynamic>.from(rawPatch)
+            : <String, dynamic>{};
+        if (_userProvider == null) {
+          isOk = false;
+          error = 'WRITE_REJECTED';
+          resultData = const WriteResult<Object?>.rejected(
+            'NUTRITION_PROFILE_CONTEXT_UNAVAILABLE',
+          ).toJson();
+          break;
+        }
+        final nutritionWrite =
+            await _userProvider!.updateNutritionProfileFromChat(patch);
+        if (!nutritionWrite.isPersisted || nutritionWrite.value == null) {
+          isOk = false;
+          error = nutritionWrite.status == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = nutritionWrite.toJson();
+          break;
+        }
+        _lastUser = _userProvider!.currentUser ?? _lastUser;
+        resultData = {
+          ...nutritionWrite.toJson(),
+          'nutrition_profile': nutritionWrite.value!.toJson(),
+        };
+        break;
+      case 'update_workout_profile':
+        final mode = args['mode'] as String?;
+        final rawPatch = args['patch'];
+        final patch = rawPatch is Map
+            ? Map<String, dynamic>.from(rawPatch)
+            : <String, dynamic>{};
+        if (mode == null || _userProvider == null) {
+          isOk = false;
+          error = 'WRITE_REJECTED';
+          resultData = const WriteResult<Object?>.rejected(
+            'WORKOUT_PROFILE_CONTEXT_UNAVAILABLE',
+          ).toJson();
+          break;
+        }
+        final profileWrite = await _userProvider!.updateWorkoutProfileFromChat(
+          patch,
+          mode: mode,
+        );
+        if (!profileWrite.isPersisted || profileWrite.value == null) {
+          isOk = false;
+          error = profileWrite.status == WriteStatus.rejected
+              ? 'WRITE_REJECTED'
+              : 'PERSISTENCE_ERROR';
+          resultData = profileWrite.toJson();
+          break;
+        }
+        final stored = profileWrite.value!;
+        _lastUser = _userProvider!.currentUser ?? _lastUser;
+        resultData = {
+          ...profileWrite.toJson(),
+          'workout_profile': stored.toJson(),
+          'intake_confirmation_status': stored.intakeConfirmationStatus,
+          'intake_revision': stored.intakeRevision,
+        };
         break;
       case 'get_today_meals':
         final user = _userProvider?.currentUser ?? _lastUser;
@@ -767,6 +1060,7 @@ class AIChatProvider extends ChangeNotifier {
         final dishName = args['dish_name'] as String? ?? 'Món ăn';
         final mealTypeRaw = args['meal_type'] as String? ?? 'lunch';
         final mealType = _mapMealType(mealTypeRaw);
+        final catalogDishId = args['catalog_dish_id']?.toString().trim();
         final requestedGrams = _positiveDouble(args['serving_grams']);
         final grams = requestedGrams ?? 100.0;
 
@@ -902,6 +1196,16 @@ class AIChatProvider extends ChangeNotifier {
           }
         }
 
+        // Keep the trusted catalogue reference with the generated card and
+        // return it after a successful write. The backend accepts a pending
+        // recommendation as persisted only when this exact reference comes
+        // back, preventing a stale or substituted dish from being confirmed.
+        if (catalogDishId != null && catalogDishId.isNotEmpty) {
+          for (final action in actions) {
+            action.details['catalog_dish_id'] = catalogDishId;
+          }
+        }
+
         final items = actions.map((action) {
           final details = action.details;
           final cal100g = (details['calories'] as num? ?? 0).toDouble();
@@ -988,6 +1292,11 @@ class AIChatProvider extends ChangeNotifier {
         resultData = {
           'write_status': 'PERSISTED',
           'meal_record_status': 'CONSUMED',
+          if (catalogDishId != null && catalogDishId.isNotEmpty)
+            'catalog_dish_id': catalogDishId,
+          if (catalogDishId != null && catalogDishId.isNotEmpty)
+            'read_back_catalog_dish_id': catalogDishId,
+          if (mealWrite.value != null) 'persisted_meal_id': mealWrite.value!.id,
           'logged_meal': dishName,
           'calories': totalCal,
           'today_calories_consumed': _lastTodayCalories,
@@ -1648,8 +1957,7 @@ class AIChatProvider extends ChangeNotifier {
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
 
-    // Giữ câu trả lời lại để panel suy nghĩ có thời gian chạy hết hiệu ứng.
-    if (_thoughtTypewriter.hasPending || _deferredResponseText.isNotEmpty) {
+    if (_deferredResponseText.isNotEmpty) {
       _deferredResponseText += token;
       return;
     }
@@ -1669,46 +1977,39 @@ class AIChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Nhận token suy nghĩ từ backend
-  void _onThoughtReceived(String token) {
+  void _onPublicTraceReceived(dynamic rawTrace) {
     _resetTimeoutTimer();
-    if (_streamingMessageId == null || token.isEmpty) return;
-
+    if (_streamingMessageId == null || rawTrace is! Map) return;
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
-
-    _thoughtTypewriter.add(token);
-  }
-
-  void _appendThoughtTypewriterChunk(String chunk) {
-    if (_streamingMessageId == null || chunk.isEmpty) return;
-
-    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
-    if (idx == -1) return;
-    final currentMessage = _messages[idx];
-    _messages[idx] = currentMessage.copyWith(
-      thoughts: currentMessage.thoughts + chunk,
-      // Một thought đến muộn không được làm ẩn phần câu trả lời đang chạy.
-      status: currentMessage.status == MessageStatus.streaming
-          ? MessageStatus.streaming
-          : MessageStatus.thinking,
+    final trace = PublicReasoningTrace.fromJson(
+      Map<String, dynamic>.from(rawTrace),
+    );
+    if (!trace.hasSteps) return;
+    _messages[idx] = _messages[idx].copyWith(
+      publicTrace: trace,
+      status: _messages[idx].text.isEmpty
+          ? MessageStatus.thinking
+          : MessageStatus.streaming,
     );
     notifyListeners();
   }
 
-  void _onThoughtTypewriterIdle() {
-    _flushDeferredResponse();
-    _completePendingStream();
+  void _onDebugTraceReceived(dynamic rawEvent) {
+    _resetTimeoutTimer();
+    if (_streamingMessageId == null || rawEvent is! Map) return;
+    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
+    if (idx == -1) return;
+    final event = DeveloperTraceEvent.fromJson(
+      Map<String, dynamic>.from(rawEvent),
+    );
+    _messages[idx] = _messages[idx].copyWith(
+      developerTrace: [..._messages[idx].developerTrace, event],
+    );
+    notifyListeners();
   }
 
-  void _flushDeferredResponse() {
-    if (_deferredResponseText.isEmpty) return;
-    final deferredText = _deferredResponseText;
-    _deferredResponseText = '';
-    _responseTypewriter.add(deferredText);
-  }
-
-  /// Status trung gian chỉ là heartbeat; UI chỉ hiển thị thought thật.
+  /// Status trung gian chỉ là heartbeat; UI dùng public trace an toàn.
   void _onStatusReceived() {
     _resetTimeoutTimer();
   }
@@ -1761,9 +2062,7 @@ class AIChatProvider extends ChangeNotifier {
     // Phục hồi an toàn nếu full_response khác với các delta đã nhận.
     _messages[idx] = _messages[idx].copyWith(
       text: '',
-      status: _thoughtTypewriter.hasPending
-          ? MessageStatus.thinking
-          : MessageStatus.streaming,
+      status: MessageStatus.streaming,
     );
     _replacePendingResponse(fullResponse);
     notifyListeners();
@@ -1771,10 +2070,6 @@ class AIChatProvider extends ChangeNotifier {
 
   void _replacePendingResponse(String text) {
     _responseTypewriter.clear();
-    if (_thoughtTypewriter.hasPending) {
-      _deferredResponseText = text;
-      return;
-    }
     _deferredResponseText = '';
     _responseTypewriter.replacePending(text);
   }
@@ -1782,7 +2077,6 @@ class AIChatProvider extends ChangeNotifier {
   void _completePendingStream() {
     final data = _pendingDoneData;
     if (data == null ||
-        _thoughtTypewriter.hasPending ||
         _responseTypewriter.hasPending ||
         _deferredResponseText.isNotEmpty) {
       return;
@@ -1792,12 +2086,15 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   void _applyStreamDone(Map<String, dynamic> data) {
-    _thoughtTypewriter.clear();
     _responseTypewriter.clear();
     _deferredResponseText = '';
 
     final fullResponse = data['full_response'] as String? ?? '';
     final structuredData = data['structured'] as Map<String, dynamic>?;
+    final rawPublicTrace = data['public_trace'];
+    final publicTrace = rawPublicTrace is Map
+        ? PublicReasoningTrace.fromJson(Map<String, dynamic>.from(rawPublicTrace))
+        : null;
     final suggestionsRaw = data['suggestions'] as List<dynamic>? ?? [];
     final optionsRaw = data['options'] as List<dynamic>? ?? [];
     final suggestions = suggestionsRaw.map((s) => s.toString()).toList();
@@ -1825,6 +2122,7 @@ class AIChatProvider extends ChangeNotifier {
           structuredResponse: structuredResponse,
           suggestions: options.isNotEmpty ? options : suggestions,
           isFlowQuestion: options.isNotEmpty,
+          publicTrace: publicTrace,
         );
       }
     }
@@ -1873,6 +2171,20 @@ class AIChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  _ProfileContextScope _scopeForMessage(String message) {
+    final normalized = message.toLowerCase();
+    final asksNutrition = RegExp(
+      r'(ăn|uống|món|bữa|thực đơn|dinh dưỡng|calo|đạm|protein|carb|kiêng|dị ứng|giảm cân|tăng cân)',
+    ).hasMatch(normalized);
+    final asksWorkout = RegExp(
+      r'(tập|workout|bài tập|hiệp|reps|rpe|rir|tạ|gym|chạy|cardio|cơ bụng|cơ vai|cơ ngực)',
+    ).hasMatch(normalized);
+    if (asksNutrition && asksWorkout) return _ProfileContextScope.both;
+    if (asksNutrition) return _ProfileContextScope.nutrition;
+    if (asksWorkout) return _ProfileContextScope.workout;
+    return _ProfileContextScope.general;
+  }
+
   /// Ngắt kết nối WebSocket và hủy tất cả subscriptions
   void disconnect() {
     _subscription?.cancel();
@@ -1881,7 +2193,6 @@ class AIChatProvider extends ChangeNotifier {
     _channel = null;
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
-    _thoughtTypewriter.clear();
     _responseTypewriter.clear();
     _pendingDoneData = null;
     _deferredResponseText = '';
@@ -1890,7 +2201,6 @@ class AIChatProvider extends ChangeNotifier {
   @override
   void dispose() {
     disconnect();
-    _thoughtTypewriter.dispose();
     _responseTypewriter.dispose();
     super.dispose();
   }

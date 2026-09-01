@@ -180,6 +180,16 @@ async def test_chat_message_structured_data_migration_present_and_wellformed():
 
 
 @pytest.mark.asyncio
+async def test_chat_message_public_trace_migration_present_and_wellformed():
+    sql_path = db_module.MIGRATIONS_DIR / "009_chat_message_public_trace.sql"
+    assert sql_path.is_file(), f"Missing migration file: {sql_path}"
+
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "ADD COLUMN IF NOT EXISTS public_trace" in sql
+    assert "JSONB" in sql
+
+
+@pytest.mark.asyncio
 async def test_nutrition_policy_plan_provenance_migration_present():
     sql_path = db_module.MIGRATIONS_DIR / "007_nutrition_policy_v1.sql"
     assert sql_path.is_file()
@@ -188,6 +198,26 @@ async def test_nutrition_policy_plan_provenance_migration_present():
     assert "nutrition_formula_ids" in sql
     assert "JSONB" in sql
     assert "UPDATE plans" not in sql
+
+
+@pytest.mark.asyncio
+async def test_plan_tool_v2_migration_is_versioned_and_separates_observations():
+    sql_path = db_module.MIGRATIONS_DIR / "010_plan_tool_v2.sql"
+    assert sql_path.is_file(), f"Missing migration file: {sql_path}"
+    sql = sql_path.read_text(encoding="utf-8")
+    required = [
+        "CREATE TABLE IF NOT EXISTS plan_v2_plans",
+        "CREATE TABLE IF NOT EXISTS plan_v2_revisions",
+        "CREATE TABLE IF NOT EXISTS plan_v2_items",
+        "CREATE TABLE IF NOT EXISTS plan_v2_write_actions",
+        "UNIQUE (plan_id, revision_number)",
+        "EXCLUDE USING gist",
+        "lifecycle_status <> 'ACTIVE'",
+        "legacy_plan_v2_classification",
+    ]
+    assert not [fragment for fragment in required if fragment not in sql]
+    assert "INSERT INTO meals" not in sql
+    assert "INSERT INTO workout_results" not in sql
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,1425 @@
+{
+  "schema_version": "catalog-review-queue-v1.0.0",
+  "generated_for_catalog_version": "production-catalog-v1.0.0",
+  "policy": "Review queues never mutate source nutrient values.",
+  "queues": {
+    "legacy_serving_sizes": [
+      {
+        "queue_item_id": "SERVING-0001",
+        "entity_type": "DISH",
+        "entity_id": 1,
+        "name": "Cơm gà",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 1016.5,
+          "relative_delta": 0.360551
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0003",
+        "entity_type": "DISH",
+        "entity_id": 3,
+        "name": "Bún chả",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 600.0,
+          "recipe_calculated_kcal": 384.0,
+          "relative_delta": 0.5625
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0004",
+        "entity_type": "DISH",
+        "entity_id": 4,
+        "name": "Cơm sườn",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 700.0,
+          "recipe_calculated_kcal": 1002.1,
+          "relative_delta": 0.301467
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0006",
+        "entity_type": "DISH",
+        "entity_id": 6,
+        "name": "Xôi gà",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 764.9,
+          "relative_delta": 0.280952
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0008",
+        "entity_type": "DISH",
+        "entity_id": 8,
+        "name": "Cơm rang",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 500.0,
+          "recipe_calculated_kcal": 922.15,
+          "relative_delta": 0.457789
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0009",
+        "entity_type": "DISH",
+        "entity_id": 9,
+        "name": "Canh chua cá",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 250.0,
+          "recipe_calculated_kcal": 185.0,
+          "relative_delta": 0.351351
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0010",
+        "entity_type": "DISH",
+        "entity_id": 10,
+        "name": "Thịt kho tàu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 450.0,
+          "recipe_calculated_kcal": 684.4,
+          "relative_delta": 0.34249
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0011",
+        "entity_type": "DISH",
+        "entity_id": 11,
+        "name": "Cơm tấm sườn",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 700.0,
+          "recipe_calculated_kcal": 1002.1,
+          "relative_delta": 0.301467
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0012",
+        "entity_type": "DISH",
+        "entity_id": 12,
+        "name": "Bún bò Huế",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 350.5,
+          "relative_delta": 0.569187
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0013",
+        "entity_type": "DISH",
+        "entity_id": 13,
+        "name": "Mì xào thịt bò",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 600.0,
+          "recipe_calculated_kcal": 354.0,
+          "relative_delta": 0.694915
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0014",
+        "entity_type": "DISH",
+        "entity_id": 14,
+        "name": "Cá kho tộ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 300.0,
+          "recipe_calculated_kcal": 336.3,
+          "relative_delta": 0.107939
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0015",
+        "entity_type": "DISH",
+        "entity_id": 15,
+        "name": "Gà luộc",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 250.0,
+          "recipe_calculated_kcal": 301.4,
+          "relative_delta": 0.170537
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0016",
+        "entity_type": "DISH",
+        "entity_id": 16,
+        "name": "Trứng chiên",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 200.0,
+          "recipe_calculated_kcal": 255.7,
+          "relative_delta": 0.217833
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0017",
+        "entity_type": "DISH",
+        "entity_id": 17,
+        "name": "Cơm chiên dương châu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 600.0,
+          "recipe_calculated_kcal": 987.75,
+          "relative_delta": 0.392559
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0018",
+        "entity_type": "DISH",
+        "entity_id": 18,
+        "name": "Bún riêu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 500.0,
+          "recipe_calculated_kcal": 322.4,
+          "relative_delta": 0.550868
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0019",
+        "entity_type": "DISH",
+        "entity_id": 19,
+        "name": "Hủ tiếu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 372.2,
+          "relative_delta": 0.4777
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0021",
+        "entity_type": "DISH",
+        "entity_id": 21,
+        "name": "Cơm thịt kho",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 954.4,
+          "relative_delta": 0.318944
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0022",
+        "entity_type": "DISH",
+        "entity_id": 22,
+        "name": "Bún thịt nướng",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 384.0,
+          "relative_delta": 0.432292
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0024",
+        "entity_type": "DISH",
+        "entity_id": 24,
+        "name": "Cơm cá kho",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 600.0,
+          "recipe_calculated_kcal": 918.4,
+          "relative_delta": 0.34669
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0025",
+        "entity_type": "DISH",
+        "entity_id": 25,
+        "name": "Xôi đậu xanh",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 500.0,
+          "recipe_calculated_kcal": 868.1,
+          "relative_delta": 0.424029
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0026",
+        "entity_type": "DISH",
+        "entity_id": 26,
+        "name": "Mì Quảng",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 600.0,
+          "recipe_calculated_kcal": 435.0,
+          "relative_delta": 0.37931
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0027",
+        "entity_type": "DISH",
+        "entity_id": 27,
+        "name": "Cao lầu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 379.0,
+          "relative_delta": 0.451187
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0028",
+        "entity_type": "DISH",
+        "entity_id": 28,
+        "name": "Cơm bò",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 919.3,
+          "relative_delta": 0.29294
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0029",
+        "entity_type": "DISH",
+        "entity_id": 29,
+        "name": "Bánh mì thịt",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 450.0,
+          "recipe_calculated_kcal": 388.0,
+          "relative_delta": 0.159794
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0031",
+        "entity_type": "DISH",
+        "entity_id": 31,
+        "name": "Cơm bắp",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 360.0,
+          "recipe_calculated_kcal": 884.0,
+          "relative_delta": 0.59276
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0032",
+        "entity_type": "DISH",
+        "entity_id": 32,
+        "name": "Cơm gạo lức",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 360.0,
+          "recipe_calculated_kcal": 850.5,
+          "relative_delta": 0.57672
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0033",
+        "entity_type": "DISH",
+        "entity_id": 33,
+        "name": "Cháo thịt bằm rau củ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 250.0,
+          "recipe_calculated_kcal": 371.1,
+          "relative_delta": 0.326327
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0034",
+        "entity_type": "DISH",
+        "entity_id": 34,
+        "name": "Cháo khoai mỡ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 320.0,
+          "recipe_calculated_kcal": 465.6,
+          "relative_delta": 0.312715
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0035",
+        "entity_type": "DISH",
+        "entity_id": 35,
+        "name": "Gà nấu hạt dẻ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 400.0,
+          "recipe_calculated_kcal": 621.0,
+          "relative_delta": 0.355878
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0036",
+        "entity_type": "DISH",
+        "entity_id": 36,
+        "name": "Giò heo nấu đậu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 450.0,
+          "recipe_calculated_kcal": 1506.0,
+          "relative_delta": 0.701195
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0037",
+        "entity_type": "DISH",
+        "entity_id": 37,
+        "name": "Cháo gà nấu nấm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 300.0,
+          "recipe_calculated_kcal": 502.7,
+          "relative_delta": 0.403223
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0038",
+        "entity_type": "DISH",
+        "entity_id": 38,
+        "name": "Cháo sò điệp",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 320.0,
+          "recipe_calculated_kcal": 389.45,
+          "relative_delta": 0.178328
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0039",
+        "entity_type": "DISH",
+        "entity_id": 39,
+        "name": "Cơm đùi gà nấu nấm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 1015.0,
+          "relative_delta": 0.359606
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0040",
+        "entity_type": "DISH",
+        "entity_id": 40,
+        "name": "Thịt heo hầm đậu nành",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 550.0,
+          "recipe_calculated_kcal": 618.0,
+          "relative_delta": 0.110032
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0041",
+        "entity_type": "DISH",
+        "entity_id": 41,
+        "name": "Thịt bò hầm củ cải",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 480.0,
+          "recipe_calculated_kcal": 278.0,
+          "relative_delta": 0.726619
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0042",
+        "entity_type": "DISH",
+        "entity_id": 42,
+        "name": "Cánh gà om khoai",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 510.0,
+          "recipe_calculated_kcal": 584.0,
+          "relative_delta": 0.126712
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0043",
+        "entity_type": "DISH",
+        "entity_id": 43,
+        "name": "Gà rán",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 450.0,
+          "recipe_calculated_kcal": 750.4,
+          "relative_delta": 0.40032
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0044",
+        "entity_type": "DISH",
+        "entity_id": 44,
+        "name": "Tôm chiên giòn",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 400.0,
+          "recipe_calculated_kcal": 475.4,
+          "relative_delta": 0.158603
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0045",
+        "entity_type": "DISH",
+        "entity_id": 45,
+        "name": "Cơm bò xào",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 640.0,
+          "recipe_calculated_kcal": 877.8,
+          "relative_delta": 0.270905
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0046",
+        "entity_type": "DISH",
+        "entity_id": 46,
+        "name": "Sườn heo om đậu đũa",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 400.0,
+          "recipe_calculated_kcal": 462.5,
+          "relative_delta": 0.135135
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0047",
+        "entity_type": "DISH",
+        "entity_id": 47,
+        "name": "Thịt bò hầm cà chua",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 480.0,
+          "recipe_calculated_kcal": 298.8,
+          "relative_delta": 0.606426
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0050",
+        "entity_type": "DISH",
+        "entity_id": 50,
+        "name": "Thịt bò hầm cải chua",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 390.0,
+          "recipe_calculated_kcal": 279.5,
+          "relative_delta": 0.395349
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0054",
+        "entity_type": "DISH",
+        "entity_id": 54,
+        "name": "Khoai lang luộc",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 172.0,
+          "recipe_calculated_kcal": 238.0,
+          "relative_delta": 0.277311
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0056",
+        "entity_type": "DISH",
+        "entity_id": 56,
+        "name": "Cam",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 70.0,
+          "recipe_calculated_kcal": 57.0,
+          "relative_delta": 0.22807
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0057",
+        "entity_type": "DISH",
+        "entity_id": 57,
+        "name": "Sữa tươi",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 150.0,
+          "recipe_calculated_kcal": 185.0,
+          "relative_delta": 0.189189
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0058",
+        "entity_type": "DISH",
+        "entity_id": 58,
+        "name": "Khoai tây luộc",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 116.0,
+          "recipe_calculated_kcal": 139.5,
+          "relative_delta": 0.168459
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0060",
+        "entity_type": "DISH",
+        "entity_id": 60,
+        "name": "Ngô luộc",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 123.0,
+          "recipe_calculated_kcal": 294.0,
+          "relative_delta": 0.581633
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0062",
+        "entity_type": "DISH",
+        "entity_id": 62,
+        "name": "Đu đủ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 86.0,
+          "recipe_calculated_kcal": 72.0,
+          "relative_delta": 0.194444
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0064",
+        "entity_type": "DISH",
+        "entity_id": 64,
+        "name": "Sữa đậu nành",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 130.0,
+          "recipe_calculated_kcal": 70.0,
+          "relative_delta": 0.857143
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0066",
+        "entity_type": "DISH",
+        "entity_id": 66,
+        "name": "Mì xào hải sản",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 580.0,
+          "recipe_calculated_kcal": 345.4,
+          "relative_delta": 0.679213
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0067",
+        "entity_type": "DISH",
+        "entity_id": 67,
+        "name": "Cháo cá",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 300.0,
+          "recipe_calculated_kcal": 396.65,
+          "relative_delta": 0.243666
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0068",
+        "entity_type": "DISH",
+        "entity_id": 68,
+        "name": "Bún cá",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 500.0,
+          "recipe_calculated_kcal": 356.0,
+          "relative_delta": 0.404494
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0069",
+        "entity_type": "DISH",
+        "entity_id": 69,
+        "name": "Cơm cá hồi",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 680.0,
+          "recipe_calculated_kcal": 867.2,
+          "relative_delta": 0.215867
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0070",
+        "entity_type": "DISH",
+        "entity_id": 70,
+        "name": "Miến xào tôm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 480.0,
+          "recipe_calculated_kcal": 612.4,
+          "relative_delta": 0.216199
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0071",
+        "entity_type": "DISH",
+        "entity_id": 71,
+        "name": "Cơm xúc xích",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 1322.6,
+          "relative_delta": 0.508544
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0073",
+        "entity_type": "DISH",
+        "entity_id": 73,
+        "name": "Cháo tôm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 320.0,
+          "recipe_calculated_kcal": 358.65,
+          "relative_delta": 0.107765
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0074",
+        "entity_type": "DISH",
+        "entity_id": 74,
+        "name": "Bún mực",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 520.0,
+          "recipe_calculated_kcal": 332.6,
+          "relative_delta": 0.56344
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0075",
+        "entity_type": "DISH",
+        "entity_id": 75,
+        "name": "Cơm cá thu",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 640.0,
+          "recipe_calculated_kcal": 903.2,
+          "relative_delta": 0.291408
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0078",
+        "entity_type": "DISH",
+        "entity_id": 78,
+        "name": "Bún tôm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 540.0,
+          "recipe_calculated_kcal": 343.4,
+          "relative_delta": 0.57251
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0079",
+        "entity_type": "DISH",
+        "entity_id": 79,
+        "name": "Cơm cá ngừ",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "REVIEW",
+          "catalog_estimated_kcal": 650.0,
+          "recipe_calculated_kcal": 808.4,
+          "relative_delta": 0.195943
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0080",
+        "entity_type": "DISH",
+        "entity_id": 80,
+        "name": "Phở hải sản",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 560.0,
+          "recipe_calculated_kcal": 395.4,
+          "relative_delta": 0.416287
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0081",
+        "entity_type": "DISH",
+        "entity_id": 81,
+        "name": "Cơm giò lụa",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 620.0,
+          "recipe_calculated_kcal": 923.6,
+          "relative_delta": 0.328714
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0082",
+        "entity_type": "DISH",
+        "entity_id": 82,
+        "name": "Bún chả cá",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 580.0,
+          "recipe_calculated_kcal": 762.0,
+          "relative_delta": 0.238845
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0083",
+        "entity_type": "DISH",
+        "entity_id": 83,
+        "name": "Miến xào bò",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 520.0,
+          "recipe_calculated_kcal": 655.6,
+          "relative_delta": 0.206833
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0085",
+        "entity_type": "DISH",
+        "entity_id": 85,
+        "name": "Cơm mực xào",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 620.0,
+          "recipe_calculated_kcal": 791.6,
+          "relative_delta": 0.216776
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0086",
+        "entity_type": "DISH",
+        "entity_id": 86,
+        "name": "Phở tôm",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 540.0,
+          "recipe_calculated_kcal": 396.9,
+          "relative_delta": 0.360544
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0087",
+        "entity_type": "DISH",
+        "entity_id": 87,
+        "name": "Bún bò xào",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 580.0,
+          "recipe_calculated_kcal": 377.6,
+          "relative_delta": 0.536017
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0088",
+        "entity_type": "DISH",
+        "entity_id": 88,
+        "name": "Cơm tôm xào",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 640.0,
+          "recipe_calculated_kcal": 802.4,
+          "relative_delta": 0.202393
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0089",
+        "entity_type": "DISH",
+        "entity_id": 89,
+        "name": "Miến lươn",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 480.0,
+          "recipe_calculated_kcal": 638.0,
+          "relative_delta": 0.247649
+        }
+      },
+      {
+        "queue_item_id": "SERVING-0090",
+        "entity_type": "DISH",
+        "entity_id": 90,
+        "name": "Cháo vịt",
+        "reason": "Legacy estimated calories differ from canonical ingredient-sum nutrition; serving definition needs human review.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "vietnamese_dishes.json"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "catalog_estimated_kcal": 350.0,
+          "recipe_calculated_kcal": 543.65,
+          "relative_delta": 0.356203
+        }
+      }
+    ],
+    "energy_qa_warnings": [
+      {
+        "queue_item_id": "ENERGY-VN_FCT_13009",
+        "entity_type": "FOOD",
+        "entity_id": "VN_FCT_13009",
+        "name": "Riềng",
+        "reason": "Engineering 4/4/9 signal differs from source energy; review source conventions without overwriting nutrient values.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "VIETNAM_FCT",
+          "edition": "2007",
+          "source_record_id": 13009,
+          "official_url": "https://chuyentrang.viendinhduong.vn/viewfilenew/vi/thu-vien-sach-chuyen-nganh/189/1.html",
+          "accessed_at": "2026-08-30",
+          "match_quality": "EXACT"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "source_energy_kcal": 26.0,
+          "macro_energy_kcal": 11.2,
+          "relative_delta": 0.569231,
+          "method": "4P+4C+9F_QA_ONLY",
+          "note": "Fiber, organic acids and source energy conventions can explain differences."
+        }
+      },
+      {
+        "queue_item_id": "ENERGY-VN_FCT_14012",
+        "entity_type": "FOOD",
+        "entity_id": "VN_FCT_14012",
+        "name": "Rượu trắng (cồn 39 g)",
+        "reason": "Engineering 4/4/9 signal differs from source energy; review source conventions without overwriting nutrient values.",
+        "severity": "HIGH",
+        "source": {
+          "dataset": "VIETNAM_FCT",
+          "edition": "2007",
+          "source_record_id": 14012,
+          "official_url": "https://chuyentrang.viendinhduong.vn/viewfilenew/vi/thu-vien-sach-chuyen-nganh/189/1.html",
+          "accessed_at": "2026-08-30",
+          "match_quality": "EXACT"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "source_energy_kcal": 273.0,
+          "macro_energy_kcal": 0.0,
+          "relative_delta": 1.0,
+          "method": "4P+4C+9F_QA_ONLY",
+          "note": "Fiber, organic acids and source energy conventions can explain differences."
+        }
+      },
+      {
+        "queue_item_id": "ENERGY-VN_FCT_14014",
+        "entity_type": "FOOD",
+        "entity_id": "VN_FCT_14014",
+        "name": "Rượu vang trắng (cồn 9,5 g)",
+        "reason": "Engineering 4/4/9 signal differs from source energy; review source conventions without overwriting nutrient values.",
+        "severity": "MEDIUM",
+        "source": {
+          "dataset": "VIETNAM_FCT",
+          "edition": "2007",
+          "source_record_id": 14014,
+          "official_url": "https://chuyentrang.viendinhduong.vn/viewfilenew/vi/thu-vien-sach-chuyen-nganh/189/1.html",
+          "accessed_at": "2026-08-30",
+          "match_quality": "EXACT"
+        },
+        "review_status": "OPEN",
+        "resolution": null,
+        "qa_evidence": {
+          "status": "FAIL",
+          "source_energy_kcal": 1.0,
+          "macro_energy_kcal": 1.2,
+          "relative_delta": 0.2,
+          "method": "4P+4C+9F_QA_ONLY",
+          "note": "Fiber, organic acids and source energy conventions can explain differences."
+        }
+      }
+    ]
+  },
+  "summary": {
+    "legacy_serving_sizes": 70,
+    "energy_qa_warnings": 3,
+    "open": 73,
+    "resolved": 0
+  }
+}

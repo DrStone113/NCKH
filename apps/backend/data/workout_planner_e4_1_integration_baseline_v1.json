@@ -1,0 +1,54 @@
+{
+  "schema_version": "workout-planner-e4-1-integration-baseline-v1",
+  "captured_at": "2026-08-31T00:00:00+07:00",
+  "git": {
+    "head": "5c5f5a8425886a9454e73c1c3d7e79769364c4bd",
+    "working_tree_was_clean": false,
+    "status_porcelain_sha1": "acb85639c845e82e4af451d8ae010202c9f9ec64",
+    "note": "The pre-existing dirty worktree is intentionally preserved; this manifest is an integration boundary, not a clean-worktree claim."
+  },
+  "runtime": {
+    "python": "3.10.21",
+    "dependency_lock": "requirements-e4-py310.lock",
+    "dependency_lock_sha256": "01bfc1348cfcf12306f8cdd79f716ccb1776e50c4fd6dfc7af18071cde806102"
+  },
+  "frozen_artifacts": {
+    "e2_catalog": {
+      "version": "canonical-exercise-v1.0.0",
+      "content_sha256": "c048fe7a6f73cfdb53961ea151b7c4d624259607e49d028c9d08a02de01df348",
+      "manifest_file_sha256": "52cf7808ea817107132d3dfe20e673aa2124babf509dc9045d7a92b9d8c21d4f"
+    },
+    "e3_1_policy": {
+      "version": "exercise-prescription-policy-v1.1.0",
+      "semantic_content_sha256": "b25bee0f3cfda41f6a457cac18e0e1191f212ad6f048d8863ec03c7cb1cc8a01",
+      "file_sha256": "ac1b1b17b57516ca7a9fb657867dcd1d030c27fdb894252e5884bd4e93e7f2af"
+    },
+    "nutrition_policy": {
+      "version": "nutrition-policy-v1.0.1",
+      "file_sha256": "e521a889afffcb535254c38c959aada5e64398ddd9f9f0613ac82be119f72127"
+    },
+    "research": {
+      "corpus_version": "offline-v1-636",
+      "corpus_sha256": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+      "manifest_file_sha256": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+      "conditions": {
+        "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+        "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+        "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7"
+      }
+    }
+  },
+  "e4_0_planner": {
+    "planner_version": "deterministic-workout-planner-v1.0.0-shadow",
+    "source_file_sha256": {
+      "contracts.py": "b67fa11774dfe6ea0a3d6e6569a9e8444781c6033b7ee94f8a048f584a6da9ea",
+      "history.py": "73204025e8c554d363dbd3bcf025ee1ef9df7c19f7f1074dad2572677854bcb0",
+      "planner.py": "249ac93445e3edc2e08b935642e8029d0d6eb345cbb2b3122e579a29ec9a3b25",
+      "validator.py": "fca101eea0cae393b92be4e0d7cc6a4af0ed0f7a2c6a3cc41a9bafc53dee18eb",
+      "shadow.py": "057a57d8a6ad5f676ff1947331102d4cf71647a4d214817c2f713fe4e4167b18",
+      "evaluator.py": "ac5826955c7cd148cee5ac6e748795a3fdc78eafcb475627d72d090b9cb68408",
+      "development_scenarios.py": "fe3087b557f829bccb7a8850d581c3ade8516bfdd7255aa9f202db5458accf31",
+      "__init__.py": "d708a4fa6f5fe01f4d67a95a89cccb0ce0941ce0cfe01b3dfecb897ddf8ba64d"
+    }
+  }
+}

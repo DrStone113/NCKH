@@ -1,0 +1,403 @@
+{
+  "schema_version": "exercise-data-audit-e1-v1.0.0",
+  "git_commit": "5c5f5a8425886a9454e73c1c3d7e79769364c4bd",
+  "scope": "E1_WGER_AND_EXERCISE_DATA_AUDIT_ONLY",
+  "source": {
+    "source_id": "WGER_EXERCISEINFO",
+    "publisher": "wger project",
+    "base_url": "https://wger.de/api/v2",
+    "snapshot_endpoint": "/exerciseinfo/",
+    "snapshot_query": "format=json&language=2&limit=100",
+    "source_code_license": "AGPL-3.0-or-later",
+    "exercise_data_license_policy": "Creative Commons per individual record",
+    "official_api_docs": "https://wger.readthedocs.io/en/latest/api/api.html",
+    "official_repository": "https://github.com/wger-project/wger"
+  },
+  "snapshot": {
+    "backend_path": "apps/backend/data/wger_exercises_raw.json",
+    "mobile_path": "apps/mobile/assets/data/wger_exercises_raw.json",
+    "backend_sha256": "542cc7a7f7d87938f6c245c3ff23c2a32483c5734039ee953d1dbed9d9e3d226",
+    "mobile_sha256": "542cc7a7f7d87938f6c245c3ff23c2a32483c5734039ee953d1dbed9d9e3d226",
+    "byte_identical": true,
+    "fetch_script_sha256": "1b650a4c75aa554e929aa833b3c9e6df5a212500ecd5de9d8c869e2d7fbcfd9c",
+    "fetch_has_snapshot_manifest": false,
+    "statistics": {
+      "record_count": 885,
+      "unique_id_count": 885,
+      "unique_uuid_count": 885,
+      "duplicate_id_count": 0,
+      "duplicate_uuid_count": 0,
+      "top_level_fields": [
+        "author_history",
+        "category",
+        "created",
+        "equipment",
+        "id",
+        "images",
+        "last_update",
+        "last_update_global",
+        "license",
+        "license_author",
+        "muscles",
+        "muscles_secondary",
+        "total_authors_history",
+        "translations",
+        "uuid",
+        "variation_group",
+        "videos"
+      ],
+      "field_coverage": {
+        "category": {
+          "count": 885,
+          "percent": 100.0
+        },
+        "equipment": {
+          "count": 573,
+          "percent": 64.75
+        },
+        "muscles": {
+          "count": 691,
+          "percent": 78.08
+        },
+        "muscles_secondary": {
+          "count": 321,
+          "percent": 36.27
+        },
+        "images": {
+          "count": 261,
+          "percent": 29.49
+        },
+        "videos": {
+          "count": 46,
+          "percent": 5.2
+        },
+        "license": {
+          "count": 885,
+          "percent": 100.0
+        },
+        "license_author": {
+          "count": 794,
+          "percent": 89.72
+        },
+        "translations": {
+          "count": 885,
+          "percent": 100.0
+        },
+        "variation_group": {
+          "count": 228,
+          "percent": 25.76
+        },
+        "author_history": {
+          "count": 794,
+          "percent": 89.72
+        },
+        "total_authors_history": {
+          "count": 841,
+          "percent": 95.03
+        }
+      },
+      "english_translation": {
+        "language_id": 2,
+        "records": 885,
+        "name_present": 885,
+        "description_present": 856,
+        "note": "The source still returns nested translations in multiple languages; language=2 does not flatten the payload."
+      },
+      "category_counts": {
+        "Abs": 113,
+        "Arms": 147,
+        "Back": 165,
+        "Calves": 12,
+        "Cardio": 42,
+        "Chest": 101,
+        "Legs": 195,
+        "Shoulders": 110
+      },
+      "equipment_counts": {
+        "Barbell": 81,
+        "Bench": 44,
+        "Dumbbell": 157,
+        "Gym mat": 15,
+        "Incline bench": 20,
+        "Kettlebell": 16,
+        "Pull-up bar": 25,
+        "Resistance band": 13,
+        "SZ-Bar": 18,
+        "Swiss Ball": 3,
+        "none (bodyweight exercise)": 237
+      },
+      "translation_language_counts": {
+        "1": 214,
+        "2": 885,
+        "4": 270,
+        "5": 10,
+        "6": 49,
+        "7": 68,
+        "8": 48,
+        "9": 51,
+        "10": 3,
+        "12": 71,
+        "13": 140,
+        "14": 4,
+        "15": 2,
+        "16": 31,
+        "17": 48,
+        "18": 1,
+        "19": 2,
+        "20": 3,
+        "21": 22,
+        "22": 31,
+        "23": 48,
+        "24": 48
+      },
+      "license_counts": [
+        {
+          "short_name": "CC-BY-SA 3",
+          "url": "https://creativecommons.org/licenses/by-sa/3.0/deed.en",
+          "count": 133
+        },
+        {
+          "short_name": "CC-BY-SA 4",
+          "url": "https://creativecommons.org/licenses/by-sa/4.0/deed.en",
+          "count": 732
+        },
+        {
+          "short_name": "CC0",
+          "url": "http://creativecommons.org/publicdomain/zero/1.0/",
+          "count": 20
+        }
+      ],
+      "nested_content_provenance": {
+        "translation_count": 2049,
+        "translations_with_license": 2049,
+        "translations_with_license_author": 1538,
+        "image_count": 345,
+        "images_with_license": 345,
+        "images_with_license_author": 291,
+        "images_marked_ai_generated": 0,
+        "video_count": 78,
+        "videos_with_license": 78,
+        "videos_with_license_author": 78,
+        "finding": "License and author metadata exist at exercise, translation and media levels and must be preserved separately."
+      },
+      "created_range": {
+        "minimum": "2023-08-06T10:17:17.422900+02:00",
+        "maximum": "2026-04-21T22:26:44.458488+02:00"
+      },
+      "last_update_global_range": {
+        "minimum": "2024-01-17T11:28:41.403968+01:00",
+        "maximum": "2026-04-21T22:34:49.694859+02:00"
+      }
+    }
+  },
+  "live_api_observation": {
+    "observed_at": "2026-08-30",
+    "openapi_schema_version": "2.7.0a2",
+    "exerciseinfo_count": 862,
+    "exerciseinfo_list_status": 200,
+    "exercise_search_status": 404,
+    "exerciseinfo_in_openapi": true,
+    "exercise_search_in_openapi": false,
+    "finding": "The local /wger/search/exercise proxy targets a removed upstream endpoint.",
+    "volatile_not_used_for_local_manifest_verification": true
+  },
+  "local_api_paths": {
+    "snapshot_fetch": "GET https://wger.de/api/v2/exerciseinfo/ with pagination",
+    "backend_detail_proxy": "GET /wger/exercise/{id} -> /api/v2/exerciseinfo/{id}/",
+    "backend_list_proxy": "GET /wger/exercises -> /api/v2/exerciseinfo/",
+    "backend_search_proxy": "GET /wger/search/exercise -> /api/v2/exercise/search/ (UPSTREAM_REMOVED)",
+    "mobile_catalog_default": "bundled asset via LocalExerciseService/WgerCacheService",
+    "mobile_live_service": "backend /wger proxy; present but not the default agent catalog",
+    "media_cache": "backend in-memory bounded LRU; Cache-Control max-age=86400"
+  },
+  "agent_path": {
+    "bundled_rows_loaded_at_import": 884,
+    "agent_record_fields": [
+      "id",
+      "name",
+      "category",
+      "equipment",
+      "is_bodyweight",
+      "derived_level"
+    ],
+    "excluded_rows": [
+      {
+        "source_exercise_id": 1592,
+        "name": "Meditación guiada o libre"
+      }
+    ],
+    "category_counts": {
+      "Abs": 113,
+      "Arms": 147,
+      "Back": 165,
+      "Calves": 12,
+      "Cardio": 41,
+      "Chest": 101,
+      "Legs": 195,
+      "Shoulders": 110
+    },
+    "derived_level_counts": {
+      "advanced": 170,
+      "beginner": 404,
+      "intermediate": 310
+    },
+    "bodyweight_count": 252,
+    "empty_equipment_count": 394,
+    "selection_inputs": [
+      "category",
+      "normalized_or_name_inferred_equipment",
+      "name_heuristic_difficulty",
+      "requested_muscle_group",
+      "requested_duration",
+      "requested_level",
+      "requested_goal",
+      "fatigue_level_if_supplied"
+    ],
+    "source_fields_not_retained_by_agent": [
+      "uuid",
+      "muscles",
+      "muscles_secondary",
+      "translations.description",
+      "images",
+      "videos",
+      "license",
+      "license_author",
+      "variation_group",
+      "created",
+      "last_update_global"
+    ],
+    "profile_fields_auto_injected_by_dispatcher": [
+      "weight_kg",
+      "health_goal_as_goal"
+    ],
+    "training_history_used_by_suggest_workout": false,
+    "live_wger_used_by_suggest_workout": false,
+    "exercise_duration_model": "FIXED_5_MINUTES_PER_EXERCISE",
+    "selection_tie_break": "CATEGORY_ROUND_ROBIN_THEN_ASCENDING_WGER_ID"
+  },
+  "workout_log_contract": {
+    "persisted_fields": [
+      "id",
+      "userId",
+      "name",
+      "exerciseTemplateId",
+      "date",
+      "duration",
+      "caloriesBurned",
+      "type",
+      "intensity",
+      "isCompleted",
+      "timeOfDay"
+    ],
+    "chat_today_fields": [
+      "name",
+      "type",
+      "duration_min",
+      "calories_burned"
+    ],
+    "chat_range_fields": [
+      "date",
+      "name",
+      "duration_min",
+      "calories_burned",
+      "type",
+      "intensity"
+    ],
+    "missing_for_adaptation": [
+      "canonical_exercise_id",
+      "per_set_load_kg",
+      "per_set_reps",
+      "per_set_rpe_or_rir",
+      "per_set_completion",
+      "pain_or_discomfort",
+      "session_rpe",
+      "completion_status_with_partial_state"
+    ]
+  },
+  "context_planner_finding": {
+    "intent": "WORKOUT_RECOMMENDATION",
+    "required_slots": [
+      "PROFILE",
+      "TODAY_EXERCISE"
+    ],
+    "optional_slots": [
+      "EXERCISE_HISTORY",
+      "LIFESTYLE",
+      "ACTIVE_PLAN"
+    ],
+    "allowed_tools": [
+      "get_user_profile",
+      "get_today_exercises",
+      "suggest_workout"
+    ],
+    "history_fetch_tool_allowed": false,
+    "consequence": "The agent cannot deterministically retrieve 7/28-day training history for this intent."
+  },
+  "energy_finding": {
+    "wger_energy_values_used": false,
+    "current_method": "Name/category heuristics assign an activity MET, then MET*3.5*kg/200*minutes.",
+    "current_granularity": "Per exercise using a fixed five-minute duration",
+    "limitation": "The MET mapping is app-curated and not linked to Compendium activity codes per record.",
+    "recommended_boundary": "Use session/activity-level Compendium codes; label output estimated_energy_expenditure."
+  },
+  "e1_gaps": [
+    "No canonical exercise ID/versioned catalog or record-level provenance in agent output.",
+    "No source snapshot timestamp/version/output manifest is written by the fetch script.",
+    "No movement pattern, substitution group or curated-field provenance.",
+    "Primary and secondary muscle metadata are discarded before recommendation.",
+    "Difficulty is inferred from equipment/name without a versioned exercise policy.",
+    "Training history is not consumed by suggest_workout.",
+    "Workout logs lack set-level load, reps, effort, completion and pain.",
+    "One local live-search proxy targets an upstream endpoint removed in Wger 2.5.",
+    "Bundled snapshot has 885 rows while the live API observation has 862; deletions/merges are not reconciled."
+  ],
+  "research_identity": {
+    "corpus_version": "offline-v1-636",
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "research_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+    "research_manifest_file_sha256": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "source_artifacts": [
+      {
+        "dataset_file": "vietnamese_foods.json",
+        "expected_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "actual_sha256": "bab724008611d7a16f4aa78cd459eedce5a7bf02210bd79c852b0eb159b64c27",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "vietnamese_dishes.json",
+        "expected_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "actual_sha256": "a3108f4893f5840e3372b6b527843d3a1bf5e2d51ac43f49a6650ee03ae489e8",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "nutrition.json",
+        "expected_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "actual_sha256": "aa65c8c73f46a5608f2f6fa6744030f19832d8237e476cd25acddb90fb9ef503",
+        "unchanged": true
+      },
+      {
+        "dataset_file": "exercises.json",
+        "expected_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "actual_sha256": "873b74b0b9b915d3a57023d1d4870e387708285ababbdf7e22972ab831df49be",
+        "unchanged": true
+      }
+    ],
+    "experiment_condition_hashes": {
+      "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+      "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+      "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7"
+    },
+    "production_catalog_is_separate": true
+  },
+  "next_phase": {
+    "phase": "E2_CANONICAL_EXERCISE_CATALOG",
+    "entry_gate": "Review this E1 manifest before changing production recommendation behavior.",
+    "must_preserve": [
+      "per-record Wger license and author metadata",
+      "source ID/UUID and snapshot hash",
+      "Wger-supplied fields versus app-curated fields",
+      "offline-v1-636 research identity"
+    ]
+  },
+  "manifest_hash": "c1a088d1e63aa585df425111efa382bf065f7d49a2c296b0651bcdeeaed76360"
+}

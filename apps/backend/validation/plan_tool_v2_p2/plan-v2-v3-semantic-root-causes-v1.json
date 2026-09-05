@@ -1,0 +1,138 @@
+{
+  "artifact_version": "PLAN_V2_V3_SEMANTIC_ROOT_CAUSES_V1",
+  "analysis_mode": "POSTMORTEM_REPLAY_ONLY",
+  "semantic_contract_version": "PLAN_V2_SEMANTIC_CONTRACT_V1",
+  "source_identities": {
+    "holdout_sha256": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+    "oracle_sha256": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5",
+    "thresholds_sha256": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400",
+    "raw_execution_sha256": "ea9c3b29312b602059eca7ed086ed621ccd57fb372996ac263ffd6034aff844c",
+    "results_sha256": "022a0ef06045f8f053bef9ea1422f19c9c7252b8cb0d437c922910de75e79b0b",
+    "execution_register_sha256": "58718243f98e95845ff2650738ee3aa87e0970ac79a127f961ac7c2ae015435c",
+    "harness_freeze_sha256": "468bb3f908bd24f5003ed5b7138f4a29147c697e211114ed5ad87ad355992dc8"
+  },
+  "official_v3_reconciliation": {
+    "case_count": 120,
+    "semantic_failures": 60,
+    "semantic_matches": 60,
+    "semantic_match_percent": 50.0,
+    "reference_chain_identity_percent": 100.0,
+    "hard_violations": 0
+  },
+  "root_causes": [
+    {
+      "root_cause": "SCORER_FALSE_NEGATIVE",
+      "case_count": 40,
+      "percentage_of_failures": 66.67,
+      "owner": "SCORER_BUG",
+      "affected_case_families": [
+        "single_workout",
+        "weekly_workout"
+      ],
+      "fix_strategy": "semantic contract safe-clarification rule",
+      "status": "RESOLVED_IN_FUTURE_HARNESS"
+    },
+    {
+      "root_cause": "HARNESS_EXPECTATION_ERROR",
+      "case_count": 20,
+      "percentage_of_failures": 33.33,
+      "owner": "HARNESS_BUG",
+      "affected_case_families": [
+        "combined_health"
+      ],
+      "fix_strategy": "require concrete child bindings before requiring READY",
+      "status": "RESOLVED_IN_FUTURE_HARNESS"
+    }
+  ],
+  "ownership": {
+    "classification_counts": {
+      "MULTI_FACTOR": 60
+    },
+    "primary_owner_counts": {
+      "HARNESS_BUG": 20,
+      "SCORER_BUG": 40
+    }
+  },
+  "pareto": [
+    {
+      "rank": 1,
+      "root_cause": "SCORER_FALSE_NEGATIVE",
+      "case_count": 40,
+      "percent_of_failures": 66.67,
+      "cumulative_percent": 66.67
+    },
+    {
+      "rank": 2,
+      "root_cause": "HARNESS_EXPECTATION_ERROR",
+      "case_count": 20,
+      "percent_of_failures": 33.33,
+      "cumulative_percent": 100.0
+    }
+  ],
+  "fix_registry": [
+    {
+      "fix_id": "SEM-CONTRACT-001",
+      "root_cause": "SCORER_FALSE_NEGATIVE",
+      "affected_cases": 40,
+      "component": "future semantic scorer",
+      "implementation_files": [
+        "services/acceptance/postmortem/plan_v2_semantics.py"
+      ],
+      "behavior_before": "required READY despite absent authoritative workout/safety profile",
+      "behavior_after": "requires safe clarification when workout authority is absent; evaluates READY only when authoritative context is supplied",
+      "regression_tests": [
+        "test_missing_workout_authority_requires_safe_clarification",
+        "test_authoritative_workout_fixture_still_requires_schedule_shape"
+      ],
+      "negative_controls": [
+        "test_ready_workout_without_authority_is_rejected"
+      ],
+      "risk": "under-normalization is deliberate; missing safety context remains material",
+      "status": "IMPLEMENTED"
+    },
+    {
+      "fix_id": "SEM-CONTRACT-002",
+      "root_cause": "HARNESS_EXPECTATION_ERROR",
+      "affected_cases": 20,
+      "component": "future semantic scorer",
+      "implementation_files": [
+        "services/acceptance/postmortem/plan_v2_semantics.py"
+      ],
+      "behavior_before": "required a ready combined container from symbolic child labels",
+      "behavior_after": "requires safe clarification for symbolic references and validates bindings only for concrete child revisions",
+      "regression_tests": [
+        "test_symbolic_combined_references_require_safe_clarification",
+        "test_concrete_combined_references_require_bound_container"
+      ],
+      "negative_controls": [
+        "test_ready_combined_with_symbolic_references_is_rejected"
+      ],
+      "risk": "no alias normalization of references; plan/revision/hash remain exact",
+      "status": "IMPLEMENTED"
+    },
+    {
+      "fix_id": "SEM-DIAG-003",
+      "root_cause": "SCORER_FALSE_NEGATIVE",
+      "affected_cases": 60,
+      "component": "future semantic diagnostics",
+      "implementation_files": [
+        "services/acceptance/postmortem/plan_v2_semantics.py"
+      ],
+      "behavior_before": "boolean-only fixture decision",
+      "behavior_after": "operation/target/field/value/missing/extra diagnostics",
+      "regression_tests": [
+        "test_diagnostics_explain_missing_authority"
+      ],
+      "negative_controls": [
+        "test_lifecycle_target_mismatch_is_rejected"
+      ],
+      "risk": "diagnostics do not change hard-invariant enforcement",
+      "status": "IMPLEMENTED"
+    }
+  ],
+  "anti_overfit_check": {
+    "production_files_changed": [],
+    "case_id_or_fixture_text_in_contract_source": false,
+    "result": "PASS"
+  }
+}

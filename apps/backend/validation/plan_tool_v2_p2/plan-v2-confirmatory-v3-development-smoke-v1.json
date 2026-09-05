@@ -1,0 +1,13 @@
+{
+  "artifact_version": "PLAN_V2_CONFIRMATORY_V3_DEVELOPMENT_SMOKE_V1",
+  "dataset_scope": "DEVELOPMENT_SYNTHETIC_ONLY",
+  "case_count": 5,
+  "oracle_firewall": {
+    "adapter_has_no_oracle_import": true,
+    "raw_persisted_before_scoring": true
+  },
+  "raw_execution_sha256": "ad94fd349dc79d816c2f3245de618f880ac37510e118cc93b54c8ebccc13f312",
+  "reference_chain_identity": true,
+  "scoring_interface_case_count": 5,
+  "status": "PASS"
+}

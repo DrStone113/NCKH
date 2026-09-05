@@ -1,0 +1,18 @@
+{
+  "register_version": "PLAN_V2_CONFIRMATORY_V3_EXECUTION_REGISTER",
+  "dataset_hash": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+  "oracle_hash": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5",
+  "threshold_hash": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400",
+  "implementation_baseline_hash": "a6e2d890e011fe4e332efc417e08365bdf6c62e63343dcadbed6010238bb33b0",
+  "harness_hash": "ef2356a4c4b80d3ac8385216984276d252afc2b371634461b0807714052f258b",
+  "python_version": "3.10.21",
+  "created_at": "2026-09-05T03:48:28.995006+00:00",
+  "started": true,
+  "completed": true,
+  "infrastructure_retries": [],
+  "started_at": "2026-09-05T03:48:29.003114+00:00",
+  "completed_at": "2026-09-05T03:48:42.155282+00:00",
+  "result": "FAIL",
+  "raw_execution_hash": "ea9c3b29312b602059eca7ed086ed621ccd57fb372996ac263ffd6034aff844c",
+  "score_hash": "022a0ef06045f8f053bef9ea1422f19c9c7252b8cb0d437c922910de75e79b0b"
+}

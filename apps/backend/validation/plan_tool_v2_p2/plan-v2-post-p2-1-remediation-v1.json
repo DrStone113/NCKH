@@ -1,0 +1,55 @@
+{
+  "baseline_version": "PLAN_V2_POST_P2_1_REMEDIATION_V1",
+  "baseline_status": "FROZEN_FOR_CONFIRMATORY_V3_ONLY",
+  "created_at": "2026-09-04T10:44:54.489969+00:00",
+  "p2_1_boundary": {
+    "first_pass_result": "FAIL",
+    "dataset_status": "USED_FOR_TUNING_AFTER_FIRST_PASS",
+    "forensic_status_sha256": "f10cba261ad17ef57650ce7987a10a2f4fed42de0fc313cbf42fdd7510c0ac72",
+    "not_the_p2_1_implementation_identity": true
+  },
+  "implementation_sources": {
+    "services/plan_engine/contracts.py": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+    "services/plan_engine/engine.py": "e3595726765204986b4e6601033ee8845d2a96de4c0b47dcea99a0eef08f8313",
+    "services/plan_engine/lifecycle.py": "cb9d07584eb6f9c264d5913991e61c806d28de4faa735c3a71fc15d453e4a5c9",
+    "services/plan_engine/persistence.py": "0522c22e89952a66d2bff54be15290b1c4ae63e8e8efeb49e5966f098c33e75c",
+    "services/agent/pending_user_action.py": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352",
+    "services/agent/tools/plan_v2.py": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+    "modules/plans/v2_router.py": "cc20bbef54abc6bd08fe5ca565c20f4b7ccb30dc2a5cdecf7a2391e57902f3a2",
+    "main.py": "5aa5c031b617a17454ea1948e20d1108bf7aee67d4ba7e59abacd60bb5b63502"
+  },
+  "migration_checksums": {
+    "db/migrations/010_plan_tool_v2.sql": "49a1ae02daa085fec3b8681c2186af0afa6419a4b04de6ba6c3428616d8d869e",
+    "db/migrations/011_plan_tool_v2_p2_enforced.sql": "1aba2faae1777ee3e5fa669a2dfce6863bca6b5d853bb01cb1d10697085fc977",
+    "db/migrations/012_plan_tool_v2_p2_item_order.sql": "2aca3e59bff2426a91d31d65eebae5b1a28a25b3881a49cd8866461b404f23d8",
+    "db/migrations/013_plan_tool_v2_p2_logical_item_identity.sql": "bf0df773e40a6f0b0b7540dfda0fd0be144d3f32f0ca2fc387ef0c8d455893ef",
+    "db/migrations/014_adaptive_nutrition_knowledge_n3.sql": "eae406e9f41e80d19f6a71a5d1e5c56d3868598c5da28c0be954df7b476293a2",
+    "db/migrations/015_external_recipe_discovery_n3_1.sql": "d74704463c044aa9e8cdf16463caf869020ae252bbc4b0549b510033779fe90c",
+    "db/migrations/016_adaptive_recommendation_intelligence_n3_2.sql": "5cef3a73cb30c1f86b20f2871a205f123d483650171605d2cb549367eee327e5"
+  },
+  "policy_versions": {
+    "nutrition": "nutrition-policy-v1.0.1",
+    "exercise": "exercise-prescription-policy-v1.1.0",
+    "canonical_nutrition_authority": true,
+    "n3_adaptive_ranking_isolation": "DEVELOPMENT_SHADOW_ONLY"
+  },
+  "toolchain": {
+    "python": "3.10.21",
+    "flutter": "3.44.8",
+    "dart": "3.12.2",
+    "postgresql": "16.15"
+  },
+  "authenticated_browser_evidence": {
+    "path": "p2-2-authenticated-edge-e2e-v1.json",
+    "sha256": "8a72190d70bdcd450b407cccf395307475252181c4fe292f215a49133e79196a",
+    "status": "PASS"
+  },
+  "confirmatory_v3_dependency": {
+    "manifest_path": "plan-v2-confirmatory-v3-freeze-manifest-v1.json",
+    "manifest_sha256": "665c9a6ef2360456295d9db60b9b8cb06680b504929d868fc564787831129c88",
+    "holdout_sha256": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+    "oracle_sha256": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5",
+    "threshold_sha256": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400",
+    "execution_status": "FROZEN_UNEXECUTED"
+  }
+}

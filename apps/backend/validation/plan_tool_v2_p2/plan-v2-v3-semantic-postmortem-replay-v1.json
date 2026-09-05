@@ -1,0 +1,2063 @@
+{
+  "artifact_version": "PLAN_V2_V3_SEMANTIC_POSTMORTEM_REPLAY_V1",
+  "analysis_mode": "POSTMORTEM_REPLAY_ONLY",
+  "execution_performed": false,
+  "official_v3_result_retained": "FAIL",
+  "semantic_contract_version": "PLAN_V2_SEMANTIC_CONTRACT_V1",
+  "source_identities": {
+    "holdout_sha256": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+    "oracle_sha256": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5",
+    "thresholds_sha256": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400",
+    "raw_execution_sha256": "ea9c3b29312b602059eca7ed086ed621ccd57fb372996ac263ffd6034aff844c",
+    "results_sha256": "022a0ef06045f8f053bef9ea1422f19c9c7252b8cb0d437c922910de75e79b0b",
+    "execution_register_sha256": "58718243f98e95845ff2650738ee3aa87e0970ac79a127f961ac7c2ae015435c",
+    "harness_freeze_sha256": "468bb3f908bd24f5003ed5b7138f4a29147c697e211114ed5ad87ad355992dc8"
+  },
+  "replayed_case_count": 120,
+  "postmortem_replay_semantic_matches": 120,
+  "postmortem_replay_semantic_match_percent": 100.0,
+  "remaining_failure_count": 0,
+  "cases": [
+    {
+      "case_id": "p2-2-v3-adversarial_safety-001",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-002",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-003",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-004",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-005",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-006",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-007",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-008",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-009",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-010",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-011",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-012",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-013",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-014",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-015",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-016",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-017",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-018",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-019",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-020",
+      "case_family": "adversarial_safety",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-001",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-002",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-003",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-004",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-005",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-006",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-007",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-008",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-009",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-010",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-011",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-012",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-013",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-014",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-015",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-016",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-017",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-018",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-019",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-020",
+      "case_family": "combined_health",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-001",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-002",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-003",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-004",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-005",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-006",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-007",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-008",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-009",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-010",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-011",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-012",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-013",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-014",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-015",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-016",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-017",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-018",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-019",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-020",
+      "case_family": "nutrition",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-001",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-002",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-003",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-004",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-005",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-006",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-007",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-008",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-009",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-010",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-011",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-012",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-013",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-014",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-015",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-016",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-017",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-018",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-019",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-020",
+      "case_family": "revision_lifecycle",
+      "v3_original_semantic_match": true,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-001",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-002",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-003",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-004",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-005",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-006",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-007",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-008",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-009",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-010",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-011",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-012",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-013",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-014",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-015",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-016",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-017",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-018",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-019",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-020",
+      "case_family": "single_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-001",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-002",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-003",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-004",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-005",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-006",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-007",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-008",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-009",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-010",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-011",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-012",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-013",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-014",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-015",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-016",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-017",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-018",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-019",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-020",
+      "case_family": "weekly_workout",
+      "v3_original_semantic_match": false,
+      "post_fix_replay_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      }
+    }
+  ],
+  "generated_at": "2026-09-05T04:07:49.010707+00:00"
+}

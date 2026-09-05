@@ -1,0 +1,18 @@
+{
+  "artifact_version": "PLAN_V2_CONFIRMATORY_V3_HARNESS_FREEZE_V2",
+  "timestamp": "2026-09-05T03:48:28.985494+00:00",
+  "runner_adapter_hashes": {
+    "services/acceptance/v3/runner.py": "7f303d49f651b6f2619144717aabf5170dc424ee87b2aa111cbb0c5bd76f6773",
+    "services/acceptance/v3/adapter.py": "13eca3a2cc6a1d2a059d632b5c08564b61495c07d90cb751e87f4f8d0f991ae4",
+    "services/acceptance/v3/scoring.py": "aac5a6eb85a9f157af12ede1380301834f93dd5f17ecf4b6f60596b9765b5dbb",
+    "scripts/run_plan_v2_confirmatory_v3.py": "ddd5d504f8198e169b976bd7717b82bfbf1e676a4eedddf4d579dbc5c140f3d5"
+  },
+  "execution.py": "310b32479f6bc5aa4645489a2783317c45e653ec658a8378a5c331501b083b24",
+  "scoring.py": "0422485c5930edf5198bb2b0500247625c39852df0beae081b5556f7be7f68a5",
+  "harness_sha256": "ef2356a4c4b80d3ac8385216984276d252afc2b371634461b0807714052f258b",
+  "python_version": "3.10.21",
+  "implementation_baseline_sha256": "a6e2d890e011fe4e332efc417e08365bdf6c62e63343dcadbed6010238bb33b0",
+  "v3_holdout_sha256": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+  "v3_oracle_sha256": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5",
+  "v3_threshold_sha256": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400"
+}

@@ -1,0 +1,2653 @@
+{
+  "oracle_version": "PLAN_V2_CONFIRMATORY_ORACLE_V3",
+  "status": "FROZEN_UNEXECUTED",
+  "protocol": {
+    "execution_visibility": "NO_PLAN_V2_OUTPUT_VISIBLE_DURING_QUALIFICATION",
+    "deterministic_validators_first": true,
+    "semantic_judge_only_when_required": true,
+    "semantic_judge_passes_when_required": 3,
+    "ambiguous_cases_rejected": true
+  },
+  "cases": [
+    {
+      "case_id": "p2-2-v3-nutrition-001",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-002",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-003",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-004",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-005",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-006",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-007",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-008",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-009",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-010",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-011",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-012",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-013",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-014",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-015",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-016",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-017",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-018",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-019",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-020",
+      "oracle_profile": "NUTRITION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-001",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-002",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-003",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-004",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-005",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-006",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-007",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-008",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-009",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-010",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-011",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-012",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-013",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-014",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-015",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-016",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-017",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-018",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-019",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-020",
+      "oracle_profile": "SINGLE_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-001",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-002",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-003",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-004",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-005",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-006",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-007",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-008",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-009",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-010",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-011",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-012",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-013",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-014",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-015",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-016",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-017",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-018",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-019",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-020",
+      "oracle_profile": "WEEKLY_WORKOUT_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": false,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": []
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-001",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-002",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-003",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-004",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-005",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-006",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-007",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-008",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-009",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-010",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-011",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-012",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-013",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-014",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-015",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-016",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-017",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-018",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-019",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-020",
+      "oracle_profile": "COMBINED_REFERENCE_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-001",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-002",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-003",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-004",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-005",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-006",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-007",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-008",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-009",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-010",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-011",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-012",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-013",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-014",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-015",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-016",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-017",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-018",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-019",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-020",
+      "oracle_profile": "LIFECYCLE_IDENTITY_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-001",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-002",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-003",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-004",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-005",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-006",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-007",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-008",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-009",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-010",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-011",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-012",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-013",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-014",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-015",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-016",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-017",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-018",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-019",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-020",
+      "oracle_profile": "SAFETY_CLARIFICATION_STRUCTURE",
+      "deterministic_checks": [
+        "owner_scope",
+        "planned_actual_separation",
+        "canonical_reference_boundary"
+      ],
+      "semantic_review": {
+        "required": true,
+        "status": "QUALIFIED_BY_INPUT_ONLY_PROTOCOL",
+        "isolated_passes": [
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_1",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_2",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          },
+          {
+            "checker": "INPUT_ONLY_SEMANTIC_CONTRACT_CHECKER_3",
+            "kind": "deterministic_automated_checker_not_human_label",
+            "decision": "ACCEPT"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "manifest_version": "PLAN_V2_CONFIRMATORY_V3_FREEZE_MANIFEST_V1",
+  "status": "FROZEN_UNEXECUTED",
+  "artifacts": {
+    "p2-2-confirmatory-v3-candidate-pool-v1.json": "fa2625120d1a7345e820f4fb645863257c8fe7138380d9e26cc3fe9b0f77c002",
+    "p2-2-confirmatory-v3-exclusion-audit-v1.json": "789a974c5b0429cd64c56e126dec4e64059770e163b8d661e88a1fbc27fcc192",
+    "plan-v2-confirmatory-thresholds-v3.json": "adeb1a8139c15eb619f3bc92ad89e68197aa056b61f567d3fb58379b040a5400",
+    "plan-v2-confirmatory-v3.json": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+    "plan-v2-confirmatory-oracle-v3.json": "bb92a47b3edc8ec8a5ce13a1fb6e30a25738651bbf1c30ff413a98f3e3eb8af5"
+  },
+  "execution_policy": "DO_NOT_EXECUTE_IN_P2_2"
+}

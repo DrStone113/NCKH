@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-09-05T03:30:42.5288647Z",
+  "python_version": "3.10.21",
+  "execution.py": "310b32479f6bc5aa4645489a2783317c45e653ec658a8378a5c331501b083b24",
+  "scoring.py": "0422485c5930edf5198bb2b0500247625c39852df0beae081b5556f7be7f68a5",
+  "v3_runner_adapter_file_hashes": {},
+  "harness_test_file_hashes": {
+    "tests/test_plan_v2_p2_1_execution_harness.py": "012d19484b3c377668e105b6479477d5d3be4e584f2897a1718d2133900c9f6c",
+    "tests/test_plan_v2_confirmatory_v3_freeze.py": "a3d985f90a65a514d6ef25080e23ee2cf0fdff6056d363d06d7d900752027a44"
+  }
+}

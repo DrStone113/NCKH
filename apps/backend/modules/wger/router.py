@@ -3,7 +3,9 @@ Wger detail endpoints — fetch chi tiết exercise/ingredient từ wger API
 """
 import logging
 import re
+import json
 from collections import OrderedDict
+from contextlib import asynccontextmanager
 from html import unescape
 
 import httpx
@@ -18,6 +20,43 @@ router = APIRouter(prefix="/wger", tags=["wger"])
 
 WGER_BASE = settings.wger_base_url
 TIMEOUT = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+_shared_http_client: httpx.AsyncClient | None = None
+_shared_public_cache = None
+
+
+def configure_http_runtime(client: httpx.AsyncClient, public_cache=None) -> None:
+    """Attach the lifespan-owned pool and public-only single-flight cache."""
+
+    global _shared_http_client, _shared_public_cache
+    _shared_http_client = client
+    _shared_public_cache = public_cache
+
+
+class _PublicClient:
+    def __init__(self, client: httpx.AsyncClient) -> None:
+        self._client = client
+
+    async def get(self, url: str, *, params=None, **kwargs):
+        async def _load():
+            return await self._client.get(url, params=params, **kwargs)
+
+        if _shared_public_cache is None:
+            return await _load()
+        key = json.dumps(
+            [url, sorted((str(k), str(v)) for k, v in (params or {}).items())],
+            ensure_ascii=True,
+            separators=(",", ":"),
+        )
+        return await _shared_public_cache.get_or_load(key, _load)
+
+
+@asynccontextmanager
+async def _public_client():
+    if _shared_http_client is not None:
+        yield _PublicClient(_shared_http_client)
+        return
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        yield _PublicClient(client)
 
 
 # ─── Schemas ────────────────────────────────────────────────────────────────
@@ -69,6 +108,15 @@ class IngredientDetail(BaseModel):
     image_url: str | None = None
 
 
+class IngredientSearchItem(BaseModel):
+    id: int
+    name: str
+    energy: float | None = None
+    protein: float | None = None
+    carbohydrates: float | None = None
+    fat: float | None = None
+
+
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
 def _strip_html(text: str) -> str:
@@ -106,7 +154,7 @@ async def get_exercise_detail(exercise_id: int):
     """Fetch chi tiết bài tập từ wger /exerciseinfo/{id}/"""
     url = f"{WGER_BASE}/exerciseinfo/{exercise_id}/?format=json"
 
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url)
             if resp.status_code == 404:
@@ -181,12 +229,47 @@ async def get_exercise_detail(exercise_id: int):
             raise HTTPException(status_code=502, detail=str(e))
 
 
+@router.get("/ingredient/")
+async def search_ingredients(
+    name: str = Query(default="", min_length=0, max_length=120),
+    page: int = Query(default=1, ge=1),
+    language: int = Query(default=2, ge=1),
+):
+    """Proxy Wger ingredient search with the shape expected by Flutter."""
+
+    params = {"format": "json", "page": page, "language": language}
+    if name.strip():
+        params["name"] = name.strip()
+    async with _public_client() as client:
+        try:
+            response = await client.get(f"{WGER_BASE}/ingredient/", params=params)
+        except httpx.HTTPError as exc:
+            raise HTTPException(status_code=502, detail="Wger ingredient search unavailable") from exc
+    if response.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"Wger API error: {response.status_code}")
+    data = response.json()
+    raw_results = data.get("results", []) if isinstance(data, dict) else []
+    results = []
+    for raw in raw_results:
+        if not isinstance(raw, dict) or not raw.get("name"):
+            continue
+        try:
+            results.append(IngredientSearchItem.model_validate(raw).model_dump())
+        except ValueError:
+            continue
+    return {
+        "count": int(data.get("count", len(results))),
+        "next": data.get("next"),
+        "results": results,
+    }
+
+
 @router.get("/ingredient/{ingredient_id}", response_model=IngredientDetail)
 async def get_ingredient_detail(ingredient_id: int):
     """Fetch chi tiết thực phẩm từ wger /ingredientinfo/{id}/"""
     url = f"{WGER_BASE}/ingredientinfo/{ingredient_id}/?format=json"
 
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url)
             if resp.status_code == 404:
@@ -254,7 +337,7 @@ async def search_exercise(
     """Tìm kiếm bài tập theo tên từ wger"""
     url = f"{WGER_BASE}/exercise/search/"
 
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(
                 url,
@@ -290,7 +373,7 @@ async def list_exercises(
     
     url = f"{WGER_BASE}/exerciseinfo/"
     
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url, params=params)
             if resp.status_code != 200:
@@ -378,7 +461,7 @@ async def list_categories():
     """Proxy endpoint để lấy danh mục bài tập từ wger"""
     url = f"{WGER_BASE}/exercisecategory/?format=json"
     
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url)
             if resp.status_code != 200:
@@ -397,7 +480,7 @@ async def list_muscles():
     """Proxy endpoint để lấy danh sách nhóm cơ từ wger"""
     url = f"{WGER_BASE}/muscle/?format=json"
     
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url)
             if resp.status_code != 200:
@@ -416,7 +499,7 @@ async def list_equipment():
     """Proxy endpoint để lấy danh sách dụng cụ tập từ wger"""
     url = f"{WGER_BASE}/equipment/?format=json"
     
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+    async with _public_client() as client:
         try:
             resp = await client.get(url)
             if resp.status_code != 200:

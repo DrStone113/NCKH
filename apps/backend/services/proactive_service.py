@@ -23,11 +23,15 @@ with no model available.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
+import inspect
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
+
+from config import settings as app_settings
 
 from models.schemas import (
     CheckinQuickOption,
@@ -150,6 +154,7 @@ class ProactiveService:
         # Last nudge category shown per user, so two consecutive check-ins do
         # not land on the same topic.
         self._last_category: dict[str, str] = {}
+        self._last_personalised_window: dict[str, str] = {}
 
     # ---------------------------------------------------------------- settings
     def get_user_settings(self, user_id: str) -> CheckinSettings:
@@ -195,7 +200,15 @@ class ProactiveService:
             )
             return None
 
-        message = await self._personalise(best, ctx, time_slot)
+        window = f"{current.date().isoformat()}:{time_slot}"
+        if (
+            self.llm_client is not None
+            and self._last_personalised_window.get(user_id) != window
+        ):
+            message = await self._personalise(best, ctx, time_slot)
+            self._last_personalised_window[user_id] = window
+        else:
+            message = best.message
         self._last_category[user_id] = best.category
 
         return ProactiveNudgeResponse(
@@ -408,8 +421,19 @@ class ProactiveService:
             "thông tin ứng dụng đã có. Chỉ trả về câu đã viết lại."
         )
         try:
-            response = await self.llm_client.chat(
-                [{"role": "user", "content": prompt}], tools=None, stream=False
+            chat_kwargs: dict[str, Any] = {"tools": None, "stream": False}
+            parameters = inspect.signature(self.llm_client.chat).parameters
+            if "max_tokens" in parameters or any(
+                item.kind == inspect.Parameter.VAR_KEYWORD
+                for item in parameters.values()
+            ):
+                chat_kwargs["max_tokens"] = app_settings.proactive_llm_max_output_tokens
+            response = await asyncio.wait_for(
+                self.llm_client.chat(
+                    [{"role": "user", "content": prompt}],
+                    **chat_kwargs,
+                ),
+                timeout=2.0,
             )
             text = (getattr(response, "full_text", "") or "").strip()
             # Guard against a model that ignores the length limit and turns a

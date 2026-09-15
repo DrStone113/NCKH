@@ -26,6 +26,14 @@ class UserModel {
   /// legacy top-level profile fields above remain readable and are mirrored on
   /// writes so existing account documents and older app releases keep working.
   final HealthProfile? healthProfile;
+
+  NutritionProfile? get effectiveNutritionProfile =>
+      nutritionProfile ?? healthProfile?.nutritionProfile;
+  WorkoutProfile? get effectiveWorkoutProfile =>
+      workoutProfile ?? healthProfile?.workoutProfile;
+
+  /// Set only after the user submits the basic account form successfully.
+  final DateTime? basicProfileCompletedAt;
   final DateTime? createdAt;
 
   UserModel({
@@ -44,27 +52,50 @@ class UserModel {
     this.nutritionProfile,
     this.workoutProfile,
     this.healthProfile,
+    this.basicProfileCompletedAt,
     this.createdAt,
   });
+
+  /// Authentication creates an incomplete profile, never assumed body data.
+  /// Zero keeps the legacy numeric model readable while toMap stores null.
+  factory UserModel.newAccount({
+    required String id,
+    required String email,
+    String name = '',
+  }) =>
+      UserModel(
+        id: id,
+        email: email,
+        name: name.trim(),
+        age: 0,
+        height: 0,
+        weight: 0,
+        activityLevel: '',
+        healthGoal: '',
+        createdAt: DateTime.now(),
+      );
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'email': email,
       'name': name,
-      'age': age,
+      'age': age > 0 ? age : null,
       'gender': gender,
       'equation_sex': equationSex,
       'nutrition_safety_profile': nutritionSafetyProfile.toJson(),
-      'height': height,
-      'weight': weight,
+      'height': height > 0 && height.isFinite ? height : null,
+      'weight': weight > 0 && weight.isFinite ? weight : null,
       'targetWeight': targetWeight,
-      'activityLevel': activityLevel,
-      'healthGoal': healthGoal,
+      'activityLevel': activityLevel.isEmpty ? null : activityLevel,
+      'healthGoal': healthGoal.isEmpty ? null : healthGoal,
       if (nutritionProfile != null)
         'nutrition_profile': nutritionProfile!.toJson(),
       if (workoutProfile != null) 'workout_profile': workoutProfile!.toJson(),
       if (healthProfile != null) 'health_profile': healthProfile!.toJson(),
+      if (basicProfileCompletedAt != null)
+        'basic_profile_completed_at':
+            basicProfileCompletedAt!.toUtc().toIso8601String(),
       'createdAt': (createdAt ?? DateTime.now()).toIso8601String(),
     };
   }
@@ -84,11 +115,13 @@ class UserModel {
       height: (map['height'] ?? 0).toDouble(),
       weight: (map['weight'] ?? 0).toDouble(),
       targetWeight: map['targetWeight']?.toDouble(),
-      activityLevel: map['activityLevel'] ?? 'sedentary',
-      healthGoal: map['healthGoal'] ?? 'maintain',
+      activityLevel: map['activityLevel'] ?? '',
+      healthGoal: map['healthGoal'] ?? '',
       nutritionProfile: NutritionProfile.fromJson(map['nutrition_profile']),
       workoutProfile: WorkoutProfile.fromJson(map['workout_profile']),
       healthProfile: HealthProfile.fromJson(map['health_profile']),
+      basicProfileCompletedAt: DateTime.tryParse(
+          map['basic_profile_completed_at']?.toString() ?? ''),
       createdAt:
           map['createdAt'] != null ? DateTime.tryParse(map['createdAt']) : null,
     );
@@ -102,6 +135,29 @@ class UserModel {
 
   bool get needsAccountHealthIntake =>
       !(healthProfile?.hasCompletedCurrentAccountIntake ?? false);
+
+  Map<String, String> get missingBasicProfileFields => {
+        if (name.trim().length < 2) 'name': 'Họ và tên',
+        if (age < 13 || age > 120) 'age': 'Tuổi',
+        if (!height.isFinite || height < 100 || height > 250)
+          'height': 'Chiều cao',
+        if (!weight.isFinite || weight < 25 || weight > 400)
+          'weight': 'Cân nặng',
+        if (gender != null &&
+            !const {'male', 'female', 'other'}.contains(gender))
+          'gender': 'Giới tính',
+        if (!const {'sedentary', 'light', 'moderate', 'active', 'very_active'}
+            .contains(activityLevel))
+          'activity_level': 'Mức độ vận động',
+        if (!const {'lose_weight', 'maintain', 'gain_muscle'}
+            .contains(healthGoal))
+          'health_goal': 'Mục tiêu sức khỏe',
+      };
+
+  bool get hasValidBasicProfile => missingBasicProfileFields.isEmpty;
+
+  bool get needsBasicProfileIntake =>
+      basicProfileCompletedAt == null || !hasValidBasicProfile;
 
   /// The authoritative shared profile layer.  These values intentionally stay
   /// at the user root so nutrition and workout can both consume them without
@@ -133,6 +189,7 @@ class UserModel {
     Object? nutritionProfile = _notSet,
     Object? workoutProfile = _notSet,
     Object? healthProfile = _notSet,
+    DateTime? basicProfileCompletedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -159,6 +216,8 @@ class UserModel {
       healthProfile: identical(healthProfile, _notSet)
           ? this.healthProfile
           : healthProfile as HealthProfile?,
+      basicProfileCompletedAt:
+          basicProfileCompletedAt ?? this.basicProfileCompletedAt,
       createdAt: createdAt,
     );
   }
@@ -452,6 +511,7 @@ class NutritionProfile {
 
   static List<String>? _strings(Object? raw) {
     if (raw is! List) return null;
+    if (raw.isEmpty) return const <String>[];
     final values = raw
         .whereType<String>()
         .map((value) => value.trim())
@@ -569,7 +629,8 @@ class NutritionProfile {
       };
 
   bool get hasCompletedCurrentAccountIntake =>
-      (accountIntakeVersion ?? 0) >= currentAccountIntakeVersion;
+      (accountIntakeVersion ?? 0) >= currentAccountIntakeVersion &&
+      accountIntakeCompletedAt != null;
 
   bool get requiresRelevantConfirmation =>
       (candidateFacts?.isNotEmpty ?? false) ||
@@ -592,6 +653,8 @@ class NutritionProfile {
         source == 'EXPLICIT_USER_TEXT' ||
         source == 'USER_CONFIRMED';
   }
+
+  bool isConfirmedField(String field) => _isConfirmedField(field);
 
   /// Converts confirmed explicit selections into the exact tags understood by
   /// the deterministic dish tool.  This includes canonical allergens,
@@ -919,6 +982,8 @@ class NutritionProfile {
     required Set<String> allowed,
     required String field,
   }) {
+    // An explicit empty selection means "none", not an unanswered question.
+    if (value != null && value.isEmpty) return const <String>[];
     final values = _freeList(value, fallback);
     if (values != null && !values.every(allowed.contains)) {
       throw ArgumentError('INVALID_NUTRITION_PROFILE_$field');
@@ -1030,6 +1095,8 @@ class HealthProfile {
   bool get hasCompletedCurrentAccountIntake =>
       (schemaVersion ?? 0) >= currentSchemaVersion &&
       supportedPrimarySupport.contains(primarySupport) &&
+      completedAt != null &&
+      (nutritionProfile?.hasCompletedCurrentAccountIntake ?? false) &&
       (!includesExercise ||
           (workoutProfile?.hasCompletedCurrentAccountIntake ?? false));
 

@@ -185,7 +185,7 @@ def candidate_rows() -> list[dict[str, str | bool]]:
                 "prompt": prompt,
                 "oracle_profile": oracle_profile,
                 "proposed_disposition": "ACCEPT_AFTER_HUMAN_REVIEW",
-                "acceptance_eligible": False,
+                "acceptance_eligible": True,
             })
     for index, (area, prompt, reason) in enumerate(DEFERRED_CANDIDATES, start=1):
         rows.append({

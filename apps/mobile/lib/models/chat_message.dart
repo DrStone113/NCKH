@@ -27,6 +27,11 @@ class PublicReasoningTrace {
     'FOOD_CATALOG_SEARCHED',
     'WORKOUT_CATALOG_SEARCHED',
     'RECOMMENDATION_SELECTED',
+    'RECOMMENDATION_NUTRITION_FIT',
+    'RECOMMENDATION_PREFERENCE_FIT',
+    'RECOMMENDATION_DIVERSITY_APPLIED',
+    'RECOMMENDATION_PORTION_ADAPTED',
+    'RECOMMENDATION_STAGING_SOURCE',
     'CALCULATION_COMPLETED',
     'CONFIRMATION_RECEIVED',
     'PERSISTENCE_IN_PROGRESS',
@@ -69,6 +74,26 @@ class PublicReasoningTrace {
     'RECOMMENDATION_SELECTED': [
       'Đã chọn gợi ý phù hợp',
       'Gợi ý được chọn dựa trên các dữ liệu đã kiểm tra ở trên.'
+    ],
+    'RECOMMENDATION_NUTRITION_FIT': [
+      'Phù hợp mục tiêu dinh dưỡng còn lại',
+      'Gợi ý này được đối chiếu với phần dinh dưỡng còn lại trong ngày.'
+    ],
+    'RECOMMENDATION_PREFERENCE_FIT': [
+      'Phù hợp khẩu vị đã xác nhận',
+      'Mình dùng phản hồi hoặc sở thích bạn đã xác nhận, sau các kiểm tra an toàn.'
+    ],
+    'RECOMMENDATION_DIVERSITY_APPLIED': [
+      'Đã cân nhắc sự đa dạng',
+      'Mình tránh lặp lại món hoặc nguồn đạm vừa xuất hiện khi có lựa chọn phù hợp.'
+    ],
+    'RECOMMENDATION_PORTION_ADAPTED': [
+      'Có thể điều chỉnh khẩu phần',
+      'Khẩu phần được tính lại từ nguyên liệu chuẩn trong giới hạn công thức phù hợp.'
+    ],
+    'RECOMMENDATION_STAGING_SOURCE': [
+      'Nguồn công thức đang được đánh giá',
+      'Công thức này là dữ liệu thử nghiệm; dinh dưỡng vẫn được tính từ dữ liệu chuẩn.'
     ],
     'CALCULATION_COMPLETED': [
       'Đã hoàn tất tính toán',

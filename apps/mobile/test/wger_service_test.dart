@@ -6,7 +6,8 @@ import 'package:health_app/services/wger_service.dart';
 
 void main() {
   group('WgerService', () {
-    test('fetchExercises returns WgerExerciseListResponse on success', () async {
+    test('fetchExercises returns WgerExerciseListResponse on success',
+        () async {
       final mockClient = MockClient((request) async {
         return http.Response(
           json.encode({
@@ -72,8 +73,12 @@ void main() {
       expect(exercise.name, 'Push-up');
     });
 
-    test('searchIngredients returns WgerIngredientListResponse on success', () async {
+    test('searchIngredients returns WgerIngredientListResponse on success',
+        () async {
       final mockClient = MockClient((request) async {
+        expect(request.url.path, '/wger/ingredient/');
+        expect(request.url.queryParameters['name'], 'chicken');
+        expect(request.url.queryParameters['page'], '1');
         return http.Response(
           json.encode({
             'count': 1,
@@ -162,8 +167,9 @@ void main() {
     });
 
     test('WgerApiException contains Vietnamese error message', () {
-      final exception = WgerApiException('Không thể tải dữ liệu', statusCode: 500);
-      
+      final exception =
+          WgerApiException('Không thể tải dữ liệu', statusCode: 500);
+
       expect(exception.message, contains('Không thể'));
       expect(exception.statusCode, 500);
     });

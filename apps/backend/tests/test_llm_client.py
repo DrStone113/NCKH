@@ -12,7 +12,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch, MagicMock
 
 import pytest
-from openai import APIConnectionError, APITimeoutError, APIError
+from openai import APIConnectionError, APITimeoutError, APIError, APIStatusError
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -188,6 +188,72 @@ async def test_chat_raises_llm_unavailable_on_5xx() -> None:
     
     with pytest.raises(LLMUnavailableError):
         await client.chat(messages=[{"role": "user", "content": "ping"}])
+
+
+@pytest.mark.asyncio
+async def test_chat_does_not_retry_or_fallback_on_insufficient_balance() -> None:
+    client = _make_llm_client()
+
+    mock_request = MagicMock()
+    mock_response = MagicMock(status_code=402, request=mock_request)
+    client.openai.chat.completions.create = AsyncMock(
+        side_effect=APIStatusError(
+            "insufficient balance",
+            response=mock_response,
+            body={"error": {"code": "INSUFFICIENT_BALANCE"}},
+        )
+    )
+
+    with pytest.raises(LLMUnavailableError, match=r"\(402\)") as caught:
+        await client.chat(messages=[{"role": "user", "content": "ping"}])
+
+    assert client.openai.chat.completions.create.await_count == 1
+    assert caught.value.status_code == 402
+    assert caught.value.reason_code == "QUOTA_EXHAUSTED"
+    assert client.provider_status == "quota_exhausted"
+
+
+@pytest.mark.asyncio
+async def test_restricted_client_never_falls_back_to_an_answer_model() -> None:
+    client = _make_llm_client()
+    client.allow_model_fallback = False
+    mock_request = MagicMock()
+    client.openai.chat.completions.create = AsyncMock(
+        side_effect=APIConnectionError(request=mock_request)
+    )
+
+    with pytest.raises(LLMUnavailableError):
+        await client.chat(
+            messages=[{"role": "user", "content": "classify"}],
+            tools=None,
+            stream=False,
+        )
+
+    assert client.openai.chat.completions.create.await_count == 2
+    assert {
+        call.kwargs["model"]
+        for call in client.openai.chat.completions.create.await_args_list
+    } == {client.model}
+
+
+@pytest.mark.asyncio
+async def test_cost_optimized_client_does_not_retry_a_failed_paid_request() -> None:
+    client = LLMClient(
+        model="small-model",
+        base_url="https://api.vilao.ai/v1",
+        api_key="sk-test-not-a-real-key",
+        allow_model_fallback=False,
+        max_attempts_per_model=1,
+    )
+    mock_request = MagicMock()
+    client.openai.chat.completions.create = AsyncMock(
+        side_effect=APIConnectionError(request=mock_request)
+    )
+
+    with pytest.raises(LLMUnavailableError):
+        await client.chat(messages=[{"role": "user", "content": "ping"}])
+
+    assert client.openai.chat.completions.create.await_count == 1
 
 
 @pytest.mark.asyncio

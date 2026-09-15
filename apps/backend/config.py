@@ -11,6 +11,25 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("APP_ENV", "APP_ENVIRONMENT"),
     )
     chat_trace_mode: Literal["public", "debug"] = "public"
+    # Strict runs the hybrid scope router before memory/RAG/model work.
+    chat_scope_guard_mode: Literal["off", "strict"] = "strict"
+    # Compact local encoder used for semantic intent/OOS routing. It is loaded
+    # lazily and sees only the current fragment, never profile/history/RAG.
+    scope_router_model: Optional[str] = (
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    scope_router_device: Optional[str] = None
+    scope_router_timeout_seconds: float = Field(default=2.5, gt=0, le=30)
+    scope_router_warmup_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
+    scope_router_low_confidence: float = Field(default=0.55, ge=0, le=1)
+    scope_router_high_confidence: float = Field(default=0.85, ge=0, le=1)
+    scope_router_temperature: float = Field(default=0.06, gt=0, le=1)
+    scope_router_full_confidence_similarity: float = Field(default=0.50, gt=0, le=1)
+    # Uncertain/disagreeing fragments alone may reach this restricted JSON-only
+    # judge. It has no tools/history/RAG and never falls back to the answer LLM.
+    scope_classifier_model: Optional[str] = "ram/qwen-3.8-flash"
+    scope_classifier_timeout_seconds: float = Field(default=2.5, gt=0, le=10)
+    scope_classifier_confidence: float = Field(default=0.85, ge=0, le=1)
     development_context_trace: bool = False
     # D3.0 supports observation only. Literal validation intentionally rejects
     # an "enforced" value so configuration cannot activate D3.1 behavior.
@@ -29,6 +48,9 @@ class Settings(BaseSettings):
     # ``plans`` / ``plan_items`` records or observations.  ``enforced`` is
     # deliberately a separate rollout switch once SQL persistence gates pass.
     plan_tool_mode: Literal["off", "shadow", "enforced"] = "shadow"
+    # N3.2 is development/shadow only. There is intentionally no "enforced"
+    # or canonical-promotion setting for adaptive recipe ranking.
+    adaptive_recommendation_mode: Literal["off", "shadow"] = "shadow"
     # Optional append-only D3.0.1 natural-shadow artifact. Collection is active
     # only together with shadow mode; None performs no filesystem writes.
     context_planner_natural_collection_path: Optional[str] = None
@@ -38,8 +60,48 @@ class Settings(BaseSettings):
     # into git history.
     openai_api_key: str = ""
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
-    llm_model: str = "rk/llms/qwen-3.7-plus"
-    heavy_llm_model: str = "spd/deepseek-v4-pro"
+    llm_model: str = "ram/qwen-3.8-flash"
+    heavy_llm_model: str = "op/deepseek/deepseek-v4-pro"
+    # Paid-model cost governor. ``off`` is an operational rollback only.
+    llm_cost_optimization_mode: Literal["off", "optimized"] = "optimized"
+    llm_cross_model_fallback: bool = False
+    llm_attempts_per_model: int = Field(default=1, ge=1, le=2)
+    llm_chitchat_max_output_tokens: int = Field(default=160, ge=32, le=512)
+    llm_simple_max_output_tokens: int = Field(default=512, ge=64, le=2048)
+    llm_complex_max_output_tokens: int = Field(default=1200, ge=128, le=4096)
+    llm_simple_max_calls: int = Field(default=2, ge=1, le=4)
+    llm_complex_max_calls: int = Field(default=3, ge=2, le=6)
+    llm_simple_history_turns: int = Field(default=6, ge=0, le=24)
+    llm_complex_history_turns: int = Field(default=12, ge=0, le=32)
+    llm_memory_summary_max_output_tokens: int = Field(default=512, ge=64, le=2048)
+    llm_memory_fact_max_output_tokens: int = Field(default=512, ge=64, le=2048)
+    backend_cost_mode: Literal["off", "observe", "enforce"] = "observe"
+    chat_queue_size: int = Field(default=4, ge=1, le=32)
+    chat_admission_min_concurrency: int = Field(default=2, ge=1, le=32)
+    chat_admission_initial_concurrency: int = Field(default=8, ge=1, le=64)
+    chat_admission_max_concurrency: int = Field(default=16, ge=2, le=128)
+    chat_admission_timeout_seconds: float = Field(default=1.0, gt=0, le=30)
+    chat_admission_retry_after_ms: int = Field(default=750, ge=100, le=30000)
+    background_memory_concurrency: int = Field(default=1, ge=1, le=4)
+    proactive_llm_personalization: bool = False
+    proactive_llm_max_output_tokens: int = Field(default=96, ge=32, le=256)
+    rag_warmup_mode: Literal["lazy", "startup"] = "lazy"
+    rag_cpu_threads: int = Field(default=2, ge=1, le=16)
+    rag_inference_concurrency: int = Field(default=1, ge=1, le=8)
+    rag_lexical_confidence_threshold: float = Field(default=0.18, ge=0, le=1)
+    rag_lexical_margin_ratio: float = Field(default=1.5, ge=1, le=10)
+    public_cache_max_entries: int = Field(default=256, ge=16, le=4096)
+    public_cache_ttl_seconds: int = Field(default=86400, ge=60, le=604800)
+    private_cache_ttl_seconds: int = Field(default=120, ge=60, le=300)
+    http_max_connections: int = Field(default=32, ge=4, le=256)
+    http_max_keepalive_connections: int = Field(default=16, ge=2, le=128)
+    http_keepalive_expiry_seconds: float = Field(default=30.0, ge=5, le=300)
+    http_circuit_failure_threshold: int = Field(default=3, ge=1, le=20)
+    http_circuit_reset_seconds: float = Field(default=30.0, ge=1, le=300)
+    db_pool_size: int = Field(default=5, ge=1, le=32)
+    db_max_overflow: int = Field(default=5, ge=0, le=64)
+    db_pool_timeout_seconds: float = Field(default=5.0, gt=0, le=60)
+    db_pool_recycle_seconds: int = Field(default=1800, ge=60, le=86400)
     embedding_model: str = "BAAI/bge-m3"
     cloudflare_tunnel_token: Optional[str] = None
     # NOTE: a "turn" here is one row in ``chat_messages``, which includes tool
@@ -55,6 +117,7 @@ class Settings(BaseSettings):
     wger_cache_ttl_hours: int = 24
     wger_request_timeout_seconds: int = 120
     wger_enabled: bool = True
+    firebase_project_id: str = "healthcare-191d8"
     jwt_secret: str = "dev-secret"
 
     # Task 5.2 / Requirement 5.2: rolling summary trigger.
@@ -63,6 +126,7 @@ class Settings(BaseSettings):
     # ``keep_raw_turns`` turn gần nhất ở dạng raw.
     summary_threshold: int = 20
     keep_raw_turns: int = 10
+    summary_min_new_turns: int = Field(default=12, ge=2, le=100)
     max_agent_steps: int = 3
     tool_timeout_ms: int = 5000
 
@@ -117,6 +181,13 @@ class Settings(BaseSettings):
     @property
     def plan_tool_enforced_enabled(self) -> bool:
         return self.plan_tool_mode == "enforced"
+
+    @property
+    def adaptive_recommendation_shadow_enabled(self) -> bool:
+        return (
+            self.adaptive_recommendation_mode == "shadow"
+            and self.app_environment.strip().lower() != "production"
+        )
 
 
 settings = Settings()

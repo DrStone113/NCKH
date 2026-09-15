@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/user_provider.dart';
 import '../../home/screens/home_screen.dart';
+import '../../settings/screens/profile_settings_screen.dart';
 import 'auth_screen.dart';
 import 'workout_account_intake_screen.dart';
 
@@ -28,6 +29,12 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (userProvider.isAuthenticated) {
+          if (userProvider.needsBasicProfileIntake) {
+            return ProfileSettingsScreen(
+              key: ValueKey(userProvider.currentUser!.id),
+              isAccountSetup: true,
+            );
+          }
           // A new registration reaches this gate immediately. Existing users
           // re-enter it only when an account-intake version gains a question
           // they have not explicitly answered yet.

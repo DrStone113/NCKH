@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from datetime import date
 from threading import RLock
 from typing import Any, Iterable
+from unicodedata import normalize as unicode_normalize
 from uuid import NAMESPACE_URL, uuid5
 
 from models.schemas import UserProfile
@@ -36,7 +37,9 @@ from .contracts import (
     new_plan_id,
     new_revision_id,
 )
+from .lifecycle import transition_allowed
 from .nutrition_horizon import NutritionPlanningHorizonState, variety_score
+from .request_normalization import partition_nutrition_exclusions
 
 
 _MEAL_SPLIT: tuple[tuple[str, float], ...] = (
@@ -148,6 +151,9 @@ class PlanValidator:
                 for restriction in revision.constraint_snapshot.get("dietary_restrictions", []):
                     if _meal_violates_restriction(item, str(restriction)):
                         issues.append(PlanValidationIssue("HARD_DIETARY_CONSTRAINT_VIOLATION", "HARD", item.plan_item_id))
+                for exclusion in revision.constraint_snapshot.get("ingredient_exclusions", []):
+                    if _meal_violates_ingredient_exclusion(item, str(exclusion)):
+                        issues.append(PlanValidationIssue("HARD_INGREDIENT_EXCLUSION_VIOLATION", "HARD", item.plan_item_id))
             if item.item_type is PlanItemType.WORKOUT_SESSION:
                 ids = item.canonical_refs.get("exercise_ids")
                 if not isinstance(ids, list) or not ids:
@@ -290,19 +296,7 @@ class MemoryPlanRepository:
                 raise ValueError("PLAN_NOT_FOUND")
             if revision.revision_number != expected_revision_number:
                 raise ValueError("PLAN_REVISION_CONFLICT")
-            allowed = {
-                PlanLifecycleStatus.ACTIVE: {PlanLifecycleStatus.SAVED},
-                PlanLifecycleStatus.PAUSED: {PlanLifecycleStatus.ACTIVE},
-                PlanLifecycleStatus.COMPLETED: {PlanLifecycleStatus.ACTIVE, PlanLifecycleStatus.PAUSED},
-                PlanLifecycleStatus.CANCELLED: {
-                    PlanLifecycleStatus.DRAFT,
-                    PlanLifecycleStatus.PENDING_CONFIRMATION,
-                    PlanLifecycleStatus.SAVED,
-                    PlanLifecycleStatus.ACTIVE,
-                    PlanLifecycleStatus.PAUSED,
-                },
-            }
-            if status not in allowed or revision.lifecycle_status not in allowed[status]:
+            if not transition_allowed(revision.lifecycle_status, status):
                 raise ValueError("INVALID_PLAN_LIFECYCLE_TRANSITION")
             if status is PlanLifecycleStatus.ACTIVE and not revision.validation.ready:
                 raise ValueError("PLAN_NOT_READY")
@@ -349,8 +343,10 @@ class PlanEngine:
             return self._clarification_revision(context, request, "CANONICAL_NUTRITION_INPUT_UNAVAILABLE")
         if canonical.get("status") != "READY" or not isinstance(canonical.get("daily_kcal"), (int, float)):
             return self._specialist_or_clarification_revision(context, request, canonical)
-        restrictions = tuple(context.dietary_constraints.value or ()) if context.dietary_constraints.state is ContextState.KNOWN else ()
-        restrictions = tuple(dict.fromkeys((*restrictions, *request.temporary_exclusions)))
+        confirmed_constraints = tuple(context.dietary_constraints.value or ()) if context.dietary_constraints.state is ContextState.KNOWN else ()
+        restrictions, ingredient_exclusions = partition_nutrition_exclusions(
+            (*confirmed_constraints, *request.temporary_exclusions)
+        )
         items: list[PlanItem] = []
         recent_dishes: deque[int] = deque(maxlen=12)
         for offset in range(request.duration_days):
@@ -360,6 +356,7 @@ class PlanEngine:
                     meal_type=meal_type,
                     target_kcal=float(canonical["daily_kcal"]) * ratio,
                     dietary_restrictions=restrictions,
+                    ingredient_exclusions=ingredient_exclusions,
                     recent_dish_ids=tuple(recent_dishes),
                 )
                 dish_id = int(dish["id"])
@@ -396,9 +393,9 @@ class PlanEngine:
             validation=PlanValidationResult(PlanValidationStatus.READY),
             policy_versions={"nutrition": POLICY_VERSION}, catalog_versions={key: value for key, value in context.catalog_versions.items() if key != "exercise_catalog"},
             goal_snapshot={"health_goal": profile_data.get("health_goal"), "canonical_daily_kcal": canonical.get("daily_kcal"), "canonical_daily_protein": canonical.get("daily_protein")},
-            constraint_snapshot={"dietary_restrictions": list(restrictions)}, items=tuple(items),
+            constraint_snapshot={"dietary_restrictions": list(restrictions), "ingredient_exclusions": list(ingredient_exclusions)}, items=tuple(items),
             summary={**_nutrition_summary(items), "variety": variety_score(items)},
-            explanation_metadata={"reason_codes": ["NUTRITION_GOAL_MATCH", "DIETARY_CONSTRAINT_MATCH", "VARIETY_TARGET", "SOFT_PLANNING_TARGET"]},
+            explanation_metadata={"reason_codes": ["NUTRITION_GOAL_MATCH", "DIETARY_CONSTRAINT_MATCH", "INGREDIENT_EXCLUSION_MATCH", "VARIETY_TARGET", "SOFT_PLANNING_TARGET"]},
             provenance={
                 "generator": "P2_NUTRITION_DELEGATE", "canonical_nutrition_status": canonical.get("status"),
                 "planning_horizon": nutrition_horizon.to_dict(), "planned_not_consumed": True,
@@ -686,6 +683,31 @@ def _meal_violates_restriction(item: PlanItem, restriction: str) -> bool:
     # The canonical selector owns quantitative tags such as low_carb and
     # high_protein; it has already filtered before this immutable item exists.
     return False
+
+
+def _meal_violates_ingredient_exclusion(item: PlanItem, exclusion: str) -> bool:
+    """Verify a literal food exclusion against immutable dish component facts.
+
+    Literal exclusions deliberately stay separate from policy-level dietary
+    restrictions.  Comparing them here preserves the same accent-insensitive
+    match rule used by the canonical dish selector without treating a food name
+    as an unrelated policy enum.
+    """
+
+    needle = _normalized_food_text(exclusion)
+    if not needle:
+        return False
+    values: list[Any] = [item.content.get("dish_name")]
+    components = item.content.get("components")
+    if isinstance(components, list):
+        values.extend(component.get("name") for component in components if isinstance(component, dict))
+    return any(needle in _normalized_food_text(value) for value in values if isinstance(value, str))
+
+
+def _normalized_food_text(value: str) -> str:
+    return " ".join(
+        "".join(char for char in unicode_normalize("NFD", value).casefold() if char.isascii() and char.isalnum() or char == " ").split()
+    )
 
 
 def _contains_observational_key(value: Any) -> bool:

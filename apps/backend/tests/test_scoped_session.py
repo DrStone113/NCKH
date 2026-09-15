@@ -19,6 +19,7 @@ import asyncio
 
 import pytest
 
+import db.database as database
 from db.database import ScopedSession
 
 
@@ -164,3 +165,31 @@ async def test_commit_and_rollback_are_noops():
     await scoped.close()
 
     assert factory.created == []
+
+
+@pytest.mark.asyncio
+async def test_request_session_never_hides_a_commit_failure(monkeypatch):
+    class FailingCommitSession:
+        def __init__(self):
+            self.rolled_back = False
+            self.closed = False
+
+        async def commit(self):
+            raise RuntimeError("commit failed")
+
+        async def rollback(self):
+            self.rolled_back = True
+
+        async def close(self):
+            self.closed = True
+
+    session = FailingCommitSession()
+    monkeypatch.setattr(database, "AsyncSessionLocal", lambda: session)
+    dependency = database.get_db()
+
+    assert await anext(dependency) is session
+    with pytest.raises(RuntimeError, match="commit failed"):
+        await anext(dependency)
+
+    assert session.rolled_back is True
+    assert session.closed is True

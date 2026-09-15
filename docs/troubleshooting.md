@@ -1,5 +1,48 @@
 # 04. Sổ Tay Sửa Lỗi (Troubleshooting Guide)
 
+### 60. Lỗi đè FloatingActionButton (FAB) lên Bottom Dock & Khối đen pill trạng thái trong Plan Card
+
+- **Triệu chứng (Symptoms):**
+  1. Nút `+` (thêm bữa ăn) tại màn hình Dinh dưỡng bị đè trùng, che lấp lên Bottom Navigation Bar và bóng Chatbot FAB ở giữa.
+  2. Huy hiệu trạng thái kế hoạch (`_Pill`) hiển thị thành một khối chữ nhật màu đen đặc, không đọc được chữ.
+  3. Tiêu đề "Thực đơn theo kế hoạch" bị ngắt dòng chật chội và nội dung cuối danh sách bị che khuất bởi thanh điều hướng.
+- **Nguyên nhân gốc (Root cause):**
+  1. `NutritionScreen` nằm trong `IndexedStack` của `HomeScreen`, `FloatingActionButton` mặc định bám đáy Scaffold bên trong (`bottom: 0`), gây chồng chéo với Dock nổi 64px của `HomeScreen`.
+  2. `_Pill` trong `versioned_plan_card.dart` sử dụng `Theme.of(context).colorScheme.primaryContainer` (màu Slate đậm trong theme) kết hợp `labelSmall` cùng tone màu gây mất tương phản (đen trên nền đen).
+  3. `PlannedDayPlanSection` có tiêu đề dài đi kèm nút `IconButton` lớn trong cùng một `Row` cố định gây vỡ dòng trên màn hình hẹp.
+- **Cách xử lý (Resolution):**
+  1. Đẩy `FloatingActionButton` của `NutritionScreen` lên trên với `Padding(padding: EdgeInsets.only(bottom: 72))` và thêm nút `+` nhanh vào thanh AppBar.
+  2. Tăng khoảng đệm cuộn cuối danh sách `padding: EdgeInsets.fromLTRB(16, 12, 16, 96)`.
+  3. Cập nhật `_Pill` với màu nền mờ `color.withValues(alpha: 0.1)` và màu chữ `color` tương ứng theo từng trạng thái kế hoạch (`_statusColor(lifecycle)`).
+  4. Tối ưu tiêu đề `PlannedDayPlanSection` với `Flexible` text, badge "Dự kiến" gọn gàng và nút chuyển "Xem chi tiết →" dạng pill.
+- **Kiểm thử (Verification):** Chạy `flutter test` toàn bộ 131/131 bài test đều pass (`All tests passed!`).
+
+### 59. Giao diện Kế hoạch (Plan V2) thiếu trực quan và xung đột nhiều Scrollable trong Widget Test
+
+- **Triệu chứng (Symptoms):** Màn hình Kế hoạch đơn điệu, các ngày hiển thị dạng khối xám thô (`AppColors.background`), thiếu phân loại danh mục (Dinh dưỡng / Tập luyện / Sức khỏe), không có tab chuyển ngày linh hoạt trong chi tiết kế hoạch. Khi dùng `SingleChildScrollView` cho thanh tab trong danh sách gây lỗi `Too many elements` (`find.byType(Scrollable)`).
+- **Nguyên nhân gốc (Root cause):**
+  1. Thẻ kế hoạch (`_PlanOverviewCard`) và thẻ ngày (`_DayCard`) chưa áp dụng thiết kế Bento card chuẩn, thiếu badge phân loại macro (P/C/F) và format thứ/ngày rõ ràng.
+  2. Việc nhúng `SingleChildScrollView(scrollDirection: Axis.horizontal)` bên trong `ListView` tạo ra nhiều `Scrollable`, làm vỡ `scrollUntilVisible` trong widget testing.
+- **Cách xử lý (Resolution):**
+  1. Thay thế `SingleChildScrollView` bằng `Wrap(spacing: 8, runSpacing: 8)` cho cả thanh bộ lọc thư viện kế hoạch và thanh chọn ngày trong chi tiết kế hoạch.
+  2. Nâng cấp `_PlanLibraryHero`: Thêm thống kê số kế hoạch đang áp dụng, tổng mục dự kiến với gradient Slate cao cấp.
+  3. Bổ sung `_MacroBadge` (P: Protein, C: Carbs, F: Fat) cho từng món ăn và thời lượng/hiệp tập cho bài tập.
+  4. Nâng cấp `_PlanActions`: Phân cấp rõ ràng Primary CTA (Lưu, Kích hoạt), Secondary Outlined CTA (Chỉnh sửa), và Subtle Destructive (Hủy/Tạm dừng).
+  5. Thêm thanh chọn ngày tương tác (`_buildDayTabs`) trong `PlanDetailScreen` cho phép xem tổng thể hoặc lọc theo từng ngày cụ thể.
+- **Kiểm thử (Verification):** Chạy `flutter test` toàn bộ 131/131 bài test đều pass (`All tests passed!`).
+
+### 58. Lỗi không cuộn được / kẹt kéo chuột trên Desktop & Web (Flutter Scroll Behavior & UI Overhaul)
+
+- **Triệu chứng (Symptoms):** Người dùng sử dụng chuột hoặc trackpad kéo/cuộn danh sách trên Web/Desktop bị trơ, không cuộn được hoặc giật cục. Giao diện màu xám thô và hiệu ứng chuyển tab/loading còn cứng.
+- **Nguyên nhân gốc (Root cause):**
+  1. Flutter mặc định chỉ kích hoạt cử chỉ kéo (`dragDevices`) cho `PointerDeviceKind.touch` và `stylus`, bỏ qua `PointerDeviceKind.mouse`, `trackpad`, và `unknown`.
+  2. Màu sắc và hiệu ứng shimmer loading dùng màu đen xám `grey[800]` thô cứng thay vì tone Bento `#E2E8F0` / `#F1F5F9`.
+- **Cách xử lý (Resolution):**
+  1. Thêm `AppScrollBehavior` kế thừa `MaterialScrollBehavior` cấu hình `dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad, PointerDeviceKind.stylus, PointerDeviceKind.unknown}` và áp dụng `BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())`.
+  2. Gắn `scrollBehavior: const AppScrollBehavior()` vào `MaterialApp` tại `main.dart`.
+  3. Chuẩn hóa hệ thống thiết kế Bento: Thẻ nền trắng `#FFFFFF`, viền mờ 1px `Colors.black.withValues(alpha: 0.04)`, ambient shadow mềm mại `AppShadows.card`, `InteractiveCard` với hiệu ứng nhấn nhún (spring scale bounce), và nút AI Chatbot FAB với breathing pulse animation.
+- **Kiểm thử (Verification):** Chạy `flutter test` toàn bộ 131/131 unit & widget tests đều pass.
+
 ### 57. FastAPI Docker container starts but cannot serve port 8080
 
 - **Symptoms:** `docker compose` reports the container as running, but
@@ -575,3 +618,29 @@
   4. Không thêm compatibility shim vào repository và không sửa behavioral code
      chỉ để phục vụ test runtime. Xem runtime artifact
      `apps/backend/data/workout_planner_e4_runtime_v1.json`.
+
+### 61. N3.1 active-learning queue fails module import
+
+- **Symptom:** Python raised `SyntaxError: '(' was never closed` while pytest
+  collected the N3/N3.1 suites; no runtime candidate was processed.
+- **Root cause:** The nested `tuple(sorted(...))` return in
+  `AdaptiveRecipeRepository.active_learning_queue` lost its outer closing
+  parenthesis during the initial implementation.
+- **Resolution:** Close the outer tuple expression and retain the deterministic
+  `(-priority_score, queue_id)` ordering.  The regression test now exercises
+  the aggregate-only queue and owner-scoped unknown-dish learning.
+- **Regression check:** Run `python -m pytest tests/test_adaptive_nutrition_n3.py
+  tests/test_external_recipe_discovery_n3_1.py -q` from `apps/backend`.
+
+### 62. N3.1 redirect security test references the wrong browser fixture
+
+- **Symptom:** The redirect-host test raised `NameError: browser is not
+  defined` after the redirect assertion had already passed.
+- **Root cause:** The blocked-source assertion from the policy-gate test was
+  accidentally placed in the adjacent redirect test while adding the new
+  security case.
+- **Resolution:** Keep the blocked-source/no-browser-call assertion with its
+  `_FakeBrowser` fixture and make the redirect test own only the redirect
+  boundary assertion.
+- **Regression check:** Run `python -m pytest tests/test_external_recipe_discovery_n3_1.py -q`
+  from `apps/backend`.

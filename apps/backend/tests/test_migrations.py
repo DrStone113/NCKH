@@ -221,6 +221,18 @@ async def test_plan_tool_v2_migration_is_versioned_and_separates_observations():
 
 
 @pytest.mark.asyncio
+async def test_durable_preview_migration_is_non_observational_and_owner_scoped():
+    sql_path = db_module.MIGRATIONS_DIR / "018_durable_plan_previews.sql"
+    assert sql_path.is_file()
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "CREATE TABLE IF NOT EXISTS plan_v2_previews" in sql
+    assert "CREATE TABLE IF NOT EXISTS workout_plan_previews_e4" in sql
+    assert "owner_user_id" in sql
+    assert "INSERT INTO meals" not in sql
+    assert "INSERT INTO workout_results" not in sql
+
+
+@pytest.mark.asyncio
 async def test_apply_migrations_handles_missing_dir(monkeypatch, tmp_path: Path):
     """Nếu thư mục migrations không tồn tại thì trả về [] thay vì raise."""
     monkeypatch.setattr(db_module, "MIGRATIONS_DIR", tmp_path / "no_such_dir")

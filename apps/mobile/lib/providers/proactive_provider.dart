@@ -4,7 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/backend_api_service.dart';
 
 abstract interface class ProactiveApiClient {
-  Future<Map<String, dynamic>?> getActiveCheckin({required String userId});
+  Future<Map<String, dynamic>?> getActiveCheckin({
+    required String userId,
+    Map<String, dynamic>? userContext,
+  });
 
   Future<Map<String, dynamic>> respondToCheckin({
     required String nudgeId,
@@ -28,8 +31,14 @@ class BackendProactiveApiClient implements ProactiveApiClient {
   final BackendApiService _service;
 
   @override
-  Future<Map<String, dynamic>?> getActiveCheckin({required String userId}) {
-    return _service.getActiveCheckin(userId: userId);
+  Future<Map<String, dynamic>?> getActiveCheckin({
+    required String userId,
+    Map<String, dynamic>? userContext,
+  }) {
+    return _service.getActiveCheckin(
+      userId: userId,
+      userContext: userContext,
+    );
   }
 
   @override
@@ -201,7 +210,10 @@ class ProactiveProvider with ChangeNotifier {
   }
 
   /// Load active check-in nudge from backend
-  Future<void> loadActiveCheckin(String userId) async {
+  Future<void> loadActiveCheckin(
+    String userId, {
+    Map<String, dynamic>? userContext,
+  }) async {
     await loadCheckinSettings(userId);
     if (!(_checkinSettings['enable_proactive'] ?? true)) {
       _activeNudge = null;
@@ -216,7 +228,10 @@ class ProactiveProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final nudge = await _apiService.getActiveCheckin(userId: userId);
+      final nudge = await _apiService.getActiveCheckin(
+        userId: userId,
+        userContext: userContext,
+      );
       _activeNudge = nudge;
       _isDismissed = false;
     } catch (e) {

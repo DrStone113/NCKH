@@ -1,0 +1,26 @@
+﻿{
+    "artifact_version":  "N3_2_1_LIVE_BRAVE_E2E_V1",
+    "status":  "FAIL",
+    "browser_name":  "Brave",
+    "browser_executable_path":  "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+    "browser_version":  "152.1.94.121",
+    "service_health":  {
+                           "backend_api":  false,
+                           "postgresql":  false,
+                           "static_web":  false
+                       },
+    "build_configuration":  {
+                                "api_base_url_configured":  false,
+                                "test_auth_configured":  false,
+                                "e2e_demo_enabled":  false,
+                                "bundle_marker_embedded":  false
+                            },
+    "failure_stage":  "locator-probe",
+    "failure_class":  "PLAYWRIGHT_HARNESS",
+    "error":  "locator.waitFor: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole(\u0027button\u0027, { name: \u0027n3-open-chat\u0027, exact: true }) to be visible\u001b[22m\n\n    at enableForTarget (C:\\Project\\NCKH\\apps\\mobile\\tool\\n3_2_1_live_brave_e2e.cjs:101:16)\n    at async run (C:\\Project\\NCKH\\apps\\mobile\\tool\\n3_2_1_live_brave_e2e.cjs:131:5)",
+    "timestamps":  {
+                       "started_at_utc":  "2026-09-05T17:21:01.0133601Z",
+                       "completed_at_utc":  "2026-09-05T17:23:56.5234729Z"
+                   },
+    "token_recorded":  false
+}

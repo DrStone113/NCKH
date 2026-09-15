@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
@@ -8,6 +10,7 @@ import 'features/auth/screens/auth_wrapper.dart';
 import 'providers/user_provider.dart';
 import 'providers/health_provider.dart';
 import 'providers/nutrition_provider.dart';
+import 'providers/plan_provider.dart';
 import 'providers/exercise_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/ai_chat_provider.dart';
@@ -18,7 +21,6 @@ import 'providers/lifestyle_provider.dart';
 import 'providers/proactive_provider.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   // Try Firebase init - may fail on web/desktop without config
@@ -27,6 +29,12 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    if (const bool.fromEnvironment('USE_FIREBASE_EMULATORS')) {
+      const emulatorHost = kIsWeb ? '127.0.0.1' : '10.0.2.2';
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+      FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+      debugPrint('Firebase Auth/Firestore emulators enabled at $emulatorHost');
+    }
     firebaseOk = true;
   } catch (e) {
     debugPrint('Firebase init failed: $e (running in demo mode)');
@@ -77,6 +85,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HealthProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
+        ChangeNotifierProvider(create: (_) => PlanProvider()),
         ChangeNotifierProvider(create: (_) => LifestyleProvider()),
         ChangeNotifierProvider(create: (_) => ProactiveProvider()),
         ChangeNotifierProvider(create: (_) {
@@ -88,7 +97,13 @@ class MyApp extends StatelessWidget {
         // HealthProvider được thêm vào đây để chatbot đọc/ghi được lịch sử cân
         // nặng. Thiếu nó thì tool `get_weight_history` và `log_weight` không có
         // nguồn dữ liệu nào để làm việc.
-        ChangeNotifierProxyProvider5<UserProvider, ExerciseProvider, NutritionProvider, LifestyleProvider, HealthProvider, AIChatProvider>(
+        ChangeNotifierProxyProvider5<
+            UserProvider,
+            ExerciseProvider,
+            NutritionProvider,
+            LifestyleProvider,
+            HealthProvider,
+            AIChatProvider>(
           create: (_) => AIChatProvider(),
           update: (_, user, exercise, nutrition, lifestyle, health, aiChat) {
             final chat = aiChat ?? AIChatProvider();
@@ -107,6 +122,7 @@ class MyApp extends StatelessWidget {
         title: 'Health App v1.1.0',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
+        scrollBehavior: const AppScrollBehavior(),
         home: const AuthWrapper(),
         builder: (context, child) {
           if (kIsWeb && child != null) {
@@ -322,7 +338,8 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                 // Khung mô phỏng điện thoại ở giữa (dùng FittedBox để co giãn tự động dựa trên độ cao trình duyệt)
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20.0, horizontal: 10.0),
                     child: FittedBox(
                       fit: BoxFit.contain,
                       child: AnimatedContainer(
@@ -352,9 +369,12 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                                 child: MediaQuery(
                                   data: MediaQuery.of(context).copyWith(
                                     size: Size(baseWidth - 24, baseHeight - 24),
-                                    padding: const EdgeInsets.only(top: 24, bottom: 16),
+                                    padding: const EdgeInsets.only(
+                                        top: 24, bottom: 16),
                                   ),
-                                  child: widget.child,
+                                  child: ScaffoldMessenger(
+                                    child: widget.child,
+                                  ),
                                 ),
                               ),
                             ),
@@ -390,8 +410,10 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
                                         width: 35,
                                         height: 3,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(2),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(2),
                                         ),
                                       ),
                                     ),
@@ -427,17 +449,22 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withValues(alpha: 0.05),
+          color: isSelected
+              ? const Color(0xFF6B4EFF)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.transparent,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+            color:
+                isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -459,17 +486,22 @@ class _WebPhoneWrapperState extends State<_WebPhoneWrapper> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6B4EFF) : Colors.white.withValues(alpha: 0.05),
+          color: isSelected
+              ? const Color(0xFF6B4EFF)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.transparent,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+            color:
+                isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

@@ -1,0 +1,699 @@
+{
+  "artifact_version": "PLAN_V2_P2_2_FAILURE_TAXONOMY_V1",
+  "source_status": "P2_1_FIRST_PASS_IMMUTABLE_USED_FOR_TUNING_ONLY",
+  "source_hashes": {
+    "holdout": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+    "raw_execution": "e2944ad6b11a5285b76f0414b52160242ffc1d0071e9ed35ddd06ef63205fb9b",
+    "scored_results": "6a87aa68e82ead5cdae4613dfc03f27da953055ca12943905778471299191239"
+  },
+  "records_analyzed": 120,
+  "semantic_mismatches_classified": 63,
+  "category_semantic_summary": {
+    "combined_health": {
+      "comparable": 15,
+      "semantic_mismatch": 8,
+      "semantic_match": 7
+    },
+    "nutrition": {
+      "comparable": 30,
+      "semantic_match": 12,
+      "semantic_mismatch": 18
+    },
+    "revision_lifecycle_concurrency_adversarial": {
+      "comparable": 15,
+      "semantic_mismatch": 10,
+      "semantic_match": 5
+    },
+    "weekly_workout_scheduling": {
+      "comparable": 30,
+      "semantic_mismatch": 24,
+      "semantic_match": 6
+    },
+    "workout_single_session": {
+      "comparable": 30,
+      "semantic_match": 27,
+      "semantic_mismatch": 3
+    }
+  },
+  "primary_category_counts": {
+    "EXECUTION_ADAPTER_BUG": {
+      "count": 43,
+      "case_ids": [
+        "p2r-combined_health-001",
+        "p2r-combined_health-003",
+        "p2r-combined_health-004",
+        "p2r-combined_health-005",
+        "p2r-combined_health-009",
+        "p2r-combined_health-010",
+        "p2r-combined_health-012",
+        "p2r-combined_health-015",
+        "p2r-nutrition-006",
+        "p2r-nutrition-010",
+        "p2r-nutrition-011",
+        "p2r-nutrition-017",
+        "p2r-nutrition-021",
+        "p2r-nutrition-025",
+        "p2r-nutrition-026",
+        "p2r-nutrition-030",
+        "p2r-weekly_workout_scheduling-001",
+        "p2r-weekly_workout_scheduling-002",
+        "p2r-weekly_workout_scheduling-003",
+        "p2r-weekly_workout_scheduling-005",
+        "p2r-weekly_workout_scheduling-006",
+        "p2r-weekly_workout_scheduling-008",
+        "p2r-weekly_workout_scheduling-009",
+        "p2r-weekly_workout_scheduling-010",
+        "p2r-weekly_workout_scheduling-011",
+        "p2r-weekly_workout_scheduling-012",
+        "p2r-weekly_workout_scheduling-013",
+        "p2r-weekly_workout_scheduling-014",
+        "p2r-weekly_workout_scheduling-015",
+        "p2r-weekly_workout_scheduling-016",
+        "p2r-weekly_workout_scheduling-019",
+        "p2r-weekly_workout_scheduling-021",
+        "p2r-weekly_workout_scheduling-022",
+        "p2r-weekly_workout_scheduling-023",
+        "p2r-weekly_workout_scheduling-024",
+        "p2r-weekly_workout_scheduling-025",
+        "p2r-weekly_workout_scheduling-026",
+        "p2r-weekly_workout_scheduling-027",
+        "p2r-weekly_workout_scheduling-029",
+        "p2r-weekly_workout_scheduling-030",
+        "p2r-workout_single_session-003",
+        "p2r-workout_single_session-011",
+        "p2r-workout_single_session-025"
+      ]
+    },
+    "FIXTURE_RUNTIME_BUG": {
+      "count": 20,
+      "case_ids": [
+        "p2r-nutrition-002",
+        "p2r-nutrition-003",
+        "p2r-nutrition-007",
+        "p2r-nutrition-009",
+        "p2r-nutrition-012",
+        "p2r-nutrition-014",
+        "p2r-nutrition-018",
+        "p2r-nutrition-022",
+        "p2r-nutrition-024",
+        "p2r-nutrition-027",
+        "p2r-revision_lifecycle_concurrency_adversarial-001",
+        "p2r-revision_lifecycle_concurrency_adversarial-002",
+        "p2r-revision_lifecycle_concurrency_adversarial-004",
+        "p2r-revision_lifecycle_concurrency_adversarial-005",
+        "p2r-revision_lifecycle_concurrency_adversarial-006",
+        "p2r-revision_lifecycle_concurrency_adversarial-007",
+        "p2r-revision_lifecycle_concurrency_adversarial-010",
+        "p2r-revision_lifecycle_concurrency_adversarial-012",
+        "p2r-revision_lifecycle_concurrency_adversarial-013",
+        "p2r-revision_lifecycle_concurrency_adversarial-015"
+      ]
+    }
+  },
+  "mismatches": [
+    {
+      "case_id": "p2r-nutrition-002",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-003",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-006",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-007",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-009",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-010",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-011",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-012",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-014",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-017",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-018",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-021",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-022",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-024",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-025",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-026",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-027",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_CANONICAL_CONSTRAINT",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The P2.1 execution context supplied only user_id although the prompt requires a current profile or constraint context.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-nutrition-030",
+      "category": "nutrition",
+      "oracle_profile": "NUTRITION_SPECIALIST_GATE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor omitted explicit prompt safety/planned-state intent before calling the Plan V2 tool.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-workout_single_session-003",
+      "category": "workout_single_session",
+      "oracle_profile": "WORKOUT_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-workout_single_session-011",
+      "category": "workout_single_session",
+      "oracle_profile": "WORKOUT_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-workout_single_session-025",
+      "category": "workout_single_session",
+      "oracle_profile": "WORKOUT_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-001",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-002",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-003",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-005",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_TIMEZONE_EXACT",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-006",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-008",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-009",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_TIMEZONE_EXACT",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-010",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-011",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_HEURISTIC_LABEL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-012",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_INVALID_REQUEST",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-013",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-014",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-015",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-016",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-019",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_PLANNED_NOT_ACTUAL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-021",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-022",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_TIMEZONE_EXACT",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-023",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_E4_DELEGATION",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-024",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-025",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-026",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_TIMEZONE_EXACT",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-027",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_HEURISTIC_LABEL",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-029",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_EXACT_SCHEDULE",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-030",
+      "category": "weekly_workout_scheduling",
+      "oracle_profile": "WEEKLY_E4_DELEGATION",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "CLARIFICATION_REQUIRED",
+      "observed_legacy_status": "READY"
+    },
+    {
+      "case_id": "p2r-combined_health-001",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_ONLY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-003",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_ONLY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-004",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_ONLY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-005",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_ISOLATED_REVISION",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-009",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_IDENTITY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-010",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_ISOLATED_REVISION",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-012",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_ONLY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-combined_health-015",
+      "category": "combined_health",
+      "oracle_profile": "COMBINED_REFERENCE_ONLY",
+      "primary_category": "EXECUTION_ADAPTER_BUG",
+      "reason": "The executor did not translate prompt facts into the bounded public Plan V2 request contract.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-001",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_EXACT_OWNER_WRITE",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-002",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_EXACT_OWNER_WRITE",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-004",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_IDENTITY_CHAIN",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-005",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_IDEMPOTENCY",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-006",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_OVERLAP",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-007",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_NO_ACTUAL_WRITE",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-010",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_IDENTITY_CHAIN",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-012",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_EXACT_OWNER_WRITE",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-013",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_IDEMPOTENCY",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-015",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "oracle_profile": "LIFECYCLE_EXACT_OWNER_WRITE",
+      "primary_category": "FIXTURE_RUNTIME_BUG",
+      "reason": "The executor invented a missing UUID read instead of provisioning the exact owner-scoped revision fixture required by the lifecycle request.",
+      "observed_v2_status": "NOT_FOUND",
+      "observed_legacy_status": "NOT_COMPARABLE"
+    }
+  ],
+  "systemic_findings": [
+    {
+      "primary_category": "REFERENCE_PROPAGATION_BUG",
+      "scope": "all 120 P2.1 records",
+      "reason": "The first-pass runner computed reference_chain_identity_percent from v2_status == READY. It did not execute or observe preview-to-pending-to-persistence identity propagation."
+    },
+    {
+      "primary_category": "NORMALIZATION_BUG",
+      "scope": "legacy comparison adapter",
+      "reason": "A rolled-back legacy insert was exposed as unintended_writes to the frozen comparator even though it did not persist. New harnesses retain write-attempt telemetry separately from persisted side effects."
+    },
+    {
+      "primary_category": "LIFECYCLE_BUG",
+      "scope": "PostgreSQL 16.15 live integration",
+      "reason": "The duplicated lifecycle maps rejected PAUSED to ACTIVE. P2.2 centralizes the transition table and permits resume only from PAUSED."
+    }
+  ]
+}

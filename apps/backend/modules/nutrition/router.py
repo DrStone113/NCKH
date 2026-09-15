@@ -96,7 +96,7 @@ async def get_dish_by_id(dish_id: int) -> Dict[str, Any]:
 async def get_vietnamese_foods(
     search: str = None,
     category: str = None,
-    limit: int = 100
+    limit: int = 1000
 ) -> List[Dict[str, Any]]:
     """
     Get Vietnamese foods
@@ -104,7 +104,7 @@ async def get_vietnamese_foods(
     Query params:
     - search: Search by food name
     - category: Filter by category
-    - limit: Maximum number of results (default 100)
+    - limit: Maximum number of results (default 1000)
     """
     foods = load_foods()
     

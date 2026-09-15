@@ -19,6 +19,7 @@ from services.plan_engine.contracts import (
     PlanPatch,
     PlanPatchOperation,
     PlanRequest,
+    PlanRevision,
 )
 from services.plan_engine.development_scenarios import development_scenarios
 from services.plan_engine.engine import MemoryPlanRepository, PlanContextResolver, PlanEngine, PlanValidator
@@ -58,6 +59,16 @@ def test_nutrition_draft_uses_canonical_items_and_never_observations():
         not {"actual_reps", "consumed_at", "logged_at", "performed_at"}.intersection(item.content)
         for item in revision.items
     )
+
+
+def test_plan_revision_preview_round_trips_with_same_identity_hash():
+    revision = PlanEngine(MemoryPlanRepository()).build_nutrition_plan(
+        _context(), _request()
+    )
+    restored = PlanRevision.from_dict(revision.to_dict())
+
+    assert restored == revision
+    assert restored.revision_content_hash == revision.revision_content_hash
 
 
 def test_missing_context_remains_missing_and_is_not_defaulted_to_zero():

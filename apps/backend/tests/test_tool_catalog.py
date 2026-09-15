@@ -13,8 +13,8 @@ def test_tool_catalog_registers_all_tools():
         "get_today_exercises",
         "get_meal_log_range",
         "get_exercise_log_range",
-            "update_workout_profile",
-            "update_nutrition_profile",
+        "update_workout_profile",
+        "update_nutrition_profile",
         "get_weight_history",
         "log_meal",
         "log_exercise",
@@ -24,12 +24,14 @@ def test_tool_catalog_registers_all_tools():
         "set_lifestyle_reminder",
         "navigate_to_screen",
         "suggest_dish",
-            "suggest_workout",
-            "build_personalized_workout",
-            "get_workout_substitutions",
-            "save_workout_plan",
-            "log_workout_result",
-            "calculate_tdee",
+        "search_dish_catalog",
+        "suggest_workout",
+        "search_exercise_catalog",
+        "build_personalized_workout",
+        "get_workout_substitutions",
+        "save_workout_plan",
+        "log_workout_result",
+        "calculate_tdee",
         "search_food_nutrition",
         "build_nutrition_plan",
         "build_workout_schedule",
@@ -43,7 +45,7 @@ def test_tool_catalog_registers_all_tools():
     }
 
     assert set(registry.names()) == expected
-    assert len(registry.schemas()) == 32
+    assert len(registry.schemas()) == 34
     assert not {"create_long_term_plan", "create_plan", "append_plan_items", "get_active_plan", "mark_plan_item_complete"}.intersection(registry.names())
 
 
@@ -73,6 +75,8 @@ def test_server_tool_sides_and_idempotency():
 
     assert registry.get("suggest_dish").side == "server"
     assert registry.get("suggest_dish").idempotent is True
+    assert registry.get("search_dish_catalog").idempotent is True
+    assert registry.get("search_exercise_catalog").idempotent is True
     assert registry.get("build_nutrition_plan").idempotent is True
     assert registry.get("save_plan").idempotent is False
     assert registry.get("set_plan_status").idempotent is False

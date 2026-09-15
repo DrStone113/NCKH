@@ -1,0 +1,220 @@
+{
+  "register_version": "PLAN_V2_P2_1_FIRST_SCORED_ACCEPTANCE_REGISTER_V1",
+  "register_status": "FIRST_PASS_COMPLETE",
+  "review_mode": "AUTOMATED",
+  "created_at": "2026-09-03T11:08:23.1670905Z",
+  "first_pass_started": true,
+  "first_pass_completed": true,
+  "historical_scope": {
+    "HISTORICAL_V1_CONTAMINATED": true,
+    "CURRENT_ACCEPTANCE_QUALIFICATION_STATUS_AT_REGISTER_CREATION": "READY_FOR_FIRST_SCORED_ACCEPTANCE",
+    "CURRENT_ACCEPTANCE_QUALIFICATION_STATUS_CURRENT": "NOT_READY_FOR_FIRST_SCORED_ACCEPTANCE",
+    "CURRENT_SCOPE": "P2_1A_AUTOMATED_FREEZE"
+  },
+  "frozen_artifacts": {
+    "holdout": {
+      "version": "PLAN_V2_P2_1A_AUTOMATED_HOLDOUT_V1",
+      "path": "p2-1a-automated-holdout-v1.json",
+      "sha256": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+      "case_count": 120
+    },
+    "oracle": {
+      "version": "PLAN_V2_P2_1A_DETERMINISTIC_ORACLE_V1",
+      "path": "p2-1a-deterministic-oracle-v1.json",
+      "sha256": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8"
+    },
+    "thresholds": {
+      "version": "PLAN_V2_P2_1_ACCEPTANCE_THRESHOLDS_V1",
+      "path": "acceptance-thresholds-v1.json",
+      "sha256": "e6002d52ddd849f4f434c8a56ba1af2e6659ca6b8abddf0f8b5dd1adcff15df0"
+    },
+    "implementation_freeze": {
+      "version": "PLAN_V2_IMPLEMENTATION_FREEZE_P2_1R_V1",
+      "path": "implementation-freeze-p2-1r-v1.json",
+      "sha256": "58abdea52c9466e25dd9b71e8e50dc7e588ea52d46b74937b6a50c6f5ff993f8",
+      "source_mismatches": {}
+    },
+    "exclusion_index": {
+      "path": "development-exclusion-index-v1.json",
+      "file_sha256": "42b3da22815ed1c996930a0803d707be33f03851476fd8f06ef220beebaa9ced",
+      "canonical_records_sha256": "925b15d808bafa9f8ddadcc75168231371347a48601effe9a49e54c058723681",
+      "matches_automated_freeze": true
+    },
+    "dedup_protocol": {
+      "version": "DEDUP_PROTOCOL_V1",
+      "path": "dedup-protocol-v1.json",
+      "file_sha256": "b6da80f22b1796dd21a6147eeca8c412645f43648cfc22413a8e3db39bbd5236",
+      "frozen_before_candidate_review": true
+    }
+  },
+  "toolchain": {
+    "python_executable": "C:\\Project\\NCKH\\.venv-e4-py310\\Scripts\\python.exe",
+    "cpython_version": "3.10.21",
+    "flutter_executable": "C:\\Project\\NCKH\\apps\\mobile\\.fvm\\flutter_sdk\\bin\\flutter.bat",
+    "flutter_version": "3.44.8",
+    "dart_version": "3.12.2",
+    "pinned_versions_observed_before_flutter_bootstrap_failure": true,
+    "flutter_command_usable_currently": false,
+    "flutter_command_failure": "Flutter SDK bootstrap cannot replace bin/cache/engine.stamp."
+  },
+  "preconditions": {
+    "scoped_qualification_ready": true,
+    "implementation_source_hashes_match": true,
+    "holdout_hash_matches": true,
+    "oracle_hash_matches": true,
+    "threshold_hash_matches": true,
+    "exclusion_index_hash_matches": true,
+    "dedup_protocol_frozen": true,
+    "toolchain_versions_match_at_register_creation": true,
+    "toolchain_command_usable_currently": false,
+    "frozen_execution_path_ready": false,
+    "legacy_read_only_adapter_ready": false
+  },
+  "scoring_blockers": [],
+  "next_allowed_state": "A separately reviewed, frozen execution harness and read-only legacy adapter must exist before any case can set first_pass_started=true. No Plan V2, comparator, oracle, holdout, threshold, or frozen implementation source was modified by this register.",
+  "started_at": "2026-09-03T12:16:33.460063+00:00",
+  "final_preflight": {
+    "first_pass_not_started": true,
+    "frozen_plan_implementation_match": true,
+    "holdout_hash_match": true,
+    "oracle_hash_match": true,
+    "comparator_hash_match": true,
+    "threshold_hash_match": true,
+    "exclusion_index_hash_match": true,
+    "dedup_protocol_hash_match": true,
+    "toolchain_match": true,
+    "postgres16": true,
+    "hashes": {
+      "implementation": {
+        "services/plan_engine/development_scenarios.py": {
+          "expected": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+          "actual": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+          "matches": true
+        },
+        "services/plan_engine/contracts.py": {
+          "expected": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+          "actual": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+          "matches": true
+        },
+        "services/plan_engine/engine.py": {
+          "expected": "a9f5f5143e794cffdaab1006ee365eb4dc2ba57f64e9909180c0f6bae29e3e2d",
+          "actual": "a9f5f5143e794cffdaab1006ee365eb4dc2ba57f64e9909180c0f6bae29e3e2d",
+          "matches": true
+        },
+        "services/plan_engine/comparator.py": {
+          "expected": "77f52544cc6b07bca9882bb823d1687e85775c5066543db0b6602ae9d7ed711a",
+          "actual": "77f52544cc6b07bca9882bb823d1687e85775c5066543db0b6602ae9d7ed711a",
+          "matches": true
+        },
+        "services/plan_engine/weekly_scheduler.py": {
+          "expected": "e694183a71bbcd49b32988ab03673a8d53361c6337243168d773a6c8867864ff",
+          "actual": "e694183a71bbcd49b32988ab03673a8d53361c6337243168d773a6c8867864ff",
+          "matches": true
+        },
+        "services/plan_engine/nutrition_horizon.py": {
+          "expected": "159e625d851d850080eaf62bd27d03f7745c9fbc48eff3c6eb2601f18e6a025c",
+          "actual": "159e625d851d850080eaf62bd27d03f7745c9fbc48eff3c6eb2601f18e6a025c",
+          "matches": true
+        },
+        "services/plan_engine/persistence.py": {
+          "expected": "06bd7c9255914cef6c04ca0f1b44372cb9fe85615329df9a620dae20f22eff11",
+          "actual": "06bd7c9255914cef6c04ca0f1b44372cb9fe85615329df9a620dae20f22eff11",
+          "matches": true
+        },
+        "services/agent/tools/plan_v2.py": {
+          "expected": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+          "actual": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+          "matches": true
+        },
+        "services/agent/pending_user_action.py": {
+          "expected": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352",
+          "actual": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352",
+          "matches": true
+        }
+      },
+      "artifacts": {
+        "holdout": {
+          "expected": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+          "actual": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+          "matches": true
+        },
+        "oracle": {
+          "expected": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+          "actual": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+          "matches": true
+        },
+        "automated_review_register": {
+          "expected": "185d20362032c2746d572e940d506c9d9569beee7b6dffee0f8223b78e8ec1fc",
+          "actual": "185d20362032c2746d572e940d506c9d9569beee7b6dffee0f8223b78e8ec1fc",
+          "matches": true
+        },
+        "thresholds": {
+          "expected": "e6002d52ddd849f4f434c8a56ba1af2e6659ca6b8abddf0f8b5dd1adcff15df0",
+          "actual": "e6002d52ddd849f4f434c8a56ba1af2e6659ca6b8abddf0f8b5dd1adcff15df0",
+          "matches": true
+        },
+        "implementation_freeze": {
+          "expected": "58abdea52c9466e25dd9b71e8e50dc7e588ea52d46b74937b6a50c6f5ff993f8",
+          "actual": "58abdea52c9466e25dd9b71e8e50dc7e588ea52d46b74937b6a50c6f5ff993f8",
+          "matches": true
+        }
+      },
+      "supplemental": {
+        "exclusion_index": {
+          "expected": "42b3da22815ed1c996930a0803d707be33f03851476fd8f06ef220beebaa9ced",
+          "actual": "42b3da22815ed1c996930a0803d707be33f03851476fd8f06ef220beebaa9ced",
+          "matches": true
+        },
+        "dedup_protocol": {
+          "expected": "b6da80f22b1796dd21a6147eeca8c412645f43648cfc22413a8e3db39bbd5236",
+          "actual": "b6da80f22b1796dd21a6147eeca8c412645f43648cfc22413a8e3db39bbd5236",
+          "matches": true
+        }
+      }
+    },
+    "toolchain": {
+      "flutter_exit_code": 0,
+      "dart_exit_code": 0,
+      "flutter_version": "3.44.8",
+      "dart_version": "3.12.2",
+      "cpython_version": "3.10.21",
+      "usable": true
+    },
+    "postgres_version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "ok": true
+  },
+  "harness": {
+    "version": "P2_1A_EXECUTION_HARNESS_V1",
+    "sha256": "09c232eda4b023cf57b1f64e125ea638e00fd57de5cad8d23108019998a277ba"
+  },
+  "postgresql": {
+    "url_redacted": "postgresql+asyncpg://***@127.0.0.1:55432/p2_1_acceptance",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)"
+  },
+  "migration_checksums": {
+    "001_chatbot_redesign.sql": "2e5496d0f9332443285231c7eac1ae6d39589ec4bfb66177c2d5904ddc0fe37d",
+    "002_hybrid_search.sql": "7bc1ba3399ad7cde8c4ba3144d47a7f2267a098027c4dc08319b8de1a9b99cb4",
+    "003_web_knowledge.sql": "c3df48b934b3119b2bb697dd31507177ad1c2ee7ab80bdf9c3956fa6ec9b3af0",
+    "004_chat_message_thoughts.sql": "d3e30e8787bae14e9eb1036cde53f116d3bf57e459967aad5d6eeeedbefff6d3",
+    "005_chat_message_structured_data.sql": "f9ff9b4b8815fbafd2a60b09ccf4c911f71251e2450114e3d7f4d82cbf286a03",
+    "006_research_corpus.sql": "875acafe78be95c749d82c8e3af610b7e49376d4e1281682641cbe26cb78b0a3",
+    "007_nutrition_policy_v1.sql": "c76ca5561d2fcbad1d7dc5dd5735e13984819e8ce1ba925fe472216ced8674bd",
+    "008_personalized_workout_e4_1.sql": "0089b27d342f83f58b2034be3ebf88f3e0c1ffbd33a62b7d1c8500020d7d4500",
+    "009_chat_message_public_trace.sql": "be7f04c979af7f3ab2294437fa6156ac7d8f9366f47c3aaddfffc57b24dcca2a",
+    "010_plan_tool_v2.sql": "49a1ae02daa085fec3b8681c2186af0afa6419a4b04de6ba6c3428616d8d869e",
+    "011_plan_tool_v2_p2_enforced.sql": "1aba2faae1777ee3e5fa669a2dfce6863bca6b5d853bb01cb1d10697085fc977",
+    "012_plan_tool_v2_p2_item_order.sql": "2aca3e59bff2426a91d31d65eebae5b1a28a25b3881a49cd8866461b404f23d8",
+    "013_plan_tool_v2_p2_logical_item_identity.sql": "bf0df773e40a6f0b0b7540dfda0fd0be144d3f32f0ca2fc387ef0c8d455893ef",
+    "014_adaptive_nutrition_knowledge_n3.sql": "eae406e9f41e80d19f6a71a5d1e5c56d3868598c5da28c0be954df7b476293a2",
+    "015_external_recipe_discovery_n3_1.sql": "d74704463c044aa9e8cdf16463caf869020ae252bbc4b0549b510033779fe90c",
+    "016_adaptive_recommendation_intelligence_n3_2.sql": "5cef3a73cb30c1f86b20f2871a205f123d483650171605d2cb549367eee327e5"
+  },
+  "working_tree_fingerprint": {
+    "status_sha256": "15d56bf00a68a9c4249b82390a23ffb5e58a89f9087b8b3f05477a47a17a9662",
+    "tracked_diff_sha256": "9d9da9e6a5b2959ae12d079a0bca63e3f4ec0c8ca0f64a975fd8d9b7834d2e80"
+  },
+  "completed_at": "2026-09-03T12:16:34.071154+00:00",
+  "first_pass_result": "FAIL",
+  "raw_execution_sha256": "e2944ad6b11a5285b76f0414b52160242ffc1d0071e9ed35ddd06ef63205fb9b",
+  "score_result_sha256": "6a87aa68e82ead5cdae4613dfc03f27da953055ca12943905778471299191239"
+}

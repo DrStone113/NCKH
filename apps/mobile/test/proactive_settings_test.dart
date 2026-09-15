@@ -12,11 +12,15 @@ class _FakeProactiveApi implements ProactiveApiClient {
   };
   int activeCalls = 0;
   int updateCalls = 0;
+  Map<String, dynamic>? lastUserContext;
 
   @override
-  Future<Map<String, dynamic>?> getActiveCheckin(
-      {required String userId}) async {
+  Future<Map<String, dynamic>?> getActiveCheckin({
+    required String userId,
+    Map<String, dynamic>? userContext,
+  }) async {
     activeCalls++;
+    lastUserContext = userContext;
     return {'id': 'nudge-1'};
   }
 

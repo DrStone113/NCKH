@@ -48,16 +48,7 @@ class NutritionProvider with ChangeNotifier {
   List<FoodItem> get vietnameseFoods =>
       _vietnameseFoods.isNotEmpty ? _vietnameseFoods : vietnameseFoodDatabase;
 
-  Set<String> _deletedPlanItemIds = {};
-
-  Future<void> _loadDeletedPlanItemIds(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final list =
-          prefs.getStringList('nutrition_deleted_plan_items_$userId') ?? [];
-      _deletedPlanItemIds = list.toSet();
-    } catch (_) {}
-  }
+  final Set<String> _deletedPlanItemIds = {};
 
   Future<void> _saveDeletedPlanItemIds(String userId) async {
     try {
@@ -298,112 +289,16 @@ class NutritionProvider with ChangeNotifier {
     await addMeal(newMeal, replacePendingSlot: false);
   }
 
-  String _mapMealType(String raw) {
-    return MealTypeUtils.normalize(raw);
-  }
-
+  /// Read Plan V2 status without materialising planned food as MealModel.
+  /// A plan card belongs in the planned section; only an explicit meal log may
+  /// enter the observed diary, calorie totals, or completion state.
   Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
     try {
-      await _loadDeletedPlanItemIds(userId);
       final read = await BackendApiService().readActivePlanDetail(userId);
       _activePlanReadStatus = read.status;
-      final detail = read.plan;
-      if (read.status != ActivePlanStatus.activePlanFound || detail == null) {
-        return;
-      }
-      final items = detail['items'] as List<dynamic>? ?? [];
-      final dateStr =
-          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-      for (final item in items) {
-        if (item is! Map<String, dynamic>) continue;
-        if (item['item_type'] != 'meal') continue;
-        final planDate = item['plan_date']?.toString();
-        if (planDate != null && planDate != dateStr) continue;
-
-        final planItemId = item['id']?.toString() ?? '';
-        if (planItemId.isEmpty) continue;
-        if (_deletedPlanItemIds.contains(planItemId)) continue;
-
-        final payload = item['payload'] as Map<String, dynamic>? ?? {};
-        final mealTypeRaw = payload['meal_type']?.toString() ?? 'lunch';
-        final mealType = _mapMealType(mealTypeRaw);
-
-        final existingIdx = _allMeals.indexWhere((m) => m.id == planItemId);
-        if (existingIdx == -1) {
-          final start = DateTime(date.year, date.month, date.day);
-          final end = start.add(const Duration(days: 1));
-          final hasSlotMeal = _allMeals.any((m) {
-            final isSameDate = !m.date.isBefore(start) && m.date.isBefore(end);
-            final isSameType = MealTypeUtils.normalize(m.mealType) == mealType;
-            return isSameDate && isSameType && m.id != planItemId;
-          });
-          if (hasSlotMeal) continue;
-        }
-
-        final title = item['title']?.toString() ?? 'Món ăn';
-        final targetKcal = (item['target_kcal'] as num?)?.toDouble() ?? 0.0;
-        final targetProtein =
-            (item['target_protein'] as num?)?.toDouble() ?? 0.0;
-        final isCompleted = item['completed'] == true;
-        final components = (payload['components'] as List<dynamic>?) ?? [];
-
-        List<MealItem> mealItems = [];
-        if (components.isNotEmpty) {
-          for (final comp in components) {
-            if (comp is Map<String, dynamic>) {
-              final compName = comp['name']?.toString() ?? 'Thành phần';
-              final compGrams =
-                  (comp['serving_grams'] as num?)?.toDouble() ?? 100.0;
-              final compCal = (comp['calories'] as num?)?.toDouble() ?? 0.0;
-              final compPro = (comp['protein'] as num?)?.toDouble() ?? 0.0;
-              final compCarbs = (comp['carbs'] as num?)?.toDouble() ?? 0.0;
-              final compFat = (comp['fat'] as num?)?.toDouble() ?? 0.0;
-
-              mealItems.add(MealItem(
-                id: '${planItemId}_$compName',
-                foodId: '',
-                name: compName,
-                weightGrams: compGrams,
-                calories: compCal,
-                protein: compPro,
-                carbs: compCarbs,
-                fat: compFat,
-              ));
-            }
-          }
-        } else {
-          mealItems.add(MealItem(
-            id: '${planItemId}_item',
-            foodId: '',
-            name: title,
-            weightGrams: 100.0,
-            calories: targetKcal,
-            protein: targetProtein,
-            carbs: 0.0,
-            fat: 0.0,
-          ));
-        }
-
-        final planMeal = MealModel(
-          id: planItemId,
-          userId: userId,
-          name: title,
-          date: date,
-          mealType: mealType,
-          items: mealItems,
-          isCompleted: isCompleted,
-        );
-
-        if (existingIdx != -1) {
-          _allMeals[existingIdx] = planMeal;
-        } else {
-          _allMeals.add(planMeal);
-        }
-      }
     } catch (e) {
       _activePlanReadStatus = ActivePlanStatus.readError;
-      debugPrint('⚠️ Sync meals from backend plan error: $e');
+      debugPrint('Plan V2 status read failed: $e');
     }
   }
 

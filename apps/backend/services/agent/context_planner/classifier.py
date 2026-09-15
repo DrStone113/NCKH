@@ -61,7 +61,10 @@ def classify_intent(query: str) -> IntentClassification:
         reasons.setdefault(intent, []).append(reason)
 
     # Mentions never grant writes; an explicit mutation verb and object do.
-    write_verb = _has(text, "log", "record", "save", "ghi lai", "ghi nhan", "luu", "cap nhat", "them")
+    write_verb = _has(
+        text, "log", "record", "save", "ghi", "ghi lai", "ghi nhan",
+        "luu", "cap nhat", "them",
+    )
     action_kind: str | None = None
     if write_verb and _has(text, "bua an", "mon an", "meal", "food", "breakfast", "lunch", "dinner"):
         action_kind = "LOG_MEAL"

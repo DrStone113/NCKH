@@ -1,0 +1,21 @@
+{
+  "counterfactual_policy_evaluation": "NOT_SUPPORTED",
+  "error_type": "ConnectionRefusedError",
+  "evidence_type": "DURABLE_STORE_AGGREGATE_AUDIT",
+  "observed_at": "2026-09-07T12:33:52.049467+00:00",
+  "observed_comparisons": null,
+  "observed_rates": null,
+  "os_error_code": 1225,
+  "real_counts": {
+    "DISLIKED_EVENTS": null,
+    "LIKED_EVENTS": null,
+    "REAL_FEEDBACK_EVENTS": null,
+    "REAL_RECOMMENDATION_EVENTS": null,
+    "REJECTED_EVENTS": null,
+    "SAVED_EVENTS": null,
+    "USERS_WITH_FEEDBACK": null
+  },
+  "real_usage_provenance": "UNVERIFIED_NO_ORIGIN_REGISTER",
+  "status": "DATABASE_UNAVAILABLE",
+  "transaction": "REPEATABLE_READ_READ_ONLY"
+}

@@ -44,6 +44,8 @@ from services.workout_planner.planner import (
 )
 from services.workout_planner.presentation import WorkoutPlanPresenter, WorkoutResponseValidator
 from services.workout_planner.validator import WorkoutPlanValidator
+from services.plan_engine.request_normalization import normalize_workout_goal
+from modules.wger.exercise_prescription_policy import ExercisePrescriptionPolicyError
 
 
 INTEGRATION_VERSION = "workout-planner-e4-1-integration-v1.0.0"
@@ -542,19 +544,88 @@ class WorkoutRepository:
         row = result.first()
         return str(row[0]) if row is not None else None
 
-    async def save_plan(self, cached: CachedWorkoutPlan, request_id: str, *, activate: bool) -> dict[str, Any]:
+    async def put_preview(self, user_id: str, plan_id: str, presentation: Mapping[str, Any]) -> None:
         db = self._require_db()
+        await db.execute(
+            text(
+                """
+                INSERT INTO workout_plan_previews_e4 (owner_user_id, plan_id, presentation)
+                VALUES (:owner, CAST(:plan_id AS uuid), CAST(:presentation AS jsonb))
+                ON CONFLICT (owner_user_id, plan_id)
+                DO UPDATE SET presentation = EXCLUDED.presentation,
+                              created_at = NOW(),
+                              expires_at = NOW() + INTERVAL '30 days'
+                """
+            ),
+            {"owner": user_id, "plan_id": plan_id, "presentation": _json(presentation)},
+        )
+
+    async def load_preview(self, user_id: str, plan_id: str) -> dict[str, Any] | None:
+        db = self._require_db()
+        result = await db.execute(
+            text(
+                """
+                SELECT presentation
+                FROM workout_plan_previews_e4
+                WHERE owner_user_id = :owner
+                  AND plan_id = CAST(:plan_id AS uuid)
+                  AND expires_at > NOW()
+                """
+            ),
+            {"owner": user_id, "plan_id": plan_id},
+        )
+        row = result.first()
+        if row is None:
+            return None
+        value = self._mapping(row).get("presentation")
+        return dict(value) if isinstance(value, Mapping) else None
+
+    async def save_plan(self, cached: CachedWorkoutPlan, request_id: str, *, activate: bool) -> dict[str, Any]:
         plan = cached.plan
         presentation = WorkoutPlanPresenter.present(plan, plan_id=cached.plan_id)
+        return await self.save_presentation(
+            cached.user_id,
+            cached.plan_id,
+            presentation,
+            request_id,
+            activate=activate,
+        )
+
+    async def save_presentation(
+        self,
+        user_id: str,
+        plan_id: str,
+        presentation: Mapping[str, Any],
+        request_id: str,
+        *,
+        activate: bool,
+    ) -> dict[str, Any]:
+        db = self._require_db()
+        if (
+            presentation.get("type") != "personalized_workout"
+            or presentation.get("status") != "READY"
+            or str(presentation.get("plan_id")) != plan_id
+        ):
+            raise RuntimeError("WORKOUT_PREVIEW_INVALID")
         status = "ACTIVE" if activate else "SAVED"
         payload = {
-            "plan_id": cached.plan_id, "user_id": cached.user_id, "request_id": request_id,
-            "status": status, "planner_version": plan.planner_version, "catalog_version": plan.catalog_version,
-            "policy_version": plan.exercise_policy_version, "generated_at": plan.generated_at,
-            "goal": plan.goal, "duration_budget": plan.duration_budget, "estimated_duration": plan.estimated_duration,
+            "plan_id": plan_id, "user_id": user_id, "request_id": request_id,
+            "status": status,
+            "planner_version": presentation["planner_version"],
+            "catalog_version": presentation["catalog_version"],
+            "policy_version": presentation["exercise_policy_version"],
+            "generated_at": datetime.fromisoformat(str(presentation["generated_at"]).replace("Z", "+00:00")),
+            "goal": presentation.get("goal"),
+            "duration_budget": presentation.get("duration_budget_minutes"),
+            "estimated_duration": presentation["estimated_duration_minutes"],
             "exercises": _json(presentation["exercises"]),
-            "reason_metadata": _json({"selection": plan.selection_reason_codes, "history": plan.history_reason_codes, "policy": plan.policy_reason_codes, "filtering": [item.to_dict() for item in plan.catalog_filtering]}),
-            "energy": _json(plan.estimated_energy_expenditure.to_dict()),
+            "reason_metadata": _json({
+                "selection": presentation.get("selection_reason_codes") or [],
+                "history": presentation.get("history_reason_codes") or [],
+                "policy": presentation.get("policy_reason_codes") or [],
+                "filtering": presentation.get("catalog_filtering") or [],
+            }),
+            "energy": _json(presentation["energy_estimate"]),
         }
         result = await db.execute(text("""
             WITH inserted AS (
@@ -586,7 +657,7 @@ class WorkoutRepository:
         row = self._mapping(result.first())
         if not row:
             raise RuntimeError("WORKOUT_PLAN_READBACK_FAILED")
-        if str(row["id"]) != cached.plan_id or str(row["planner_version"]) != plan.planner_version:
+        if str(row["id"]) != plan_id or str(row["planner_version"]) != str(presentation["planner_version"]):
             raise RuntimeError("WORKOUT_PLAN_READBACK_MISMATCH")
         return row
 
@@ -721,7 +792,8 @@ class WorkoutIntegrationService:
         if not isinstance(user_id, str) or not user_id or user_id == "anonymous":
             return IntegrationOutcome("CLARIFICATION_REQUIRED", None, None, None, {}, {}, {}, {"total": round((time.perf_counter() - started) * 1000, 3)}, "AUTHORITATIVE_USER_CONTEXT_REQUIRED")
         profile_started = time.perf_counter()
-        adapted = self._profiles.adapt(context, goal_override=goal_override)
+        normalized_goal = normalize_workout_goal(goal_override, context=context)
+        adapted = self._profiles.adapt(context, goal_override=normalized_goal)
         profile = adapted.profile
         profile_ms = (time.perf_counter() - profile_started) * 1000
         if adapted.field_statuses.get("intake_confirmation_status") == _PENDING_INTAKE_CONFIRMATION:
@@ -773,7 +845,7 @@ class WorkoutIntegrationService:
         state_ms = (time.perf_counter() - state_started) * 1000
 
         request = WorkoutRequest(
-            goal_override=goal_override,
+            goal_override=normalized_goal,
             requested_duration_minutes=requested_duration_minutes,
             requested_location=requested_location,
             available_equipment_override=tuple(available_equipment_override) if available_equipment_override is not None else None,
@@ -791,6 +863,8 @@ class WorkoutIntegrationService:
         try:
             planner = PersonalizedWorkoutPlanner()
             plan = planner.plan(profile, state, request, energy_weight_kg=energy_weight)
+        except ExercisePrescriptionPolicyError as exc:
+            return IntegrationOutcome("CLARIFICATION_REQUIRED", None, None, None, {}, adapted.field_statuses, self._coverage(state), {"profile": round(profile_ms, 3), "training_state": round(state_ms, 3), "total": round((time.perf_counter() - started) * 1000, 3)}, str(exc))
         except Exception:
             return IntegrationOutcome("PLANNER_UNAVAILABLE", None, None, None, {}, adapted.field_statuses, self._coverage(state), {"profile": round(profile_ms, 3), "training_state": round(state_ms, 3), "total": round((time.perf_counter() - started) * 1000, 3)}, "PLANNER_EXCEPTION")
         planner_ms = (time.perf_counter() - planner_started) * 1000
@@ -817,6 +891,12 @@ class WorkoutIntegrationService:
         if not response_validation.valid:
             return IntegrationOutcome("VALIDATION_FAILED", None, plan, None, {**validation_payload, "response": response_validation.to_dict()}, adapted.field_statuses, self._coverage(state), latency, "STRUCTURED_RESPONSE_MISMATCH")
         self._cache.put(CachedWorkoutPlan(plan_id, user_id, plan, profile, state, _now()))
+        try:
+            await self._repository.put_preview(user_id, plan_id, presentation)
+        except Exception:
+            # Recommendation rendering stays available if preview persistence
+            # is temporarily unavailable; explicit save reports a real error.
+            pass
         return IntegrationOutcome("READY", plan_id, plan, presentation, {**validation_payload, "response": response_validation.to_dict()}, adapted.field_statuses, self._coverage(state), latency)
 
     @staticmethod
@@ -834,11 +914,19 @@ class WorkoutIntegrationService:
             return {"status": "WORKOUT_WRITE_DISABLED", "write_status": "REJECTED"}
         user_id = runtime.user_id
         cached = self._cache.get(plan_id, user_id or "") if user_id else None
-        if cached is None:
-            return {"status": "PLAN_NOT_FOUND", "write_status": "REJECTED"}
         started = time.perf_counter()
         try:
-            row = await self._repository.save_plan(cached, request_id, activate=activate)
+            if cached is not None:
+                row = await self._repository.save_plan(cached, request_id, activate=activate)
+            elif user_id:
+                preview = await self._repository.load_preview(user_id, plan_id)
+                if preview is None:
+                    return {"status": "PLAN_NOT_FOUND", "write_status": "REJECTED"}
+                row = await self._repository.save_presentation(
+                    user_id, plan_id, preview, request_id, activate=activate
+                )
+            else:
+                return {"status": "PLAN_NOT_FOUND", "write_status": "REJECTED"}
         except Exception as exc:
             return {"status": "PERSISTENCE_ERROR", "write_status": "ERROR", "error_code": str(exc)}
         return {

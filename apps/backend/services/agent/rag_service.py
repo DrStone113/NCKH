@@ -30,8 +30,11 @@ before passing a populated descriptor to
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
+import re
+import unicodedata
 from typing import Any
 
 from sqlalchemy import text
@@ -119,19 +122,27 @@ class RAGService:
     application startup.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, metrics: Any | None = None) -> None:
         self._model: Any = None  # lazily-loaded SentenceTransformer
         # None = not yet probed; True/False = cached probe result.
         self._keyword_available: bool | None = None
         self._provenance_available: bool | None = None
+        self._inference_semaphore = asyncio.Semaphore(
+            max(1, settings.rag_inference_concurrency)
+        )
+        self._embedding_batch_lock = asyncio.Lock()
+        self._embedding_pending: list[
+            tuple[str, asyncio.Future[list[float]]]
+        ] = []
+        self._embedding_batch_task: asyncio.Task[None] | None = None
+        self.metrics = metrics
 
     # ----------------------------------------------------------- model loader
     def _get_model(self) -> Any:
         """Load the embedding model on first call. Idempotent."""
         if self._model is None:
-            import os
             import torch
-            num_threads = max(1, os.cpu_count() or 4)
+            num_threads = max(1, settings.rag_cpu_threads)
             with contextlib.suppress(Exception):
                 torch.set_num_threads(num_threads)
             from sentence_transformers import SentenceTransformer
@@ -148,6 +159,53 @@ class RAGService:
         model = self._get_model()
         embedding = model.encode(text_input).tolist()
         return embedding
+
+    async def _embed_batched(self, query: str) -> list[float]:
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[list[float]] = loop.create_future()
+        async with self._embedding_batch_lock:
+            self._embedding_pending.append((query, future))
+            if self._embedding_batch_task is None or self._embedding_batch_task.done():
+                self._embedding_batch_task = asyncio.create_task(
+                    self._flush_embedding_batches()
+                )
+        return await future
+
+    async def _flush_embedding_batches(self) -> None:
+        while True:
+            await asyncio.sleep(0.010)
+            async with self._embedding_batch_lock:
+                batch = self._embedding_pending[:8]
+                del self._embedding_pending[:8]
+            if not batch:
+                return
+            try:
+                async with self._inference_semaphore:
+                    vectors = await asyncio.to_thread(
+                        self._embed_many_sync, [query for query, _ in batch]
+                    )
+                for (_, future), vector in zip(batch, vectors, strict=True):
+                    if not future.done():
+                        future.set_result(vector)
+            except Exception as exc:
+                for _, future in batch:
+                    if not future.done():
+                        future.set_exception(exc)
+            async with self._embedding_batch_lock:
+                if not self._embedding_pending:
+                    return
+
+    def _embed_many_sync(self, queries: list[str]) -> list[list[float]]:
+        if "embed" in self.__dict__:
+            return [self.embed(query) for query in queries]
+        model = self._get_model()
+        encoded = model.encode(
+            queries,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            show_progress_bar=False,
+        )
+        return [[float(value) for value in vector] for vector in encoded]
 
     # ------------------------------------------------------------------ query
     async def query(
@@ -197,18 +255,45 @@ class RAGService:
             logger.debug("chunk_embeddings empty - returning []")
             return []
 
-        # --- run both retrievers ---------------------------------------------
+        # --- lexical-first cascade -------------------------------------------
         candidate_n = max(top_k * CANDIDATE_MULTIPLIER, top_k)
         provenance = await self._has_provenance(db)
-
-        dense_rows = await self._dense_search(
-            query, candidate_n, db=db, provenance=provenance
-        )
         sparse_rows: list[Any] = []
         if await self._has_keyword_index(db):
             sparse_rows = await self._sparse_search(
                 query, candidate_n, db=db, provenance=provenance
             )
+
+        if sparse_rows and bool(getattr(sparse_rows[0], "exact_match", False)):
+            if self.metrics is not None:
+                self.metrics.increment(
+                    "retrieval.exact_exit"
+                    if settings.backend_cost_mode == "enforce"
+                    else "retrieval.shadow_exact_exit"
+                )
+            if settings.backend_cost_mode == "enforce":
+                return [self._to_chunk(sparse_rows[0], 1.0)]
+
+        if self._lexical_is_confident(sparse_rows):
+            if self.metrics is not None:
+                self.metrics.increment(
+                    "retrieval.lexical_exit"
+                    if settings.backend_cost_mode == "enforce"
+                    else "retrieval.shadow_lexical_exit"
+                )
+            if settings.backend_cost_mode == "enforce":
+                lexical_k = min(top_k, 3)
+                chunks = [
+                    self._to_chunk(row, self._lexical_similarity(row))
+                    for row in sparse_rows
+                ]
+                return self._deduplicate(chunks, lexical_k)
+
+        if self.metrics is not None:
+            self.metrics.increment("retrieval.dense_calls")
+        dense_rows = await self._dense_search(
+            query, candidate_n, db=db, provenance=provenance
+        )
 
         if not sparse_rows:
             # Dense-only path: preserve the original threshold semantics.
@@ -219,9 +304,11 @@ class RAGService:
                 if float(row.similarity) >= threshold
             ]
             chunks.sort(key=lambda c: c.similarity, reverse=True)
-            return chunks[:top_k]
+            return self._deduplicate(chunks, top_k)
 
-        return self._fuse(dense_rows, sparse_rows, top_k)
+        if self.metrics is not None:
+            self.metrics.increment("retrieval.hybrid")
+        return self._deduplicate(self._fuse(dense_rows, sparse_rows, top_k), top_k)
 
     # ------------------------------------------------------------ retrievers
     async def _dense_search(
@@ -233,10 +320,7 @@ class RAGService:
         candidate list, and filtering a chunk out at this stage would hide it
         from the keyword retriever's vote too.
         """
-        import asyncio
-
-        loop = asyncio.get_running_loop()
-        query_vec = await loop.run_in_executor(None, self.embed, query)
+        query_vec = await self._embed_batched(query)
         # pgvector accepts the textual ``[v1,v2,...]`` representation.
         query_vec_str = "[" + ",".join(str(v) for v in query_vec) + "]"
 
@@ -267,11 +351,17 @@ class RAGService:
             f"""
             SELECT kc.id, kc.category, kc.title, kc.content, kc.metadata,
                    {self._provenance_select(provenance)},
-                   ts_rank(kc.search_vector, q) AS rank
+                   ts_rank(kc.search_vector, q) AS rank,
+                   (
+                       lower(btrim(kc.title)) = lower(btrim(:query))
+                       OR kc.metadata->>'canonical_id' = :query
+                   ) AS exact_match
             FROM knowledge_chunks kc,
                  websearch_to_tsquery('simple', :query) AS q
             WHERE kc.search_vector @@ q
-            ORDER BY rank DESC
+               OR lower(btrim(kc.title)) = lower(btrim(:query))
+               OR kc.metadata->>'canonical_id' = :query
+            ORDER BY exact_match DESC, rank DESC
             LIMIT :limit
             """
         )
@@ -283,6 +373,52 @@ class RAGService:
             await db.rollback()
             self._keyword_available = False
             return []
+
+    @staticmethod
+    def _lexical_similarity(row: Any) -> float:
+        rank = max(0.0, float(getattr(row, "rank", 0.0) or 0.0))
+        return rank / (rank + 0.10) if rank else float(settings.rag_similarity_threshold)
+
+    @staticmethod
+    def _lexical_is_confident(rows: list[Any]) -> bool:
+        if not rows:
+            return False
+        first = float(getattr(rows[0], "rank", 0.0) or 0.0)
+        second = float(getattr(rows[1], "rank", 0.0) or 0.0) if len(rows) > 1 else 0.0
+        if first < settings.rag_lexical_confidence_threshold:
+            return False
+        return second <= 0.0 or first / second >= settings.rag_lexical_margin_ratio
+
+    @classmethod
+    def _deduplicate(
+        cls, chunks: list[KnowledgeChunk], top_k: int
+    ) -> list[KnowledgeChunk]:
+        """MMR-style near-duplicate suppression without another embedding call."""
+
+        selected: list[KnowledgeChunk] = []
+        selected_terms: list[set[str]] = []
+        for chunk in chunks:
+            terms = cls._terms(f"{chunk.title} {chunk.content}")
+            if any(cls._jaccard(terms, prior) >= 0.82 for prior in selected_terms):
+                continue
+            selected.append(chunk)
+            selected_terms.append(terms)
+            if len(selected) >= top_k:
+                break
+        return selected
+
+    @staticmethod
+    def _terms(value: str) -> set[str]:
+        decomposed = unicodedata.normalize("NFD", value.casefold().replace("đ", "d"))
+        folded = "".join(
+            char for char in decomposed if unicodedata.category(char) != "Mn"
+        )
+        return set(re.findall(r"[a-z0-9]{2,}", folded))
+
+    @staticmethod
+    def _jaccard(left: set[str], right: set[str]) -> float:
+        union = left | right
+        return len(left & right) / len(union) if union else 1.0
 
     async def _has_column(self, db: AsyncSession, column: str) -> bool:
         """Return whether ``knowledge_chunks`` has ``column``."""

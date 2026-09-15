@@ -96,8 +96,10 @@ class WorkoutPlanPresenter:
             "selection_reason_codes": list(plan.selection_reason_codes),
             "history_reason_codes": list(plan.history_reason_codes),
             "policy_reason_codes": list(plan.policy_reason_codes),
+            "catalog_filtering": [stage.to_dict() for stage in plan.catalog_filtering],
             "explanations": explanations,
             "energy_estimate": plan.estimated_energy_expenditure.to_dict(),
+            "generated_at": plan.generated_at.isoformat(),
         }
 
 
@@ -119,6 +121,8 @@ class WorkoutResponseValidator:
             ("time_budget_status", plan.time_budget_status.value),
             ("safety_status", plan.safety_status.value),
             ("energy_estimate", plan.estimated_energy_expenditure.to_dict()),
+            ("catalog_filtering", [stage.to_dict() for stage in plan.catalog_filtering]),
+            ("generated_at", plan.generated_at.isoformat()),
         ):
             if payload.get(key) != expected:
                 violations.append(f"{key.upper()}_MISMATCH")

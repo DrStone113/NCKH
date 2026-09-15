@@ -29,6 +29,11 @@ dependencies:
   http: ^1.2.0
   web_socket_channel: ^2.4.0
   uuid: ^4.3.3
+  crypto: ^3.0.6
+
+  # Android-only, isolated behind the semantic-router runtime abstraction.
+  # Model weights are delivered separately and are never bundled by default.
+  llama_flutter_android: 0.2.6
 
   # Local Storage
   shared_preferences: ^2.2.2

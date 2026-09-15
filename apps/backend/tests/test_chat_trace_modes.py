@@ -43,6 +43,39 @@ def test_public_trace_maps_known_tool_outcomes_but_drops_unknown_tool() -> None:
     ]
 
 
+def test_public_trace_exposes_catalog_then_approved_recipe_search() -> None:
+    trace = PublicReasoningTrace()
+
+    record_tool_result(trace, "search_dish_catalog", ok=True)
+    record_tool_result(trace, "search_recipe_web", ok=True)
+
+    assert [step.public_event_type for step in trace.steps] == [
+        "FOOD_CATALOG_SEARCHED",
+        "EXTERNAL_RECIPE_SEARCHED",
+    ]
+    assert trace.steps[1].title == "Đã tìm nguồn công thức ngoài"
+    assert "nhãn xác minh" in trace.steps[1].summary
+
+
+def test_public_trace_uses_domain_accurate_copy_for_nutrition_weight_and_lifestyle() -> None:
+    trace = PublicReasoningTrace()
+
+    record_tool_result(trace, "search_food_nutrition", ok=True)
+    record_tool_result(trace, "get_weight_history", ok=True)
+    record_tool_result(trace, "get_lifestyle_logs", ok=True)
+
+    assert [step.public_event_type for step in trace.steps] == [
+        "NUTRITION_DATA_SEARCHED",
+        "BODY_PROGRESS_CHECKED",
+        "LIFESTYLE_LOGS_CHECKED",
+    ]
+    assert [step.title for step in trace.steps] == [
+        "Đã tra thông tin dinh dưỡng",
+        "Đã xem dữ liệu cân nặng",
+        "Đã xem nhật ký lối sống",
+    ]
+
+
 def test_debug_trace_recursively_redacts_secrets_and_unneeded_pii() -> None:
     builder = DebugTraceBuilder(enabled=True)
     event = builder.record(

@@ -56,6 +56,9 @@ class _FakeResult:
     def first(self):
         return self.rows[0] if self.rows else None
 
+    def fetchall(self):
+        return list(self.rows)
+
 
 @dataclass
 class _FakeDbSession:
@@ -106,6 +109,29 @@ class _FakeGateway:
 
     async def send_tool_call(self, correlation_id: str, name: str, args: dict[str, Any], timeout_ms: int):
         self.calls.append((correlation_id, name, args, timeout_ms))
+
+
+class _AuthenticatedGateway(_FakeGateway):
+    def __init__(self, user_id: str):
+        super().__init__()
+        self.user_id = user_id
+        self.authenticated_principal = True
+
+
+@dataclass
+class _DurableDishHistoryDb(_FakeDbSession):
+    recent_by_owner: dict[str, list[int]] = field(default_factory=dict)
+    history_reads: list[str] = field(default_factory=list)
+
+    async def execute(self, statement: Any, params: Any = None):
+        sql = str(statement)
+        if "SELECT ti.result->>'id' AS item_id" in sql:
+            owner = params["owner_user_id"]
+            self.history_reads.append(owner)
+            return _FakeResult(
+                rows=[(item_id,) for item_id in self.recent_by_owner.get(owner, [])]
+            )
+        return await super().execute(statement, params)
 
 
 def _registry_with(descriptor: ToolDescriptor) -> ToolRegistry:
@@ -301,6 +327,19 @@ async def test_suggest_dish_does_not_repeat_within_a_session():
 
 
 @pytest.mark.asyncio
+async def test_parallel_suggest_dish_calls_are_diversified_in_order():
+    dispatcher = ToolDispatcher(_dish_registry())
+
+    first, second = await asyncio.gather(
+        dispatcher.dispatch("session-parallel", _dish_call(0), 5000),
+        dispatcher.dispatch("session-parallel", _dish_call(1), 5000),
+    )
+
+    assert first.ok and second.ok
+    assert first.data["id"] != second.data["id"]
+
+
+@pytest.mark.asyncio
 async def test_suggest_dish_diversity_is_scoped_per_session():
     dispatcher = ToolDispatcher(_dish_registry())
 
@@ -311,6 +350,78 @@ async def test_suggest_dish_diversity_is_scoped_per_session():
     assert first_a.data["id"] != second_a.data["id"]
     # A fresh conversation must not inherit another session's history.
     assert first_b.data["id"] == first_a.data["id"]
+
+
+@pytest.mark.asyncio
+async def test_suggest_dish_hydrates_owner_history_across_reconnects():
+    baseline_dispatcher = ToolDispatcher(_dish_registry())
+    baseline = await baseline_dispatcher.dispatch(
+        "first-session", _dish_call(0), 5000
+    )
+    assert baseline.ok, baseline.error
+
+    db = _DurableDishHistoryDb(
+        recent_by_owner={"owner-a": [baseline.data["id"]]}
+    )
+    dispatcher = ToolDispatcher(
+        _dish_registry(),
+        gateway=_AuthenticatedGateway("owner-a"),
+        db_session=db,
+    )
+
+    after_reconnect = await dispatcher.dispatch(
+        "second-session", _dish_call(1), 5000
+    )
+
+    assert after_reconnect.ok, after_reconnect.error
+    assert after_reconnect.data["id"] != baseline.data["id"]
+    assert db.history_reads == ["owner-a"]
+
+
+@pytest.mark.asyncio
+async def test_durable_dish_history_is_owner_scoped():
+    baseline_dispatcher = ToolDispatcher(_dish_registry())
+    baseline = await baseline_dispatcher.dispatch(
+        "first-session", _dish_call(0), 5000
+    )
+    assert baseline.ok, baseline.error
+
+    db = _DurableDishHistoryDb(
+        recent_by_owner={"owner-a": [baseline.data["id"]]}
+    )
+    dispatcher = ToolDispatcher(
+        _dish_registry(),
+        gateway=_AuthenticatedGateway("owner-b"),
+        db_session=db,
+    )
+
+    other_owner = await dispatcher.dispatch(
+        "other-owner-session", _dish_call(1), 5000
+    )
+
+    assert other_owner.ok, other_owner.error
+    assert other_owner.data["id"] == baseline.data["id"]
+    assert db.history_reads == ["owner-b"]
+
+
+@pytest.mark.asyncio
+async def test_durable_history_keeps_latest_unique_exposure_order():
+    db = _DurableDishHistoryDb(recent_by_owner={"owner-a": [35, 35, 42, 40]})
+    dispatcher = ToolDispatcher(
+        _dish_registry(),
+        gateway=_AuthenticatedGateway("owner-a"),
+        db_session=db,
+    )
+
+    await dispatcher._hydrate_recent_ids("session-order", "suggest_dish")
+    await dispatcher._hydrate_recent_ids("session-order", "suggest_dish")
+
+    assert list(dispatcher._recent_ids["session-order"]["suggest_dish"]) == [
+        40,
+        42,
+        35,
+    ]
+    assert db.history_reads == ["owner-a"]
 
 
 @pytest.mark.asyncio

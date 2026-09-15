@@ -60,6 +60,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from services.agent.scope_guard import SCOPE_GUARD_HISTORY_MARKERS
 from db.db_status import is_db_offline, mark_db_offline
 from models.schemas import (
     ChatTurn,
@@ -158,6 +159,10 @@ class MemoryService:
     ) -> None:
         self._session = db_session
         self._rag_service = rag_service
+        # Process-local watermark prevents the same old transcript from
+        # buying two background completions after every user turn. It carries
+        # no content and is owner/session scoped.
+        self._last_consolidated_turn_count: dict[str, int] = {}
 
     # ------------------------------------------------------------------ summary
     async def getRollingSummary(self, session_id: str) -> str:
@@ -434,8 +439,29 @@ class MemoryService:
             )
             return
 
+        previous_total = self._last_consolidated_turn_count.get(session_id)
+        if (
+            previous_total is not None
+            and total - previous_total < settings.summary_min_new_turns
+        ):
+            logger.debug(
+                "updateRollingSummary batched: new_turns=%d required=%d",
+                total - previous_total,
+                settings.summary_min_new_turns,
+            )
+            return
+        # Reserve the batch before paid work begins. Concurrent background
+        # tasks and repeated provider failures therefore cannot create a cost
+        # storm; a later batch may try again after enough genuinely new turns.
+        self._last_consolidated_turn_count[session_id] = total
+
         old_count = total - keep
         old_turns = await self._load_oldest_turns(session_id, limit=old_count)
+        old_turns = [
+            turn
+            for turn in old_turns
+            if turn.tool_name not in SCOPE_GUARD_HISTORY_MARKERS
+        ]
         if not old_turns:
             return
 
@@ -448,7 +474,10 @@ class MemoryService:
         try:
             summary_messages = buildSummaryPrompt(turns_text, prior_summary)
             response = await llm_client.chat(
-                summary_messages, tools=None, stream=False
+                summary_messages,
+                tools=None,
+                stream=False,
+                max_tokens=settings.llm_memory_summary_max_output_tokens,
             )
             new_summary = (getattr(response, "full_text", "") or "").strip()
         except Exception as exc:  # noqa: BLE001 - best-effort summarisation
@@ -476,7 +505,10 @@ class MemoryService:
             existing_facts = await self.getPinnedFacts(session_id)
             fact_messages = buildFactExtractionPrompt(turns_text, existing_facts=existing_facts)
             response = await llm_client.chat(
-                fact_messages, tools=None, stream=False
+                fact_messages,
+                tools=None,
+                stream=False,
+                max_tokens=settings.llm_memory_fact_max_output_tokens,
             )
             raw_text = getattr(response, "full_text", "") or ""
         except Exception as exc:  # noqa: BLE001 - best-effort
@@ -783,7 +815,12 @@ class MemoryService:
             return []
 
     async def loadContext(
-        self, session_id: str, user_text: str
+        self,
+        session_id: str,
+        user_text: str,
+        *,
+        include_rag: bool = True,
+        include_relevant_history: bool = True,
     ) -> Context:
         """Aggregate the four pieces needed to build the system prompt.
 
@@ -815,11 +852,49 @@ class MemoryService:
         if not isinstance(user_text, str):
             raise ValueError("INVALID_USER_TEXT")
 
-        history = await self._load_recent_turns(
-            session_id, limit=settings.max_history_turns
+        can_parallelize = bool(
+            getattr(self._session, "supports_concurrent_statements", False)
         )
-        rolling_summary = await self.getRollingSummary(session_id)
-        pinned_facts = await self.getPinnedFacts(session_id)
+        combined_loader = getattr(self._session, "fetch_chat_context", None)
+        if callable(combined_loader) and not is_db_offline():
+            try:
+                raw_history, rolling_summary, raw_facts = await combined_loader(
+                    session_id, settings.max_history_turns
+                )
+                history = [self._chat_turn_from_mapping(item) for item in raw_history]
+                pinned_facts = [self._fact_from_mapping(item) for item in raw_facts]
+            except Exception as exc:
+                logger.warning(
+                    "Combined context read failed; using compatible fallback: %s", exc
+                )
+                history, rolling_summary, pinned_facts = await asyncio.gather(
+                    self._load_recent_turns(session_id, limit=settings.max_history_turns),
+                    self.getRollingSummary(session_id),
+                    self.getPinnedFacts(session_id),
+                )
+        elif can_parallelize:
+            history, rolling_summary, pinned_facts = await asyncio.gather(
+                self._load_recent_turns(
+                    session_id, limit=settings.max_history_turns
+                ),
+                self.getRollingSummary(session_id),
+                self.getPinnedFacts(session_id),
+            )
+        else:
+            # A raw AsyncSession cannot overlap statements on one connection.
+            history = await self._load_recent_turns(
+                session_id, limit=settings.max_history_turns
+            )
+            rolling_summary = await self.getRollingSummary(session_id)
+            pinned_facts = await self.getPinnedFacts(session_id)
+
+        # Scope-gate messages remain visible in chat history but never become
+        # model context, RAG query-expansion input, summaries, or user facts.
+        history = [
+            turn
+            for turn in history
+            if turn.tool_name not in SCOPE_GUARD_HISTORY_MARKERS
+        ]
 
         rag_chunks: list[KnowledgeChunk] = []
         relevant_history: list[ChatTurn] = []
@@ -827,21 +902,15 @@ class MemoryService:
         rag_result_status = "NOT_REQUESTED"
 
         # Skip FTS / RAG when the message is blank or a simple greeting/chitchat
-        if user_text.strip() and not is_simple_greeting_or_chitchat(user_text):
-            # Fetch contextual history matching user query
-            relevant_history = await self._search_contextual_history(
-                session_id, user_text, limit=20
-            )
-            # Filter out duplicates that are already inside history window
-            history_ids = {t.id for t in history}
-            relevant_history = [
-                t for t in relevant_history if t.id not in history_ids
-            ]
-
-            if self._rag_service is not None:
+        if (
+            (include_rag or include_relevant_history)
+            and user_text.strip()
+            and not is_simple_greeting_or_chitchat(user_text)
+        ):
+            rag_query = user_text
+            if include_rag and self._rag_service is not None:
                 rag_requested = True
                 # Query expansion for reference/pronouns to improve pgvector search accuracy
-                rag_query = user_text
                 if history:
                     last_user_turn = None
                     for turn in reversed(history):
@@ -854,25 +923,53 @@ class MemoryService:
                             rag_query = f"{last_user_turn.content} {user_text}"
                             logger.info("Expanded RAG query: %r", rag_query)
 
+            async def _load_rag() -> tuple[list[KnowledgeChunk], str]:
+                if not include_rag:
+                    return [], "NOT_REQUESTED"
+                if self._rag_service is None:
+                    return [], "NOT_CONFIGURED"
                 try:
-                    rag_chunks = await asyncio.wait_for(
+                    chunks = await asyncio.wait_for(
                         self.queryRag(rag_query, top_k=settings.rag_top_k),
                         timeout=1.0,
                     )
-                    rag_result_status = "RESULTS_FOUND" if rag_chunks else "NO_RESULTS"
+                    return chunks, "RESULTS_FOUND" if chunks else "NO_RESULTS"
                 except asyncio.TimeoutError:
                     logger.warning("queryRag timed out (>1.0s) for session=%s, skipping RAG context", session_id)
-                    rag_chunks = []
-                    rag_result_status = "TIMEOUT"
+                    return [], "TIMEOUT"
                 except ValueError as exc:
                     logger.warning(
                         "queryRag rejected rag_query for session=%s: %s",
                         session_id,
                         exc,
                     )
-                    rag_result_status = "ERROR"
+                    return [], "ERROR"
+
+            async def _load_relevant_history() -> list[ChatTurn]:
+                if not include_relevant_history:
+                    return []
+                return await self._search_contextual_history(
+                    session_id, user_text, limit=20
+                )
+
+            if can_parallelize:
+                relevant_history, rag_outcome = await asyncio.gather(
+                    _load_relevant_history(),
+                    _load_rag(),
+                )
             else:
-                rag_result_status = "NOT_CONFIGURED"
+                relevant_history = await _load_relevant_history()
+                rag_outcome = await _load_rag()
+            rag_chunks, rag_result_status = rag_outcome
+
+            # Filter out duplicates that are already inside history window.
+            history_ids = {t.id for t in history}
+            relevant_history = [
+                turn
+                for turn in relevant_history
+                if turn.id not in history_ids
+                and turn.tool_name not in SCOPE_GUARD_HISTORY_MARKERS
+            ]
 
         return Context(
             history=history,
@@ -882,6 +979,40 @@ class MemoryService:
             relevant_history=relevant_history,
             rag_requested=rag_requested,
             rag_result_status=rag_result_status,
+        )
+
+    @staticmethod
+    def _chat_turn_from_mapping(value: Any) -> ChatTurn:
+        item = dict(value)
+        for key in ("id", "session_id", "tool_call_id", "tool_name"):
+            if item.get(key) is not None:
+                item[key] = str(item[key])
+        item["content"] = str(item.get("content") or "")
+        return ChatTurn.model_validate(item)
+
+    @staticmethod
+    def _fact_from_mapping(value: Any) -> Fact:
+        item = dict(value)
+        for key in ("id", "user_id", "source_msg_id"):
+            if item.get(key) is not None:
+                item[key] = str(item[key])
+        return Fact.model_validate(item)
+
+    async def loadContextCostOptimized(
+        self,
+        session_id: str,
+        user_text: str,
+        *,
+        include_rag: bool,
+        include_relevant_history: bool,
+    ) -> Context:
+        """Explicit policy-aware entrypoint used by the cost governor."""
+
+        return await self.loadContext(
+            session_id,
+            user_text,
+            include_rag=include_rag,
+            include_relevant_history=include_relevant_history,
         )
 
     async def _load_recent_turns(
@@ -958,34 +1089,34 @@ class MemoryService:
 
 
 def is_simple_greeting_or_chitchat(text: str) -> bool:
-    """Check if text is a simple greeting, farewell, or polite expression."""
+    """Skip semantic retrieval for pure chitchat or bare control replies.
+
+    Chitchat classification is delegated to the production turn router so
+    prompt routing and context retrieval cannot drift apart.
+    """
     if not isinstance(text, str):
         return False
+    if not text.strip():
+        return True
     cleaned = text.strip().lower()
     cleaned = re.sub(r"[!?.,:;~\-_*#\"']+", " ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned)
     cleaned = cleaned.strip()
+    # Punctuation-only text may refer to the prior answer (for example "?").
+    # Keep semantic history available instead of treating it as small talk.
     if not cleaned:
+        return False
+    from services.agent.turn_router import classify_turn
+
+    if classify_turn(text).is_chitchat:
         return True
-    no_rag_phrases = {
-        # Greetings & Chitchat
-        "chào", "chào bạn", "chào em", "chào anh", "chào chị", "chào bô", "xin chào",
-        "hi", "hello", "hey", "alo", "hế lô", "helu",
-        "chào buổi sáng", "chào buổi tối", "good morning", "good night",
-        "cảm ơn", "cám ơn", "cảm ơn bạn", "cảm ơn nhé", "cảm ơn nha", "cam on",
-        "thanks", "thank you", "thanks bạn", "tks", "tnx",
-        "tạm biệt", "bye", "goodbye", "bai", "chào nhé", "hẹn gặp lại",
-        "bạn là ai", "bạn tên gì", "bạn làm được gì", "giúp gì được",
-        "test", "hello world",
-        # Affirmative responses
-        "có", "có chứ", "có nhé", "ừ", "ừm", "vâng", "dạ", "được", "được nhé",
-        "ok", "oke", "okay", "okie", "ghi đi", "ghi lại", "ghi nhé", "lưu lại", "lưu đi",
-        "đồng ý", "uh", "dạ có", "vâng ạ",
-        # Negative / Cancel responses
-        "không", "không cần", "không nhé", "không nha", "hủy", "thôi", "bỏ qua", "không đồng ý",
-        "no", "nop", "nope"
+    control_replies = {
+        "có", "có chứ", "có nhé", "dạ có", "đồng ý", "ghi đi", "ghi lại",
+        "ghi nhé", "lưu đi", "lưu lại", "không", "không cần", "không nhé",
+        "không nha", "không đồng ý", "hủy", "thôi", "bỏ qua", "no", "nop",
+        "nope",
     }
-    return cleaned in no_rag_phrases
+    return cleaned in control_replies
 
 
 __all__ = [

@@ -24,6 +24,7 @@ from services.plan_engine.contracts import (
 )
 from services.plan_engine.engine import PlanContextResolver, PlanEngine
 from services.plan_engine.persistence import PlanPersistenceError, PlanSqlRepository
+from services.plan_engine.request_normalization import PlanIntent, normalize_planning_request, normalize_workout_goal
 from services.plan_engine.weekly_scheduler import (
     PlanningHorizonState,
     WeeklyScheduleError,
@@ -141,9 +142,34 @@ def _revision_payload(revision: PlanRevision, *, mode: str | None = None) -> dic
     }
 
 
+async def _persist_authenticated_preview(
+    revision: PlanRevision, runtime: PlanRuntimeContext
+) -> str:
+    if not _principal(runtime).valid:
+        return "NOT_AUTHENTICATED"
+    # A verified identity alone does not prove that this invocation is attached
+    # to the application's persistence runtime.  Unit/development callers use
+    # an authenticated synthetic principal with no DB session; attempting the
+    # process-global asyncpg pool from their short-lived ``asyncio.run`` loop
+    # leaks cancellation tasks when PostgreSQL is unavailable.  The real chat
+    # dispatcher always supplies its scoped DB session, while HTTP Plan V2 uses
+    # the repository directly in its router.
+    if runtime.db_session is None:
+        return "UNAVAILABLE"
+    try:
+        await PlanSqlRepository().put_preview(revision)
+        return "PERSISTED"
+    except Exception:
+        # Draft calculation stays available during a temporary DB outage, but
+        # the response explicitly records that restart-safe save is unavailable.
+        return "UNAVAILABLE"
+
+
 def _present(revision: PlanRevision) -> dict[str, Any]:
     """Presentation built exclusively from the persisted revision contract."""
 
+    summary = revision.summary
+    daily_summary = summary.get("daily") if isinstance(summary, dict) else {}
     days: dict[str, list[dict[str, Any]]] = {}
     for item in revision.items:
         days.setdefault(item.scheduled_date.isoformat(), []).append(
@@ -154,6 +180,11 @@ def _present(revision: PlanRevision) -> dict[str, Any]:
                 "status": item.status.value,
                 "dish_name": item.content.get("dish_name"),
                 "canonical_refs": item.canonical_refs,
+                # Exact canonical components are presentation data, not an
+                # observation. Keeping them here lets every app surface show
+                # the same dish detail instead of reconstructing it from text.
+                "ingredients": item.content.get("components", []),
+                "serving_grams": item.content.get("serving_grams"),
                 "planned_duration_minutes": item.content.get("planned_duration_minutes"),
                 "nutrition": {
                     key: item.content.get(key)
@@ -162,7 +193,6 @@ def _present(revision: PlanRevision) -> dict[str, Any]:
                 },
             }
         )
-    summary = revision.summary
     text = (
         f"Bản kế hoạch {revision.domain.value.lower()} gồm {len(revision.items)} mục, "
         f"từ {revision.request.period_start.isoformat()} đến {revision.request.period_end.isoformat()}. "
@@ -180,8 +210,23 @@ def _present(revision: PlanRevision) -> dict[str, Any]:
         "timezone": revision.request.timezone,
         "period_start": revision.request.period_start.isoformat(),
         "period_end": revision.request.period_end.isoformat(),
-        "days": [{"date": key, "items": value} for key, value in sorted(days.items())],
+        "days": [
+            {
+                "date": key,
+                "items": value,
+                "summary": (
+                    daily_summary.get(key, {})
+                    if isinstance(daily_summary, dict)
+                    else {}
+                ),
+            }
+            for key, value in sorted(days.items())
+        ],
         "summary": summary,
+        "daily_targets": {
+            "calories": revision.goal_snapshot.get("canonical_daily_kcal"),
+            "protein": revision.goal_snapshot.get("canonical_daily_protein"),
+        },
         "reason_codes": revision.explanation_metadata.get("reason_codes", []),
         "planned_not_actual": True,
     }
@@ -200,14 +245,30 @@ async def build_nutrition_plan(
     _runtime_context: PlanRuntimeContext | None = None,
 ) -> dict[str, Any]:
     runtime = _runtime(_runtime_context)
+    normalized = normalize_planning_request(
+        intent=PlanIntent.NUTRITION_DRAFT,
+        period_start=period_start,
+        period_end=period_end,
+        timezone=timezone,
+        goal=goal_override,
+        schedule_constraints=schedule_constraints,
+        temporary_preferences=temporary_preferences,
+        temporary_exclusions=temporary_exclusions,
+        context=runtime.user_context,
+    )
     request = _request(
-        domain=PlanDomain.NUTRITION, period_start=period_start, period_end=period_end, timezone=timezone,
-        goal_override=goal_override, schedule_constraints=schedule_constraints,
-        temporary_preferences=temporary_preferences, temporary_exclusions=temporary_exclusions,
+        domain=PlanDomain.NUTRITION, period_start=normalized.period_start.isoformat() if normalized.period_start else period_start,
+        period_end=normalized.period_end.isoformat() if normalized.period_end else period_end,
+        timezone=normalized.timezone or timezone,
+        goal_override=normalized.goal if normalized.goal is not None else goal_override,
+        schedule_constraints=normalized.nutrition_constraints,
+        temporary_preferences=normalized.temporary_preferences, temporary_exclusions=normalized.temporary_exclusions,
         requested_modifications=requested_modifications,
     )
     revision = PlanEngine().build_nutrition_plan(_context(runtime), request)
-    return _revision_payload(revision)
+    payload = _revision_payload(revision)
+    payload["preview_persistence_status"] = await _persist_authenticated_preview(revision, runtime)
+    return payload
 
 
 async def build_workout_schedule(
@@ -230,27 +291,67 @@ async def build_workout_schedule(
     _runtime_context: PlanRuntimeContext | None = None,
 ) -> dict[str, Any]:
     runtime = _runtime(_runtime_context)
-    request = _request(
-        domain=PlanDomain.WORKOUT, period_start=period_start, period_end=period_end, timezone=timezone,
-        goal_override=goal_override, temporary_preferences=temporary_preferences,
+    normalized = normalize_planning_request(
+        intent=PlanIntent.WORKOUT_DRAFT,
+        period_start=period_start,
+        period_end=period_end,
+        timezone=timezone,
+        goal=goal_override,
+        temporary_preferences=temporary_preferences,
         temporary_exclusions=temporary_exclusions,
+        session_count=number_of_sessions,
+        available_weekdays=available_days,
+        unavailable_weekdays=unavailable_days,
+        preferred_weekdays=preferred_days,
+        duration_minutes=duration_minutes,
+        duration_by_day=duration_by_day,
+        equipment=equipment,
+        context=runtime.user_context,
+    )
+    request = _request(
+        domain=PlanDomain.WORKOUT, period_start=normalized.period_start.isoformat() if normalized.period_start else period_start,
+        period_end=normalized.period_end.isoformat() if normalized.period_end else period_end,
+        timezone=normalized.timezone or timezone,
+        goal_override=normalized.goal if normalized.goal is not None else goal_override,
+        temporary_preferences=normalized.temporary_preferences,
+        temporary_exclusions=normalized.temporary_exclusions,
     )
     context = _context(runtime)
+    safety_clarifications = {
+        "WORKOUT_PROFILE_REQUIRED",
+        "EXERCISE_SAFETY_CONTEXT_REQUIRED",
+    }
+    clarification = next((need for need in normalized.clarification_needs if need in safety_clarifications), None)
+    if clarification:
+        return _revision_payload(PlanEngine()._clarification_revision(context, request, clarification))  # noqa: SLF001
+    e4_goal = normalize_workout_goal(goal_override, context=context.raw_context)
     profile = context.raw_context.get("workout_profile") if isinstance(context.raw_context.get("workout_profile"), Mapping) else {}
     configured_days = tuple(str(item) for item in profile.get("preferred_training_days", ()) if isinstance(item, str))
     configured_count = profile.get("available_days_per_week")
+    # A bounded one-day request is more specific than a persisted weekly
+    # preference.  Passing the old preferred weekdays here could make the
+    # requested date appear unavailable and cause an unnecessary clarification.
+    resolved_available_days = (
+        normalized.available_weekdays
+        or (() if request.duration_days == 1 else configured_days)
+    )
+    resolved_session_count = (
+        normalized.session_count
+        if normalized.session_count is not None
+        else 1 if request.duration_days == 1 else configured_count if isinstance(configured_count, int) else None
+    )
     try:
         weekly = WeeklyWorkoutScheduler().schedule(
             WeeklyWorkoutRequest(
                 plan_request=request,
-                number_of_sessions=number_of_sessions if number_of_sessions is not None else (configured_count if isinstance(configured_count, int) else None),
-                explicit_available_days=tuple(str(item) for item in available_days) or configured_days,
-                explicit_unavailable_days=tuple(str(item) for item in unavailable_days),
-                preferred_days=tuple(str(item) for item in preferred_days),
-                default_duration_minutes=duration_minutes,
-                duration_by_day=dict(duration_by_day or {}), location=training_location,
-                equipment=tuple(str(item) for item in equipment) if equipment is not None else None,
-                temporary_constraints=tuple(str(item) for item in temporary_exclusions),
+                number_of_sessions=resolved_session_count,
+                explicit_available_days=resolved_available_days,
+                explicit_unavailable_days=normalized.unavailable_weekdays,
+                preferred_days=normalized.preferred_weekdays,
+                default_duration_minutes=normalized.duration_minutes,
+                duration_by_day=dict(normalized.duration_by_day), location=training_location,
+                equipment=normalized.equipment if equipment is not None else None,
+                temporary_constraints=normalized.temporary_exclusions,
             )
         )
     except WeeklyScheduleError as exc:
@@ -265,10 +366,10 @@ async def build_workout_schedule(
     for slot in weekly.slots:
         outcome = await WorkoutIntegrationService(runtime.db_session).build(
             e4_runtime,
-            goal_override=goal_override,
+            goal_override=e4_goal,
             requested_duration_minutes=slot.duration_minutes,
             requested_location=training_location,
-            available_equipment_override=equipment,
+            available_equipment_override=normalized.equipment if equipment is not None else None,
             requested_body_area=requested_body_area,
             exercise_exclude=temporary_exclusions,
             temporary_preferences=temporary_preferences,
@@ -286,8 +387,9 @@ async def build_workout_schedule(
         if planned_ids and generated_ids and set(generated_ids).issubset(set(planned_ids)):
             alternate = await WorkoutIntegrationService(runtime.db_session).build(
                 e4_runtime,
-                goal_override=goal_override, requested_duration_minutes=slot.duration_minutes,
-                requested_location=training_location, available_equipment_override=equipment,
+                goal_override=e4_goal, requested_duration_minutes=slot.duration_minutes,
+                requested_location=training_location,
+                available_equipment_override=normalized.equipment if equipment is not None else None,
                 requested_body_area=requested_body_area,
                 exercise_exclude=tuple(dict.fromkeys((*tuple(temporary_exclusions), *planned_ids))),
                 temporary_preferences=temporary_preferences,
@@ -317,7 +419,9 @@ async def build_workout_schedule(
         },
     )
     PlanEngine().repository.put(revision)
-    return _revision_payload(revision)
+    payload = _revision_payload(revision)
+    payload["preview_persistence_status"] = await _persist_authenticated_preview(revision, runtime)
+    return payload
 
 
 def _workout_schedule_dates(raw: Mapping[str, Any], request: PlanRequest) -> tuple[date, ...]:
@@ -393,9 +497,17 @@ async def revise_plan(
     _runtime_context: PlanRuntimeContext | None = None,
 ) -> dict[str, Any]:
     runtime = _runtime(_runtime_context)
+    normalized = normalize_planning_request(
+        intent=PlanIntent.PLAN_REVISION,
+        target_plan_id=plan_id,
+        target_revision_id=revision_id,
+        context=runtime.user_context,
+    )
+    if normalized.clarification_needs:
+        return {"status": normalized.clarification_needs[0], "write_status": "NOT_PERSISTED"}
     try:
         patch = PlanPatch(
-            target_plan_id=plan_id, target_revision_id=revision_id,
+            target_plan_id=normalized.target_plan_id or plan_id, target_revision_id=normalized.target_revision_id or revision_id,
             expected_revision_number=expected_revision_number,
             operation=PlanPatchOperation(operation), target_item_id=target_item_id,
             requested_change=dict(requested_change or {}), request_source="CHAT", reason=reason,
@@ -412,7 +524,9 @@ async def revise_plan(
         revision = PlanEngine().revise(context, patch)
     except ValueError as exc:
         return {"status": str(exc)}
-    return _revision_payload(revision)
+    payload = _revision_payload(revision)
+    payload["preview_persistence_status"] = await _persist_authenticated_preview(revision, runtime)
+    return payload
 
 
 async def save_plan(
@@ -430,11 +544,16 @@ async def save_plan(
         if blocked:
             return {"status": blocked, "write_status": "NOT_PERSISTED"}
         context = _context(runtime)
+        repository = PlanSqlRepository()
         preview = PlanEngine().repository.get(context.owner_user_id, plan_id, revision_id)
+        if preview is None:
+            preview = await repository.get_preview(
+                context.owner_user_id, plan_id, revision_id
+            )
         if preview is None:
             return {"status": "PLAN_PREVIEW_NOT_FOUND", "write_status": "NOT_PERSISTED"}
         try:
-            revision = await PlanSqlRepository().save_exact_revision(
+            revision = await repository.save_exact_revision(
                 owner_user_id=_principal(runtime).user_id, revision=preview,
                 expected_content_hash=revision_content_hash, action_id=request_id, activate=activate,
             )
@@ -480,6 +599,16 @@ async def set_plan_status(
     _runtime_context: PlanRuntimeContext | None = None,
 ) -> dict[str, Any]:
     runtime = _runtime(_runtime_context)
+    normalized = normalize_planning_request(
+        intent=PlanIntent.PLAN_LIFECYCLE,
+        target_plan_id=plan_id,
+        target_revision_id=revision_id,
+        context=runtime.user_context,
+    )
+    if normalized.clarification_needs:
+        return {"status": normalized.clarification_needs[0], "write_status": "NOT_PERSISTED"}
+    plan_id = normalized.target_plan_id or plan_id
+    revision_id = normalized.target_revision_id or revision_id
     if settings.plan_tool_mode == "enforced":
         blocked = _enforced_allowed(runtime)
         if blocked:

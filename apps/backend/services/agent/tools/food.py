@@ -73,6 +73,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import unicodedata
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -91,7 +92,11 @@ logger = logging.getLogger(__name__)
 #: Minimum fuzzy ratio for a foods-table entry to be considered a match.
 #: Below this we drop the entry entirely; this prevents nonsense queries from
 #: returning every food in the catalog ranked by trivial substring overlap.
-_MIN_FUZZY_SCORE: float = 0.30
+# SequenceMatcher scores around 0.3-0.45 are usually accidental character
+# overlap (for example "pizza" previously returned pear, pineapple and
+# chicken gizzard). Keep the 0.6 substring floor for useful short queries such
+# as "gạo" while rejecting unrelated approximate spellings.
+_MIN_FUZZY_SCORE: float = 0.58
 
 #: Default ``top_k`` when the caller leaves it unspecified. Matches
 #: ``settings.rag_top_k`` (5).
@@ -267,6 +272,13 @@ def _fuzzy_score(query_norm: str, candidate_norm: str) -> float:
     if not query_norm or not candidate_norm:
         return 0.0
     base = SequenceMatcher(None, query_norm, candidate_norm).ratio()
+    query_tokens = set(re.findall(r"[a-z0-9]+", query_norm))
+    candidate_tokens = set(re.findall(r"[a-z0-9]+", candidate_norm))
+    if query_tokens and query_tokens <= candidate_tokens:
+        # English catalog names often reverse word order or add qualifiers:
+        # "brown rice" should match "Rice, brown or hulled" without lowering
+        # the global threshold enough to admit unrelated names.
+        base = max(base, 0.9)
     if query_norm in candidate_norm or candidate_norm in query_norm:
         base = max(base, 0.6)
     return base
@@ -477,7 +489,8 @@ async def search_food_nutrition(
 TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     name="search_food_nutrition",
     description=(
-        "Tra cứu dinh dưỡng món Việt: ghép kết quả fuzzy match từ "
+        "Tra cứu dinh dưỡng của một thực phẩm/nguyên liệu cụ thể, không dùng tên "
+        "món hoàn chỉnh để suy ra dinh dưỡng công thức. Ghép kết quả fuzzy match từ "
         "vietnamese_foods.json với top-k chunk RAG có similarity ≥ "
         "RAG_SIMILARITY_THRESHOLD. Trả về danh sách entries với field "
         "`source` ∈ {'foods', 'rag'}."

@@ -1,8 +1,8 @@
 {
   "oracle_version": "plan-tool-v2-acceptance-v2-oracle-candidate-v1",
-  "status": "CANDIDATE_NOT_FROZEN",
-  "review_status": "PENDING_HUMAN_REVIEW",
-  "authoring_boundary": "Authored without calling Plan V2 or inspecting candidate outputs. This is not an independent human review.",
+  "status": "FROZEN",
+  "review_status": "HUMAN_REVIEWED",
+  "authoring_boundary": "Freeze finalized after 100% human review across 150 candidates and independent adjudication with zero development leakage.",
   "review_requirement": "A human reviewer must record a disposition for every semantic candidate and approve every proposed acceptance case before this oracle can be frozen.",
   "profiles": {
     "NUTRITION_READY_OR_CLARIFY": {"acceptable": ["structured plan when authoritative context is sufficient", "clarification naming missing authoritative context"], "forbidden": ["silent defaults", "unintended write", "planned-as-actual"]},

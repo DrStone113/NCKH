@@ -173,6 +173,15 @@ async def test_plan_v2_replaces_legacy_long_term_assembly_in_public_catalog():
     assert len(result["plan"]["items"]) == 9
     assert all(item["canonical_refs"]["dish_id"] for item in result["plan"]["items"])
     assert result["plan"]["summary"]["planned_not_consumed"] is True
+    presentation = result["presentation"]
+    assert presentation["planned_not_actual"] is True
+    assert presentation["daily_targets"]["calories"] == result["plan"]["goal_snapshot"]["canonical_daily_kcal"]
+    for day in presentation["days"]:
+        expected = result["plan"]["summary"]["daily"][day["date"]]
+        assert day["summary"] == expected
+        assert sum(item["nutrition"]["total_calories"] for item in day["items"]) == pytest.approx(expected["calories"])
+        assert all(item["plan_item_id"] for item in day["items"])
+        assert all(isinstance(item["ingredients"], list) for item in day["items"])
 
 
 # --------------------------------------------------------------------------- #

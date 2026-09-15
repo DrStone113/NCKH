@@ -12,6 +12,7 @@ from services.workout_planner.integration import (
     ExerciseProfileAdapter,
     TrainingStateAdapter,
     WorkoutIntegrationService,
+    WorkoutPlanCache,
     WorkoutRuntimeContext,
 )
 from services.workout_planner.presentation import WorkoutResponseValidator
@@ -103,6 +104,34 @@ def test_recommendation_does_not_persist_and_writes_stay_disabled(monkeypatch) -
     assert outcome.status == "READY" and outcome.plan_id
     result = _run(service.save_plan(runtime, outcome.plan_id, "explicit-save"))
     assert result == {"status": "WORKOUT_WRITE_DISABLED", "write_status": "REJECTED"}
+
+
+def test_explicit_save_restores_owner_scoped_preview_after_cache_restart(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "workout_write_mode", "explicit")
+    runtime = WorkoutRuntimeContext("e4-integration-user", "session", _safe_context(), None)
+    built = _run(WorkoutIntegrationService(cache=WorkoutPlanCache()).build(runtime))
+    assert built.plan_id and built.presentation
+
+    class PreviewRepository:
+        async def load_preview(self, user_id, plan_id):
+            assert user_id == "e4-integration-user"
+            assert plan_id == built.plan_id
+            return built.presentation
+
+        async def save_presentation(self, user_id, plan_id, presentation, request_id, *, activate):
+            assert presentation == built.presentation
+            return {
+                "id": plan_id,
+                "status": "SAVED",
+                "planner_version": presentation["planner_version"],
+            }
+
+    restarted = WorkoutIntegrationService(cache=WorkoutPlanCache())
+    restarted._repository = PreviewRepository()  # noqa: SLF001 - restart boundary fixture
+    result = _run(restarted.save_plan(runtime, built.plan_id, "restart-save"))
+
+    assert result["write_status"] == "PERSISTED"
+    assert result["workout_plan_id"] == built.plan_id
 
 
 def test_enforced_legacy_facade_never_falls_back_to_generic_algorithm(monkeypatch) -> None:

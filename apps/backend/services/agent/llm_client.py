@@ -45,6 +45,16 @@ GARBLED_INVALID_RATIO = 0.30
 DEFAULT_REQUEST_TIMEOUT_S = 180.0
 DEFAULT_HEALTH_TIMEOUT_S = 5.0
 
+# Authentication and account-balance failures apply to the provider account,
+# not to a particular request or model. Retrying the same model and then the
+# fallback model only adds latency (and can produce four identical failures).
+_TERMINAL_PROVIDER_STATUS_CODES = frozenset({401, 402})
+
+# Other ordinary client errors are not transient for the same request. They
+# may still be model-specific (for example an unsupported parameter), so the
+# next configured model is allowed one attempt. 408/409/429 remain retryable.
+_RETRYABLE_HTTP_STATUS_CODES = frozenset({408, 409, 429})
+
 _TOOL_CALL_BLOCK_RE = re.compile(
     r"<tool_call>\s*(.*?)\s*</tool_call>",
     re.DOTALL | re.IGNORECASE,
@@ -62,6 +72,17 @@ class GarbledOutputError(LLMError):
 
 class LLMUnavailableError(LLMError):
     """Raised when the underlying LLM service is not reachable."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        reason_code: str = "UNAVAILABLE",
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.reason_code = reason_code
 
 # ---------------------------------------------------------------------------- #
 # Data classes
@@ -544,13 +565,20 @@ class LLMClient:
         request_timeout_s: float = DEFAULT_REQUEST_TIMEOUT_S,
         health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
         client: httpx.AsyncClient | None = None,
+        allow_model_fallback: bool = True,
+        max_attempts_per_model: int = 2,
     ) -> None:
+        if max_attempts_per_model not in {1, 2}:
+            raise ValueError("max_attempts_per_model must be 1 or 2")
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key if api_key else "dummy-key"
         self.request_timeout_s = request_timeout_s
         self.health_timeout_s = health_timeout_s
         self._external_client = client
+        self.allow_model_fallback = allow_model_fallback
+        self.max_attempts_per_model = max_attempts_per_model
+        self.provider_status = "unknown"
         self.openai = AsyncOpenAI(
             base_url=self.base_url,
             api_key=self.api_key,
@@ -564,6 +592,7 @@ class LLMClient:
         tools: list[dict[str, Any]] | None = None,
         stream: bool = True,
         prefill: str | None = None,
+        max_tokens: int | None = None,
     ) -> LLMResponse:
         if not messages:
             raise ValueError("messages must be non-empty (precondition §9.1)")
@@ -586,12 +615,12 @@ class LLMClient:
         from config import settings
         candidate_models = [self.model]
         fallback_model = settings.heavy_llm_model if self.model != settings.heavy_llm_model else settings.llm_model
-        if fallback_model and fallback_model not in candidate_models:
+        if self.allow_model_fallback and fallback_model and fallback_model not in candidate_models:
             candidate_models.append(fallback_model)
 
         last_exc: Exception | None = None
         for model_idx, model_name in enumerate(candidate_models):
-            for attempt in range(2):
+            for attempt in range(self.max_attempts_per_model):
                 try:
                     kwargs: dict[str, Any] = {
                         "model": model_name,
@@ -600,10 +629,13 @@ class LLMClient:
                     }
                     if tools:
                         kwargs["tools"] = tools
+                    if max_tokens is not None:
+                        kwargs["max_tokens"] = max_tokens
 
                     if not stream:
                         # Non-streaming fallback
                         response = await self.openai.chat.completions.create(**kwargs)
+                        self.provider_status = "ready"
                         choice = response.choices[0].message
                         content = choice.content or ""
                         _check_garbled(content)
@@ -635,6 +667,7 @@ class LLMClient:
 
                     # Streaming mode (stream=True)
                     raw_stream = await self.openai.chat.completions.create(**kwargs)
+                    self.provider_status = "ready"
                     response_stream = raw_stream.__aiter__()
                     
                     # Read first few chunks to determine if it is a tool call
@@ -750,25 +783,56 @@ class LLMClient:
 
                 except GarbledOutputError:
                     raise
-                except (APIConnectionError, APITimeoutError, APIError, Exception) as exc:
+                except Exception as exc:
                     last_exc = exc
+                    status_code = getattr(exc, "status_code", None)
                     logger.warning(
-                        "LLM API error on model %s (attempt %d/2): %s",
+                        "LLM API error on model %s (attempt %d/%d): %s",
                         model_name,
                         attempt + 1,
+                        self.max_attempts_per_model,
                         exc,
                     )
+
+                    if status_code in _TERMINAL_PROVIDER_STATUS_CODES:
+                        reason_code = (
+                            "QUOTA_EXHAUSTED"
+                            if status_code == 402
+                            else "AUTHENTICATION_FAILED"
+                        )
+                        self.provider_status = reason_code.lower()
+                        # Do not leak the upstream response body (which may
+                        # contain provider/account details) into user-facing
+                        # layers. The status is enough for diagnostics.
+                        raise LLMUnavailableError(
+                            f"LLM provider rejected the account ({status_code})",
+                            status_code=status_code,
+                            reason_code=reason_code,
+                        ) from exc
+
+                    if (
+                        isinstance(status_code, int)
+                        and 400 <= status_code < 500
+                        and status_code not in _RETRYABLE_HTTP_STATUS_CODES
+                    ):
+                        # A second identical request cannot repair a malformed
+                        # or unsupported request. Try the next model once.
+                        break
                     await asyncio.sleep(0.5 * (attempt + 1))
 
         if isinstance(last_exc, (APIConnectionError, APITimeoutError)):
+            self.provider_status = "unavailable"
             logger.warning("LLM API unavailable: %s", last_exc)
             raise LLMUnavailableError(f"LLM API not reachable: {last_exc!s}") from last_exc
         if isinstance(last_exc, APIError):
             status_code = getattr(last_exc, "status_code", None)
             if status_code and status_code >= 500:
+                self.provider_status = "unavailable"
                 raise LLMUnavailableError(f"LLM API returned {status_code}") from last_exc
+            self.provider_status = "unavailable"
             raise LLMUnavailableError(f"LLM API error: {last_exc!s}") from last_exc
         if last_exc:
+            self.provider_status = "unavailable"
             raise LLMUnavailableError(f"LLM API unexpected error: {last_exc!s}") from last_exc
         raise LLMUnavailableError("LLM API call failed")
 
@@ -782,8 +846,11 @@ class LLMClient:
                 max_retries=0
             )
             await custom_openai.models.list()
+            if self.provider_status == "unknown":
+                self.provider_status = "reachable_unverified"
             return True
         except Exception:
+            self.provider_status = "unavailable"
             return False
 
 __all__ = [

@@ -19,6 +19,7 @@ record the call arguments instead of running ``sentence-transformers``.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -156,6 +157,24 @@ class _FakeAsyncSession:
         return _FakeResult()
 
 
+class _ConcurrentFakeAsyncSession(_FakeAsyncSession):
+    supports_concurrent_statements = True
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.active = 0
+        self.max_active = 0
+
+    async def execute(self, statement: Any, params: Any = None) -> _FakeResult:
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+        try:
+            await asyncio.sleep(0.01)
+            return await super().execute(statement, params)
+        finally:
+            self.active -= 1
+
+
 # --------------------------------------------------------------------------- #
 # Stub RAGService — records calls without doing real embedding work
 # --------------------------------------------------------------------------- #
@@ -266,6 +285,39 @@ async def test_query_rag_returns_empty_when_corpus_empty():
     assert rag.calls == [("anything", 5, session)]
 
 
+@pytest.mark.asyncio
+async def test_cost_optimized_context_can_skip_rag_and_contextual_history():
+    session_id = str(uuid4())
+    now = datetime.now()
+    session = _FakeAsyncSession(
+        chat_sessions={session_id: "user-1"},
+        chat_messages=[
+            _make_message(
+                session_id=session_id,
+                role="user",
+                content="100g ức gà bao nhiêu protein?",
+                created_at=now,
+            )
+        ],
+    )
+    rag = _StubRAGService(return_chunks=[_make_chunk(0.9)])
+    svc = MemoryService(session, rag_service=rag)  # type: ignore[arg-type]
+
+    context = await svc.loadContextCostOptimized(
+        session_id,
+        "100g ức gà bao nhiêu protein?",
+        include_rag=False,
+        include_relevant_history=False,
+    )
+
+    assert context.rag_chunks == []
+    assert context.relevant_history == []
+    assert context.rag_requested is False
+    assert context.rag_result_status == "NOT_REQUESTED"
+    assert rag.calls == []
+    assert not any(params and "query" in params for _, params in session.executed)
+
+
 # --------------------------------------------------------------------------- #
 # loadContext — Requirement 5.5
 # --------------------------------------------------------------------------- #
@@ -352,6 +404,17 @@ async def test_load_context_returns_all_four_pieces():
 
 
 @pytest.mark.asyncio
+async def test_load_context_parallelizes_independent_reads_on_scoped_session():
+    db = _ConcurrentFakeAsyncSession(chat_sessions={"s": "u"})
+    svc = MemoryService(db)  # type: ignore[arg-type]
+
+    await svc.loadContext("s", "Cảm ơn bạn nhiều nhé")
+
+    assert db.max_active >= 3
+    assert len(db.executed) == 3
+
+
+@pytest.mark.asyncio
 async def test_load_context_history_respects_max_history_turns():
     """history is capped at ``settings.max_history_turns`` and ordered chronologically."""
     base = datetime(2025, 1, 1, 12, 0, 0)
@@ -383,6 +446,41 @@ async def test_load_context_history_respects_max_history_turns():
 
 
 @pytest.mark.asyncio
+async def test_load_context_excludes_scope_guard_turns_from_model_history():
+    base = datetime(2025, 1, 1, 12, 0, 0)
+    db = _FakeAsyncSession(
+        chat_sessions={"s": "u"},
+        chat_messages=[
+            _make_message(
+                session_id="s",
+                role="user",
+                content="1 + 1 bằng mấy?",
+                tool_name="scope_guard",
+                created_at=base,
+            ),
+            _make_message(
+                session_id="s",
+                role="assistant",
+                content="Mình chỉ hỗ trợ sức khỏe.",
+                tool_name="scope_guard",
+                created_at=base + timedelta(seconds=1),
+            ),
+            _make_message(
+                session_id="s",
+                role="user",
+                content="Tối nay ăn gì?",
+                created_at=base + timedelta(seconds=2),
+            ),
+        ],
+    )
+    svc = MemoryService(db)  # type: ignore[arg-type]
+
+    ctx = await svc.loadContext("s", "Gợi ý món khác")
+
+    assert [turn.content for turn in ctx.history] == ["Tối nay ăn gì?"]
+
+
+@pytest.mark.asyncio
 async def test_load_context_returns_empty_pieces_for_unknown_session():
     """A fresh session id with no rows yields empty history/facts/summary."""
     db = _FakeAsyncSession()
@@ -405,6 +503,18 @@ async def test_load_context_skips_rag_when_user_text_is_blank():
     ctx = await svc.loadContext("s", "   ")
     assert ctx.rag_chunks == []
     assert rag.calls == []
+
+
+@pytest.mark.asyncio
+async def test_load_context_keeps_semantic_retrieval_for_punctuation_reference():
+    """A bare question mark can refer to prior context and is not chitchat."""
+    rag = _StubRAGService(return_chunks=[])
+    db = _FakeAsyncSession(chat_sessions={"s": "u"})
+    svc = MemoryService(db, rag_service=rag)  # type: ignore[arg-type]
+
+    await svc.loadContext("s", "?")
+
+    assert rag.calls == [("?", settings.rag_top_k, db)]
 
 
 @pytest.mark.asyncio

@@ -19,9 +19,12 @@ passwords, service credentials, email, phone, and precise location. Provider
 scratchpads (`analysis`, `thinking`, `reasoning_content`) are classified as
 internal-only, discarded, and never become a public or developer UI surface.
 
-The Flutter debug panel is compiled only with `--dart-define=CHAT_DEBUG_TRACE=true`.
-That compile-time switch is not an authorization boundary; the server-side gate
-remains authoritative.
+The Flutter debug panel and its copy-transcript button are enabled automatically
+in Flutter debug builds. They can be explicitly disabled or enabled with
+`--dart-define=CHAT_DEBUG_TRACE=false|true`. That compile-time switch is not an
+authorization boundary; the server-side gate remains authoritative. The copied
+transcript contains the prior user message, the allowlisted public trace, and
+only the already-redacted developer telemetry received by the client.
 
 ## Confirmed action lifecycle
 

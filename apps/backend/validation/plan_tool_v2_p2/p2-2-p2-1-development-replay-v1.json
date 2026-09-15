@@ -1,0 +1,103 @@
+{
+  "artifact_version": "PLAN_V2_P2_2_P2_1_DEVELOPMENT_REPLAY_V1",
+  "dataset_status": "USED_FOR_TUNING_AFTER_FIRST_PASS",
+  "not_acceptance": true,
+  "not_unseen": true,
+  "not_a_second_first_pass": true,
+  "historical_scored_result": {
+    "request_semantic_match_percent": 47.5,
+    "reference_chain_identity_percent": 0.0,
+    "first_pass_result": "FAIL"
+  },
+  "replay_scope": {
+    "exact_120_case_rescore": "NOT_PERFORMED",
+    "reason": "The old execution schema omitted profile and lifecycle fixture references. Re-scoring known data through a changed fixture adapter would not measure product improvement.",
+    "generalized_failure_regressions": [
+      "test_plan_lifecycle_p2_2.py",
+      "test_plan_reference_chain_live.py",
+      "test_plan_sql_repository_live.py",
+      "test_plan_v2_api_live.py",
+      "test_plan_v2_p2_1_execution_harness.py"
+    ],
+    "failure_patterns_covered": {
+      "EXECUTION_ADAPTER_BUG": {
+        "count": 43,
+        "case_ids": [
+          "p2r-combined_health-001",
+          "p2r-combined_health-003",
+          "p2r-combined_health-004",
+          "p2r-combined_health-005",
+          "p2r-combined_health-009",
+          "p2r-combined_health-010",
+          "p2r-combined_health-012",
+          "p2r-combined_health-015",
+          "p2r-nutrition-006",
+          "p2r-nutrition-010",
+          "p2r-nutrition-011",
+          "p2r-nutrition-017",
+          "p2r-nutrition-021",
+          "p2r-nutrition-025",
+          "p2r-nutrition-026",
+          "p2r-nutrition-030",
+          "p2r-weekly_workout_scheduling-001",
+          "p2r-weekly_workout_scheduling-002",
+          "p2r-weekly_workout_scheduling-003",
+          "p2r-weekly_workout_scheduling-005",
+          "p2r-weekly_workout_scheduling-006",
+          "p2r-weekly_workout_scheduling-008",
+          "p2r-weekly_workout_scheduling-009",
+          "p2r-weekly_workout_scheduling-010",
+          "p2r-weekly_workout_scheduling-011",
+          "p2r-weekly_workout_scheduling-012",
+          "p2r-weekly_workout_scheduling-013",
+          "p2r-weekly_workout_scheduling-014",
+          "p2r-weekly_workout_scheduling-015",
+          "p2r-weekly_workout_scheduling-016",
+          "p2r-weekly_workout_scheduling-019",
+          "p2r-weekly_workout_scheduling-021",
+          "p2r-weekly_workout_scheduling-022",
+          "p2r-weekly_workout_scheduling-023",
+          "p2r-weekly_workout_scheduling-024",
+          "p2r-weekly_workout_scheduling-025",
+          "p2r-weekly_workout_scheduling-026",
+          "p2r-weekly_workout_scheduling-027",
+          "p2r-weekly_workout_scheduling-029",
+          "p2r-weekly_workout_scheduling-030",
+          "p2r-workout_single_session-003",
+          "p2r-workout_single_session-011",
+          "p2r-workout_single_session-025"
+        ]
+      },
+      "FIXTURE_RUNTIME_BUG": {
+        "count": 20,
+        "case_ids": [
+          "p2r-nutrition-002",
+          "p2r-nutrition-003",
+          "p2r-nutrition-007",
+          "p2r-nutrition-009",
+          "p2r-nutrition-012",
+          "p2r-nutrition-014",
+          "p2r-nutrition-018",
+          "p2r-nutrition-022",
+          "p2r-nutrition-024",
+          "p2r-nutrition-027",
+          "p2r-revision_lifecycle_concurrency_adversarial-001",
+          "p2r-revision_lifecycle_concurrency_adversarial-002",
+          "p2r-revision_lifecycle_concurrency_adversarial-004",
+          "p2r-revision_lifecycle_concurrency_adversarial-005",
+          "p2r-revision_lifecycle_concurrency_adversarial-006",
+          "p2r-revision_lifecycle_concurrency_adversarial-007",
+          "p2r-revision_lifecycle_concurrency_adversarial-010",
+          "p2r-revision_lifecycle_concurrency_adversarial-012",
+          "p2r-revision_lifecycle_concurrency_adversarial-013",
+          "p2r-revision_lifecycle_concurrency_adversarial-015"
+        ]
+      }
+    }
+  },
+  "source_hashes": {
+    "raw_execution": "e2944ad6b11a5285b76f0414b52160242ffc1d0071e9ed35ddd06ef63205fb9b",
+    "historical_results": "6a87aa68e82ead5cdae4613dfc03f27da953055ca12943905778471299191239",
+    "taxonomy": "b79afc4235933803e6abef755a06ebda065f1cf024b8487ec5eb5818533488c8"
+  }
+}

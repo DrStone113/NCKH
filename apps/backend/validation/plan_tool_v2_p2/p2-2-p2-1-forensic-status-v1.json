@@ -1,0 +1,37 @@
+{
+  "artifact_version": "PLAN_V2_P2_2_P2_1_FORENSIC_STATUS_V1",
+  "status": "PRESERVED",
+  "P2_1_FIRST_PASS_RESULT": "FAIL",
+  "P2_1_DATASET_STATUS": "USED_FOR_TUNING_AFTER_FIRST_PASS",
+  "scope": "The P2.1 first scored data are historical evidence and may be used only for remediation analysis and development regression. They are not unseen, confirmatory, or eligible for a future first-pass claim.",
+  "immutable_artifacts": {
+    "first_pass_register": {
+      "path": "p2-1-first-scored-acceptance-register-v1.json",
+      "sha256": "38dd936649881446bc6348a6809e7064fadb453a24042e231d0fb4758c881294"
+    },
+    "raw_execution": {
+      "path": "p2-1-first-scored-raw-execution-v1.json",
+      "sha256": "e2944ad6b11a5285b76f0414b52160242ffc1d0071e9ed35ddd06ef63205fb9b"
+    },
+    "scored_results": {
+      "path": "p2-1-first-scored-results-v1.json",
+      "sha256": "6a87aa68e82ead5cdae4613dfc03f27da953055ca12943905778471299191239"
+    },
+    "holdout": {
+      "path": "p2-1a-automated-holdout-v1.json",
+      "sha256": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a"
+    },
+    "oracle": {
+      "path": "p2-1a-deterministic-oracle-v1.json",
+      "sha256": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8"
+    },
+    "thresholds": {
+      "path": "acceptance-thresholds-v1.json",
+      "sha256": "e6002d52ddd849f4f434c8a56ba1af2e6659ca6b8abddf0f8b5dd1adcff15df0"
+    },
+    "closure_report": {
+      "path": "docs/reports/plan_tool_v2_p2_1_first_scored_acceptance_report.md",
+      "sha256": "e6609f9096d176337e2c91a5e350a7634ad85f1182241f4701929512b40490dc"
+    }
+  }
+}

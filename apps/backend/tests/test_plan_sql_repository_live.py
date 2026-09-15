@@ -4,13 +4,20 @@ from __future__ import annotations
 
 import os
 from datetime import date
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from services.plan_engine.contracts import PlanDomain, PlanLifecycleStatus, PlanRequest
+from services.plan_engine.contracts import (
+    PlanDomain,
+    PlanLifecycleStatus,
+    PlanPatch,
+    PlanPatchOperation,
+    PlanRequest,
+)
 from services.plan_engine.engine import MemoryPlanRepository, PlanContextResolver, PlanEngine
-from services.plan_engine.persistence import PlanSqlRepository
+from services.plan_engine.persistence import PlanAuthorizationError, PlanPersistenceError, PlanSqlRepository
 
 
 _LIVE_URL = os.getenv("PLAN_V2_LIVE_POSTGRES_URL")
@@ -51,5 +58,90 @@ async def test_live_sql_save_readback_idempotency_and_owner_boundary():
         assert retry.revision_id == saved.revision_id
         assert saved.revision_content_hash == preview.revision_content_hash
         assert await repository.get("different-owner", saved.plan_id, saved.revision_id) is None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_live_sql_revision_lifecycle_idempotency_and_cross_owner_denial():
+    """Exercise the production repository against PostgreSQL, not a mock."""
+
+    assert _LIVE_URL
+    engine = create_async_engine(_LIVE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    repository = PlanSqlRepository(session_factory)
+    owner = f"p2-live-matrix-{uuid4()}"
+    context = PlanContextResolver.resolve(
+        owner,
+        {
+            "user_id": owner, "age": 31, "equation_sex": "male", "height_cm": 172,
+            "weight_kg": 70, "activity_level": "moderate", "health_goal": "maintain",
+            "dietary_restrictions": ["no_pork"],
+        },
+    )
+    request = PlanRequest(PlanDomain.NUTRITION, date(2026, 10, 3), date(2026, 10, 3), "Asia/Ho_Chi_Minh")
+    planner = PlanEngine(MemoryPlanRepository())
+    try:
+        original = planner.build_nutrition_plan(context, request)
+        saved = await repository.save_exact_revision(
+            owner_user_id=owner, revision=original, expected_content_hash=original.revision_content_hash,
+            action_id=f"save-{original.revision_id}", activate=False,
+        )
+        assert saved.lifecycle_status is PlanLifecycleStatus.SAVED
+        assert saved.revision_content_hash == original.revision_content_hash
+
+        active = await repository.set_status(
+            owner_user_id=owner, plan_id=saved.plan_id, revision_id=saved.revision_id,
+            expected_revision_number=1, status=PlanLifecycleStatus.ACTIVE, action_id=f"activate-{saved.revision_id}",
+        )
+        paused = await repository.set_status(
+            owner_user_id=owner, plan_id=saved.plan_id, revision_id=saved.revision_id,
+            expected_revision_number=1, status=PlanLifecycleStatus.PAUSED, action_id=f"pause-{saved.revision_id}",
+        )
+        resumed = await repository.set_status(
+            owner_user_id=owner, plan_id=saved.plan_id, revision_id=saved.revision_id,
+            expected_revision_number=1, status=PlanLifecycleStatus.ACTIVE, action_id=f"resume-{saved.revision_id}",
+        )
+        retried_resume = await repository.set_status(
+            owner_user_id=owner, plan_id=saved.plan_id, revision_id=saved.revision_id,
+            expected_revision_number=1, status=PlanLifecycleStatus.ACTIVE, action_id=f"resume-{saved.revision_id}",
+        )
+        cancelled = await repository.set_status(
+            owner_user_id=owner, plan_id=saved.plan_id, revision_id=saved.revision_id,
+            expected_revision_number=1, status=PlanLifecycleStatus.CANCELLED, action_id=f"cancel-{saved.revision_id}",
+        )
+        assert (active.lifecycle_status, paused.lifecycle_status, resumed.lifecycle_status, cancelled.lifecycle_status) == (
+            PlanLifecycleStatus.ACTIVE, PlanLifecycleStatus.PAUSED, PlanLifecycleStatus.ACTIVE, PlanLifecycleStatus.CANCELLED,
+        )
+        assert retried_resume == resumed
+
+        revised = planner.revise(
+            context,
+            PlanPatch(
+                target_plan_id=original.plan_id, target_revision_id=original.revision_id,
+                expected_revision_number=1, operation=PlanPatchOperation.CHANGE_TIME,
+                target_item_id=original.items[0].plan_item_id, requested_change={"schedule_slot": "snack"},
+                request_source="P2_1_LIVE", reason="live revision matrix",
+            ),
+        )
+        persisted_revision = await repository.save_exact_revision(
+            owner_user_id=owner, revision=revised, expected_content_hash=revised.revision_content_hash,
+            action_id=f"save-{revised.revision_id}", activate=False,
+        )
+        assert persisted_revision.revision_number == 2
+        assert persisted_revision.parent_revision_id == original.revision_id
+        assert persisted_revision.revision_content_hash == revised.revision_content_hash
+        assert await repository.get("other-owner", original.plan_id, original.revision_id) is None
+
+        with pytest.raises(PlanPersistenceError, match="PLAN_REVISION_CONFLICT"):
+            await repository.set_status(
+                owner_user_id=owner, plan_id=original.plan_id, revision_id=revised.revision_id,
+                expected_revision_number=1, status=PlanLifecycleStatus.ACTIVE, action_id=f"stale-{revised.revision_id}",
+            )
+        with pytest.raises(PlanAuthorizationError, match="PLAN_NOT_FOUND"):
+            await repository.set_status(
+                owner_user_id="other-owner", plan_id=original.plan_id, revision_id=revised.revision_id,
+                expected_revision_number=2, status=PlanLifecycleStatus.ACTIVE, action_id=f"foreign-{revised.revision_id}",
+            )
     finally:
         await engine.dispose()

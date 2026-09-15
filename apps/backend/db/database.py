@@ -1,4 +1,6 @@
 import logging
+import time
+import contextlib
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
@@ -18,6 +20,10 @@ engine = create_async_engine(
     settings.database_url,
     echo=False,
     pool_pre_ping=True,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_timeout=settings.db_pool_timeout_seconds,
+    pool_recycle=settings.db_pool_recycle_seconds,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -36,10 +42,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     session = AsyncSessionLocal()
     try:
         yield session
-        try:
-            await session.commit()
-        except Exception:
-            pass
+        await session.commit()
     except Exception:
         try:
             await session.rollback()
@@ -82,25 +85,118 @@ class ScopedSession:
     session instead.
     """
 
-    def __init__(self, session_factory=AsyncSessionLocal) -> None:
+    supports_concurrent_statements = True
+
+    def __init__(
+        self,
+        session_factory=AsyncSessionLocal,
+        *,
+        metrics=None,
+        admission_controller=None,
+    ) -> None:
         self._session_factory = session_factory
+        self._metrics = metrics
+        self._admission_controller = admission_controller
 
     async def execute(self, statement, params=None):
-        async with self._session_factory() as session:
-            result = (
-                await session.execute(statement, params)
-                if params is not None
-                else await session.execute(statement)
-            )
-            # Detach the rows before the connection goes back to the pool;
-            # a closed session cannot stream a server-side cursor.
-            try:
-                buffered = _BufferedResult(result.fetchall(), result.rowcount)
-            except Exception:
-                # Non-row-returning statement (INSERT/UPDATE/DDL).
-                buffered = _BufferedResult([], getattr(result, "rowcount", -1))
-            await session.commit()
-            return buffered
+        started = time.perf_counter()
+        failed = False
+        failure_text = ""
+        try:
+            async with self._session_factory() as session:
+                result = (
+                    await session.execute(statement, params)
+                    if params is not None
+                    else await session.execute(statement)
+                )
+                # Detach the rows before the connection goes back to the pool;
+                # a closed session cannot stream a server-side cursor.
+                try:
+                    buffered = _BufferedResult(result.fetchall(), result.rowcount)
+                except Exception:
+                    # Non-row-returning statement (INSERT/UPDATE/DDL).
+                    buffered = _BufferedResult([], getattr(result, "rowcount", -1))
+                await session.commit()
+                return buffered
+        except Exception as exc:
+            failed = True
+            failure_text = str(exc)
+            raise
+        finally:
+            if self._metrics is not None:
+                self._metrics.increment("db.statements")
+                self._metrics.observe(
+                    "db.statement_ms", (time.perf_counter() - started) * 1000
+                )
+                if failed:
+                    self._metrics.increment("db.statement_failures")
+                with contextlib.suppress(Exception):
+                    checked_out = engine.pool.checkedout()
+                    capacity = engine.pool.size() + settings.db_max_overflow
+                    utilization = checked_out / max(1, capacity)
+                    self._metrics.gauge("db.pool_checked_out", checked_out)
+                    self._metrics.gauge("db.pool_utilization", utilization)
+                    if self._admission_controller is not None:
+                        self._admission_controller.observe_pressure(
+                            db_utilization=utilization,
+                            timed_out=failed and "timeout" in failure_text.casefold(),
+                        )
+
+    async def fetch_chat_context(self, session_id: str, limit: int):
+        """Fetch history, summary and owner-scoped facts in one statement."""
+
+        result = await self.execute(
+            text(
+                """
+                WITH recent AS (
+                    SELECT id, session_id, role, content, tool_call_id,
+                           tool_name, public_trace, created_at
+                    FROM chat_messages
+                    WHERE session_id = :sid
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT :lim
+                ), owner AS (
+                    SELECT user_id FROM chat_sessions WHERE id = :sid
+                )
+                SELECT
+                    COALESCE((
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'id', id, 'session_id', session_id,
+                                'role', role, 'content', content,
+                                'tool_call_id', tool_call_id,
+                                'tool_name', tool_name,
+                                'public_trace', public_trace,
+                                'created_at', created_at
+                            ) ORDER BY created_at ASC, id ASC
+                        ) FROM recent
+                    ), '[]'::jsonb) AS history,
+                    COALESCE((
+                        SELECT rolling_summary FROM chat_session_memory
+                        WHERE session_id = :sid
+                    ), '') AS rolling_summary,
+                    COALESCE((
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'id', f.id, 'user_id', f.user_id,
+                                'category', f.category, 'fact', f.fact,
+                                'status', f.status,
+                                'source_msg_id', f.source_msg_id,
+                                'created_at', f.created_at
+                            ) ORDER BY f.created_at ASC
+                        )
+                        FROM user_facts f
+                        JOIN owner o ON o.user_id = f.user_id
+                        WHERE f.status = 'confirmed'
+                    ), '[]'::jsonb) AS pinned_facts
+                """
+            ),
+            {"sid": session_id, "lim": max(0, int(limit))},
+        )
+        row = result.first()
+        if row is None:
+            return [], "", []
+        return row[0] or [], row[1] or "", row[2] or []
 
     async def commit(self) -> None:
         """No-op: :meth:`execute` already commits per statement."""
@@ -232,9 +328,52 @@ async def apply_migrations(conn: AsyncConnection | None = None) -> list[str]:
     """
     if conn is not None:
         return await _apply_migrations_with_conn(conn)
+    return await _apply_migrations_managed()
 
-    async with engine.begin() as new_conn:
-        return await _apply_migrations_with_conn(new_conn)
+
+def _is_autocommit_migration(sql: str) -> bool:
+    return "-- migration-mode: autocommit" in sql[:256].casefold()
+
+
+def _autocommit_statements(sql: str) -> list[str]:
+    """Split the deliberately simple online-index migration format."""
+
+    without_comments = "\n".join(
+        line for line in sql.splitlines() if not line.lstrip().startswith("--")
+    )
+    return [item.strip() for item in without_comments.split(";") if item.strip()]
+
+
+async def _apply_migrations_managed() -> list[str]:
+    if not MIGRATIONS_DIR.is_dir():
+        return []
+    applied: list[str] = []
+    async with engine.begin() as conn:
+        await _ensure_migrations_table(conn)
+
+    for sql_path in sorted(MIGRATIONS_DIR.glob("*.sql")):
+        version = sql_path.stem
+        sql = sql_path.read_text(encoding="utf-8")
+        async with engine.begin() as check_conn:
+            if await _is_migration_applied(check_conn, version):
+                continue
+        if _is_autocommit_migration(sql):
+            async with engine.connect() as raw_conn:
+                auto_conn = await raw_conn.execution_options(
+                    isolation_level="AUTOCOMMIT"
+                )
+                for statement in _autocommit_statements(sql):
+                    await auto_conn.execute(text(statement))
+            async with engine.begin() as mark_conn:
+                await _mark_migration_applied(mark_conn, version)
+        else:
+            async with engine.begin() as migration_conn:
+                raw = await migration_conn.get_raw_connection()
+                await raw.driver_connection.execute(sql)
+                await _mark_migration_applied(migration_conn, version)
+        applied.append(version)
+        logger.info("Migration %s applied", version)
+    return applied
 
 
 async def _apply_migrations_with_conn(conn: AsyncConnection) -> list[str]:
@@ -257,6 +396,10 @@ async def _apply_migrations_with_conn(conn: AsyncConnection) -> list[str]:
             continue
 
         sql = sql_path.read_text(encoding="utf-8")
+        if _is_autocommit_migration(sql) and hasattr(conn, "get_isolation_level"):
+            isolation = await conn.get_isolation_level()
+            if str(isolation).upper() != "AUTOCOMMIT":
+                raise RuntimeError("AUTOCOMMIT_MIGRATION_REQUIRES_MANAGED_CONNECTION")
         logger.info("Applying migration %s", version)
         # asyncpg KHÔNG cho phép nhiều statement trong một prepared statement.
         # Để gửi nguyên file (nhiều CREATE TABLE / ALTER TABLE) phải dùng raw

@@ -202,6 +202,53 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+_SEARCH_DISH_CATALOG_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "query": {
+            "type": "string",
+            "maxLength": 160,
+            "default": "",
+            "description": "Tên món hoặc nguyên liệu cần tìm; để trống để duyệt toàn bộ catalog theo trang.",
+        },
+        "dish_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "ID canonical chính xác khi cần đọc một món cụ thể.",
+        },
+        "meal_type": {
+            "type": "string",
+            "enum": sorted(_VALID_MEAL_TYPES),
+            "description": "Bộ lọc loại bữa, không bắt buộc.",
+        },
+        "dietary_restrictions": {
+            "type": "array",
+            "items": {"type": "string", "enum": sorted(_VALID_RESTRICTIONS)},
+            "uniqueItems": True,
+            "default": [],
+        },
+        "ingredient_exclusions": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1, "maxLength": 100},
+            "uniqueItems": True,
+            "default": [],
+        },
+        "page": {"type": "integer", "minimum": 1, "default": 1},
+        "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 5,
+        },
+        "include_details": {
+            "type": "boolean",
+            "default": False,
+            "description": "Trả nguyên liệu, provenance và quality; tối đa 5 kết quả mỗi trang.",
+        },
+    },
+    "additionalProperties": False,
+}
+
 
 # ---------------------------------------------------------------------------
 # Data loading (once at import time per Requirement 7.8)
@@ -472,6 +519,15 @@ def _passes_dietary_restrictions(
     return True
 
 
+def _passes_ingredient_exclusions(dish: _DishRecord, exclusions: frozenset[str]) -> bool:
+    """Reject an explicitly excluded ingredient or dish name, case-insensitively."""
+
+    if not exclusions:
+        return True
+    searchable = " ".join(_remove_accents(value.casefold()) for value in (dish.name, *(component.name for component in dish.components)))
+    return not any(exclusion in searchable for exclusion in exclusions)
+
+
 # ---------------------------------------------------------------------------
 # Scaling
 # ---------------------------------------------------------------------------
@@ -654,6 +710,7 @@ def suggest_dish(
     meal_type: str,
     target_kcal: float,
     dietary_restrictions: Sequence[str] | Iterable[str] = (),
+    ingredient_exclusions: Sequence[str] | Iterable[str] = (),
     recent_dish_ids: Sequence[int] | Iterable[int] = (),
     query: str = "",
     latitude: float | None = None,
@@ -705,6 +762,11 @@ def suggest_dish(
         raise ValueError("INVALID_TARGET_KCAL")
 
     restrictions = _normalize_restrictions(dietary_restrictions)
+    exclusions = frozenset(
+        _remove_accents(value.casefold())
+        for value in ingredient_exclusions
+        if isinstance(value, str) and value.strip()
+    )
     recent_ids = _normalize_recent_ids(recent_dish_ids)
 
     clean_query = _remove_accents(query.strip().lower()) if isinstance(query, str) else ""
@@ -724,6 +786,8 @@ def suggest_dish(
         if meal_type not in dish.meal_types:
             continue
         if not _passes_dietary_restrictions(dish, restrictions):
+            continue
+        if not _passes_ingredient_exclusions(dish, exclusions):
             continue
         if clean_query and clean_query not in _remove_accents(dish.name.lower()):
             continue
@@ -796,6 +860,162 @@ def suggest_dish(
     return result
 
 
+def _catalog_page(page: int, page_size: int, *, include_details: bool) -> tuple[int, int]:
+    if (
+        isinstance(page, bool)
+        or isinstance(page_size, bool)
+        or not isinstance(page, int)
+        or not isinstance(page_size, int)
+        or page < 1
+        or page_size < 1
+        or page_size > 20
+    ):
+        raise ValueError("INVALID_CATALOG_PAGE")
+    if include_details and page_size > 5:
+        raise ValueError("DETAIL_PAGE_TOO_LARGE")
+    start = (page - 1) * page_size
+    return start, start + page_size
+
+
+def _dish_search_rank(dish: _DishRecord, query: str) -> int | None:
+    if not query:
+        return 4
+    name = _remove_accents(dish.name.casefold())
+    ingredients = " ".join(
+        _remove_accents(component.name.casefold()) for component in dish.components
+    )
+    if name == query:
+        return 0
+    if name.startswith(query):
+        return 1
+    if query in name:
+        return 2
+    searchable = f"{name} {ingredients}"
+    if all(token in searchable for token in query.split()):
+        return 3
+    return None
+
+
+def _catalog_dish_payload(
+    record: _DishRecord, *, include_details: bool
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "dish_id": record.id,
+        "name": record.name,
+        "meal_types": sorted(record.meal_types),
+        "nutrition": {
+            "method": "RECIPE_CALCULATED_FROM_CANONICAL_INGREDIENTS",
+            "energy_kcal": round(record.base_total_calories, 2),
+            "protein_g": round(record.base_total_protein, 2),
+            "carbohydrate_g": round(record.base_total_carbs, 2),
+            "fat_g": round(record.base_total_fat, 2),
+        },
+        "serving": dict(record.serving),
+        "ingredient_names": [component.name for component in record.components],
+        "allergen_ids": sorted(record.allergen_ids),
+        "dietary_tags": sorted(record.objective_tags),
+        "recommendation_eligible": True,
+    }
+    if include_details:
+        payload["components"] = [
+            {
+                "name": component.name,
+                "food_id": component.food_id,
+                "food_state": component.food_state,
+                "serving_grams": component.base_grams,
+                "calories": round(component.kcal_per_g * component.base_grams, 2),
+                "protein": round(component.protein_per_g * component.base_grams, 2),
+                "carbs": round(component.carbs_per_g * component.base_grams, 2),
+                "fat": round(component.fat_per_g * component.base_grams, 2),
+                "allergen_ids": list(component.allergen_ids),
+                "source_id": component.source_id,
+                "source_record_id": component.source_record_id,
+                "match_quality": component.match_quality,
+            }
+            for component in record.components
+        ]
+        payload["quality"] = dict(record.quality)
+        payload["provenance"] = (
+            dict(record.provenance) if record.provenance is not None else None
+        )
+        # This catalog owns ingredient amounts and recalculated nutrients, but
+        # it does not own cooking prose. Expose that absence explicitly so the
+        # model cannot silently invent steps from the ingredient list.
+        payload["instructions"] = []
+        payload["instruction_status"] = "UNAVAILABLE_IN_CANONICAL_CATALOG"
+    return payload
+
+
+def search_dish_catalog(
+    query: str = "",
+    dish_id: int | None = None,
+    meal_type: str | None = None,
+    dietary_restrictions: Sequence[str] | Iterable[str] = (),
+    ingredient_exclusions: Sequence[str] | Iterable[str] = (),
+    page: int = 1,
+    page_size: int = 5,
+    include_details: bool = False,
+) -> dict[str, Any]:
+    """Search every live merged dish record, then paginate the matched rows.
+
+    This is a read-only discovery surface. It never promotes staging recipes
+    and never replaces :func:`suggest_dish` as the safety-checked
+    recommendation path.
+    """
+
+    if not isinstance(query, str) or len(query) > 160:
+        raise ValueError("INVALID_CATALOG_QUERY")
+    if dish_id is not None and (
+        isinstance(dish_id, bool) or not isinstance(dish_id, int) or dish_id < 1
+    ):
+        raise ValueError("INVALID_DISH_ID")
+    if meal_type is not None and meal_type not in _VALID_MEAL_TYPES:
+        raise ValueError("INVALID_MEAL_TYPE")
+    if isinstance(ingredient_exclusions, (str, bytes)):
+        raise ValueError("INVALID_INGREDIENT_EXCLUSIONS")
+    try:
+        exclusions = frozenset(
+            _remove_accents(value.strip().casefold())
+            for value in ingredient_exclusions
+            if isinstance(value, str) and value.strip()
+        )
+    except TypeError as exc:
+        raise ValueError("INVALID_INGREDIENT_EXCLUSIONS") from exc
+    restrictions = _normalize_restrictions(dietary_restrictions)
+    start, end = _catalog_page(page, page_size, include_details=include_details)
+    clean_query = _remove_accents(query.strip().casefold())
+
+    matches: list[tuple[int, _DishRecord]] = []
+    for record in _DISHES:
+        if dish_id is not None and record.id != dish_id:
+            continue
+        if meal_type is not None and meal_type not in record.meal_types:
+            continue
+        if not _passes_dietary_restrictions(record, restrictions):
+            continue
+        if not _passes_ingredient_exclusions(record, exclusions):
+            continue
+        rank = _dish_search_rank(record, clean_query)
+        if rank is not None:
+            matches.append((rank, record))
+    matches.sort(key=lambda item: (item[0], item[1].id))
+    page_rows = matches[start:end]
+    return {
+        "catalog": "LIVE_MERGED_DISH_CATALOG",
+        "catalog_size": len(_DISHES),
+        "scanned_count": len(_DISHES),
+        "matched_count": len(matches),
+        "page": page,
+        "page_size": page_size,
+        "has_more": end < len(matches),
+        "next_page": page + 1 if end < len(matches) else None,
+        "results": [
+            _catalog_dish_payload(record, include_details=include_details)
+            for _, record in page_rows
+        ],
+    }
+
+
 # ---------------------------------------------------------------------------
 # Descriptor — consumed by ``register_server_tools`` (task 12.1)
 # ---------------------------------------------------------------------------
@@ -815,8 +1035,24 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     idempotent=True,
 )
 
+SEARCH_CATALOG_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
+    name="search_dish_catalog",
+    description=(
+        "Quét toàn bộ catalog món ăn live rồi tìm theo tên món, nguyên liệu, ID, "
+        "loại bữa và ràng buộc ăn uống. Kết quả được phân trang; dùng "
+        "include_details=true với tối đa 5 kết quả để lấy nguyên liệu và dinh dưỡng "
+        "tính từ bảng thành phần canonical. Đây là tra cứu, không phải khuyến nghị."
+    ),
+    parameters_schema=_SEARCH_DISH_CATALOG_SCHEMA,
+    side="server",
+    fn=search_dish_catalog,
+    idempotent=True,
+)
+
 
 __all__ = [
+    "SEARCH_CATALOG_DESCRIPTOR",
     "TOOL_DESCRIPTOR",
+    "search_dish_catalog",
     "suggest_dish",
 ]

@@ -1,0 +1,6 @@
+-r requirements-runtime.txt
+
+# Development and test dependencies; excluded from the production image.
+hypothesis==6.151.9
+pytest==8.4.2
+pytest-asyncio==1.2.0

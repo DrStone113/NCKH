@@ -1,0 +1,12 @@
+{
+  "pack_version": "PLAN_V2_P2_1H_HUMAN_REVIEW_PACK_V1",
+  "pack_path": "p2-1h-human-review-pack-v1.json",
+  "pack_sha256": "8e735cbdf28e82f498af5971f7d6d4c7630c364f9aac8c3cb82b797b1286f59e",
+  "register_template_path": "p2-1h-human-review-register-template-v1.json",
+  "register_template_sha256": "331a994163d4f1f56368edd2cea6a4569ac27966f46a8a8f1d9a18707cb4440a",
+  "register_csv_path": "p2-1h-human-review-register-template-v1.csv",
+  "register_csv_sha256": "d9d9046043018030087cce0c3bfe517e459a71ce088ce8e82df61628c35c3b1e",
+  "case_count": 150,
+  "candidate_source_sha256": "09e5d624a6210d30721a2a83976d79c1757d13af8e07f002d12cf19d3132a1f1",
+  "human_decisions_present": true
+}

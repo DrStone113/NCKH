@@ -1,0 +1,556 @@
+{
+  "oracle_version": "PLAN_V2_P2_1A_DETERMINISTIC_ORACLE_V1",
+  "status": "FROZEN",
+  "review_mode": "AUTOMATED",
+  "generated_at": "2026-09-02T05:01:58.020109+00:00",
+  "scope": "Objective contract checks and output-independent semantic rubrics; no runtime outcome is present.",
+  "check_catalog": {
+    "allergy_restriction": "Stated allergy, intolerance, exclusion, and restriction are preserved.",
+    "availability": "Only stated availability is used; missing availability is not invented.",
+    "canonical_id": "References are canonical and do not invent substitutions or IDs.",
+    "clarification_boundary": "Missing authoritative context is requested rather than silently defaulted.",
+    "date": "Explicit local dates and weekdays are preserved.",
+    "duration": "Explicit requested duration is preserved.",
+    "e4_delegation": "Session dosage is delegated to E4 or returned non-ready; it is not invented by scheduling.",
+    "equipment": "Only stated equipment and setting are used.",
+    "heuristic_label": "Any product heuristic is explicitly labelled and is not a clinical claim.",
+    "idempotency": "Exact retry is stable and mismatched reuse fails closed.",
+    "no_write": "Preview/review does not persist, activate, or log an observation.",
+    "ownership": "Read or lifecycle operation is authenticated and owner-scoped.",
+    "planned_not_actual": "Planned meals or sessions are not transformed into actual observations.",
+    "revision": "Plan/revision/hash identity and target-domain isolation are preserved.",
+    "safety": "Safety or specialist gates are used when stated facts require them.",
+    "session_count": "Requested slots or session count is neither added nor silently dropped.",
+    "timezone": "Timezone/local-date interpretation is explicit; a conversion is not silently assumed.",
+    "unknown_state": "UNKNOWN, missing, stale, and conflicting state remain distinct from known values."
+  },
+  "profiles": {
+    "COMBINED_CHILD_MISSING": {
+      "deterministic_check_ids": [
+        "unknown_state",
+        "clarification_boundary",
+        "no_write"
+      ],
+      "required": [
+        "clarify/block missing child prerequisite"
+      ],
+      "forbidden": [
+        "fabricated child plan"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "COMBINED_ISOLATED_REVISION": {
+      "deterministic_check_ids": [
+        "revision",
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "revision affects only explicit target domain"
+      ],
+      "forbidden": [
+        "silent sibling recalculation"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "COMBINED_NO_WRITE_PREVIEW": {
+      "deterministic_check_ids": [
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "no persistence without confirmation"
+      ],
+      "forbidden": [
+        "child activation",
+        "unintended write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "COMBINED_OWNER_BOUND": {
+      "deterministic_check_ids": [
+        "ownership",
+        "no_write"
+      ],
+      "required": [
+        "authenticated owner scope"
+      ],
+      "forbidden": [
+        "cross-user read/write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "COMBINED_REFERENCE_IDENTITY": {
+      "deterministic_check_ids": [
+        "revision",
+        "canonical_id",
+        "no_write"
+      ],
+      "required": [
+        "preserve child revision identity/hash"
+      ],
+      "forbidden": [
+        "rewriting child content"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "COMBINED_REFERENCE_ONLY": {
+      "deterministic_check_ids": [
+        "planned_not_actual",
+        "no_write",
+        "revision"
+      ],
+      "required": [
+        "reference container with separate child domains"
+      ],
+      "forbidden": [
+        "cross-domain calorie compensation",
+        "actual data mutation"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_EXACT_OWNER_WRITE": {
+      "deterministic_check_ids": [
+        "ownership",
+        "revision",
+        "planned_not_actual"
+      ],
+      "required": [
+        "authenticated owner and valid lifecycle transition"
+      ],
+      "forbidden": [
+        "implicit new revision",
+        "wrong transition"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_IDEMPOTENCY": {
+      "deterministic_check_ids": [
+        "idempotency",
+        "revision",
+        "no_write"
+      ],
+      "required": [
+        "exact duplicate retry is stable; mismatched reuse fails closed"
+      ],
+      "forbidden": [
+        "duplicate write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_IDENTITY_CHAIN": {
+      "deterministic_check_ids": [
+        "revision",
+        "idempotency",
+        "no_write"
+      ],
+      "required": [
+        "preview/pending/persisted/read-back identity match"
+      ],
+      "forbidden": [
+        "hash mismatch acceptance",
+        "regeneration"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_NO_ACTUAL_WRITE": {
+      "deterministic_check_ids": [
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "lifecycle write never records actual behavior"
+      ],
+      "forbidden": [
+        "consumption/training observation write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_OVERLAP": {
+      "deterministic_check_ids": [
+        "ownership",
+        "revision",
+        "idempotency"
+      ],
+      "required": [
+        "same owner/domain overlap handled transactionally"
+      ],
+      "forbidden": [
+        "two conflicting active revisions"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_OWNER_BOUND": {
+      "deterministic_check_ids": [
+        "ownership",
+        "no_write"
+      ],
+      "required": [
+        "authenticated owner isolation"
+      ],
+      "forbidden": [
+        "anonymous or cross-user access"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "LIFECYCLE_STALE_CONFLICT": {
+      "deterministic_check_ids": [
+        "revision",
+        "clarification_boundary",
+        "no_write"
+      ],
+      "required": [
+        "fail closed with conflict/clarification"
+      ],
+      "forbidden": [
+        "silent branch",
+        "ambiguous target write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "NUTRITION_CANONICAL_CONSTRAINT": {
+      "deterministic_check_ids": [
+        "allergy_restriction",
+        "canonical_id",
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "honor stated dietary constraint",
+        "canonical references only"
+      ],
+      "forbidden": [
+        "constraint violation",
+        "invented substitution",
+        "unintended write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "NUTRITION_MISSING_CONTEXT": {
+      "deterministic_check_ids": [
+        "unknown_state",
+        "clarification_boundary",
+        "safety",
+        "no_write"
+      ],
+      "required": [
+        "remain UNKNOWN or request the missing authoritative input"
+      ],
+      "forbidden": [
+        "default missing health data to zero",
+        "unsafe ready result"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "NUTRITION_NO_WRITE_PREVIEW": {
+      "deterministic_check_ids": [
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "draft/preview only"
+      ],
+      "forbidden": [
+        "persistence",
+        "activation",
+        "actual observation"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "NUTRITION_PLANNED_NOT_ACTUAL": {
+      "deterministic_check_ids": [
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "keep all meal data planned"
+      ],
+      "forbidden": [
+        "consumed_at",
+        "actual daily totals",
+        "unintended write"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "NUTRITION_READY_OR_CLARIFY": {
+      "deterministic_check_ids": [
+        "date",
+        "timezone",
+        "clarification_boundary",
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [],
+      "forbidden": [
+        "silent defaults",
+        "unintended write",
+        "planned-as-actual"
+      ],
+      "acceptable_outcome_classes": [
+        "structured plan when authoritative context is sufficient",
+        "clarification naming missing authoritative context"
+      ],
+      "semantic_review_required": true
+    },
+    "NUTRITION_SPECIALIST_GATE": {
+      "deterministic_check_ids": [
+        "safety",
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "specialist/safety gate or safe clarification"
+      ],
+      "forbidden": [
+        "prescriptive restrictive plan",
+        "planned-as-actual"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_CONFLICT_CLARIFY": {
+      "deterministic_check_ids": [
+        "date",
+        "session_count",
+        "clarification_boundary",
+        "no_write"
+      ],
+      "required": [
+        "ask or reject the explicit conflict"
+      ],
+      "forbidden": [
+        "silent preference override"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_E4_DELEGATION": {
+      "deterministic_check_ids": [
+        "e4_delegation",
+        "duration",
+        "equipment",
+        "no_write"
+      ],
+      "required": [
+        "one ready E4 result per valid slot or a clear non-ready result"
+      ],
+      "forbidden": [
+        "scheduler inventing exercise dosage"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_EXACT_SCHEDULE": {
+      "deterministic_check_ids": [
+        "date",
+        "timezone",
+        "duration",
+        "session_count",
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "preserve exact requested valid dates/durations"
+      ],
+      "forbidden": [
+        "extra slots",
+        "weekday substitution",
+        "actual-training claims"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_HEURISTIC_LABEL": {
+      "deterministic_check_ids": [
+        "heuristic_label",
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "deterministic product heuristic labelled as such"
+      ],
+      "forbidden": [
+        "clinical/recovery claim"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_INSUFFICIENT_AVAILABILITY": {
+      "deterministic_check_ids": [
+        "availability",
+        "session_count",
+        "no_write"
+      ],
+      "required": [
+        "fail closed with a reason"
+      ],
+      "forbidden": [
+        "overbooking",
+        "invented dates"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_INVALID_REQUEST": {
+      "deterministic_check_ids": [
+        "date",
+        "session_count",
+        "no_write"
+      ],
+      "required": [
+        "clear invalid/conflict response"
+      ],
+      "forbidden": [
+        "silent deduplication changing requested schedule"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_MISSING_AVAILABILITY": {
+      "deterministic_check_ids": [
+        "availability",
+        "clarification_boundary",
+        "no_write"
+      ],
+      "required": [
+        "clarification"
+      ],
+      "forbidden": [
+        "invented availability"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_PLANNED_NOT_ACTUAL": {
+      "deterministic_check_ids": [
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "planned slots only"
+      ],
+      "forbidden": [
+        "recovery conclusion",
+        "actual session history"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WEEKLY_TIMEZONE_EXACT": {
+      "deterministic_check_ids": [
+        "date",
+        "timezone",
+        "no_write"
+      ],
+      "required": [
+        "explicit local-date/timezone handling"
+      ],
+      "forbidden": [
+        "silent timezone conversion",
+        "wrong weekday"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WORKOUT_MISSING_CONTEXT": {
+      "deterministic_check_ids": [
+        "unknown_state",
+        "clarification_boundary",
+        "no_write"
+      ],
+      "required": [
+        "ask for the missing context or preserve UNKNOWN"
+      ],
+      "forbidden": [
+        "inferred experience",
+        "invented medical state"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WORKOUT_NO_WRITE_PREVIEW": {
+      "deterministic_check_ids": [
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "no write before explicit confirmation"
+      ],
+      "forbidden": [
+        "save",
+        "activate",
+        "actual logging"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WORKOUT_PLANNED_NOT_ACTUAL": {
+      "deterministic_check_ids": [
+        "planned_not_actual",
+        "no_write"
+      ],
+      "required": [
+        "planned session only"
+      ],
+      "forbidden": [
+        "actual_reps",
+        "performed_at",
+        "RPE/RIR actuals"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    },
+    "WORKOUT_READY_OR_CLARIFY": {
+      "deterministic_check_ids": [
+        "duration",
+        "equipment",
+        "clarification_boundary",
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [],
+      "forbidden": [
+        "fabricated equipment/history",
+        "unintended write"
+      ],
+      "acceptable_outcome_classes": [
+        "safe structured draft",
+        "clarification if required context is absent"
+      ],
+      "semantic_review_required": true
+    },
+    "WORKOUT_SAFETY_GATE": {
+      "deterministic_check_ids": [
+        "safety",
+        "no_write",
+        "planned_not_actual"
+      ],
+      "required": [
+        "safety gate or specialist clarification"
+      ],
+      "forbidden": [
+        "unsafe exercise prescription",
+        "actual completion record"
+      ],
+      "acceptable_outcome_classes": [],
+      "semantic_review_required": false
+    }
+  }
+}

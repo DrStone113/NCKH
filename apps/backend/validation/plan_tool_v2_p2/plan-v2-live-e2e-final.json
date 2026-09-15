@@ -1,0 +1,42 @@
+{
+    "artifact_version":  "PLAN_V2_LIVE_E2E_FINAL_V1",
+    "status":  "FAIL",
+    "failure_stage":  "browser-load",
+    "failure_class":  "PLAYWRIGHT_HARNESS",
+    "failure_message":  "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator(\u0027flt-semantics\u0027).first()\u001b[22m\n\n    at ensureFlutterSemanticsEnabled (C:\\Project\\NCKH\\apps\\mobile\\tool\\plan_v2_flutter_semantics.cjs:21:31)\n    at async main (C:\\Project\\NCKH\\apps\\mobile\\tool\\plan_v2_authenticated_edge_e2e.cjs:174:5)",
+    "timestamps":  {
+                       "started_at_utc":  "2026-09-05T11:09:17.6684703Z",
+                       "completed_at_utc":  "2026-09-05T11:11:12.6373510Z"
+                   },
+    "toolchain":  {
+                      "python":  "Python 3.10.21",
+                      "flutter":  "Flutter 3.44.8 • channel [user-branch] • unknown source",
+                      "dart":  "Tools • Dart 3.12.2 • DevTools 2.57.0",
+                      "edge_path":  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                      "edge_version":  "Opening in existing browser session.",
+                      "playwright_runtime":  "C:\\Users\\Khang\\AppData\\Roaming\\npm\\node_modules\\@playwright\\cli\\node_modules\\playwright\\index.js"
+                  },
+    "build_configuration":  {
+                                "api_base_url_configured":  true,
+                                "test_auth_configured":  true,
+                                "e2e_demo_enabled":  true,
+                                "runtime_marker_embedded":  true
+                            },
+    "service_health":  {
+                           "postgresql_tcp":  true,
+                           "isolated_plan_api":  true,
+                           "static_web":  true
+                       },
+    "plan_id":  null,
+    "revision_id":  null,
+    "authenticated_principal":  null,
+    "events":  [
+
+               ],
+    "semantics_preflight":  null,
+    "read_back_statuses":  null,
+    "cross_user_result":  null,
+    "planned_actual_result":  null,
+    "browser_failure_stage":  "browser-load",
+    "token_recorded":  false
+}

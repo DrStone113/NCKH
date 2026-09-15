@@ -2,17 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/nutrition_provider.dart';
 import '../../../providers/user_provider.dart';
+import '../../../providers/plan_provider.dart';
 import '../../../models/meal_model.dart';
-import '../../../models/canonical_nutrition.dart';
 import '../../../theme/app_theme.dart';
 import '../../../utils/meal_nutrition_utils.dart';
 import '../../../widgets/animated_card.dart';
-import '../../../widgets/animated_counter.dart';
+import '../../../widgets/health_surface.dart';
+import '../../../models/app_state_value.dart';
+import '../widgets/nutrition_overview.dart';
+import '../widgets/meal_plan_card.dart';
+import '../../plans/screens/plan_list_screen.dart';
+import '../../plans/plan_history.dart';
+import '../../plans/plan_snapshot.dart';
 import '../../../widgets/meal_summary_card.dart';
-import 'dart:math' as math;
+import '../../plans/widgets/planned_day_plan_section.dart';
 
 class NutritionScreen extends StatefulWidget {
-  const NutritionScreen({super.key});
+  const NutritionScreen({super.key, this.planLoader});
+  final PlanSnapshotLoader? planLoader;
 
   @override
   State<NutritionScreen> createState() => _NutritionScreenState();
@@ -23,11 +30,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final user =
           Provider.of<UserProvider>(context, listen: false).currentUser;
       if (user != null) {
         Provider.of<NutritionProvider>(context, listen: false)
             .loadTodayMeals(user.id);
+        if (widget.planLoader == null) {
+          Provider.of<PlanProvider>(context, listen: false)
+              .loadForUser(user.id)
+              .catchError((_) => <PlanSnapshot>[]);
+        }
       }
     });
   }
@@ -203,415 +216,150 @@ class _NutritionScreenState extends State<NutritionScreen> {
     return months[month];
   }
 
-  void _changeDate(BuildContext context, int days) {
-    final provider = Provider.of<NutritionProvider>(context, listen: false);
-    final userId =
-        Provider.of<UserProvider>(context, listen: false).currentUser?.id;
-    if (userId == null) return;
-    final newDate = provider.selectedDate.add(Duration(days: days));
-    // Cho phép xem các ngày tương lai để lập kế hoạch
-    provider.loadMealsForDate(userId, newDate);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final nutritionProvider = Provider.of<NutritionProvider>(context);
-    final user = Provider.of<UserProvider>(context).currentUser;
-    final targetCal = user?.recommendedCalories;
-    final selectedDate = nutritionProvider.selectedDate;
-    final isToday = nutritionProvider.isToday;
-
-    // Format ngày hiển thị
-    final now = DateTime.now();
-    final yesterday = DateTime(now.year, now.month, now.day - 1);
-    String dateLabel;
-    if (isToday) {
-      dateLabel = 'Hôm nay';
-    } else if (selectedDate.year == yesterday.year &&
-        selectedDate.month == yesterday.month &&
-        selectedDate.day == yesterday.day) {
-      dateLabel = 'Hôm qua';
-    } else {
-      dateLabel =
-          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
-    }
-
+    final provider = context.watch<NutritionProvider>();
+    final user = context.watch<UserProvider>().currentUser;
+    final sharedPlans =
+        widget.planLoader == null ? context.watch<PlanProvider>() : null;
+    final selected = provider.selectedDate;
+    final canonical = user?.canonicalNutrition;
+    final summary =
+        canonical == null ? null : provider.canonicalDailySummary(canonical);
+    final dateLabel =
+        '${provider.isToday ? 'Hôm nay, ' : ''}${selected.day} tháng ${selected.month}';
+    final retry = user == null
+        ? null
+        : () => provider.loadMealsForDate(user.id, selected);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dinh dưỡng'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
-            onPressed: targetCal == null
-                ? null
-                : () => _showMealSuggestions(context, targetCal),
-            tooltip: 'Gợi ý thực đơn',
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddMealDialog(context, selectedDate),
-        child: const Icon(Icons.add),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date navigator
-            AnimatedCard(
-              delay: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.cardDark,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left, size: 20),
-                      onPressed: () => _changeDate(context, -1),
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 36, minHeight: 36),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        final userId =
-                            Provider.of<UserProvider>(context, listen: false)
-                                .currentUser
-                                ?.id;
-                        if (userId == null) return;
-                        _showDatePicker(context, nutritionProvider, userId);
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.calendar_today,
-                              size: 13, color: AppColors.textSecondary),
-                          const SizedBox(width: 6),
-                          Text(dateLabel,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 14)),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down,
-                              size: 16, color: AppColors.textSecondary),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right, size: 20),
-                      onPressed: () => _changeDate(context, 1),
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 36, minHeight: 36),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Calorie summary
-            AnimatedCard(
-              delay: 100,
-              child: _buildCalorieSummary(
-                  nutritionProvider, user?.canonicalNutrition),
-            ),
-            const SizedBox(height: 20),
-
-            // Macro breakdown
-            AnimatedCard(
-              delay: 200,
-              child: _buildMacroBreakdown(nutritionProvider),
-            ),
-            const SizedBox(height: 24),
-
-            // Meals header
-            AnimatedCard(
-              delay: 300,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text('Bữa ăn $dateLabel',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                  const SizedBox(width: 8),
-                  Wrap(
-                    spacing: 6,
-                    children: [
-                      if (nutritionProvider.completedMealsCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+          title: const Text('Dinh dưỡng'),
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+                tooltip: 'Gợi ý thực đơn',
+                onPressed: user?.recommendedCalories == null
+                    ? null
+                    : () => _showMealSuggestions(
+                        context, user!.recommendedCalories!),
+                icon: const Icon(Icons.auto_awesome_outlined)),
+            IconButton(
+                tooltip: 'Mở kế hoạch',
+                onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                        builder: (_) => const PlanListScreen())),
+                icon: const Icon(Icons.calendar_month_outlined)),
+            IconButton(
+                tooltip: 'Chọn ngày',
+                onPressed: user == null
+                    ? null
+                    : () => _showDatePicker(context, provider, user.id),
+                icon: const Icon(Icons.date_range_outlined)),
+          ]),
+      body: SafeArea(
+          child: RefreshIndicator(
+              onRefresh: () async {
+                if (user != null) {
+                  await Future.wait([
+                    provider.loadMealsForDate(user.id, selected),
+                    if (sharedPlans != null)
+                      sharedPlans.loadForUser(user.id, force: true),
+                  ]);
+                }
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+                child: Center(
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 720),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Icon(Icons.check_circle,
-                                  size: 12, color: AppColors.success),
-                              const SizedBox(width: 4),
                               Text(
-                                '${nutritionProvider.completedMealsCount} đã ăn',
-                                style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.success,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (nutritionProvider.pendingMealsCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.schedule,
-                                  size: 12, color: AppColors.warning),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${nutritionProvider.pendingMealsCount} sắp ăn',
-                                style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.warning,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            if (nutritionProvider.todayMeals.isEmpty)
-              AnimatedCard(
-                delay: 300,
-                child: Container(
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardDark,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Column(
-                      children: [
-                        Icon(Icons.restaurant_menu,
-                            size: 48, color: AppColors.textHint),
-                        SizedBox(height: 12),
-                        Text('Chưa có bữa ăn nào',
-                            style: TextStyle(color: AppColors.textSecondary)),
-                        SizedBox(height: 4),
-                        Text('Nhấn + để thêm bữa ăn',
-                            style: TextStyle(
-                                fontSize: 12, color: AppColors.textHint)),
-                      ],
-                    ),
-                  ),
-                ),
-              )
-            else
-              ..._buildMealsByType(context, nutritionProvider),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCalorieSummary(
-      NutritionProvider provider, CanonicalNutritionState? canonical) {
-    final summary = canonical == null
-        ? null
-        : provider.canonicalDailySummary(canonical);
-    final target = canonical?.calorieTargetKcalPerDay;
-    final consumed = summary?.energyConsumedKcal ?? 0.0;
-    final progress = target != null && target > 0
-        ? (consumed / target).clamp(0.0, 1.5)
-        : 0.0;
-    final remaining = summary?.energyRemainingKcal;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppColors.cardGradient,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          // Circular progress
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: CustomPaint(
-              painter: _CalorieRingPainter(
-                progress: progress.toDouble(),
-                consumed: target != null && consumed > target,
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedCounter(
-                      value: roundNutritionEnergyForDisplay(consumed),
-                      decimals: 0,
-                      style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    const Text('kcal đã ăn',
-                        style: TextStyle(
-                            fontSize: 10, color: AppColors.textSecondary)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-
-          // Stats
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (target != null)
-                  _calorieStat('Mục tiêu',
-                      canonical!.displayCalorieTargetKcalPerDay!, AppColors.primary)
-                else
-                  const Text('Mục tiêu: cần hướng dẫn chuyên gia'),
-                const SizedBox(height: 8),
-                _calorieStat('Đã ăn', roundNutritionEnergyForDisplay(consumed), AppColors.calories),
-                const SizedBox(height: 8),
-                if (remaining != null)
-                  _calorieStat('Còn lại', roundNutritionEnergyForDisplay(remaining),
-                      remaining < 0 ? AppColors.error : AppColors.success),
-                if (provider.pendingMealsCount > 0) ...[
-                  const SizedBox(height: 8),
-                  _calorieStat('Kế hoạch',
-                      roundNutritionEnergyForDisplay(provider.plannedCalories),
-                      AppColors.textSecondary),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _calorieStat(String label, double value, Color color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style:
-                const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-        Flexible(
-          child: AnimatedCounter(
-            value: value,
-            decimals: 0,
-            suffix: ' kcal',
-            style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600, color: color),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMacroBreakdown(NutritionProvider provider) {
-    final hasConsumed = provider.consumedCalories > 0;
-    final p = hasConsumed ? provider.consumedProtein : provider.totalProtein;
-    final c = hasConsumed ? provider.consumedCarbs : provider.totalCarbs;
-    final f = hasConsumed ? provider.consumedFat : provider.totalFat;
-
-    final percentages = calculateMacroEnergyPercentages(
-      proteinGrams: p,
-      carbohydrateGrams: c,
-      fatGrams: f,
-    );
-    final proteinPct = percentages.protein;
-    final carbsPct = percentages.carbohydrate;
-    final fatPct = percentages.fat;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.cardDark,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Thành phần dinh dưỡng',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text(
-                hasConsumed ? 'Đã ăn' : 'Dự kiến',
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _macroBar('Protein', p, proteinPct.toDouble(),
-              AppColors.protein),
-          const SizedBox(height: 12),
-          _macroBar('Carbs', c, carbsPct.toDouble(),
-              AppColors.carbs),
-          const SizedBox(height: 12),
-          _macroBar(
-              'Chất béo', f, fatPct.toDouble(), AppColors.fat),
-        ],
-      ),
-    );
-  }
-
-  Widget _macroBar(String name, double grams, double pct, Color color) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(name, style: const TextStyle(fontSize: 13)),
-            Flexible(
-              child: Text(
-                '${roundNutritionMacroForDisplay(grams).toStringAsFixed(0)}g (${pct.toStringAsFixed(0)}%)',
-                style: TextStyle(
-                    fontSize: 12, color: color, fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        AnimatedProgressBar(
-          value: (pct / 100).clamp(0.0, 1.0),
-          height: 6,
-          color: color,
-          backgroundColor: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(4),
-        ),
-      ],
+                                  provider.isToday
+                                      ? 'Dinh dưỡng hôm nay'
+                                      : 'Dinh dưỡng theo ngày',
+                                  style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -.9)),
+                              const SizedBox(height: 8),
+                              Text(dateLabel,
+                                  style: const TextStyle(
+                                      color: AppColors.textSecondary)),
+                              const SizedBox(height: 20),
+                              DailyDateStrip(
+                                  selected: selected,
+                                  onSelected: (date) {
+                                    if (user != null) {
+                                      provider.loadMealsForDate(user.id, date);
+                                    }
+                                  }),
+                              const SizedBox(height: 20),
+                              if (provider.isLoading)
+                                const NutritionSkeleton()
+                              else ...[
+                                if (provider
+                                        .todayMealsStatus ==
+                                    DataStatus.error)
+                                  Padding(
+                                      padding: const EdgeInsets.only(
+                                          bottom: 12),
+                                      child: NutritionEmptyState(
+                                          title:
+                                              'Không thể tải nhật ký lúc này.',
+                                          message:
+                                              'Dữ liệu bên dưới chưa được xác nhận lại.',
+                                          icon: Icons.cloud_off_outlined,
+                                          actionLabel: 'Thử lại',
+                                          onAction: retry)),
+                                NutritionHeroCard(
+                                    canonical: canonical, summary: summary),
+                                const HealthSectionTitle('Dưỡng chất',
+                                    subtitle: 'Từ các bữa ăn đã ghi nhận'),
+                                NutritionMacroSummary(
+                                    canonical: canonical, summary: summary),
+                              ],
+                              if (user != null)
+                                PlannedDayPlanSection(
+                                    userId: user.id,
+                                    date: selected,
+                                    domain: 'NUTRITION',
+                                    loader: widget.planLoader,
+                                    snapshots: sharedPlans?.plans),
+                              const HealthSectionTitle('Nhật ký đã ăn',
+                                  subtitle:
+                                      'Chỉ các bữa đã xác nhận ăn mới được tính vào tổng ngày.'),
+                              if (provider.isLoading)
+                                const NutritionSkeleton(lines: 2)
+                              else if (provider.completedMealsCount == 0)
+                                NutritionEmptyState(
+                                    title: provider.isToday
+                                        ? 'Bạn chưa ghi nhận bữa ăn nào hôm nay.'
+                                        : 'Bạn chưa ghi nhận bữa ăn nào cho ngày này.',
+                                    actionLabel: 'Thêm bữa ăn',
+                                    onAction: () =>
+                                        _showAddMealDialog(context, selected))
+                              else
+                                ..._buildMealsByType(context, provider,
+                                    completed: true),
+                              if (provider.pendingMealsCount > 0) ...[
+                                const HealthSectionTitle(
+                                    'Bữa đã thêm · chưa ăn',
+                                    subtitle:
+                                        'Chưa tính vào năng lượng đã ăn.'),
+                                ..._buildMealsByType(context, provider,
+                                    completed: false),
+                              ],
+                              const SizedBox(height: 16),
+                              FilledButton.icon(
+                                  onPressed: () =>
+                                      _showAddMealDialog(context, selected),
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Thêm bữa ăn')),
+                            ]))),
+              ))),
     );
   }
 
@@ -676,15 +424,45 @@ class _NutritionScreenState extends State<NutritionScreen> {
         fat: meal.fat,
         completed: meal.isCompleted,
         margin: const EdgeInsets.only(bottom: 10),
-        onTap: () => Provider.of<NutritionProvider>(
-          context,
-          listen: false,
-        ).toggleMealCompleted(meal.id),
+        onTap: () => _showMealDetail(context, meal),
         onLongPress: () => _showAddItemToMeal(context, meal),
-        actionLabel: 'Thêm thành phần',
-        onAction: () => _showAddItemToMeal(context, meal),
+        actionLabel: meal.isCompleted ? 'Bỏ ghi nhận đã ăn' : 'Ghi nhận đã ăn',
+        actionIcon: meal.isCompleted ? Icons.undo : Icons.check_circle_outline,
+        onAction: () =>
+            context.read<NutritionProvider>().toggleMealCompleted(meal.id),
       ),
     );
+  }
+
+  void _showMealDetail(BuildContext context, MealModel meal) {
+    showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (_) => FractionallySizedBox(
+            heightFactor: .9,
+            child: MealDetailContent(
+              name: meal.name,
+              status: meal.isCompleted
+                  ? 'Đã ăn · đã ghi nhận'
+                  : 'Dự kiến · chưa ghi nhận',
+              nutrition: {
+                'total_calories': meal.calories,
+                'total_protein': meal.protein,
+                'total_carbs': meal.carbs,
+                'total_fat': meal.fat
+              },
+              content: {
+                'ingredients': meal.items
+                    .map((item) =>
+                        {'name': item.name, 'grams': item.weightGrams})
+                    .toList()
+              },
+              footer: OutlinedButton(
+                  onPressed: () => _showAddItemToMeal(context, meal),
+                  child: const Text('Thêm thành phần')),
+            )));
   }
 
   void _showAddItemToMeal(BuildContext context, MealModel meal) {
@@ -784,7 +562,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
   /// Nhóm bữa ăn theo loại và hiển thị có header
   List<Widget> _buildMealsByType(
-      BuildContext context, NutritionProvider provider) {
+      BuildContext context, NutritionProvider provider,
+      {required bool completed}) {
     final mealGroups = <String, List<MealModel>>{
       'sang': [],
       'trua': [],
@@ -792,17 +571,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
       'phu': [],
     };
 
-    for (final meal in provider.todayMeals) {
+    for (final meal
+        in provider.todayMeals.where((meal) => meal.isCompleted == completed)) {
       final type = MealTypeUtils.normalize(meal.mealType);
       mealGroups[type]!.add(meal);
     }
 
     final groupOrder = ['sang', 'trua', 'toi', 'phu'];
     final groupLabels = {
-      'sang': '🌅 Bữa sáng',
-      'trua': '☀️ Bữa trưa',
-      'toi': '🌙 Bữa tối',
-      'phu': '🍎 Ăn phụ',
+      'sang': 'Bữa sáng',
+      'trua': 'Bữa trưa',
+      'toi': 'Bữa tối',
+      'phu': 'Bữa phụ',
     };
 
     final widgets = <Widget>[];
@@ -1170,9 +950,9 @@ class _AddMealSheetState extends State<_AddMealSheet>
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Text('Thêm món ăn',
+                        const Text('Chọn món',
                             style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
+                                fontSize: 26, fontWeight: FontWeight.w800)),
                         const Spacer(),
                         // Meal type pill
                         Container(
@@ -1209,15 +989,16 @@ class _AddMealSheetState extends State<_AddMealSheet>
                     ),
                     const SizedBox(height: 10),
                     // Tên món
-                    TextField(
-                      controller: _mealNameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Tên món ăn (vd: Phở bò, Cơm tấm...)',
-                        hintStyle: TextStyle(fontSize: 13),
-                        prefixIcon: Icon(Icons.restaurant, size: 18),
-                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+                    if (_items.isNotEmpty)
+                      TextField(
+                        controller: _mealNameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Tên món ăn (vd: Phở bò, Cơm tấm...)',
+                          hintStyle: TextStyle(fontSize: 13),
+                          prefixIcon: Icon(Icons.restaurant, size: 18),
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 8),
                     // Tab bar
                     TabBar(
@@ -1432,16 +1213,31 @@ class _SampleMealsTab extends StatefulWidget {
 class _SampleMealsTabState extends State<_SampleMealsTab> {
   final _searchCtrl = TextEditingController();
   String _query = '';
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadCatalog();
+    });
+  }
+
+  Future<void> _loadCatalog() async {
+    setState(() => _loading = true);
+    try {
+      await context.read<NutritionProvider>().loadVietnameseDatabase();
+    } catch (_) {
+      // The provider retains any previously loaded catalog on failure.
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
-  }
-
-  static (String emoji, Color bg, Color border) _getDishVisuals(String name) {
-    final visual = MealPresentation.dishVisual(name);
-    return (visual.emoji, visual.background, visual.border);
   }
 
   @override
@@ -1486,121 +1282,28 @@ class _SampleMealsTabState extends State<_SampleMealsTab> {
         ),
         Expanded(
           child: filtered.isEmpty
-              ? Center(
-                  child: Text(
-                    dishes.isEmpty
-                        ? 'Đang nạp danh mục món Việt...'
-                        : 'Không tìm thấy món phù hợp',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: dishes.isEmpty && _loading
+                      ? const NutritionSkeleton()
+                      : NutritionEmptyState(
+                          icon: Icons.restaurant_menu,
+                          title: dishes.isEmpty
+                              ? 'Danh mục món ăn chưa khả dụng.'
+                              : 'Không tìm thấy món phù hợp.',
+                          message: dishes.isEmpty
+                              ? 'Thử tải lại để chọn món cho bữa ăn.'
+                              : 'Thử tìm bằng tên món khác.',
+                          actionLabel: dishes.isEmpty ? 'Thử lại' : null,
+                          onAction: dishes.isEmpty ? _loadCatalog : null,
+                        ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                   itemCount: filtered.length,
                   itemBuilder: (ctx, i) {
-                    final d = filtered[i];
-                    final name = d['name']?.toString() ?? '';
-                    final cal =
-                        (d['estimated_calories'] as num?)?.toDouble() ?? 0.0;
-                    final ingredients =
-                        (d['ingredients'] as List<dynamic>? ?? []);
-                    final ingSummary = ingredients
-                        .map(
-                            (ing) => '${ing['name']} ${(ing['grams'] ?? 100)}g')
-                        .join(' · ');
-
-                    final visuals = _getDishVisuals(name);
-
-                    return GestureDetector(
-                      onTap: () => widget.onSelectDish(d),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.surfaceLight),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: visuals.$2,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: visuals.$3),
-                              ),
-                              child: Center(
-                                  child: Text(visuals.$1,
-                                      style: const TextStyle(fontSize: 22))),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14)),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    ingSummary,
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('~${cal.toStringAsFixed(0)}',
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.calories)),
-                                const Text('kcal',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        color: AppColors.textSecondary)),
-                              ],
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 5),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.3)),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.add_rounded,
-                                      size: 14, color: AppColors.primary),
-                                  SizedBox(width: 2),
-                                  Text('Chọn',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return CatalogDishCard(
+                        dish: filtered[i], onSelect: widget.onSelectDish);
                   },
                 ),
         ),
@@ -2187,42 +1890,3 @@ class _FoodPickerListState extends State<_FoodPickerList> {
 // ═══════════════════════════════════════════════════════════════
 // Calorie Ring Painter
 // ═══════════════════════════════════════════════════════════════
-class _CalorieRingPainter extends CustomPainter {
-  final double progress;
-  final bool consumed;
-
-  _CalorieRingPainter({required this.progress, required this.consumed});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2 - 4;
-
-    final bgPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..color = AppColors.surfaceLight;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    final progressPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round
-      ..shader = consumed
-          ? const LinearGradient(colors: [Color(0xFFE53935), Color(0xFFFF5722)])
-              .createShader(Rect.fromCircle(center: center, radius: radius))
-          : AppColors.calorieGradient
-              .createShader(Rect.fromCircle(center: center, radius: radius));
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi / 2,
-      2 * math.pi * progress.clamp(0.0, 1.0),
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

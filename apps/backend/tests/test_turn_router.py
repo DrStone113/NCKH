@@ -31,6 +31,8 @@ from services.agent.turn_router import CHITCHAT, COMPLEX, SIMPLE, classify_turn
         "hiểu rồi",
         "tạm biệt",
         "bạn là ai",
+        "giúp tôi với",
+        "bạn còn đó không?",
     ],
 )
 def test_greetings_and_acknowledgements_are_chitchat(text):
@@ -103,6 +105,67 @@ def test_question_word_prevents_chitchat_misroute():
     plan = classify_turn("chào bạn, tối nay ăn gì?")
     assert plan.tier != CHITCHAT
     assert plan.offer_tools is True
+
+
+@pytest.mark.parametrize("text", ["?", "??", "..."])
+def test_punctuation_only_input_keeps_context_and_tools(text):
+    plan = classify_turn(text)
+    assert plan.tier == SIMPLE
+    assert plan.offer_tools is True
+    assert plan.prompt_mode == "full"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_tier"),
+    [
+        ("chào bạn tôi đau ngực", COMPLEX),
+        ("ok tôi đang chóng mặt", COMPLEX),
+        ("ừ tôi muốn ăn phở", SIMPLE),
+        ("cảm ơn nhưng ghi lại giúp tôi", SIMPLE),
+        ("hello mình vừa tập 30 phút", SIMPLE),
+    ],
+)
+def test_greeting_prefix_never_strips_tools_from_real_request(text, expected_tier):
+    plan = classify_turn(text)
+
+    assert plan.tier == expected_tier
+    assert plan.offer_tools is True
+    assert plan.prompt_mode == "full"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Cảm ơn bạn nhiều nhé",
+        "chào bạn nha",
+        "ok bạn nhé",
+        "tạm biệt bạn nha",
+    ],
+)
+def test_extended_chitchat_accepts_only_courtesy_fillers(text):
+    plan = classify_turn(text)
+
+    assert plan.tier == CHITCHAT
+    assert plan.offer_tools is False
+    assert plan.prompt_mode == "light"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "ok đau ngực",
+        "chào bạn, tôi khó thở",
+        "ừ tôi sắp ngất",
+        "cảm ơn nhưng tôi đang nghĩ đến tự làm hại mình",
+    ],
+)
+def test_safety_signals_override_acknowledgement_and_chitchat(text):
+    plan = classify_turn(text, history_len=3)
+
+    assert plan.tier == COMPLEX
+    assert plan.use_heavy_model is True
+    assert plan.offer_tools is True
+    assert plan.prompt_mode == "full"
 
 
 def test_chitchat_budget_is_a_single_step():

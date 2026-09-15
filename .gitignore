@@ -3,10 +3,19 @@
 # Sao chép từ .env.example và điền thông tin thực
 # =============================================================
 
+/.env
+**/.env
+
 
 # Firebase — chứa API keys, mỗi người tự cấu hình
 **/google-services.json
 **/GoogleService-Info.plist
+/firebase/node_modules/
+/firebase/.generated/
+/.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 
 # =============================================================
 # FLUTTER SDK — cài riêng ngoài project, xem README
@@ -81,6 +90,8 @@ desktop.ini
 # Config riêng của từng AI IDE (không dùng chung cho team)
 /rules/
 /.continue/
+**/.kiro/
+/.playwright-cli/
 
 # =============================================================
 # LOGS & TMP

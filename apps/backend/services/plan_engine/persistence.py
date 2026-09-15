@@ -32,6 +32,7 @@ from .contracts import (
     PlanValidationStatus,
     canonical_json,
 )
+from .lifecycle import transition_allowed
 
 
 class PlanPersistenceError(RuntimeError):
@@ -92,6 +93,70 @@ class PlanSqlRepository:
     ) -> None:
         self._session_factory = session_factory
 
+    async def put_preview(self, revision: PlanRevision) -> None:
+        """Persist an exact non-authoritative draft for restart-safe confirmation."""
+
+        if not revision.owner_user_id or revision.owner_user_id == "anonymous":
+            raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
+        async with self._session_factory() as session:
+            async with session.begin():
+                await session.execute(
+                    text(
+                        """
+                        INSERT INTO plan_v2_previews (
+                            owner_user_id, plan_id, revision_id, content_hash, revision_payload
+                        ) VALUES (
+                            :owner, CAST(:plan_id AS uuid), CAST(:revision_id AS uuid),
+                            :content_hash, CAST(:payload AS jsonb)
+                        )
+                        ON CONFLICT (owner_user_id, plan_id, revision_id)
+                        DO UPDATE SET content_hash = EXCLUDED.content_hash,
+                                      revision_payload = EXCLUDED.revision_payload,
+                                      created_at = NOW(),
+                                      expires_at = NOW() + INTERVAL '30 days'
+                        """
+                    ),
+                    {
+                        "owner": revision.owner_user_id,
+                        "plan_id": revision.plan_id,
+                        "revision_id": revision.revision_id,
+                        "content_hash": revision.revision_content_hash,
+                        "payload": canonical_json(revision.to_dict()),
+                    },
+                )
+
+    async def get_preview(
+        self, owner_user_id: str, plan_id: str, revision_id: str
+    ) -> PlanRevision | None:
+        async with self._session_factory() as session:
+            row = (
+                await session.execute(
+                    text(
+                        """
+                        SELECT revision_payload, content_hash
+                        FROM plan_v2_previews
+                        WHERE owner_user_id = :owner
+                          AND plan_id = CAST(:plan_id AS uuid)
+                          AND revision_id = CAST(:revision_id AS uuid)
+                          AND expires_at > NOW()
+                        """
+                    ),
+                    {"owner": owner_user_id, "plan_id": plan_id, "revision_id": revision_id},
+                )
+            ).mappings().first()
+        if row is None:
+            return None
+        payload = _as_dict(row["revision_payload"])
+        revision = PlanRevision.from_dict(payload)
+        if (
+            revision.owner_user_id != owner_user_id
+            or revision.plan_id != plan_id
+            or revision.revision_id != revision_id
+            or revision.revision_content_hash != str(row["content_hash"])
+        ):
+            raise PlanPersistenceError("PLAN_PREVIEW_READBACK_MISMATCH")
+        return revision
+
     async def get(
         self, owner_user_id: str, plan_id: str, revision_id: str | None = None
     ) -> PlanRevision | None:
@@ -123,6 +188,42 @@ class PlanSqlRepository:
             if row is None:
                 return None
             return await self._get_in_session(session, owner_user_id, str(row["plan_id"]), str(row["revision_id"]))
+
+    async def list_owned(self, owner_user_id: str) -> tuple[PlanRevision, ...]:
+        """Return the newest immutable revision of every plan owned by a principal.
+
+        This is intentionally repository-backed rather than chat-history-backed:
+        a chat card is a useful historical presentation, but it cannot decide
+        which persisted revision is authoritative for a user.
+        """
+
+        if not owner_user_id or owner_user_id == "anonymous":
+            raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
+        async with self._session_factory() as session:
+            rows = (
+                await session.execute(
+                    text(
+                        """
+                        SELECT DISTINCT ON (plan_id) plan_id::text AS plan_id, id::text AS revision_id
+                        FROM plan_v2_revisions
+                        WHERE owner_user_id = :owner
+                        ORDER BY plan_id, revision_number DESC
+                        """
+                    ),
+                    {"owner": owner_user_id},
+                )
+            ).mappings().all()
+            revisions = [
+                await self._get_in_session(session, owner_user_id, str(row["plan_id"]), str(row["revision_id"]))
+                for row in rows
+            ]
+        return tuple(
+            sorted(
+                (revision for revision in revisions if revision is not None),
+                key=lambda revision: (revision.created_at, revision.revision_number),
+                reverse=True,
+            )
+        )
 
     async def save_exact_revision(
         self,
@@ -217,16 +318,7 @@ class PlanSqlRepository:
                         return duplicate
                     if current.revision_number != expected_revision_number:
                         raise PlanPersistenceError("PLAN_REVISION_CONFLICT")
-                    allowed = {
-                        PlanLifecycleStatus.ACTIVE: {PlanLifecycleStatus.SAVED},
-                        PlanLifecycleStatus.PAUSED: {PlanLifecycleStatus.ACTIVE},
-                        PlanLifecycleStatus.COMPLETED: {PlanLifecycleStatus.ACTIVE, PlanLifecycleStatus.PAUSED},
-                        PlanLifecycleStatus.CANCELLED: {
-                            PlanLifecycleStatus.DRAFT, PlanLifecycleStatus.PENDING_CONFIRMATION,
-                            PlanLifecycleStatus.SAVED, PlanLifecycleStatus.ACTIVE, PlanLifecycleStatus.PAUSED,
-                        },
-                    }
-                    if status not in allowed or current.lifecycle_status not in allowed[status]:
+                    if not transition_allowed(current.lifecycle_status, status):
                         raise PlanPersistenceError("INVALID_PLAN_LIFECYCLE_TRANSITION")
                     if status is PlanLifecycleStatus.ACTIVE and not current.validation.ready:
                         raise PlanPersistenceError("PLAN_NOT_READY")

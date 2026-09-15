@@ -1,0 +1,115 @@
+{
+  "freeze_version": "PLAN_V2_P2_1A_AUTOMATED_FREEZE_V1",
+  "status": "FROZEN",
+  "review_mode": "AUTOMATED",
+  "SAME_MODEL_MULTI_PASS": true,
+  "generated_at": "2026-09-02T05:01:58.020109+00:00",
+  "artifacts": {
+    "holdout": {
+      "path": "p2-1a-automated-holdout-v1.json",
+      "sha256": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a"
+    },
+    "oracle": {
+      "path": "p2-1a-deterministic-oracle-v1.json",
+      "sha256": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8"
+    },
+    "automated_review_register": {
+      "path": "p2-1a-automated-review-register-v1.json",
+      "sha256": "185d20362032c2746d572e940d506c9d9569beee7b6dffee0f8223b78e8ec1fc"
+    },
+    "thresholds": {
+      "path": "acceptance-thresholds-v1.json",
+      "sha256": "e6002d52ddd849f4f434c8a56ba1af2e6659ca6b8abddf0f8b5dd1adcff15df0"
+    },
+    "implementation_freeze": {
+      "path": "implementation-freeze-p2-1r-v1.json",
+      "sha256": "58abdea52c9466e25dd9b71e8e50dc7e588ea52d46b74937b6a50c6f5ff993f8"
+    }
+  },
+  "deterministic_oracle_coverage": {
+    "case_count": 120,
+    "semantic_case_count": 17,
+    "deterministic_only_case_count": 103,
+    "check_case_counts": {
+      "allergy_restriction": 10,
+      "availability": 4,
+      "canonical_id": 11,
+      "clarification_boundary": 37,
+      "date": 25,
+      "duration": 25,
+      "e4_delegation": 2,
+      "equipment": 13,
+      "heuristic_label": 2,
+      "idempotency": 5,
+      "no_write": 115,
+      "ownership": 9,
+      "planned_not_actual": 81,
+      "revision": 20,
+      "safety": 18,
+      "session_count": 17,
+      "timezone": 22,
+      "unknown_state": 13
+    }
+  },
+  "leakage_audit": {
+    "selected_unique_count": 120,
+    "selected_exact_duplicate_count": 0,
+    "selected_template_duplicate_count": 0,
+    "confirmed_development_overlap": [],
+    "template_development_overlap": [],
+    "semantic_overlap_candidates": [],
+    "exclusion_index_hash": "925b15d808bafa9f8ddadcc75168231371347a48601effe9a49e54c058723681"
+  },
+  "implementation_hash_verification": {
+    "freeze_manifest_version": "PLAN_V2_IMPLEMENTATION_FREEZE_P2_1R_V1",
+    "expected_hashes": {
+      "services/plan_engine/development_scenarios.py": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+      "services/plan_engine/contracts.py": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+      "services/plan_engine/engine.py": "a9f5f5143e794cffdaab1006ee365eb4dc2ba57f64e9909180c0f6bae29e3e2d",
+      "services/plan_engine/comparator.py": "77f52544cc6b07bca9882bb823d1687e85775c5066543db0b6602ae9d7ed711a",
+      "services/plan_engine/weekly_scheduler.py": "e694183a71bbcd49b32988ab03673a8d53361c6337243168d773a6c8867864ff",
+      "services/plan_engine/nutrition_horizon.py": "159e625d851d850080eaf62bd27d03f7745c9fbc48eff3c6eb2601f18e6a025c",
+      "services/plan_engine/persistence.py": "06bd7c9255914cef6c04ca0f1b44372cb9fe85615329df9a620dae20f22eff11",
+      "services/agent/tools/plan_v2.py": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+      "services/agent/pending_user_action.py": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352"
+    },
+    "actual_hashes": {
+      "services/plan_engine/development_scenarios.py": "ce8591b853be3aa63ba2c6227a0e5303c52cb9cea974804db094e9dabab2b368",
+      "services/plan_engine/contracts.py": "936ff8e65fb77bb775a33dfe888564b6d868033515b7725822cea013bd6356f2",
+      "services/plan_engine/engine.py": "a9f5f5143e794cffdaab1006ee365eb4dc2ba57f64e9909180c0f6bae29e3e2d",
+      "services/plan_engine/comparator.py": "77f52544cc6b07bca9882bb823d1687e85775c5066543db0b6602ae9d7ed711a",
+      "services/plan_engine/weekly_scheduler.py": "e694183a71bbcd49b32988ab03673a8d53361c6337243168d773a6c8867864ff",
+      "services/plan_engine/nutrition_horizon.py": "159e625d851d850080eaf62bd27d03f7745c9fbc48eff3c6eb2601f18e6a025c",
+      "services/plan_engine/persistence.py": "06bd7c9255914cef6c04ca0f1b44372cb9fe85615329df9a620dae20f22eff11",
+      "services/agent/tools/plan_v2.py": "ddd9d0912fe66bce682081aaeddbdf3e0c87a881e049b26302f2f254b9bfce6d",
+      "services/agent/pending_user_action.py": "da08aaf5b50279cced863ccaa6757f421175c6af04bbfe042ed2b65887c29352"
+    },
+    "mismatches": {}
+  },
+  "toolchain": {
+    "flutter_executable": "C:\\Project\\NCKH\\apps\\mobile\\.fvm\\flutter_sdk\\bin\\flutter.bat",
+    "flutter_version": "3.44.8",
+    "dart_version": "3.12.2",
+    "cpython_version": "3.10.21",
+    "error": null
+  },
+  "final_preflight": {
+    "REVIEW_MODE_AUTOMATED": true,
+    "HOLDOUT_V2_FROZEN": true,
+    "ORACLE_FROZEN": true,
+    "THRESHOLDS_FROZEN": true,
+    "IMPLEMENTATION_FROZEN_FOR_ACCEPTANCE": true,
+    "REVIEW_COVERAGE_100_PERCENT": true,
+    "THREE_SEMANTIC_PASSES": true,
+    "NO_UNRESOLVED_SEMANTIC_DISAGREEMENTS": true,
+    "ZERO_CONFIRMED_DEVELOPMENT_OVERLAP": true,
+    "ZERO_TEMPLATE_DEVELOPMENT_OVERLAP": true,
+    "ZERO_DUPLICATE_WEIGHTING": true,
+    "ZERO_SEMANTIC_LEAKAGE_CANDIDATES": true,
+    "FLUTTER_3_44_8": true,
+    "DART_3_12_2": true,
+    "CPYTHON_3_10_21": true,
+    "NO_SCORED_ACCEPTANCE_EXECUTED": true
+  },
+  "READY_TO_RUN_P2_1_ACCEPTANCE": true
+}

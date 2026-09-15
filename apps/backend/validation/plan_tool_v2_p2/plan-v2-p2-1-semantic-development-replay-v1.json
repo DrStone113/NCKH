@@ -1,0 +1,863 @@
+{
+  "artifact_version": "PLAN_V2_P2_1_SEMANTIC_DEVELOPMENT_REPLAY_V1",
+  "replay_mode": "DEVELOPMENT_ONLY_KNOWN_DATA",
+  "not_acceptance": true,
+  "not_confirmatory": true,
+  "historical_result_retained": "FAIL",
+  "source_hashes": {
+    "holdout": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+    "oracle": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+    "historical_raw": "e2944ad6b11a5285b76f0414b52160242ffc1d0071e9ed35ddd06ef63205fb9b",
+    "historical_results": "6a87aa68e82ead5cdae4613dfc03f27da953055ca12943905778471299191239"
+  },
+  "historical_request_semantic_match_percent": 47.5,
+  "development_replay_request_semantic_match_percent": 47.5,
+  "case_count": 120,
+  "hard_constraint_violations": 0,
+  "planned_to_actual_leakage": 0,
+  "unintended_writes": 0,
+  "cross_user_access": 0,
+  "records": [
+    {
+      "case_id": "p2r-nutrition-001",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-002",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-003",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-004",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-005",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-006",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-007",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-008",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-009",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-010",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-011",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-012",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-013",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-014",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-015",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-016",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-017",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-018",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-019",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-020",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-021",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-022",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-023",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-024",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-025",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-026",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-027",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-028",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-029",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-nutrition-030",
+      "category": "nutrition",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-001",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-002",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-003",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-004",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-005",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-006",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-007",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-008",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-009",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-010",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-011",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-012",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-013",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-014",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-015",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-016",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-017",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-018",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-019",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-020",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-021",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-022",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-023",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-024",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-025",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-026",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-027",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-028",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-029",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-workout_single_session-030",
+      "category": "workout_single_session",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-001",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-002",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-003",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-004",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-005",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-006",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-007",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-008",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-009",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-010",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-011",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-012",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-013",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-014",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-015",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-016",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-017",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-018",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-019",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-020",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-021",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-022",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-023",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-024",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-025",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-026",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-027",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-028",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-029",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-030",
+      "category": "weekly_workout_scheduling",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-001",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-002",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-003",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-004",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-005",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-006",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-007",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-008",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-009",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-010",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-011",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-012",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-013",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-014",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-combined_health-015",
+      "category": "combined_health",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-001",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-002",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-003",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-004",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-005",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-006",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-007",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-008",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-009",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-010",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-011",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-012",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-013",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-014",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": true,
+      "hard_violations": []
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-015",
+      "category": "revision_lifecycle_concurrency_adversarial",
+      "v2_status": "NOT_FOUND",
+      "semantic_match": false,
+      "hard_violations": []
+    }
+  ],
+  "generated_at": "2026-09-05T04:34:17.377020+00:00"
+}

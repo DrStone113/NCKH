@@ -62,14 +62,18 @@ class _BentoCardState extends State<BentoCard> with SingleTickerProviderStateMix
           decoration: BoxDecoration(
             color: widget.gradient == null ? (widget.color ?? AppColors.surface) : null,
             gradient: widget.gradient,
-            borderRadius: BorderRadius.circular(32), // Signature Bento severe rounding
+            borderRadius: BorderRadius.circular(AppRadius.xxl),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.04),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: _isHovered 
-                    ? Colors.black.withValues(alpha: 0.08) 
-                    : Colors.black.withValues(alpha: 0.04), // Very subtle shadow
+                color: _isHovered
+                    ? const Color(0xFF0F172A).withValues(alpha: 0.08)
+                    : const Color(0xFF0F172A).withValues(alpha: 0.04),
                 blurRadius: _isHovered ? 24 : 16,
-                offset: Offset(0, _isHovered ? 12 : 8),
+                offset: Offset(0, _isHovered ? 10 : 6),
               ),
             ],
           ),

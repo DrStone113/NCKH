@@ -66,6 +66,21 @@ def test_ambiguous_superseded_and_expired_actions_are_never_claimed() -> None:
     assert expired_store.claim_confirmation("session-a", "user-a", "có").status == "ACTION_EXPIRED"
 
 
+def test_explicit_rejection_cancels_the_exact_pending_action() -> None:
+    store = PendingUserActionStore()
+    action = _action(store)
+    store.put(action)
+
+    resolution = store.claim_confirmation(
+        "session-a", "user-a", "không lưu"
+    )
+
+    assert resolution.status == "REJECTED"
+    assert resolution.action is action
+    assert action.status == "SUPERSEDED"
+    assert store.claim_confirmation("session-a", "user-a", "có").status == "NO_MATCH"
+
+
 class _Tools:
     def schemas(self):
         return []
@@ -125,9 +140,19 @@ class _BlockingDispatcher:
         )
 
 
+class _RejectDispatcher:
+    async def dispatch(self, *args: Any, **kwargs: Any) -> ToolResult:
+        raise AssertionError("A rejected action must not be dispatched")
+
+
 class _UnusedLlm:
     async def chat(self, *args: Any, **kwargs: Any) -> None:  # pragma: no cover - assertion guard
         raise AssertionError("A pending confirmation must not invoke the LLM")
+
+
+class _UnusedScopeGuard:
+    async def classify(self, text: str):
+        raise AssertionError("A pending confirmation must resolve before scope routing")
 
 
 @pytest.mark.asyncio
@@ -159,3 +184,45 @@ async def test_multidevice_confirmation_performs_one_write_and_returns_idempoten
     assert second_gateway.action_states[-1]["status"] == "ALREADY_EXECUTED"
     assert dispatcher.calls[0].arguments["catalog_dish_id"] == "dish-42"
     assert first_gateway.action_states[-1]["status"] == "PERSISTED"
+
+
+@pytest.mark.asyncio
+async def test_rejection_gets_a_natural_reply_without_llm_or_write() -> None:
+    pending = PendingUserActionStore()
+    pending.put(_action(pending))
+    gateway = _Gateway("user-a")
+    orchestrator = AgentOrchestrator(
+        _UnusedLlm(),
+        _Tools(),
+        _Memory(),
+        _SessionStore(),
+        _RejectDispatcher(),
+        gateway,
+        pending_actions=pending,
+    )
+
+    await orchestrator.handleChatMessage("session-a", "không cần")
+
+    assert gateway.done == ["Được, mình sẽ không lưu Cơm gà."]
+    assert gateway.action_states[-1]["status"] == "CANCELLED"
+
+
+@pytest.mark.asyncio
+async def test_pending_action_fast_path_runs_before_general_scope_routing() -> None:
+    pending = PendingUserActionStore()
+    pending.put(_action(pending))
+    gateway = _Gateway("user-a")
+    orchestrator = AgentOrchestrator(
+        _UnusedLlm(),
+        _Tools(),
+        _Memory(),
+        _SessionStore(),
+        _RejectDispatcher(),
+        gateway,
+        pending_actions=pending,
+        scope_guard=_UnusedScopeGuard(),
+    )
+
+    await orchestrator.handleChatMessage("session-a", "thôi")
+
+    assert gateway.action_states[-1]["status"] == "CANCELLED"

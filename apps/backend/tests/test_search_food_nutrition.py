@@ -187,6 +187,12 @@ def test_query_with_no_match_returns_empty():
     assert result == []
 
 
+def test_unrelated_dish_name_does_not_return_weak_ingredient_matches():
+    result = _run(search_food_nutrition("pizza", top_k=5))
+
+    assert result == []
+
+
 # ---------------------------------------------------------------------------
 # RAG augmentation
 # ---------------------------------------------------------------------------

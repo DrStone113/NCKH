@@ -1,0 +1,296 @@
+{
+  "artifact_type": "SYNTHETIC_DEVELOPMENT",
+  "router": "semantic-router-s1 cascade, model unavailable",
+  "model_inference_executed": false,
+  "dataset": "../backend/validation/semantic_router_s1/semantic_router_s1_development.jsonl",
+  "overall": {
+    "count": 50,
+    "primary_correct": 47,
+    "primary_accuracy": 0.94,
+    "secondary_correct": 49,
+    "write_correct": 50,
+    "negation_correct": 50,
+    "ambiguity_correct": 46,
+    "confirmation_correct": 50
+  },
+  "by_category": {
+    "ambiguity": {
+      "count": 3,
+      "primary_correct": 3,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 3,
+      "confirmation_correct": 3
+    },
+    "clean": {
+      "count": 5,
+      "primary_correct": 5,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 5,
+      "write_correct": 5,
+      "negation_correct": 5,
+      "ambiguity_correct": 5,
+      "confirmation_correct": 5
+    },
+    "long": {
+      "count": 1,
+      "primary_correct": 1,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 0,
+      "write_correct": 1,
+      "negation_correct": 1,
+      "ambiguity_correct": 1,
+      "confirmation_correct": 1
+    },
+    "mixed_language": {
+      "count": 3,
+      "primary_correct": 3,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 3,
+      "confirmation_correct": 3
+    },
+    "multi_intent": {
+      "count": 3,
+      "primary_correct": 3,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 3,
+      "confirmation_correct": 3
+    },
+    "negation": {
+      "count": 6,
+      "primary_correct": 5,
+      "primary_accuracy": 0.8333,
+      "secondary_correct": 6,
+      "write_correct": 6,
+      "negation_correct": 6,
+      "ambiguity_correct": 6,
+      "confirmation_correct": 6
+    },
+    "no_diacritics": {
+      "count": 4,
+      "primary_correct": 4,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 4,
+      "write_correct": 4,
+      "negation_correct": 4,
+      "ambiguity_correct": 4,
+      "confirmation_correct": 4
+    },
+    "pending_action": {
+      "count": 4,
+      "primary_correct": 4,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 4,
+      "write_correct": 4,
+      "negation_correct": 4,
+      "ambiguity_correct": 4,
+      "confirmation_correct": 4
+    },
+    "reference": {
+      "count": 4,
+      "primary_correct": 4,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 4,
+      "write_correct": 4,
+      "negation_correct": 4,
+      "ambiguity_correct": 4,
+      "confirmation_correct": 4
+    },
+    "regional": {
+      "count": 2,
+      "primary_correct": 2,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 2,
+      "write_correct": 2,
+      "negation_correct": 2,
+      "ambiguity_correct": 1,
+      "confirmation_correct": 2
+    },
+    "safety": {
+      "count": 3,
+      "primary_correct": 2,
+      "primary_accuracy": 0.6667,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 2,
+      "confirmation_correct": 3
+    },
+    "slang": {
+      "count": 2,
+      "primary_correct": 2,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 2,
+      "write_correct": 2,
+      "negation_correct": 2,
+      "ambiguity_correct": 1,
+      "confirmation_correct": 2
+    },
+    "teencode": {
+      "count": 4,
+      "primary_correct": 4,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 4,
+      "write_correct": 4,
+      "negation_correct": 4,
+      "ambiguity_correct": 4,
+      "confirmation_correct": 4
+    },
+    "typo": {
+      "count": 3,
+      "primary_correct": 2,
+      "primary_accuracy": 0.6667,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 2,
+      "confirmation_correct": 3
+    },
+    "write": {
+      "count": 3,
+      "primary_correct": 3,
+      "primary_accuracy": 1.0,
+      "secondary_correct": 3,
+      "write_correct": 3,
+      "negation_correct": 3,
+      "ambiguity_correct": 3,
+      "confirmation_correct": 3
+    }
+  },
+  "cascade_reasons": {
+    "DETERMINISTIC_HIGH_CONFIDENCE": 16,
+    "MODEL_UNAVAILABLE": 30,
+    "PENDING_ACTION_AUTHORITATIVE": 4
+  },
+  "hard_failures": {
+    "false_positive_write_intent": 0,
+    "pending_action_target_mutation": 0,
+    "invalid_structured_output_after_verifier": 0
+  },
+  "failures": [
+    {
+      "id": "typo-02",
+      "category": "typo",
+      "primary_correct": false,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": true,
+      "confirmation_correct": true,
+      "actual_primary": "SMALLTALK_OR_OTHER",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "LEXICAL",
+      "reason_code": "MODEL_UNAVAILABLE"
+    },
+    {
+      "id": "typo-03",
+      "category": "typo",
+      "primary_correct": true,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": false,
+      "confirmation_correct": true,
+      "actual_primary": "WORKOUT_RECOMMENDATION",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "NONE",
+      "reason_code": "MODEL_UNAVAILABLE"
+    },
+    {
+      "id": "slang-02",
+      "category": "slang",
+      "primary_correct": true,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": false,
+      "confirmation_correct": true,
+      "actual_primary": "WORKOUT_RECOMMENDATION",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "NONE",
+      "reason_code": "MODEL_UNAVAILABLE"
+    },
+    {
+      "id": "regional-01",
+      "category": "regional",
+      "primary_correct": true,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": false,
+      "confirmation_correct": true,
+      "actual_primary": "MEAL_RECOMMENDATION",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "NONE",
+      "reason_code": "DETERMINISTIC_HIGH_CONFIDENCE"
+    },
+    {
+      "id": "negation-03",
+      "category": "negation",
+      "primary_correct": false,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": true,
+      "confirmation_correct": true,
+      "actual_primary": "WEIGHT_PROGRESS",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [
+        "LOG_WEIGHT"
+      ],
+      "actual_ambiguity": "NONE",
+      "reason_code": "MODEL_UNAVAILABLE"
+    },
+    {
+      "id": "safety-03",
+      "category": "safety",
+      "primary_correct": false,
+      "secondary_correct": true,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": false,
+      "confirmation_correct": true,
+      "actual_primary": "SMALLTALK_OR_OTHER",
+      "actual_secondary": [],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "LEXICAL",
+      "reason_code": "MODEL_UNAVAILABLE"
+    },
+    {
+      "id": "long-01",
+      "category": "long",
+      "primary_correct": true,
+      "secondary_correct": false,
+      "write_correct": true,
+      "negation_correct": true,
+      "ambiguity_correct": true,
+      "confirmation_correct": true,
+      "actual_primary": "DAILY_NUTRITION_STATUS",
+      "actual_secondary": [
+        "WORKOUT_RECOMMENDATION"
+      ],
+      "actual_write": false,
+      "actual_negated_actions": [],
+      "actual_ambiguity": "NONE",
+      "reason_code": "MODEL_UNAVAILABLE"
+    }
+  ]
+}

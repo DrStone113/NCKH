@@ -61,6 +61,16 @@ _E4_RUNTIME_TOOLS = frozenset(
     }
 )
 _PLAN_V2_RUNTIME_TOOLS = PLAN_V2_TOOL_NAMES
+_PRIVATE_SNAPSHOT_READS = frozenset(
+    {
+        "get_user_profile",
+        "get_today_meals",
+        "get_today_exercises",
+        "get_lifestyle_logs",
+        "get_active_plan",
+        "get_active_plan_v2",
+    }
+)
 
 #: FIFO window size for chat-driven diversification.
 #:
@@ -238,13 +248,25 @@ class ToolDispatcher:
         registry: ToolRegistry,
         gateway: Any | None = None,
         db_session: Any | None = None,
+        snapshot_cache: Any | None = None,
     ) -> None:
         self.registry = registry
         self.gateway = gateway
         self.db_session = db_session
+        self.snapshot_cache = snapshot_cache
         self._pending_calls: dict[str, tuple[str, asyncio.Future[ToolResult]]] = {}
         # session_id -> tool_name -> FIFO of ids already returned this session.
         self._recent_ids: dict[str, dict[str, deque[int]]] = {}
+        # A reconnect creates a new dispatcher even when the logical chat or
+        # account is unchanged. Track which session/tool windows have already
+        # been hydrated from durable, owner-scoped invocation history so the
+        # first suggestion after a reconnect does not restart at the same dish.
+        self._hydrated_recent_ids: set[tuple[str, str]] = set()
+        # Multiple suggestions in one model response are dispatched in
+        # parallel by the orchestrator. Serialize only diversity-aware tools
+        # per session so each result can exclude the one returned just before
+        # it; unrelated reads remain fully parallel.
+        self._recent_ids_locks: dict[tuple[str, str], asyncio.Lock] = {}
 
     # ----------------------------------------------------------------- dispatch
     async def dispatch(
@@ -344,8 +366,31 @@ class ToolDispatcher:
             timeout_s = max(effective_timeout_ms / 1000.0, 0.0)
             started = time.perf_counter()
 
+            cache_owner = str(getattr(self.gateway, "user_id", "") or "")
+            cacheable_private_read = bool(
+                descriptor.idempotent
+                and descriptor.name in _PRIVATE_SNAPSHOT_READS
+                and cache_owner
+                and self.snapshot_cache is not None
+            )
+            if cacheable_private_read:
+                cached = await self.snapshot_cache.get(
+                    owner=cache_owner,
+                    session_id=session_id,
+                    source=descriptor.name,
+                    params=call.arguments,
+                )
+                if isinstance(cached, ToolResult):
+                    await self._insert_completed_invocation(
+                        session_id, call, descriptor, cached, started
+                    )
+                    return cached
+
             invocation_id: str | None = None
-            if self.db_session is not None:
+            # Writes keep a durable claim/finalize lifecycle. Pure reads need
+            # only one audit row after completion, cutting their audit traffic
+            # in half without weakening idempotency or write recovery.
+            if self.db_session is not None and not descriptor.idempotent:
                 invocation_id = await self._insert_invocation(session_id, call, descriptor)
 
             if not descriptor.idempotent:
@@ -361,30 +406,40 @@ class ToolDispatcher:
 
             result: ToolResult
             if descriptor.side == "server":
-                self._apply_recent_ids(session_id, call)
-                # Preserve ``call.arguments`` exactly for invocation audit and
-                # LLM transcripts. Profile/history snapshots travel only in
-                # this ephemeral private copy after schema validation.
-                server_arguments = dict(call.arguments)
-                if descriptor.name in _E4_RUNTIME_TOOLS:
-                    server_arguments["_runtime_context"] = WorkoutRuntimeContext(
-                        user_id=getattr(self.gateway, "user_id", None),
-                        session_id=session_id,
-                        user_context=getattr(self.gateway, "user_context", None),
-                        db_session=self.db_session,
+                async def _run_server_call() -> ToolResult:
+                    await self._apply_recent_ids(session_id, call)
+                    # Preserve ``call.arguments`` exactly for invocation audit and
+                    # LLM transcripts. Profile/history snapshots travel only in
+                    # this ephemeral private copy after schema validation.
+                    server_arguments = dict(call.arguments)
+                    if descriptor.name in _E4_RUNTIME_TOOLS:
+                        server_arguments["_runtime_context"] = WorkoutRuntimeContext(
+                            user_id=getattr(self.gateway, "user_id", None),
+                            session_id=session_id,
+                            user_context=getattr(self.gateway, "user_context", None),
+                            db_session=self.db_session,
+                        )
+                    if descriptor.name in _PLAN_V2_RUNTIME_TOOLS:
+                        server_arguments["_runtime_context"] = PlanRuntimeContext(
+                            user_id=getattr(self.gateway, "user_id", None),
+                            session_id=session_id,
+                            user_context=getattr(self.gateway, "user_context", None),
+                            db_session=self.db_session,
+                            authenticated_principal=bool(getattr(self.gateway, "authenticated_principal", False)),
+                        )
+                    server_result = await self._dispatch_server(
+                        descriptor, call, timeout_s, session_id, server_arguments
                     )
-                if descriptor.name in _PLAN_V2_RUNTIME_TOOLS:
-                    server_arguments["_runtime_context"] = PlanRuntimeContext(
-                        user_id=getattr(self.gateway, "user_id", None),
-                        session_id=session_id,
-                        user_context=getattr(self.gateway, "user_context", None),
-                        db_session=self.db_session,
-                        authenticated_principal=bool(getattr(self.gateway, "authenticated_principal", False)),
-                    )
-                result = await self._dispatch_server(
-                    descriptor, call, timeout_s, session_id, server_arguments
-                )
-                self._remember_result_id(session_id, call, result)
+                    self._remember_result_id(session_id, call, server_result)
+                    return server_result
+
+                if descriptor.name in _RECENT_IDS_TOOLS:
+                    lock_key = (session_id, descriptor.name)
+                    lock = self._recent_ids_locks.setdefault(lock_key, asyncio.Lock())
+                    async with lock:
+                        result = await _run_server_call()
+                else:
+                    result = await _run_server_call()
             elif descriptor.side == "client":
                 result = await self._dispatch_client(
                     descriptor, call, timeout_s, session_id
@@ -397,7 +452,24 @@ class ToolDispatcher:
                 )
                 result = ToolResult(ok=False, error="TOOL_INTERNAL_ERROR")
 
-            await self._finalize_invocation(invocation_id, result, started)
+            if descriptor.idempotent:
+                if cacheable_private_read and result.ok:
+                    await self.snapshot_cache.set(
+                        owner=cache_owner,
+                        session_id=session_id,
+                        source=descriptor.name,
+                        params=call.arguments,
+                        value=result,
+                    )
+                await self._insert_completed_invocation(
+                    session_id, call, descriptor, result, started
+                )
+            else:
+                await self._finalize_invocation(invocation_id, result, started)
+                if result.ok and cache_owner and self.snapshot_cache is not None:
+                    await self.snapshot_cache.invalidate(
+                        owner=cache_owner, session_id=session_id
+                    )
             return result
 
         except Exception:
@@ -503,9 +575,17 @@ class ToolDispatcher:
             if not future.done():
                 future.set_result(ToolResult(ok=False, error="DISCONNECTED"))
         self._recent_ids.pop(session_id, None)
+        self._hydrated_recent_ids = {
+            key for key in self._hydrated_recent_ids if key[0] != session_id
+        }
+        self._recent_ids_locks = {
+            key: lock
+            for key, lock in self._recent_ids_locks.items()
+            if key[0] != session_id
+        }
 
     # ------------------------------------------------------- diversity helpers
-    def _apply_recent_ids(self, session_id: str, call: ToolCall) -> None:
+    async def _apply_recent_ids(self, session_id: str, call: ToolCall) -> None:
         """Merge this session's recently returned ids into ``call.arguments``.
 
         Without this, ``suggest_dish`` returns the same dish on every turn of a
@@ -523,6 +603,7 @@ class ToolDispatcher:
         """
         if call.name not in _RECENT_IDS_TOOLS:
             return
+        await self._hydrate_recent_ids(session_id, call.name)
         seen = self._recent_ids.get(session_id, {}).get(call.name)
         if not seen:
             return
@@ -545,6 +626,83 @@ class ToolDispatcher:
         # here keeps the tool signature untouched and preserves idempotency of
         # ``suggest_dish`` itself (same arguments still yield the same dish).
         call.arguments[_RECENT_IDS_ARG] = merged
+
+    async def _hydrate_recent_ids(self, session_id: str, tool_name: str) -> None:
+        """Load recent ids for the authenticated owner once per connection.
+
+        The in-memory window remains the fast path. This one bounded read only
+        runs for the first recommendation after a connection/reconnect and is
+        scoped through ``chat_sessions.user_id`` using the verified gateway
+        principal. Failure is deliberately fail-open: recommendation safety
+        and availability must not depend on optional diversity history.
+        """
+
+        hydration_key = (session_id, tool_name)
+        if hydration_key in self._hydrated_recent_ids:
+            return
+        self._hydrated_recent_ids.add(hydration_key)
+
+        owner_user_id = getattr(self.gateway, "user_id", None)
+        if (
+            self.db_session is None
+            or not bool(getattr(self.gateway, "authenticated_principal", False))
+            or not isinstance(owner_user_id, str)
+            or not owner_user_id.strip()
+            or owner_user_id == "anonymous"
+        ):
+            return
+
+        try:
+            from db.db_status import is_db_offline
+
+            if is_db_offline():
+                return
+            result = await asyncio.wait_for(
+                self.db_session.execute(
+                    text(
+                        """
+                        SELECT ti.result->>'id' AS item_id
+                        FROM tool_invocations AS ti
+                        JOIN chat_sessions AS cs ON cs.id = ti.session_id
+                        WHERE cs.user_id = :owner_user_id
+                          AND ti.tool_name = :tool_name
+                          AND ti.ok = TRUE
+                          AND ti.result->>'id' IS NOT NULL
+                        ORDER BY ti.created_at DESC
+                        LIMIT :history_limit
+                        """
+                    ),
+                    {
+                        "owner_user_id": owner_user_id,
+                        "tool_name": tool_name,
+                        "history_limit": _RECENT_IDS_MAXLEN,
+                    },
+                ),
+                timeout=0.5,
+            )
+            rows = result.fetchall()
+        except Exception as exc:  # noqa: BLE001 - optional diversity history
+            logger.info("Durable recommendation history unavailable: %s", exc)
+            return
+
+        # SQL returns newest-first; append oldest-first so the deque preserves
+        # FIFO meaning and evicts the genuinely oldest exposure next.
+        newest_unique: list[int] = []
+        for row in rows:
+            raw_id = row[0] if row else None
+            try:
+                item_id = int(raw_id)
+            except (TypeError, ValueError):
+                continue
+            if item_id not in newest_unique:
+                newest_unique.append(item_id)
+
+        window = self._recent_ids.setdefault(session_id, {}).setdefault(
+            tool_name, deque(maxlen=_RECENT_IDS_MAXLEN)
+        )
+        for item_id in reversed(newest_unique):
+            if item_id not in window:
+                window.append(item_id)
 
     def _remember_result_id(
         self, session_id: str, call: ToolCall, result: ToolResult
@@ -580,6 +738,14 @@ class ToolDispatcher:
         for stale_id in list(self._recent_ids)[:overflow]:
             if stale_id != keep_session_id:
                 self._recent_ids.pop(stale_id, None)
+                self._hydrated_recent_ids = {
+                    key for key in self._hydrated_recent_ids if key[0] != stale_id
+                }
+                self._recent_ids_locks = {
+                    key: lock
+                    for key, lock in self._recent_ids_locks.items()
+                    if key[0] != stale_id
+                }
 
     async def _insert_invocation(
         self,
@@ -653,6 +819,51 @@ class ToolDispatcher:
             )
         except Exception:
             logger.exception("Failed to finalize tool invocation audit row")
+
+    async def _insert_completed_invocation(
+        self,
+        session_id: str,
+        call: ToolCall,
+        descriptor: ToolDescriptor,
+        result: ToolResult,
+        started: float,
+    ) -> None:
+        from db.db_status import is_db_offline, mark_db_offline
+
+        if self.db_session is None or is_db_offline():
+            return
+        try:
+            await asyncio.wait_for(
+                self.db_session.execute(
+                    text(
+                        """
+                        INSERT INTO tool_invocations (
+                            session_id, correlation_id, tool_name, side, arguments,
+                            result, ok, error_code, duration_ms
+                        ) VALUES (
+                            :session_id, :correlation_id, :tool_name, :side,
+                            CAST(:arguments AS JSONB), CAST(:result AS JSONB),
+                            :ok, :error_code, :duration_ms
+                        )
+                        """
+                    ),
+                    {
+                        "session_id": session_id,
+                        "correlation_id": call.id,
+                        "tool_name": call.name,
+                        "side": descriptor.side,
+                        "arguments": json.dumps(call.arguments),
+                        "result": json.dumps(result.data if result.ok else None),
+                        "ok": result.ok,
+                        "error_code": result.error,
+                        "duration_ms": int((time.perf_counter() - started) * 1000),
+                    },
+                ),
+                timeout=0.5,
+            )
+        except Exception:
+            mark_db_offline(60.0)
+            logger.warning("Failed to insert completed read audit row (DB unavailable)")
 
     async def _load_idempotent_result(
         self,

@@ -7,9 +7,10 @@ from services.agent.chat_gateway import ChatGateway
 
 
 class FakeWebSocket:
-    def __init__(self, messages=None, query_params=None):
+    def __init__(self, messages=None, query_params=None, headers=None):
         self.messages = list(messages or [])
         self.query_params = query_params or {}
+        self.headers = headers or {}
         self.sent = []
         self.closed = None
 
@@ -34,6 +35,36 @@ class FakeOrchestrator:
 
     async def handleChatMessage(self, session_id, message):
         self.calls.append((session_id, message))
+
+
+@pytest.mark.asyncio
+async def test_checked_profile_snapshot_drops_stale_fields_from_previous_turn(monkeypatch):
+    import asyncio
+
+    class CapturingOrchestrator:
+        def __init__(self):
+            self.contexts = []
+
+        async def handleChatMessage(self, session_id, message, user_context=None):
+            self.contexts.append(user_context)
+
+    incoming = {
+        'name': 'Synthetic fixture', 'weight': 63,
+        'profile_readiness': {'scope': 'workout', 'required_fields': []},
+    }
+    ws = FakeWebSocket([{'type': 'chat', 'message': 'Lịch tập', 'user_context': incoming}])
+    orchestrator = CapturingOrchestrator()
+    gateway = ChatGateway(ws, orchestrator, 'synthetic-profile-test')
+    gateway.user_context = {'weight': 60, 'nutrition_profile': {'food_allergies': ['MILK']}}
+
+    async def session_exists():
+        return True
+
+    monkeypatch.setattr(gateway, '_ensure_session_exists', session_exists)
+    await gateway.run()
+    await asyncio.sleep(0.01)
+    assert gateway.user_context == incoming
+    assert orchestrator.contexts == [incoming]
 
 
 @pytest.mark.asyncio
@@ -75,6 +106,27 @@ async def test_invalid_jwt_closes_4401():
 
 
 @pytest.mark.asyncio
+async def test_authenticates_token_from_websocket_subprotocol(monkeypatch):
+    import jwt
+
+    configured = Settings(
+        app_environment="development",
+        jwt_secret="test-jwt-secret-that-is-long-enough-for-hs256",
+    )
+    monkeypatch.setattr(config, "settings", configured)
+    token = jwt.encode({"sub": "owner-a"}, configured.jwt_secret, algorithm="HS256")
+    ws = FakeWebSocket(
+        headers={
+            "sec-websocket-protocol": f"health-auth-v1, auth.{token}",
+        },
+    )
+    gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
+
+    assert await gateway.authenticate() is True
+    assert gateway.user_id == "owner-a"
+
+
+@pytest.mark.asyncio
 async def test_debug_trace_is_dropped_unless_server_gate_is_enabled():
     ws = FakeWebSocket()
     gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
@@ -92,7 +144,7 @@ async def test_debug_trace_is_dropped_unless_server_gate_is_enabled():
 
 
 @pytest.mark.asyncio
-async def test_production_never_enables_debug_from_query_header_or_client_payload(monkeypatch):
+async def test_production_rejects_legacy_hs256_token(monkeypatch):
     import jwt
 
     production = Settings(
@@ -113,23 +165,26 @@ async def test_production_never_enables_debug_from_query_header_or_client_payloa
     ws.headers = {"x-chat-debug": "true"}
     gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
 
-    assert await gateway.authenticate() is True
-    assert gateway.developer_authenticated is True
-    assert gateway.debug_trace_enabled is False
-    await gateway.send_debug_trace({"operation": "TOOL_CALL"})
-    await gateway.run()
-
-    assert all(message.get("type") != "debug_trace" for message in ws.sent)
+    assert await gateway.authenticate() is False
+    assert ws.closed == 4401
 
 
 @pytest.mark.asyncio
 async def test_development_debug_is_server_enabled_not_client_selected(monkeypatch):
+    import jwt
+
+    configured = Settings(
+        app_environment="development",
+        chat_trace_mode="debug",
+        jwt_secret="test-jwt-secret-that-is-long-enough-for-hs256",
+    )
     monkeypatch.setattr(
         config,
         "settings",
-        Settings(app_environment="development", chat_trace_mode="debug"),
+        configured,
     )
-    ws = FakeWebSocket(query_params={"debug": "false"})
+    token = jwt.encode({"sub": "owner-a"}, configured.jwt_secret, algorithm="HS256")
+    ws = FakeWebSocket(query_params={"debug": "false", "token": token})
     gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
 
     assert await gateway.authenticate() is True
@@ -145,7 +200,10 @@ async def test_authenticated_principal_cannot_be_overridden_by_chat_payload(monk
     import asyncio
     import jwt
 
-    configured = Settings(jwt_secret="test-jwt-secret-that-is-long-enough-for-hs256")
+    configured = Settings(
+        app_environment="development",
+        jwt_secret="test-jwt-secret-that-is-long-enough-for-hs256",
+    )
     monkeypatch.setattr(config, "settings", configured)
     token = jwt.encode({"sub": "owner-a"}, configured.jwt_secret, algorithm="HS256")
     ws = FakeWebSocket(
@@ -159,4 +217,5 @@ async def test_authenticated_principal_cannot_be_overridden_by_chat_payload(monk
     await gateway.run()
     await asyncio.sleep(0.01)
     assert gateway.user_id == "owner-a"
-    assert orchestrator.calls == [("session-1", "xin chào")]
+    assert orchestrator.calls == []
+    assert ws.sent[-1]["code"] == "OWNER_MISMATCH"

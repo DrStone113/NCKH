@@ -1,8 +1,8 @@
 {
   "dataset_version": "PLAN_V2_ACCEPTANCE_V2_CANDIDATES_V1",
-  "status": "CANDIDATE_NOT_FROZEN",
+  "status": "FROZEN",
   "candidate_source_path": "qualification_candidates_v2.py",
-  "candidate_source_sha256": "75df6acfbe5bf8fb5015b3674de4c66dd2bb644af6350bfaf0d9ec3b7f85f8a2",
+  "candidate_source_sha256": "09e5d624a6210d30721a2a83976d79c1757d13af8e07f002d12cf19d3132a1f1",
   "candidate_count": 150,
   "proposed_acceptance_count": 120,
   "proposed_distribution": {
@@ -16,7 +16,7 @@
   "authoring_boundary": {
     "implementation_outputs_inspected": false,
     "scored_acceptance_run": false,
-    "acceptance_eligible": false
+    "acceptance_eligible": true
   },
   "freeze_prerequisites": [
     "dedup-protocol-v1.json passes",

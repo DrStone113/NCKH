@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/ai_chat_provider.dart';
 import '../../../providers/user_provider.dart';
@@ -7,6 +9,8 @@ import '../../../providers/nutrition_provider.dart';
 import '../../../providers/lifestyle_provider.dart';
 import '../../../providers/health_provider.dart';
 import '../../../models/chat_message.dart';
+import '../../../models/profile_readiness.dart';
+import '../../../widgets/profile_completion_notice.dart';
 import '../../../models/wger_models.dart';
 import '../../../models/meal_model.dart';
 import '../../../models/app_state_value.dart';
@@ -16,13 +20,20 @@ import '../../../widgets/action_card_widget.dart';
 import '../../../widgets/detail_bottom_sheet.dart';
 import '../../../widgets/plan_detail_bottom_sheet.dart';
 import '../../../services/backend_api_service.dart';
+import '../../../constants/ai_chatbot_config.dart';
 import '../../../widgets/formatted_markdown_text.dart';
 import '../../../widgets/meal_summary_card.dart';
+import '../../nutrition/widgets/meal_plan_card.dart';
+import '../../../widgets/recommendation_feedback_bar.dart';
 import '../../../widgets/personalized_workout_card.dart';
 import '../../../widgets/versioned_plan_card.dart';
+import '../chat_debug_transcript.dart';
+import '../../plans/screens/plan_detail_screen.dart';
+import '../../plans/screens/plan_list_screen.dart';
+import '../../settings/screens/profile_settings_screen.dart';
 
 const bool _developerTraceBuild =
-    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: false);
+    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: kDebugMode);
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key, this.showBackButton = true});
@@ -39,13 +50,17 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final BackendApiService _backendApi = BackendApiService();
   Map<String, dynamic>? _activePlan;
   bool _isLoadingPlan = false;
+  bool _sending = false;
+  AIChatProvider? _chatProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final aiChatProvider =
           Provider.of<AIChatProvider>(context, listen: false);
+      _chatProvider = aiChatProvider;
       final exerciseProvider =
           Provider.of<ExerciseProvider>(context, listen: false);
       final nutritionProvider =
@@ -55,6 +70,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       final healthProvider =
           Provider.of<HealthProvider>(context, listen: false);
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userId = userProvider.currentUser?.id;
+      if (userId != null && _textController.text.isEmpty) {
+        _textController.text = aiChatProvider.pendingDraftFor(userId) ?? '';
+      }
 
       aiChatProvider.setProviders(
         exerciseProvider: exerciseProvider,
@@ -91,8 +110,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   void dispose() {
-    final aiChatProvider = Provider.of<AIChatProvider>(context, listen: false);
-    aiChatProvider.removeListener(_onMessagesChanged);
+    _chatProvider?.removeListener(_onMessagesChanged);
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -101,6 +119,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   bool _wasStreaming = false;
 
   void _onMessagesChanged() {
+    if (!mounted) return;
     _scrollToBottom();
     final aiChatProvider = Provider.of<AIChatProvider>(context, listen: false);
     if (_wasStreaming && !aiChatProvider.isStreaming) {
@@ -203,6 +222,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         automaticallyImplyLeading: widget.showBackButton,
         actions: [
           IconButton(
+            icon: const Icon(Icons.event_note_outlined),
+            tooltip: 'Mở kế hoạch',
+            onPressed: _openPlanLibrary,
+          ),
+          IconButton(
             icon: const Icon(Icons.add_comment_outlined),
             tooltip: 'Tạo cuộc trò chuyện mới',
             onPressed: () {
@@ -227,15 +251,38 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         color: AppColors.background,
         child: Column(
           children: [
+            // A non-secret, E2E-only semantic marker proves that the isolated
+            // build configuration reached the real chat surface. It has no
+            // visual copy and is absent from normal builds.
+            if (AIChatbotConfig.n3E2ERuntimeConfigurationActive)
+              Semantics(
+                label: 'n3-e2e-runtime-configured',
+                container: true,
+                child: const SizedBox.shrink(),
+              ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _textController,
+              builder: (context, value, child) => ProfileCompletionNotice(
+                scope: value.text.trim().isNotEmpty
+                    ? ProfileReadiness.scopeForMessage(value.text)
+                    : aiChatProvider.profileReadiness?.scope ??
+                        ProfileContextScope.both,
+                issue: aiChatProvider.profileIssue,
+              ),
+            ),
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
+                  final message = messages[index];
                   return AnimatedCard(
                     delay: 0,
-                    child: _buildMessageBubble(messages[index]),
+                    child: _buildMessageBubble(
+                      message,
+                      precedingUserText: _precedingUserText(messages, index),
+                    ),
                   );
                 },
               ),
@@ -462,6 +509,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
+  void _openVersionedPlan(Map<String, dynamic> plan) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PlanDetailScreen(plan: plan)),
+    );
+  }
+
+  void _openPlanLibrary() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PlanListScreen()),
+    );
+  }
+
   Widget _buildActivePlanCard() {
     if (_isLoadingPlan) {
       return const Padding(
@@ -555,7 +614,35 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  Widget _buildMessageBubble(AIChatMessage message) {
+  String? _precedingUserText(List<AIChatMessage> messages, int index) {
+    for (var previousIndex = index - 1; previousIndex >= 0; previousIndex--) {
+      final previousMessage = messages[previousIndex];
+      if (previousMessage.isUser) return previousMessage.text;
+    }
+    return null;
+  }
+
+  Future<void> _copyDebugTranscript({
+    required AIChatMessage message,
+    required String? precedingUserText,
+    required String assistantText,
+  }) async {
+    final transcript = buildChatDebugTranscript(
+      userText: precedingUserText,
+      assistantText: assistantText,
+      assistantMessage: message,
+    );
+    await Clipboard.setData(ClipboardData(text: transcript));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã copy debug transcript.')),
+    );
+  }
+
+  Widget _buildMessageBubble(
+    AIChatMessage message, {
+    String? precedingUserText,
+  }) {
     // Khi bot đang xử lý, chỉ hiển thị reasoning thật từ backend.
     if (message.isThinking) {
       return _buildThinkingBubble(message);
@@ -610,22 +697,29 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: message.isUser ? AppColors.primaryGradient : null,
-                  color: message.isUser ? null : AppColors.cardDark,
+                  color: message.isUser ? null : AppColors.surface,
                   borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(message.isUser ? 18 : 4),
-                    bottomRight: Radius.circular(message.isUser ? 4 : 18),
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(message.isUser ? 20 : 6),
+                    bottomRight: Radius.circular(message.isUser ? 6 : 20),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: message.isUser
-                          ? AppColors.primary.withValues(alpha: 0.2)
-                          : Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  border: message.isUser
+                      ? null
+                      : Border.all(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          width: 1,
+                        ),
+                  boxShadow: message.isUser
+                      ? [
+                          BoxShadow(
+                            color:
+                                const Color(0xFF0F172A).withValues(alpha: 0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : AppShadows.subtle,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -668,6 +762,27 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             if (message.isUser) const SizedBox(width: 10),
           ],
         ),
+
+        if (!message.isUser &&
+            _developerTraceBuild &&
+            message.status == MessageStatus.done)
+          Padding(
+            padding: const EdgeInsets.only(left: 44, top: 2),
+            child: TextButton.icon(
+              onPressed: () => _copyDebugTranscript(
+                message: message,
+                precedingUserText: precedingUserText,
+                assistantText: displayText,
+              ),
+              icon: const Icon(Icons.copy_all_outlined, size: 16),
+              label: const Text('Copy debug transcript'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ),
 
         // Action cards
         if (!message.isUser && message.structuredResponse != null)
@@ -745,12 +860,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         padding: const EdgeInsets.only(left: 44, top: 8, right: 10),
         child: VersionedPlanCard(
           plan: versionedPlan,
-          onSave: () => _sendMessage('Lưu đúng kế hoạch này.'),
-          onActivate: () => _sendMessage('Kích hoạt kế hoạch này.'),
-          onEdit: () => _sendMessage('Tôi muốn chỉnh sửa kế hoạch này.'),
-          onPause: () => _sendMessage('Tạm dừng kế hoạch này.'),
-          onResume: () => _sendMessage('Tiếp tục kế hoạch này.'),
-          onCancel: () => _sendMessage('Hủy kế hoạch này.'),
+          onView: () => _openVersionedPlan(versionedPlan),
         ),
       ));
     }
@@ -900,6 +1010,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 mealName: dishName,
                 mealType: mealType,
                 actions: actions,
+                onRecommendationFeedback:
+                    _canRecordRecommendationFeedback(actions)
+                        ? (eventType, reasonCode) =>
+                            _recordRecommendationFeedback(
+                              actions,
+                              eventType,
+                              reasonCode,
+                            )
+                        : null,
+                onChangeDish: _canRecordRecommendationFeedback(actions)
+                    ? () => _sendMessage('Đổi món khác giúp tôi.')
+                    : null,
+                publicReasonCodes: _recommendationReasonCodes(actions),
                 onSaveAll: showSaveButton
                     ? () => _handleSaveMealToJournal(
                           mealName: dishName,
@@ -933,6 +1056,19 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               mealName: dishName,
               mealType: mealType,
               actions: actions,
+              onRecommendationFeedback:
+                  _canRecordRecommendationFeedback(actions)
+                      ? (eventType, reasonCode) =>
+                          _recordRecommendationFeedback(
+                            actions,
+                            eventType,
+                            reasonCode,
+                          )
+                      : null,
+              onChangeDish: _canRecordRecommendationFeedback(actions)
+                  ? () => _sendMessage('Đổi món khác giúp tôi.')
+                  : null,
+              publicReasonCodes: _recommendationReasonCodes(actions),
               onSaveAll: showSaveButton
                   ? () => _handleSaveMealToJournal(
                         mealName: dishName,
@@ -963,6 +1099,87 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   /// Helper: Lấy label tiếng Việt cho meal_type
   String _getMealTypeLabel(String mealType) {
     return MealTypeUtils.label(mealType);
+  }
+
+  bool _canRecordRecommendationFeedback(List<ActionItem> actions) {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    return user != null &&
+        actions.any((action) {
+          final candidateId =
+              action.details['recommendation_candidate_id']?.toString().trim();
+          final recommendationEventId =
+              action.details['recommendation_event_id']?.toString().trim();
+          final policyVersion = action.details['recommendation_policy_version']
+              ?.toString()
+              .trim();
+          return candidateId != null &&
+              candidateId.isNotEmpty &&
+              recommendationEventId != null &&
+              recommendationEventId.isNotEmpty &&
+              policyVersion != null &&
+              policyVersion.isNotEmpty;
+        });
+  }
+
+  List<String> _recommendationReasonCodes(List<ActionItem> actions) {
+    for (final action in actions) {
+      final raw = action.details['recommendation_reason_codes'];
+      if (raw is List) {
+        return raw
+            .map((item) => item.toString())
+            .where((item) => item.isNotEmpty)
+            .take(3)
+            .toList(growable: false);
+      }
+    }
+    return const [];
+  }
+
+  Future<void> _recordRecommendationFeedback(
+    List<ActionItem> actions,
+    String eventType,
+    String? reasonCode,
+  ) async {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
+    final action = actions.firstWhere(
+      (item) {
+        final candidateId =
+            item.details['recommendation_candidate_id']?.toString().trim() ??
+                '';
+        final eventId =
+            item.details['recommendation_event_id']?.toString().trim() ?? '';
+        final policy =
+            item.details['recommendation_policy_version']?.toString().trim() ??
+                '';
+        return candidateId.isNotEmpty &&
+            eventId.isNotEmpty &&
+            policy.isNotEmpty;
+      },
+    );
+    final candidateId =
+        action.details['recommendation_candidate_id'].toString();
+    final recommendationEventId =
+        action.details['recommendation_event_id'].toString();
+    final policyVersion =
+        action.details['recommendation_policy_version'].toString();
+    await _backendApi.recordAdaptiveRecommendationFeedback(
+      recommendationEventId: recommendationEventId,
+      candidateId: candidateId,
+      policyVersion: policyVersion,
+      // A reconnect may repeat the same action. Keep its identity stable per
+      // recommendation/event so the owner-bound backend can return it
+      // idempotently instead of learning twice.
+      idempotencyKey: '$recommendationEventId:$eventType',
+      eventType: eventType,
+      reasonCode: reasonCode,
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Đã ghi nhận phản hồi cho gợi ý thử nghiệm.')),
+      );
+    }
   }
 
   /// Lưu food actions thành 1 MealModel với nhiều MealItem
@@ -1504,8 +1721,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null) return;
 
+    final missing = ProfileReadiness.planCreationMissingFields(user);
+    if (missing.isNotEmpty) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            key: const Key('plan-profile-required'),
+            content: Text(
+              'Cần bổ sung ${missing.values.join(', ')} trước khi tạo kế hoạch.',
+            ),
+            action: SnackBarAction(
+              label: 'Bổ sung hồ sơ',
+              onPressed: _openProfileForPlan,
+            ),
+          ),
+        );
+      return;
+    }
+
     try {
-      await _backendApi.createLongTermPlan(
+      final createdPlan = await _backendApi.createLongTermPlan(
         userId: user.id,
         userContext: {
           'age': user.age,
@@ -1520,23 +1757,44 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         days: days,
       );
       if (!mounted) return;
+      setState(() => _activePlan = createdPlan);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('✅ Đã tạo kế hoạch $days ngày thành công'),
           backgroundColor: Colors.green,
         ),
       );
-      // REST planner đã tạo và điền đủ kế hoạch. Không gửi lại cùng yêu cầu
-      // vào chatbot vì sẽ tạo một plan thứ hai rồi hỏi xác nhận từng ngày.
-      await _loadActivePlan();
-    } catch (e) {
+      // REST planner trả về chính kế hoạch vừa ghi. Dùng payload đó ngay để
+      // tránh đọc nhầm kho Plan V2 độc lập và làm card vừa tạo biến mất.
+    } on PlanCreationException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('❌ Không tạo được kế hoạch: $e'),
-            backgroundColor: Colors.red),
+        SnackBar(content: Text(error.message), backgroundColor: Colors.red),
+      );
+    } catch (error) {
+      debugPrint('Plan creation request failed: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Không thể kết nối để tạo kế hoạch. Vui lòng kiểm tra backend và thử lại.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
+  }
+
+  void _openProfileForPlan() {
+    final user = Provider.of<UserProvider>(context, listen: false).currentUser;
+    if (user == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (routeContext) => ProfileSettingsScreen(
+          isAccountSetup: user.needsBasicProfileIntake,
+          onSaved: () => Navigator.of(routeContext).pop(),
+        ),
+      ),
+    );
   }
 
   Widget _buildContextStat(
@@ -1655,71 +1913,99 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildInputArea() {
     final aiChatProvider = Provider.of<AIChatProvider>(context);
-    final isStreaming = aiChatProvider.isStreaming;
+    final isStreaming = aiChatProvider.isStreaming ||
+        aiChatProvider.isCheckingProfile ||
+        _sending;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
+        border: Border(
+          top: BorderSide(
+            color: Colors.black.withValues(alpha: 0.05),
+            width: 1,
           ),
-        ],
+        ),
+        boxShadow: AppShadows.subtle,
       ),
       child: SafeArea(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(26),
-                ),
-                child: TextField(
-                  controller: _textController,
-                  enabled: !isStreaming,
-                  decoration: InputDecoration(
-                    hintText: isStreaming
-                        ? 'AI đang phản hồi...'
-                        : 'Nhập triệu chứng hoặc câu hỏi...',
-                    hintStyle: const TextStyle(
-                        color: AppColors.textHint, fontSize: 14),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 14),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  border: Border.all(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    width: 1,
                   ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: isStreaming ? null : (_) => _handleSubmit(),
+                ),
+                child: Semantics(
+                  label: 'n3-chat-input',
+                  textField: true,
+                  child: TextField(
+                    controller: _textController,
+                    enabled: !isStreaming,
+                    decoration: InputDecoration(
+                      hintText: isStreaming
+                          ? 'AI đang suy nghĩ và phản hồi...'
+                          : 'Nhập câu hỏi hoặc yêu cầu tư vấn...',
+                      hintStyle: const TextStyle(
+                        color: AppColors.textHint,
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                    ),
+                    maxLines: 4,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: isStreaming ? null : (_) => _handleSubmit(),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Container(
-              width: 48,
-              height: 48,
+            const SizedBox(width: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 gradient: isStreaming ? null : AppColors.primaryGradient,
-                color: isStreaming ? Colors.grey.shade300 : null,
-                borderRadius: BorderRadius.circular(24),
+                color: isStreaming ? const Color(0xFFE2E8F0) : null,
+                shape: BoxShape.circle,
                 boxShadow: isStreaming
                     ? null
                     : [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
+                          color:
+                              const Color(0xFF0F172A).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
               ),
-              child: IconButton(
-                icon: Icon(isStreaming ? Icons.hourglass_bottom : Icons.send,
-                    color: isStreaming ? Colors.grey.shade600 : Colors.white,
-                    size: 22),
-                onPressed: isStreaming ? null : _handleSubmit,
+              child: Semantics(
+                label: 'n3-chat-send',
+                button: true,
+                child: IconButton(
+                  icon: Icon(
+                    isStreaming
+                        ? Icons.more_horiz_rounded
+                        : Icons.arrow_upward_rounded,
+                    color: isStreaming ? AppColors.textSecondary : Colors.white,
+                    size: 22,
+                  ),
+                  onPressed: isStreaming ? null : _handleSubmit,
+                ),
               ),
             ),
           ],
@@ -1730,7 +2016,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _handleSubmit() {
     final aiChatProvider = Provider.of<AIChatProvider>(context, listen: false);
-    if (aiChatProvider.isStreaming) return;
+    if (aiChatProvider.isStreaming ||
+        aiChatProvider.isCheckingProfile ||
+        _sending) {
+      return;
+    }
 
     final text = _textController.text.trim();
     if (text.isEmpty) return;
@@ -1738,66 +2028,75 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _sendMessage(String text) async {
-    _textController.clear();
+    if (_sending || _chatProvider?.isStreaming == true) return;
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null) return;
+    if (_textController.text.isEmpty) _textController.text = text;
+    setState(() => _sending = true);
+    try {
+      final nutritionProvider =
+          Provider.of<NutritionProvider>(context, listen: false);
+      final exerciseProvider =
+          Provider.of<ExerciseProvider>(context, listen: false);
 
-    final nutritionProvider =
-        Provider.of<NutritionProvider>(context, listen: false);
-    final exerciseProvider =
-        Provider.of<ExerciseProvider>(context, listen: false);
+      // E4 must receive a current server-backed legacy history or an explicit
+      // ERROR status. Cached records are never relabelled as authoritative.
+      final now = DateTime.now();
+      final history =
+          await exerciseProvider.loadExercisesForDateRangeAuthoritatively(
+        user.id,
+        now.subtract(const Duration(days: 28)),
+        now.add(const Duration(days: 1)),
+      );
+      if (!mounted) return;
 
-    // E4 must receive a current server-backed legacy history or an explicit
-    // ERROR status. Cached records are never relabelled as authoritative.
-    final now = DateTime.now();
-    final history =
-        await exerciseProvider.loadExercisesForDateRangeAuthoritatively(
-      user.id,
-      now.subtract(const Duration(days: 28)),
-      now.add(const Duration(days: 1)),
-    );
-    if (!mounted) return;
+      // Chuyển bữa ăn hôm nay thành dạng gọn để gửi lên AI
+      final todayMeals = nutritionProvider.todayMeals.map((meal) {
+        return {
+          'name': meal.name,
+          'meal_type': meal.mealType,
+          'calories': meal.calories.toStringAsFixed(0),
+          'protein': meal.protein.toStringAsFixed(1),
+          'carbs': meal.carbs.toStringAsFixed(1),
+          'fat': meal.fat.toStringAsFixed(1),
+          'items': meal.items
+              .map((i) => '${i.name} ${i.weightGrams.toStringAsFixed(0)}g')
+              .toList(),
+          'is_completed': meal.isCompleted,
+        };
+      }).toList();
 
-    // Chuyển bữa ăn hôm nay thành dạng gọn để gửi lên AI
-    final todayMeals = nutritionProvider.todayMeals.map((meal) {
-      return {
-        'name': meal.name,
-        'meal_type': meal.mealType,
-        'calories': meal.calories.toStringAsFixed(0),
-        'protein': meal.protein.toStringAsFixed(1),
-        'carbs': meal.carbs.toStringAsFixed(1),
-        'fat': meal.fat.toStringAsFixed(1),
-        'items': meal.items
-            .map((i) => '${i.name} ${i.weightGrams.toStringAsFixed(0)}g')
-            .toList(),
-        'is_completed': meal.isCompleted,
-      };
-    }).toList();
+      // Chuyển bài tập hôm nay
+      final todayExercises = exerciseProvider.todayExercises.map((ex) {
+        return {
+          'name': ex.name,
+          'type': ex.type,
+          'duration': ex.duration,
+          'calories_burned': ex.caloriesBurned.toStringAsFixed(0),
+        };
+      }).toList();
 
-    // Chuyển bài tập hôm nay
-    final todayExercises = exerciseProvider.todayExercises.map((ex) {
-      return {
-        'name': ex.name,
-        'type': ex.type,
-        'duration': ex.duration,
-        'calories_burned': ex.caloriesBurned.toStringAsFixed(0),
-      };
-    }).toList();
-
-    await Provider.of<AIChatProvider>(context, listen: false).sendMessage(
-      text,
-      user,
-      todayCalories: nutritionProvider.consumedCalories,
-      todayMealsCount: nutritionProvider.completedMealsCount,
-      todayCaloriesBurned: exerciseProvider.totalCaloriesBurned,
-      todayExercisesCount: exerciseProvider.todayExercises.length,
-      todayMeals: todayMeals,
-      todayExercises: todayExercises,
-      exerciseHistory:
-          history.exercises.map((exercise) => exercise.toMap()).toList(),
-      exerciseHistoryStatus: history.status.wireName,
-      exerciseHistoryObservedAt: history.observedAt,
-    );
+      final accepted =
+          await Provider.of<AIChatProvider>(context, listen: false).sendMessage(
+        text,
+        user,
+        todayCalories: nutritionProvider.consumedCalories,
+        todayMealsCount: nutritionProvider.completedMealsCount,
+        todayCaloriesBurned: exerciseProvider.totalCaloriesBurned,
+        todayExercisesCount: exerciseProvider.todayExercises.length,
+        todayMeals: todayMeals,
+        todayExercises: todayExercises,
+        exerciseHistory:
+            history.exercises.map((exercise) => exercise.toMap()).toList(),
+        exerciseHistoryStatus: history.status.wireName,
+        exerciseHistoryObservedAt: history.observedAt,
+      );
+      if (mounted && accepted && _textController.text.trim() == text.trim()) {
+        _textController.clear();
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 }
 
@@ -1811,16 +2110,28 @@ class _MealActionCard extends StatelessWidget {
   final String mealType;
   final List<ActionItem> actions;
   final VoidCallback? onSaveAll;
+  final RecommendationFeedbackHandler? onRecommendationFeedback;
+  final VoidCallback? onChangeDish;
+  final List<String> publicReasonCodes;
 
   const _MealActionCard({
     required this.mealName,
     required this.mealType,
     required this.actions,
     this.onSaveAll,
+    this.onRecommendationFeedback,
+    this.onChangeDish,
+    this.publicReasonCodes = const [],
   });
 
   @override
   Widget build(BuildContext context) {
+    final isShadowRecommendation = actions.any(
+      (action) =>
+          action.details['feedback_eligible'] == true &&
+          (action.details['recommendation_event_id']?.toString().isNotEmpty ??
+              false),
+    );
     double gramsFor(ActionItem action) =>
         (action.details['serving_grams'] as num? ?? 100).toDouble();
     double totalFor(String field) => actions.fold(0, (sum, action) {
@@ -1828,28 +2139,79 @@ class _MealActionCard extends StatelessWidget {
           return sum + per100g * gramsFor(action) / 100;
         });
 
-    return MealSummaryCard(
-      name: mealName,
-      mealType: MealTypeUtils.normalize(mealType),
-      ingredients: actions
-          .map(
-            (action) => MealCardIngredientView(
-              name: action.name,
-              grams: gramsFor(action),
-              calories: (action.details['calories'] as num? ?? 0).toDouble() *
-                  gramsFor(action) /
-                  100,
-            ),
-          )
-          .toList(growable: false),
-      calories: totalFor('calories'),
-      protein: totalFor('protein'),
-      carbs: totalFor('carbs'),
-      fat: totalFor('fat'),
-      actionLabel: onSaveAll == null ? null : 'Lưu vào nhật ký',
-      actionIcon: Icons.bookmark_add_outlined,
-      onAction: onSaveAll,
-      primaryAction: true,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        MealSummaryCard(
+          name: mealName,
+          mealType: MealTypeUtils.normalize(mealType),
+          ingredients: actions
+              .map(
+                (action) => MealCardIngredientView(
+                  name: action.name,
+                  grams: gramsFor(action),
+                  calories:
+                      (action.details['calories'] as num? ?? 0).toDouble() *
+                          gramsFor(action) /
+                          100,
+                ),
+              )
+              .toList(growable: false),
+          onTap: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              showDragHandle: true,
+              builder: (_) => FractionallySizedBox(
+                  heightFactor: .9,
+                  child: MealDetailContent(
+                    name: mealName,
+                    status: 'Gợi ý · chưa ghi nhận đã ăn',
+                    nutrition: {
+                      'total_calories': totalFor('calories'),
+                      'total_protein': totalFor('protein'),
+                      'total_carbs': totalFor('carbs'),
+                      'total_fat': totalFor('fat')
+                    },
+                    content: {
+                      'ingredients': actions
+                          .map((action) =>
+                              {'name': action.name, 'grams': gramsFor(action)})
+                          .toList(),
+                      if (actions.any((action) =>
+                          action.details['recipe_origin'] ==
+                          'ADAPTED_RECIPE_VARIANT'))
+                        'recipe_origin': 'ADAPTED_RECIPE_VARIANT'
+                    },
+                    footer: onRecommendationFeedback == null
+                        ? null
+                        : RecommendationFeedbackBar(
+                            onFeedback: onRecommendationFeedback!,
+                            onChangeDish: onChangeDish,
+                            publicReasonCodes: publicReasonCodes),
+                  ))),
+          calories: totalFor('calories'),
+          protein: totalFor('protein'),
+          carbs: totalFor('carbs'),
+          fat: totalFor('fat'),
+          // The feedback bar's "Lưu lại" is a weak preference signal. A meal
+          // becomes actual only after this separate, explicit action.
+          actionLabel: onSaveAll == null
+              ? null
+              : isShadowRecommendation
+                  ? 'Ghi đã ăn'
+                  : 'Lưu vào nhật ký',
+          actionIcon: Icons.bookmark_add_outlined,
+          onAction: onSaveAll,
+          primaryAction: true,
+        ),
+        if (onRecommendationFeedback != null)
+          RecommendationFeedbackBar(
+            onFeedback: onRecommendationFeedback!,
+            onChangeDish: onChangeDish,
+            publicReasonCodes: publicReasonCodes,
+          ),
+      ],
     );
   }
 }
@@ -1904,6 +2266,7 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.psychology,
@@ -1921,6 +2284,8 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
                           isLive
                               ? 'Đang xử lý yêu cầu...'
                               : 'Xem cách mình xử lý',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1931,6 +2296,8 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
                         ),
                         const Text(
                           'Tóm tắt các bước hệ thống đã thực hiện',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 10.5,
                             color: AppColors.textSecondary,
@@ -1951,7 +2318,7 @@ class _AIThoughtsPanelState extends State<AIThoughtsPanel> {
                       ),
                     ),
                   ],
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Icon(
                     _isExpanded
                         ? Icons.keyboard_arrow_up

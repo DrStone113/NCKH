@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Final
+from typing import Any, Final, Iterable
 from uuid import uuid4
 
 
@@ -20,9 +20,18 @@ PUBLIC_EVENT_TYPES: Final[frozenset[str]] = frozenset(
         "TODAY_NUTRITION_CHECKED",
         "DIETARY_CONSTRAINTS_CHECKED",
         "TRAINING_HISTORY_CHECKED",
+        "BODY_PROGRESS_CHECKED",
+        "LIFESTYLE_LOGS_CHECKED",
         "FOOD_CATALOG_SEARCHED",
+        "NUTRITION_DATA_SEARCHED",
+        "EXTERNAL_RECIPE_SEARCHED",
         "WORKOUT_CATALOG_SEARCHED",
         "RECOMMENDATION_SELECTED",
+        "RECOMMENDATION_NUTRITION_FIT",
+        "RECOMMENDATION_PREFERENCE_FIT",
+        "RECOMMENDATION_DIVERSITY_APPLIED",
+        "RECOMMENDATION_PORTION_ADAPTED",
+        "RECOMMENDATION_STAGING_SOURCE",
         "CALCULATION_COMPLETED",
         "CONFIRMATION_RECEIVED",
         "PERSISTENCE_IN_PROGRESS",
@@ -55,9 +64,25 @@ _PUBLIC_COPY: Final[dict[str, tuple[str, str]]] = {
         "Đã kiểm tra lịch sử tập luyện",
         "Mình đối chiếu mức độ và lịch tập đã có trước khi đề xuất.",
     ),
+    "BODY_PROGRESS_CHECKED": (
+        "Đã xem dữ liệu cân nặng",
+        "Mình dùng các số đo đã ghi để trả lời đúng phạm vi bạn hỏi.",
+    ),
+    "LIFESTYLE_LOGS_CHECKED": (
+        "Đã xem nhật ký lối sống",
+        "Mình đối chiếu các ghi nhận như giấc ngủ, mức căng thẳng và lượng nước.",
+    ),
     "FOOD_CATALOG_SEARCHED": (
         "Đã tìm trong danh mục món ăn",
         "Mình chỉ dùng các lựa chọn có trong dữ liệu ứng dụng.",
+    ),
+    "NUTRITION_DATA_SEARCHED": (
+        "Đã tra thông tin dinh dưỡng",
+        "Mình dùng số liệu thực phẩm có trong dữ liệu của ứng dụng.",
+    ),
+    "EXTERNAL_RECIPE_SEARCHED": (
+        "Đã tìm nguồn công thức ngoài",
+        "Mình đã tra nguồn được phép và giữ nguyên nhãn xác minh của kết quả.",
     ),
     "WORKOUT_CATALOG_SEARCHED": (
         "Đã tìm trong thư viện bài tập",
@@ -66,6 +91,26 @@ _PUBLIC_COPY: Final[dict[str, tuple[str, str]]] = {
     "RECOMMENDATION_SELECTED": (
         "Đã chọn gợi ý phù hợp",
         "Gợi ý được chọn dựa trên các dữ liệu đã kiểm tra ở trên.",
+    ),
+    "RECOMMENDATION_NUTRITION_FIT": (
+        "Phù hợp mục tiêu dinh dưỡng còn lại",
+        "Gợi ý này được đối chiếu với phần dinh dưỡng còn lại trong ngày.",
+    ),
+    "RECOMMENDATION_PREFERENCE_FIT": (
+        "Phù hợp khẩu vị đã xác nhận",
+        "Mình dùng phản hồi hoặc sở thích bạn đã xác nhận, sau các kiểm tra an toàn.",
+    ),
+    "RECOMMENDATION_DIVERSITY_APPLIED": (
+        "Đã cân nhắc sự đa dạng",
+        "Mình tránh lặp lại món hoặc nguồn đạm vừa xuất hiện khi có lựa chọn phù hợp.",
+    ),
+    "RECOMMENDATION_PORTION_ADAPTED": (
+        "Có thể điều chỉnh khẩu phần",
+        "Khẩu phần được tính lại từ nguyên liệu chuẩn trong giới hạn công thức phù hợp.",
+    ),
+    "RECOMMENDATION_STAGING_SOURCE": (
+        "Nguồn công thức đang được đánh giá",
+        "Công thức này là dữ liệu thử nghiệm; dinh dưỡng vẫn được tính từ dữ liệu chuẩn.",
     ),
     "CALCULATION_COMPLETED": (
         "Đã hoàn tất tính toán",
@@ -141,12 +186,14 @@ _READ_EVENT_BY_TOOL: Final[dict[str, tuple[str, ...]]] = {
     "get_user_profile": ("PROFILE_CONTEXT_USED",),
     "get_today_meals": ("TODAY_NUTRITION_CHECKED",),
     "get_meal_log_range": ("TODAY_NUTRITION_CHECKED",),
-    "search_food_nutrition": ("FOOD_CATALOG_SEARCHED",),
+    "search_food_nutrition": ("NUTRITION_DATA_SEARCHED",),
+    "search_dish_catalog": ("FOOD_CATALOG_SEARCHED",),
+    "search_recipe_web": ("EXTERNAL_RECIPE_SEARCHED",),
     "suggest_dish": ("FOOD_CATALOG_SEARCHED", "RECOMMENDATION_SELECTED"),
     "get_today_exercises": ("TRAINING_HISTORY_CHECKED",),
     "get_exercise_log_range": ("TRAINING_HISTORY_CHECKED",),
-    "get_weight_history": ("TRAINING_HISTORY_CHECKED",),
-    "get_lifestyle_logs": ("TRAINING_HISTORY_CHECKED",),
+    "get_weight_history": ("BODY_PROGRESS_CHECKED",),
+    "get_lifestyle_logs": ("LIFESTYLE_LOGS_CHECKED",),
     "suggest_workout": (
         "TRAINING_HISTORY_CHECKED",
         "SAFETY_CHECK_APPLIED",
@@ -280,6 +327,31 @@ def record_tool_result(
         trace.add("PERSISTENCE_CONFIRMED")
 
 
+def record_recommendation_reason_codes(
+    trace: PublicReasoningTrace, reason_codes: Iterable[str]
+) -> None:
+    """Translate N3.2 structured reason codes into allowlisted public copy.
+
+    Scores, weights, candidate-set details and private profile attributes are
+    intentionally not accepted by this function.
+    """
+
+    mapping = {
+        "NUTRITION_REMAINING_FIT": "RECOMMENDATION_NUTRITION_FIT",
+        "CONFIRMED_PREFERENCE_MATCH": "RECOMMENDATION_PREFERENCE_FIT",
+        "INFERRED_PREFERENCE_MATCH": "RECOMMENDATION_PREFERENCE_FIT",
+        "DIVERSITY_PROTEIN_ROTATION": "RECOMMENDATION_DIVERSITY_APPLIED",
+        "DIVERSITY_DISH_ROTATION": "RECOMMENDATION_DIVERSITY_APPLIED",
+        "PORTION_ADAPTABLE": "RECOMMENDATION_PORTION_ADAPTED",
+        "STAGING_SOURCE": "RECOMMENDATION_STAGING_SOURCE",
+        "RUNTIME_EXTERNAL_SOURCE": "RECOMMENDATION_STAGING_SOURCE",
+    }
+    for code in reason_codes:
+        event = mapping.get(str(code))
+        if event:
+            trace.add(event)
+
+
 def record_initial_context(trace: PublicReasoningTrace, user_context: Any) -> None:
     """Expose only that confirmed context was used, never its values."""
 
@@ -297,6 +369,7 @@ __all__ = [
     "PublicReasoningTrace",
     "PublicTraceStep",
     "record_initial_context",
+    "record_recommendation_reason_codes",
     "record_tool_result",
     "record_tool_started",
 ]

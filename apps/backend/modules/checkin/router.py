@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Query, Body, HTTPException
+from fastapi import APIRouter, Request, Query, Body, Depends
 from typing import Optional
 
 from models.schemas import (
@@ -8,6 +8,7 @@ from models.schemas import (
     CheckinSettings,
     UserContext,
 )
+from services.auth import AuthenticatedPrincipal, require_authenticated_principal, require_owner
 
 router = APIRouter(prefix="/checkin", tags=["checkin"])
 
@@ -26,7 +27,8 @@ def _get_service(request: Request):
 @router.get("/active", response_model=Optional[ProactiveNudgeResponse])
 async def get_active_checkin(
     request: Request,
-    user_id: str = Query("default_user"),
+    user_id: str | None = Query(None),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
     """Lấy check-in chủ động — bản không kèm ngữ cảnh.
 
@@ -34,15 +36,18 @@ async def get_active_checkin(
     nudge chỉ dựa vào khung giờ. Client nên gọi ``POST /checkin/active`` để
     nhận lời nhắc cá nhân hóa.
     """
+    if user_id is not None:
+        require_owner(principal, user_id)
     service = _get_service(request)
-    return await service.generate_active_nudge(user_id=user_id)
+    return await service.generate_active_nudge(user_id=principal.user_id)
 
 
 @router.post("/active", response_model=Optional[ProactiveNudgeResponse])
 async def get_active_checkin_with_context(
     request: Request,
-    user_id: str = Query("default_user"),
+    user_id: str | None = Query(None),
     user_context: Optional[UserContext] = Body(None),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
     """Lấy check-in chủ động dựa trên dữ liệu thật của hôm nay.
 
@@ -51,9 +56,11 @@ async def get_active_checkin_with_context(
     câu cố định theo giờ. Trả về ``null`` khi không có gì đáng nhắc: im lặng
     đúng lúc cũng là một phần của việc nhắc đúng.
     """
+    if user_id is not None:
+        require_owner(principal, user_id)
     service = _get_service(request)
     return await service.generate_active_nudge(
-        user_id=user_id, user_context=user_context
+        user_id=principal.user_id, user_context=user_context
     )
 
 
@@ -61,6 +68,7 @@ async def get_active_checkin_with_context(
 async def respond_to_checkin(
     request: Request,
     body: CheckinRespondRequest = Body(...),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
     """Tiếp nhận phản hồi check-in từ người dùng (nút chọn nhanh hoặc tin nhắn tự do)."""
     proactive_service = getattr(request.app.state, "proactive_service", None)
@@ -68,6 +76,9 @@ async def respond_to_checkin(
         from services.proactive_service import ProactiveService
         proactive_service = ProactiveService()
 
+    if body.user_id != "default_user":
+        require_owner(principal, body.user_id)
+    body = body.model_copy(update={"user_id": principal.user_id})
     result = await proactive_service.process_response(body)
     return result
 
@@ -75,7 +86,8 @@ async def respond_to_checkin(
 @router.get("/settings", response_model=CheckinSettings)
 async def get_checkin_settings(
     request: Request,
-    user_id: str = Query("default_user"),
+    user_id: str | None = Query(None),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
     """Đọc cấu hình bật/tắt check-in chủ động của người dùng."""
     proactive_service = getattr(request.app.state, "proactive_service", None)
@@ -83,14 +95,17 @@ async def get_checkin_settings(
         from services.proactive_service import ProactiveService
         proactive_service = ProactiveService()
 
-    return proactive_service.get_user_settings(user_id)
+    if user_id is not None:
+        require_owner(principal, user_id)
+    return proactive_service.get_user_settings(principal.user_id)
 
 
 @router.put("/settings", response_model=CheckinSettings)
 async def update_checkin_settings(
     request: Request,
     body: CheckinSettings = Body(...),
-    user_id: str = Query("default_user"),
+    user_id: str | None = Query(None),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
     """Cập nhật cấu hình bật/tắt check-in chủ động của người dùng."""
     proactive_service = getattr(request.app.state, "proactive_service", None)
@@ -98,4 +113,6 @@ async def update_checkin_settings(
         from services.proactive_service import ProactiveService
         proactive_service = ProactiveService()
 
-    return proactive_service.update_user_settings(user_id, body)
+    if user_id is not None:
+        require_owner(principal, user_id)
+    return proactive_service.update_user_settings(principal.user_id, body)

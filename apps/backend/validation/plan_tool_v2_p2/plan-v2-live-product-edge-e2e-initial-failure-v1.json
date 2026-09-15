@@ -1,0 +1,7 @@
+{
+  "status": "FAIL",
+  "classification": "ENVIRONMENT_INFRASTRUCTURE",
+  "preserved_at": "2026-09-05T16:22:48+07:00",
+  "error": "Error: /api/plan-v2/plans/save: HTTP_503 {\"detail\":\"PLAN_PERSISTENCE_TRANSACTION_FAILED\"}",
+  "cause": "Docker Engine was unavailable and the PostgreSQL dependency refused direct connections; no Plan V2 code was changed for this failure."
+}

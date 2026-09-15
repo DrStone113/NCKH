@@ -1,0 +1,1760 @@
+{
+  "baseline_origin": "SYNTHETIC_ORDER_WITH_SCENARIO_GROUND_TRUTH_NOT_PRODUCTION_CAPTURE",
+  "canonical_catalog_replays": [
+    {
+      "baseline_origin": "SOURCE_DERIVED_ORDER_TOP1_VERIFIED_AGAINST_SUGGEST_DISH",
+      "baseline_top1_matches_actual_tool": true,
+      "comparison": {
+        "adaptive_ranked_candidate_ids": [
+          "8aee0059-0ecf-5217-a064-98276503bf48",
+          "41d1703e-0f5f-5ac1-b423-3aeb3a07b392",
+          "dda94cd1-9b23-5deb-aedf-0471b0c086a2",
+          "e8a804ee-9bdb-503c-b053-5130c28c7b04",
+          "9e0cca6e-6c57-5a75-9495-ca8decdf24e1",
+          "d0a8afb4-8506-5e31-944f-5118c02f20fc",
+          "efc2e57c-1e55-51ff-86cc-b9e80926700b",
+          "16cdb574-ef39-57fc-b4ca-678e9a23648c",
+          "3f25b4d6-205f-530b-bdf8-d1f4c47a3e12",
+          "7a832b29-b560-513e-9ca5-453e621fdce3",
+          "711bf7a7-9cf1-5df2-98c8-1700c31b81a2",
+          "2f9c52fb-7eab-505c-9089-e50027e9fa11",
+          "9e09bc71-28a3-5dbf-a774-79ed24c4df5a",
+          "ecc4c96b-d1a1-55e0-99dc-f90154f37fc5",
+          "60a05324-6c51-575d-bd13-9ee0e61b3b57",
+          "d7439e48-12a6-59c6-8eef-1911e0c2ad77",
+          "f229ec23-f1e7-59ea-8161-a21422a116ea",
+          "d14f5fcf-7504-556a-9102-d5ecc204460c",
+          "4f674c85-8507-55d7-b097-c80541b41409",
+          "b9ad9fb3-0696-5621-8915-66e5df862bd0",
+          "e6ecc36c-90af-5fcf-9ade-856788b8964b",
+          "cb6c7f2b-7972-5be1-8f1d-60b02d40f28b",
+          "30168551-3dd7-5071-811c-2130cd878fbe",
+          "68cdb437-f068-513e-9582-089a3fedef79",
+          "ffe162eb-6ccf-5714-aae8-c201fc8c69ec",
+          "d49ea1cf-5ba2-56ba-b0ce-21028a39fbda",
+          "455c7589-1250-5f59-b9c8-977685f9bbc6",
+          "9f675546-845f-541a-92f9-83cc4996b60c",
+          "3e48ff3a-9b88-567f-9b64-e0612e8c5efa",
+          "60afe9dc-4364-5aed-89a8-14f3c38bb1ad",
+          "c0e85eae-1d2f-5bac-b97d-905523d65af3",
+          "c8970cb5-20ab-5725-b4fc-4cdd58183617",
+          "68bceb30-2ab4-5370-93b6-19c47a3714e2",
+          "0932f2fa-1cdb-58cc-9184-aa6a06ef4c4a",
+          "acae9442-8131-5613-8911-be7bda723a8b",
+          "3ba117c1-2c80-519a-86c8-c1a26ef8ba6e",
+          "acee37ed-8b24-58cc-b6d4-94bdc92a6255",
+          "d6cc993f-1306-5958-a5ba-ac83cf6d4b67",
+          "bb1449ca-6c37-5e6b-9a0b-43416684b45e",
+          "89b653be-eb1d-575c-ab50-ecf03b045ce4",
+          "d6644294-5d93-51c4-ad18-fb82363ab613",
+          "6a246f4d-43c1-56c5-8022-7cca75babd53",
+          "6d2816a8-d03f-5b76-94cb-8e8c3076497a",
+          "922b4bda-4c2f-5b52-8467-787d02f757af",
+          "f20cb0a0-6dee-5eec-81bf-91840c2f6988",
+          "ee173407-c470-5126-8615-0954d5225a92",
+          "4be09fb4-07a4-5879-8f63-ace3f3a35755",
+          "3dd6ca6d-6c8b-5883-975c-fa5053c7dd4f",
+          "831c3966-372b-5017-bc00-0f5dd77dffce",
+          "34dcd1fc-b749-59c8-be1f-6a0baa151323",
+          "9748810e-dc54-5f26-adaa-45e4f3a1a5f2",
+          "475d1621-09c3-5a46-b2e8-ae7acd6d5d16",
+          "32333aba-03ae-5f85-ae71-47729a4547ce",
+          "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+          "4f2378e7-e0e9-5722-a116-a2b308dbba0a",
+          "2bb3336c-2756-581c-91d6-02144516889f",
+          "eacad344-c748-571a-b2fc-4c4412066033",
+          "8c9e04e2-e789-5566-a81e-5e8f83329f85",
+          "2c1940d5-5c60-5a3e-aa3d-073ebc7f5296",
+          "8bfce7b6-6199-5773-8a09-970c16c68764",
+          "00359ff0-25ff-50aa-85d0-2fb59aa8ae51",
+          "d7adb920-6cc9-5067-9e6f-81bcf04f8de6",
+          "1e5abf88-abd2-585d-812f-ef5cd3339d44",
+          "96445d75-87e8-5677-bfad-595be4b7d029",
+          "91a60e9d-48ff-5db2-9470-d8cb3a20c0db",
+          "db071edb-7288-5ad4-9045-532ae1b62a28",
+          "d79ca992-aaa0-52df-b7e2-0264bb613038",
+          "529d5ea0-7e5a-501d-86cc-cc1e235f9b72",
+          "f5ef0749-036e-5b84-8d26-be31c5e282dc",
+          "c141ed13-1ca8-5246-9e3b-4166c6c3b210",
+          "747e2c0c-60fa-5a42-a8fd-3585fe57bfe9",
+          "25dbbdf7-d2e1-53af-aac1-50c6d123a548",
+          "3290df91-dd6d-526b-af95-62939b7c0d4b",
+          "f6dfa550-6650-5423-ade8-6dd4f839ba48",
+          "c0d7d895-7f83-550f-ad06-e141bfa2a793",
+          "efc34d65-8fe0-5b7a-a285-4c12c168ae14",
+          "b830bd8c-15da-5b02-a172-38a829053a41",
+          "59f3ea84-ba2f-561a-9383-cd2a17e3e789",
+          "527c4edb-11ce-5a20-99d9-88008c7176e2",
+          "30a07699-d2cd-56ff-8cc7-11e46e61e1a3",
+          "0c986ebb-cc92-5994-a49b-539644116cf2",
+          "08340581-8967-520c-be01-541e107deaa2",
+          "9c0f1c51-20ed-5f5f-9107-2738f711c5f1",
+          "27f69680-329a-556a-ab2c-8ada28098c06",
+          "361143c8-57ee-58b2-b722-5f5ec95c0d9c",
+          "37e49cdb-9626-5ec0-b263-6c4aec89f86a",
+          "04caa577-f22f-5ed8-860e-10689d420326",
+          "8ee0d705-f2f4-5956-8197-ed4213f021c4",
+          "07b7e309-2796-52bb-be66-57d54320daf4",
+          "7fb20e3a-6ef5-58c9-bb7a-068b4de2033c",
+          "b93193b6-7a0e-5ed2-8a6f-c9dafe6a18e8",
+          "415071e6-a711-5d71-bdaf-3cc765a7ddb3",
+          "7e4d4847-87a1-588f-bbd3-92f1b8a16571",
+          "291c4dc1-0a48-54b8-8dfb-da52d83a5477",
+          "40cfdb9d-ae60-5a17-943f-363fc7b04a4d",
+          "d85ffd5d-a99d-5dc5-a775-4e7ae0ef0dcb",
+          "e1002375-d13d-590a-acb9-b4f331bbc3cc",
+          "b30acf66-6629-57fa-8b9e-8abcb9bda3ad",
+          "3ad65ea4-5b1e-57bf-9700-d50b99f7a256",
+          "23e65565-f49c-5ba9-bb81-151af2a147c1",
+          "dc7b04d4-2ba5-5cf1-8943-55d92f3e591e",
+          "94816315-f89c-52e7-ac84-6c65e6c70366",
+          "7296eb7b-6375-592f-8049-18a5a04a3808",
+          "e93b3fb0-fb5c-515d-b2c0-3e84f4f4a531",
+          "f9e5c210-e305-531a-96c9-c1e4a0678478",
+          "23edd54b-0aeb-5491-b56f-61d9711383d2",
+          "c823bc05-8e06-55fe-8c5e-92649d83a99f",
+          "f5fa2864-20b7-5033-9810-cdd412576796",
+          "d817a66b-d7a2-5d95-a533-4eacc6c6b0b0",
+          "1bd36c01-7d9d-5c14-9deb-bd60d2c3ddfa",
+          "bf2b5316-dd97-5830-9fd8-088a49cfd5a4",
+          "bec19792-f715-52f3-94f7-3c192fa672e8"
+        ],
+        "adaptive_top_candidate_id": "8aee0059-0ecf-5217-a064-98276503bf48",
+        "baseline_invalid_or_unknown_candidate_ids": [],
+        "baseline_portion_fit": 1,
+        "baseline_ranked_candidate_ids": [
+          "16cdb574-ef39-57fc-b4ca-678e9a23648c",
+          "ee173407-c470-5126-8615-0954d5225a92",
+          "32333aba-03ae-5f85-ae71-47729a4547ce",
+          "3ba117c1-2c80-519a-86c8-c1a26ef8ba6e",
+          "d6cc993f-1306-5958-a5ba-ac83cf6d4b67",
+          "f229ec23-f1e7-59ea-8161-a21422a116ea",
+          "ecc4c96b-d1a1-55e0-99dc-f90154f37fc5",
+          "9748810e-dc54-5f26-adaa-45e4f3a1a5f2",
+          "e6ecc36c-90af-5fcf-9ade-856788b8964b",
+          "711bf7a7-9cf1-5df2-98c8-1700c31b81a2",
+          "9f675546-845f-541a-92f9-83cc4996b60c",
+          "d0a8afb4-8506-5e31-944f-5118c02f20fc",
+          "89b653be-eb1d-575c-ab50-ecf03b045ce4",
+          "c8970cb5-20ab-5725-b4fc-4cdd58183617",
+          "60afe9dc-4364-5aed-89a8-14f3c38bb1ad",
+          "acae9442-8131-5613-8911-be7bda723a8b",
+          "3dd6ca6d-6c8b-5883-975c-fa5053c7dd4f",
+          "6a246f4d-43c1-56c5-8022-7cca75babd53",
+          "efc2e57c-1e55-51ff-86cc-b9e80926700b",
+          "d6644294-5d93-51c4-ad18-fb82363ab613",
+          "68cdb437-f068-513e-9582-089a3fedef79",
+          "3f25b4d6-205f-530b-bdf8-d1f4c47a3e12",
+          "4f2378e7-e0e9-5722-a116-a2b308dbba0a",
+          "dda94cd1-9b23-5deb-aedf-0471b0c086a2",
+          "e8a804ee-9bdb-503c-b053-5130c28c7b04",
+          "831c3966-372b-5017-bc00-0f5dd77dffce",
+          "acee37ed-8b24-58cc-b6d4-94bdc92a6255",
+          "4f674c85-8507-55d7-b097-c80541b41409",
+          "30168551-3dd7-5071-811c-2130cd878fbe",
+          "ffe162eb-6ccf-5714-aae8-c201fc8c69ec",
+          "c0e85eae-1d2f-5bac-b97d-905523d65af3",
+          "9e09bc71-28a3-5dbf-a774-79ed24c4df5a",
+          "7a832b29-b560-513e-9ca5-453e621fdce3",
+          "34dcd1fc-b749-59c8-be1f-6a0baa151323",
+          "922b4bda-4c2f-5b52-8467-787d02f757af",
+          "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+          "60a05324-6c51-575d-bd13-9ee0e61b3b57",
+          "f20cb0a0-6dee-5eec-81bf-91840c2f6988",
+          "b9ad9fb3-0696-5621-8915-66e5df862bd0",
+          "eacad344-c748-571a-b2fc-4c4412066033",
+          "d7adb920-6cc9-5067-9e6f-81bcf04f8de6",
+          "96445d75-87e8-5677-bfad-595be4b7d029",
+          "25dbbdf7-d2e1-53af-aac1-50c6d123a548",
+          "efc34d65-8fe0-5b7a-a285-4c12c168ae14",
+          "9c0f1c51-20ed-5f5f-9107-2738f711c5f1",
+          "27f69680-329a-556a-ab2c-8ada28098c06",
+          "37e49cdb-9626-5ec0-b263-6c4aec89f86a",
+          "8ee0d705-f2f4-5956-8197-ed4213f021c4",
+          "7fb20e3a-6ef5-58c9-bb7a-068b4de2033c",
+          "415071e6-a711-5d71-bdaf-3cc765a7ddb3",
+          "7e4d4847-87a1-588f-bbd3-92f1b8a16571",
+          "291c4dc1-0a48-54b8-8dfb-da52d83a5477",
+          "40cfdb9d-ae60-5a17-943f-363fc7b04a4d",
+          "3ad65ea4-5b1e-57bf-9700-d50b99f7a256",
+          "7296eb7b-6375-592f-8049-18a5a04a3808",
+          "c823bc05-8e06-55fe-8c5e-92649d83a99f",
+          "23edd54b-0aeb-5491-b56f-61d9711383d2",
+          "1bd36c01-7d9d-5c14-9deb-bd60d2c3ddfa",
+          "bf2b5316-dd97-5830-9fd8-088a49cfd5a4",
+          "bec19792-f715-52f3-94f7-3c192fa672e8",
+          "475d1621-09c3-5a46-b2e8-ae7acd6d5d16",
+          "2bb3336c-2756-581c-91d6-02144516889f",
+          "3e48ff3a-9b88-567f-9b64-e0612e8c5efa",
+          "68bceb30-2ab4-5370-93b6-19c47a3714e2",
+          "d7439e48-12a6-59c6-8eef-1911e0c2ad77",
+          "bb1449ca-6c37-5e6b-9a0b-43416684b45e",
+          "455c7589-1250-5f59-b9c8-977685f9bbc6",
+          "4be09fb4-07a4-5879-8f63-ace3f3a35755",
+          "41d1703e-0f5f-5ac1-b423-3aeb3a07b392",
+          "d49ea1cf-5ba2-56ba-b0ce-21028a39fbda",
+          "9e0cca6e-6c57-5a75-9495-ca8decdf24e1",
+          "cb6c7f2b-7972-5be1-8f1d-60b02d40f28b",
+          "0932f2fa-1cdb-58cc-9184-aa6a06ef4c4a",
+          "8aee0059-0ecf-5217-a064-98276503bf48",
+          "d14f5fcf-7504-556a-9102-d5ecc204460c",
+          "6d2816a8-d03f-5b76-94cb-8e8c3076497a",
+          "2f9c52fb-7eab-505c-9089-e50027e9fa11",
+          "8c9e04e2-e789-5566-a81e-5e8f83329f85",
+          "2c1940d5-5c60-5a3e-aa3d-073ebc7f5296",
+          "8bfce7b6-6199-5773-8a09-970c16c68764",
+          "00359ff0-25ff-50aa-85d0-2fb59aa8ae51",
+          "1e5abf88-abd2-585d-812f-ef5cd3339d44",
+          "91a60e9d-48ff-5db2-9470-d8cb3a20c0db",
+          "db071edb-7288-5ad4-9045-532ae1b62a28",
+          "d79ca992-aaa0-52df-b7e2-0264bb613038",
+          "529d5ea0-7e5a-501d-86cc-cc1e235f9b72",
+          "f5ef0749-036e-5b84-8d26-be31c5e282dc",
+          "c141ed13-1ca8-5246-9e3b-4166c6c3b210",
+          "747e2c0c-60fa-5a42-a8fd-3585fe57bfe9",
+          "3290df91-dd6d-526b-af95-62939b7c0d4b",
+          "f6dfa550-6650-5423-ade8-6dd4f839ba48",
+          "c0d7d895-7f83-550f-ad06-e141bfa2a793",
+          "b830bd8c-15da-5b02-a172-38a829053a41",
+          "59f3ea84-ba2f-561a-9383-cd2a17e3e789",
+          "527c4edb-11ce-5a20-99d9-88008c7176e2",
+          "30a07699-d2cd-56ff-8cc7-11e46e61e1a3",
+          "0c986ebb-cc92-5994-a49b-539644116cf2",
+          "08340581-8967-520c-be01-541e107deaa2",
+          "361143c8-57ee-58b2-b722-5f5ec95c0d9c",
+          "04caa577-f22f-5ed8-860e-10689d420326",
+          "07b7e309-2796-52bb-be66-57d54320daf4",
+          "b93193b6-7a0e-5ed2-8a6f-c9dafe6a18e8",
+          "d85ffd5d-a99d-5dc5-a775-4e7ae0ef0dcb",
+          "e1002375-d13d-590a-acb9-b4f331bbc3cc",
+          "b30acf66-6629-57fa-8b9e-8abcb9bda3ad",
+          "23e65565-f49c-5ba9-bb81-151af2a147c1",
+          "dc7b04d4-2ba5-5cf1-8943-55d92f3e591e",
+          "94816315-f89c-52e7-ac84-6c65e6c70366",
+          "e93b3fb0-fb5c-515d-b2c0-3e84f4f4a531",
+          "f9e5c210-e305-531a-96c9-c1e4a0678478",
+          "f5fa2864-20b7-5033-9810-cdd412576796",
+          "d817a66b-d7a2-5d95-a533-4eacc6c6b0b0"
+        ],
+        "baseline_top_candidate_id": "16cdb574-ef39-57fc-b4ca-678e9a23648c",
+        "candidate_set_fingerprint": "808621a300b5d01de3472e3ed913e633cab8d35406d7d2a9726ec95b20d3120e",
+        "constraint_valid_candidate_retention": 1,
+        "disliked_candidate_demotion": "NOT_APPLICABLE",
+        "diversity_change": 0,
+        "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+        "explicit_request_precedence": "NOT_APPLICABLE",
+        "hard_constraint_violations": 0,
+        "independent_validity_checked": true,
+        "label": "N3_3_SHADOW_DEVELOPMENT",
+        "outcome_binding": null,
+        "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+        "portion_fit_change": 0,
+        "portion_fit_compatibility": 1,
+        "preferred_candidate_promotion": "NOT_APPLICABLE",
+        "recent_repeat_reduction": "NOT_APPLICABLE",
+        "scenario_id": "N33_CANONICAL_LUNCH",
+        "shadow_bandit_candidate_id": "8aee0059-0ecf-5217-a064-98276503bf48",
+        "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+        "status": "NOT_APPLICABLE",
+        "top_1_identity_change": true,
+        "top_k_diversity": {
+          "adaptive": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          },
+          "baseline": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          }
+        },
+        "top_k_overlap": 0
+      },
+      "eligible_candidates": 112,
+      "meal_type": "lunch",
+      "objective_preference_ground_truth": null,
+      "projection_exclusions": 0,
+      "query": "",
+      "target_kcal": 500,
+      "user_feedback_used": 0
+    },
+    {
+      "baseline_origin": "SOURCE_DERIVED_ORDER_TOP1_VERIFIED_AGAINST_SUGGEST_DISH",
+      "baseline_top1_matches_actual_tool": true,
+      "comparison": {
+        "adaptive_ranked_candidate_ids": [
+          "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+          "60afe9dc-4364-5aed-89a8-14f3c38bb1ad",
+          "efc34d65-8fe0-5b7a-a285-4c12c168ae14",
+          "e6ecc36c-90af-5fcf-9ade-856788b8964b",
+          "44222154-0d4c-5dfd-9e72-46b097cd5e09",
+          "1bd36c01-7d9d-5c14-9deb-bd60d2c3ddfa",
+          "bf2b5316-dd97-5830-9fd8-088a49cfd5a4",
+          "6d2816a8-d03f-5b76-94cb-8e8c3076497a",
+          "8c9e04e2-e789-5566-a81e-5e8f83329f85"
+        ],
+        "adaptive_top_candidate_id": "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+        "baseline_invalid_or_unknown_candidate_ids": [],
+        "baseline_portion_fit": 1,
+        "baseline_ranked_candidate_ids": [
+          "e6ecc36c-90af-5fcf-9ade-856788b8964b",
+          "60afe9dc-4364-5aed-89a8-14f3c38bb1ad",
+          "44222154-0d4c-5dfd-9e72-46b097cd5e09",
+          "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+          "efc34d65-8fe0-5b7a-a285-4c12c168ae14",
+          "1bd36c01-7d9d-5c14-9deb-bd60d2c3ddfa",
+          "bf2b5316-dd97-5830-9fd8-088a49cfd5a4",
+          "6d2816a8-d03f-5b76-94cb-8e8c3076497a",
+          "8c9e04e2-e789-5566-a81e-5e8f83329f85"
+        ],
+        "baseline_top_candidate_id": "e6ecc36c-90af-5fcf-9ade-856788b8964b",
+        "candidate_set_fingerprint": "17211225ac3e326d1de85384d5239bcbc2b5c1c6a5409c67c5cf75e0c929e4f0",
+        "constraint_valid_candidate_retention": 1,
+        "disliked_candidate_demotion": "NOT_APPLICABLE",
+        "diversity_change": 0,
+        "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+        "explicit_request_precedence": "NOT_APPLICABLE",
+        "hard_constraint_violations": 0,
+        "independent_validity_checked": true,
+        "label": "N3_3_SHADOW_DEVELOPMENT",
+        "outcome_binding": null,
+        "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+        "portion_fit_change": 0,
+        "portion_fit_compatibility": 1,
+        "preferred_candidate_promotion": "NOT_APPLICABLE",
+        "recent_repeat_reduction": "NOT_APPLICABLE",
+        "scenario_id": "N33_CANONICAL_DINNER",
+        "shadow_bandit_candidate_id": "d4c28a21-a034-5e85-bf40-93b7f64f8b48",
+        "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+        "status": "NOT_APPLICABLE",
+        "top_1_identity_change": true,
+        "top_k_diversity": {
+          "adaptive": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          },
+          "baseline": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          }
+        },
+        "top_k_overlap": 0.2
+      },
+      "eligible_candidates": 9,
+      "meal_type": "dinner",
+      "objective_preference_ground_truth": null,
+      "projection_exclusions": 0,
+      "query": "gà",
+      "target_kcal": 600,
+      "user_feedback_used": 0
+    },
+    {
+      "baseline_origin": "SOURCE_DERIVED_ORDER_TOP1_VERIFIED_AGAINST_SUGGEST_DISH",
+      "baseline_top1_matches_actual_tool": true,
+      "comparison": {
+        "adaptive_ranked_candidate_ids": [
+          "4d143100-c047-5b88-8240-8ac7f0bd1634",
+          "529d5ea0-7e5a-501d-86cc-cc1e235f9b72",
+          "6a246f4d-43c1-56c5-8022-7cca75babd53",
+          "e8a804ee-9bdb-503c-b053-5130c28c7b04",
+          "8946b755-5da5-57cf-9a49-e00deca3f445",
+          "9567ebb3-2527-5c8c-96a1-26403e25fffe",
+          "60a05324-6c51-575d-bd13-9ee0e61b3b57",
+          "4f674c85-8507-55d7-b097-c80541b41409",
+          "9706b9fb-19d1-592d-afc2-33808d015ce8",
+          "2f9c52fb-7eab-505c-9089-e50027e9fa11",
+          "41d1703e-0f5f-5ac1-b423-3aeb3a07b392",
+          "361143c8-57ee-58b2-b722-5f5ec95c0d9c",
+          "d7439e48-12a6-59c6-8eef-1911e0c2ad77",
+          "dda94cd1-9b23-5deb-aedf-0471b0c086a2",
+          "d6cc993f-1306-5958-a5ba-ac83cf6d4b67",
+          "acee37ed-8b24-58cc-b6d4-94bdc92a6255",
+          "ee173407-c470-5126-8615-0954d5225a92",
+          "6651914a-e6cd-5557-bfa9-078b0804a526",
+          "00d61f25-2e42-5da2-bf47-5876b2c4a93b",
+          "04caa577-f22f-5ed8-860e-10689d420326",
+          "2c1940d5-5c60-5a3e-aa3d-073ebc7f5296",
+          "16cdb574-ef39-57fc-b4ca-678e9a23648c",
+          "c141ed13-1ca8-5246-9e3b-4166c6c3b210",
+          "b7f840d3-a079-51eb-9190-4bdb66fd5f50",
+          "cb6c7f2b-7972-5be1-8f1d-60b02d40f28b",
+          "68bceb30-2ab4-5370-93b6-19c47a3714e2",
+          "e12e23cc-8df9-5447-8caa-6b08ef99e0c6",
+          "6fe2ee43-79b9-50f7-889d-bef658f09361",
+          "34dcd1fc-b749-59c8-be1f-6a0baa151323",
+          "9f675546-845f-541a-92f9-83cc4996b60c",
+          "44222154-0d4c-5dfd-9e72-46b097cd5e09",
+          "4be09fb4-07a4-5879-8f63-ace3f3a35755",
+          "8bfce7b6-6199-5773-8a09-970c16c68764",
+          "b93193b6-7a0e-5ed2-8a6f-c9dafe6a18e8",
+          "91a60e9d-48ff-5db2-9470-d8cb3a20c0db",
+          "9f4f0cf9-fa7a-5f14-a30b-f112a5e74cc5",
+          "250331f6-91a0-5a69-ae5d-4fde60dd92e9",
+          "3f25b4d6-205f-530b-bdf8-d1f4c47a3e12",
+          "fbc6abaa-e392-5e6a-96b9-35f3273167ed",
+          "f9e5c210-e305-531a-96c9-c1e4a0678478",
+          "472bc957-cd78-5d60-9de1-3eced84f5301",
+          "afee692e-1316-53cc-9fdf-28e31e9f052c",
+          "4aa75c89-d4d6-58c4-a2e0-08893865cbe9",
+          "922b4bda-4c2f-5b52-8467-787d02f757af",
+          "476b3d5d-1d0a-5c20-b6cb-ba1aa63bf896",
+          "4a3e9d40-0851-555c-8d8a-6ce6d267fad5",
+          "1db737ef-1954-5050-aea0-3d18a6e83cb2",
+          "25dbbdf7-d2e1-53af-aac1-50c6d123a548",
+          "b2c548c5-22bf-50f1-a7d3-050b23ffdadf"
+        ],
+        "adaptive_top_candidate_id": "4d143100-c047-5b88-8240-8ac7f0bd1634",
+        "baseline_invalid_or_unknown_candidate_ids": [],
+        "baseline_portion_fit": 1,
+        "baseline_ranked_candidate_ids": [
+          "dda94cd1-9b23-5deb-aedf-0471b0c086a2",
+          "b7f840d3-a079-51eb-9190-4bdb66fd5f50",
+          "e8a804ee-9bdb-503c-b053-5130c28c7b04",
+          "6651914a-e6cd-5557-bfa9-078b0804a526",
+          "acee37ed-8b24-58cc-b6d4-94bdc92a6255",
+          "4f674c85-8507-55d7-b097-c80541b41409",
+          "6a246f4d-43c1-56c5-8022-7cca75babd53",
+          "9f4f0cf9-fa7a-5f14-a30b-f112a5e74cc5",
+          "4d143100-c047-5b88-8240-8ac7f0bd1634",
+          "34dcd1fc-b749-59c8-be1f-6a0baa151323",
+          "60a05324-6c51-575d-bd13-9ee0e61b3b57",
+          "9f675546-845f-541a-92f9-83cc4996b60c",
+          "9567ebb3-2527-5c8c-96a1-26403e25fffe",
+          "e12e23cc-8df9-5447-8caa-6b08ef99e0c6",
+          "8946b755-5da5-57cf-9a49-e00deca3f445",
+          "68bceb30-2ab4-5370-93b6-19c47a3714e2",
+          "d7439e48-12a6-59c6-8eef-1911e0c2ad77",
+          "4be09fb4-07a4-5879-8f63-ace3f3a35755",
+          "9706b9fb-19d1-592d-afc2-33808d015ce8",
+          "41d1703e-0f5f-5ac1-b423-3aeb3a07b392",
+          "ee173407-c470-5126-8615-0954d5225a92",
+          "cb6c7f2b-7972-5be1-8f1d-60b02d40f28b",
+          "44222154-0d4c-5dfd-9e72-46b097cd5e09",
+          "16cdb574-ef39-57fc-b4ca-678e9a23648c",
+          "2f9c52fb-7eab-505c-9089-e50027e9fa11",
+          "d6cc993f-1306-5958-a5ba-ac83cf6d4b67",
+          "00d61f25-2e42-5da2-bf47-5876b2c4a93b",
+          "6fe2ee43-79b9-50f7-889d-bef658f09361",
+          "2c1940d5-5c60-5a3e-aa3d-073ebc7f5296",
+          "8bfce7b6-6199-5773-8a09-970c16c68764",
+          "91a60e9d-48ff-5db2-9470-d8cb3a20c0db",
+          "3f25b4d6-205f-530b-bdf8-d1f4c47a3e12",
+          "922b4bda-4c2f-5b52-8467-787d02f757af",
+          "476b3d5d-1d0a-5c20-b6cb-ba1aa63bf896",
+          "25dbbdf7-d2e1-53af-aac1-50c6d123a548",
+          "b2c548c5-22bf-50f1-a7d3-050b23ffdadf",
+          "529d5ea0-7e5a-501d-86cc-cc1e235f9b72",
+          "c141ed13-1ca8-5246-9e3b-4166c6c3b210",
+          "361143c8-57ee-58b2-b722-5f5ec95c0d9c",
+          "04caa577-f22f-5ed8-860e-10689d420326",
+          "b93193b6-7a0e-5ed2-8a6f-c9dafe6a18e8",
+          "250331f6-91a0-5a69-ae5d-4fde60dd92e9",
+          "fbc6abaa-e392-5e6a-96b9-35f3273167ed",
+          "f9e5c210-e305-531a-96c9-c1e4a0678478",
+          "472bc957-cd78-5d60-9de1-3eced84f5301",
+          "afee692e-1316-53cc-9fdf-28e31e9f052c",
+          "4aa75c89-d4d6-58c4-a2e0-08893865cbe9",
+          "4a3e9d40-0851-555c-8d8a-6ce6d267fad5",
+          "1db737ef-1954-5050-aea0-3d18a6e83cb2"
+        ],
+        "baseline_top_candidate_id": "dda94cd1-9b23-5deb-aedf-0471b0c086a2",
+        "candidate_set_fingerprint": "4aca9e5bab6c8a7190cbb8f8bebf056227d81f622a06475e3a92428ecce226cc",
+        "constraint_valid_candidate_retention": 1,
+        "disliked_candidate_demotion": "NOT_APPLICABLE",
+        "diversity_change": 0,
+        "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+        "explicit_request_precedence": "NOT_APPLICABLE",
+        "hard_constraint_violations": 0,
+        "independent_validity_checked": true,
+        "label": "N3_3_SHADOW_DEVELOPMENT",
+        "outcome_binding": null,
+        "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+        "portion_fit_change": 0,
+        "portion_fit_compatibility": 1,
+        "preferred_candidate_promotion": "NOT_APPLICABLE",
+        "recent_repeat_reduction": "NOT_APPLICABLE",
+        "scenario_id": "N33_CANONICAL_BREAKFAST",
+        "shadow_bandit_candidate_id": "529d5ea0-7e5a-501d-86cc-cc1e235f9b72",
+        "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+        "status": "NOT_APPLICABLE",
+        "top_1_identity_change": true,
+        "top_k_diversity": {
+          "adaptive": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          },
+          "baseline": {
+            "candidate_count": 3,
+            "cuisine": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "dish": {
+              "known_count": 3,
+              "max_share": 0.333333,
+              "unique_count": 3
+            },
+            "main_protein": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": 0
+            },
+            "recipe_family": {
+              "known_count": 0,
+              "max_share": null,
+              "unique_count": null
+            }
+          }
+        },
+        "top_k_overlap": 0
+      },
+      "eligible_candidates": 49,
+      "meal_type": "breakfast",
+      "objective_preference_ground_truth": null,
+      "projection_exclusions": 0,
+      "query": "",
+      "target_kcal": 400,
+      "user_feedback_used": 0
+    }
+  ],
+  "clock": "2026-09-07T00:00:00+00:00",
+  "comparisons": [
+    {
+      "adaptive_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "IMPROVED",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_STRONG_LIKE",
+      "shadow_bandit_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "IMPROVED",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "adaptive_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "baseline_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "IMPROVED",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_STRONG_DISLIKE",
+      "shadow_bandit_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "IMPROVED",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "adaptive_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "baseline_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_NOT_TODAY",
+      "shadow_bandit_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+      ],
+      "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_COLD_START",
+      "shadow_bandit_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "adaptive_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "baseline_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "IMPROVED",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_CONFLICTING_PREFERENCES",
+      "shadow_bandit_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "IMPROVED",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+      ],
+      "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "REGRESSED",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_EXPLICIT_CURRENT_REQUEST",
+      "shadow_bandit_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "REGRESSED",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+      ],
+      "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0.7,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "IMPROVED",
+      "scenario_id": "N33_DIVERSITY_PRESSURE",
+      "shadow_bandit_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "IMPROVED",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+      ],
+      "adaptive_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+      ],
+      "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_ALLERGY_CONFLICT",
+      "shadow_bandit_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": false,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 1,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "main_protein": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 1,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "main_protein": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "adaptive_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "baseline_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "candidate_set_fingerprint": "1f90874c567b162991de73f0328fa9102e5cb193f47b0b396ea87ee6aeb1e4fa",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_DIET_RESTRICTION_CONFLICT",
+      "shadow_bandit_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": false,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 1,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "main_protein": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 1,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "main_protein": {
+            "known_count": 1,
+            "max_share": 1,
+            "unique_count": 1
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "adaptive_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_PORTION_CORRECTION",
+      "shadow_bandit_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": false,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "adaptive_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "baseline_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_CANDIDATE_UNAVAILABLE",
+      "shadow_bandit_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    },
+    {
+      "adaptive_ranked_candidate_ids": [
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+      ],
+      "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "baseline_invalid_or_unknown_candidate_ids": [],
+      "baseline_portion_fit": 1,
+      "baseline_ranked_candidate_ids": [
+        "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+        "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+      ],
+      "baseline_top_candidate_id": "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "candidate_set_fingerprint": "95a09e14d08a1c0fb74a97b0d364af745b0108b5ecaff814031143e272f9f363",
+      "constraint_valid_candidate_retention": 1,
+      "disliked_candidate_demotion": "NOT_APPLICABLE",
+      "diversity_change": 0,
+      "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+      "explicit_request_precedence": "NOT_APPLICABLE",
+      "hard_constraint_violations": 0,
+      "independent_validity_checked": true,
+      "label": "N3_3_SHADOW_DEVELOPMENT",
+      "outcome_binding": null,
+      "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+      "portion_fit_change": 0,
+      "portion_fit_compatibility": 1,
+      "preferred_candidate_promotion": "NOT_APPLICABLE",
+      "recent_repeat_reduction": "NOT_APPLICABLE",
+      "scenario_id": "N33_STALE_PREFERENCE",
+      "shadow_bandit_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+      "status": "NOT_APPLICABLE",
+      "top_1_identity_change": true,
+      "top_k_diversity": {
+        "adaptive": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        },
+        "baseline": {
+          "candidate_count": 2,
+          "cuisine": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": 0
+          },
+          "dish": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "main_protein": {
+            "known_count": 2,
+            "max_share": 0.5,
+            "unique_count": 2
+          },
+          "recipe_family": {
+            "known_count": 0,
+            "max_share": null,
+            "unique_count": null
+          }
+        }
+      },
+      "top_k_overlap": 1
+    }
+  ],
+  "diversity_stress": {
+    "adaptive_dish_concentration": 1,
+    "adaptive_main_protein_concentration": 1,
+    "adaptive_top_ids": [
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb"
+    ],
+    "baseline_dish_concentration": 0.5,
+    "baseline_main_protein_concentration": 0.5,
+    "baseline_policy": "SYNTHETIC_NON_REPEAT_REFERENCE",
+    "baseline_top_ids": [
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108",
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "7fdaebf9-3ceb-5811-9d67-9d43bd1ce108"
+    ],
+    "contexts": 20,
+    "family_and_cuisine": "NOT_AVAILABLE_IN_FIXTURES",
+    "major_regression": true
+  },
+  "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+  "invalid_reference_probe": {
+    "adaptive_ranked_candidate_ids": [
+      "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+      "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+    ],
+    "adaptive_top_candidate_id": "de411a34-972b-5c8d-8c89-cafb9d558fdb",
+    "baseline_invalid_or_unknown_candidate_ids": [],
+    "baseline_portion_fit": 1,
+    "baseline_ranked_candidate_ids": [
+      "f0fcf743-7e74-5fd5-8672-bf295c4fa996"
+    ],
+    "baseline_top_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+    "candidate_set_fingerprint": "546c0e891cccd1598c308e34e830e4365707ea41768e9f4bd7f45e70c32d85e0",
+    "constraint_valid_candidate_retention": 1,
+    "disliked_candidate_demotion": "NOT_APPLICABLE",
+    "diversity_change": 0,
+    "evidence_origin": "SYNTHETIC_DEVELOPMENT",
+    "explicit_request_precedence": "NOT_APPLICABLE",
+    "hard_constraint_violations": 1,
+    "independent_validity_checked": true,
+    "label": "N3_3_SHADOW_DEVELOPMENT",
+    "outcome_binding": null,
+    "policy_version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1",
+    "portion_fit_change": 0,
+    "portion_fit_compatibility": 1,
+    "preferred_candidate_promotion": "NOT_APPLICABLE",
+    "recent_repeat_reduction": "NOT_APPLICABLE",
+    "scenario_id": "N33_INVALID_REFERENCE_PROBE",
+    "shadow_bandit_candidate_id": "f0fcf743-7e74-5fd5-8672-bf295c4fa996",
+    "shadow_bandit_policy_version": "CONTEXTUAL_BANDIT_SHADOW_V1",
+    "status": "REGRESSED",
+    "top_1_identity_change": true,
+    "top_k_diversity": {
+      "adaptive": {
+        "candidate_count": 2,
+        "cuisine": {
+          "known_count": 0,
+          "max_share": null,
+          "unique_count": 0
+        },
+        "dish": {
+          "known_count": 2,
+          "max_share": 0.5,
+          "unique_count": 2
+        },
+        "main_protein": {
+          "known_count": 1,
+          "max_share": 1,
+          "unique_count": 1
+        },
+        "recipe_family": {
+          "known_count": 0,
+          "max_share": null,
+          "unique_count": null
+        }
+      },
+      "baseline": {
+        "candidate_count": 1,
+        "cuisine": {
+          "known_count": 0,
+          "max_share": null,
+          "unique_count": 0
+        },
+        "dish": {
+          "known_count": 1,
+          "max_share": 1,
+          "unique_count": 1
+        },
+        "main_protein": {
+          "known_count": 1,
+          "max_share": 1,
+          "unique_count": 1
+        },
+        "recipe_family": {
+          "known_count": 0,
+          "max_share": null,
+          "unique_count": null
+        }
+      }
+    },
+    "top_k_overlap": 0.5
+  },
+  "label": "N3_3_SHADOW_DEVELOPMENT",
+  "requirement_probes": {
+    "canonical_candidate_unchanged": true,
+    "foreign_owner_portion_prior": null,
+    "not_today_changes_contextual_ranking": false,
+    "not_today_durable_dislike_created": false,
+    "portion_fit_status": "FIT",
+    "portion_scale": 1.15,
+    "recent_dislike_against_five_older_likes_affinity": 1,
+    "stored_profile_affinity_after_365_days_without_rebuild": 1,
+    "stored_profile_affinity_now": 1,
+    "unavailable_durable_dislike_created": false
+  }
+}

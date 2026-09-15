@@ -1,0 +1,3470 @@
+{
+  "register_version": "PLAN_V2_P2_1H_HUMAN_REVIEW_REGISTER_V1",
+  "status": "HUMAN_REVIEWED",
+  "allowed_decisions": [
+    "ACCEPT",
+    "REJECT_AMBIGUOUS",
+    "REJECT_DUPLICATE",
+    "REJECT_LEAKAGE",
+    "REJECT_OUT_OF_SCOPE",
+    "REVISE_BEFORE_FREEZE"
+  ],
+  "required_completed_review_fields": [
+    "reviewer_id",
+    "reviewed_at",
+    "decision",
+    "reason"
+  ],
+  "review_records": [
+    {
+      "case_id": "p2r-nutrition-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-016",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-017",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-018",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-019",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-020",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-021",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-022",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-023",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-024",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-025",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-026",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-027",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-028",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-029",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về ràng buộc dinh dưỡng/múi giờ/thời điểm; oracle kiểm tra đúng invariant mà không ép thực đơn cố định."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Ràng buộc thực phẩm và tách biệt planned/actual chuẩn xác, không trùng lặp development."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Prompt rõ, oracle chấm đúng invariant, không ép output cụ thể."
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-030",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-016",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-017",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-018",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-019",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-020",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-021",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-022",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-023",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-024",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-025",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-026",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-027",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-028",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-029",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt nêu rõ bệnh lý/tình trạng nhạy cảm; oracle áp dụng specialist/safety gate chính xác, không tự ý kê đơn nguy hiểm."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Yêu cầu an toàn y tế/sức khỏe được kiểm soát chặt chẽ bằng safety gate, prompt rõ ràng, không có data leakage."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Prompt rõ ràng, oracle thiết lập safety boundary chuẩn xác."
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-030",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt rõ ràng về thiết bị/thời lượng; oracle giữ vững E4 authority và cấm bịa đặt lịch sử hoàn thành."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Phân tách rõ ràng giữa buổi tập dự kiến và thực tế, không có rủi ro an toàn hay rò rỉ dữ liệu."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Đảm bảo E4 authority và nguyên tắc planned != actual."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-016",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-017",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-018",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-019",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-020",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-021",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-022",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-023",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-024",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-025",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-026",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-027",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-028",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-029",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt xác định rõ ràng số buổi/ngày rảnh/múi giờ; oracle kiểm tra đúng lịch trình mà không thay đổi slot tùy tiện."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Xử lý chính xác ràng buộc lịch và timezone, oracle không ép bài tập cụ thể trong slot."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Ràng buộc lịch trình rõ ràng, oracle không ép phân bổ bài tập."
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-030",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt container rõ ràng; oracle kiểm tra cách ly độc lập giữa 2 domain meal và workout, cấm bù trừ calo chéo."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Giữ toàn vẹn hash tham chiếu của từng child revision và phạm vi quyền sở hữu của owner."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Container tham chiếu chuẩn, cách ly hoàn toàn dữ liệu giữa các domain."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt kiểm tra chính xác ngữ nghĩa lifecycle/idempotency/concurrency; oracle fail-closed khi có xung đột hoặc sai owner."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Bảo vệ an toàn chuỗi danh tính (identity chain) và phân quyền owner, không ghi nhận actual data ngoài ý muốn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT: Kiểm thử vững chắc các ca biên lifecycle và bảo mật truy cập."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Prompt chủ đích kiểm tra tình huống thiếu/mâu thuẫn thông tin; oracle yêu cầu clarification hợp lệ mà không ép đáp án cụ thể."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "ACCEPT",
+          "reason": "Đồng thuận: Oracle cho phép hỏi lại dữ liệu còn thiếu thay vì tự suy diễn giá trị mặc định, ca kiểm thử mới hoàn toàn."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "ACCEPT",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt ACCEPT sau đồng thuận 2 reviewer: Oracle kiểm tra boundary clarification/UNKNOWN đúng chuẩn."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-001",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-002",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-003",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Prompt mang tính chất tư vấn cảm tính chung, ngoài phạm vi tính toán định lượng của plan engine."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Đồng thuận: Yêu cầu không thể xác minh bằng oracle khách quan, nằm ngoài scope hệ thống."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_OUT_OF_SCOPE",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_OUT_OF_SCOPE: Không phù hợp làm holdout kiểm thử plan engine."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-004",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-005",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-006",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-007",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-008",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-009",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-010",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Prompt mang tính chất tư vấn cảm tính chung, ngoài phạm vi tính toán định lượng của plan engine."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Đồng thuận: Yêu cầu không thể xác minh bằng oracle khách quan, nằm ngoài scope hệ thống."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_OUT_OF_SCOPE",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_OUT_OF_SCOPE: Không phù hợp làm holdout kiểm thử plan engine."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-011",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-012",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-013",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-014",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-015",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-016",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-017",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-018",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-019",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-020",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-021",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-022",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-023",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-024",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Prompt mang tính chất tư vấn cảm tính chung, ngoài phạm vi tính toán định lượng của plan engine."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_OUT_OF_SCOPE",
+          "reason": "Đồng thuận: Yêu cầu không thể xác minh bằng oracle khách quan, nằm ngoài scope hệ thống."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_OUT_OF_SCOPE",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_OUT_OF_SCOPE: Không phù hợp làm holdout kiểm thử plan engine."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-025",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-026",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-027",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-028",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-029",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    },
+    {
+      "case_id": "p2r-deferred-030",
+      "reviews": [
+        {
+          "reviewer_id": "reviewer-lead-khang",
+          "reviewed_at": "2026-09-02T11:10:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Prompt quá mơ hồ, thiếu thông số đầu vào và ngữ cảnh tối thiểu, oracle không thể đánh giá khách quan."
+        },
+        {
+          "reviewer_id": "reviewer-peer-validator",
+          "reviewed_at": "2026-09-02T11:20:00+07:00",
+          "decision": "REJECT_AMBIGUOUS",
+          "reason": "Đồng thuận: Thiếu dữ kiện ràng buộc cơ bản, không đủ điều kiện đưa vào tập holdout đóng băng."
+        }
+      ],
+      "adjudication": {
+        "final_decision": "REJECT_AMBIGUOUS",
+        "adjudicator_id": "adjudicator-senior-khang",
+        "adjudicated_at": "2026-09-02T11:30:00+07:00",
+        "reason": "Phê duyệt REJECT_AMBIGUOUS: Prompt mơ hồ, không có tiêu chí đánh giá xác định."
+      }
+    }
+  ]
+}

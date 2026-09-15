@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "plan_id": "ae86fe51-fbcb-480c-870b-edfc8cd79e6b",
+  "revision_id": "a882e1ca-4736-44d8-b1be-c3fa7c52cd60",
+  "events": [
+    "library-detail-exact-revision",
+    "pause-readback",
+    "resume-readback",
+    "refresh-authoritative-readback",
+    "owner-bound-api-read"
+  ]
+}

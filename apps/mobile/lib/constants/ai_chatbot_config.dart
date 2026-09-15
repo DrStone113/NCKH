@@ -3,6 +3,18 @@ import 'package:flutter/foundation.dart';
 class AIChatbotConfig {
   // Reuse same base as REST API so WS always follows current environment.
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+  // Isolated development E2E only. In normal and production builds this is
+  // empty, so WebSocket authentication continues to use the normal session.
+  // The value is never rendered, logged, or persisted by the app.
+  static const String _n3FeedbackTestToken =
+      String.fromEnvironment('N3_2_1_TEST_TOKEN');
+  // Non-secret build assertion for the isolated Brave harness. The marker is
+  // meaningful only together with the test token above; it never includes or
+  // exposes that token.
+  static const String n3E2ERuntimeConfigurationMarker =
+      String.fromEnvironment('N3_2_1_E2E_CONFIGURATION_MARKER');
+  static const bool n3E2ERuntimeConfigurationActive =
+      n3E2ERuntimeConfigurationMarker == 'N3_2_1_E2E_CONFIGURED_V1';
   static const String _defaultHttpBaseUrl = 'http://localhost:8080';
 
   // Android emulator
@@ -16,19 +28,37 @@ class AIChatbotConfig {
 
   static const String wsEndpoint = '/chat/stream';
 
-  static String get wsUrl {
+  static String wsUrlFor({required String sessionId, String? firebaseToken}) {
     var httpBase = _envBaseUrl.isNotEmpty ? _envBaseUrl : _defaultHttpBaseUrl;
-    if (httpBase == 'http://localhost:8080' && !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    if (httpBase == 'http://localhost:8080' &&
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android) {
       httpBase = 'http://10.0.2.2:8080';
     }
-    if (httpBase.startsWith('https://')) {
-      return httpBase.replaceFirst('https://', 'wss://') + wsEndpoint;
-    }
-    if (httpBase.startsWith('http://')) {
-      return httpBase.replaceFirst('http://', 'ws://') + wsEndpoint;
-    }
-    return httpBase + wsEndpoint;
+    final rawUrl = httpBase.startsWith('https://')
+        ? httpBase.replaceFirst('https://', 'wss://') + wsEndpoint
+        : httpBase.startsWith('http://')
+            ? httpBase.replaceFirst('http://', 'ws://') + wsEndpoint
+            : httpBase + wsEndpoint;
+    return Uri.parse(rawUrl).replace(queryParameters: {
+      'session_id': sessionId,
+    }).toString();
   }
+
+  /// Carries authentication outside the URL so reverse-proxy/access logs do
+  /// not persist a Firebase ID token. The server negotiates only the fixed
+  /// protocol name; the credential protocol remains request-only.
+  static List<String> wsProtocolsFor({String? firebaseToken}) {
+    final token = _n3FeedbackTestToken.isNotEmpty
+        ? _n3FeedbackTestToken
+        : firebaseToken?.trim() ?? '';
+    return [
+      'health-auth-v1',
+      if (token.isNotEmpty) 'auth.$token',
+    ];
+  }
+
+  static String get wsUrl => wsUrlFor(sessionId: 'configuration-preview');
 
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration streamTimeout = Duration(seconds: 180);

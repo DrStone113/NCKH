@@ -35,11 +35,15 @@ void main() {
     // lower text fields in the initial viewport. Verify the editable identity
     // form and the two explicit selectors that are actually mounted here.
     expect(find.byType(TextFormField), findsAtLeastNWidgets(3));
-    expect(find.byType(DropdownButtonFormField<String>), findsAtLeastNWidgets(2));
+    expect(
+        find.byType(DropdownButtonFormField<String>), findsAtLeastNWidgets(1));
 
     await tester.enterText(find.byType(TextFormField).first, 'Nguyễn Văn B');
-    await tester.ensureVisible(find.text('Lưu thay đổi'));
-    await tester.tap(find.text('Lưu thay đổi'));
+    for (var step = 0; step < 3; step++) {
+      await tester.tap(find.byKey(const Key('profile-save')));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('Hoàn tất'));
     await tester.pumpAndSettle();
 
     expect(userProvider.currentUser?.name, 'Nguyễn Văn B');

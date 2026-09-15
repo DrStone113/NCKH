@@ -516,9 +516,15 @@ class _ScriptedLLM:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
         stream: bool = False,
+        max_tokens: int | None = None,
     ) -> _FakeLLMResponse:
         self.calls.append(
-            {"messages": messages, "tools": tools, "stream": stream}
+            {
+                "messages": messages,
+                "tools": tools,
+                "stream": stream,
+                "max_tokens": max_tokens,
+            }
         )
         if not self._responses:
             raise AssertionError("scripted LLM ran out of responses")
@@ -607,6 +613,13 @@ async def test_update_rolling_summary_writes_summary_and_proposes_facts():
     # Summary call had no tools and stream=False.
     assert llm.calls[0]["tools"] is None
     assert llm.calls[0]["stream"] is False
+    assert llm.calls[0]["max_tokens"] == settings.llm_memory_summary_max_output_tokens
+    assert llm.calls[1]["max_tokens"] == settings.llm_memory_fact_max_output_tokens
+
+    # Re-scheduling after the same user turn must not buy the same two
+    # background completions again.
+    await svc.updateRollingSummary(sid, llm)
+    assert len(llm.calls) == 2
 
 
 @pytest.mark.asyncio

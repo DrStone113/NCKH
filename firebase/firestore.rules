@@ -1,0 +1,193 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerId(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isOwned(data) {
+      return data.userId is string && isOwnerId(data.userId);
+    }
+
+    function validShortString(value, maximum) {
+      return value is string && value.size() <= maximum;
+    }
+
+    function validIsoDate(value) {
+      return value is string && value.size() >= 10 && value.size() <= 40;
+    }
+
+    function validOptionalNumber(data, key, minimum, maximum) {
+      return !(key in data)
+        || data[key] == null
+        || (data[key] is number
+          && data[key] >= minimum
+          && data[key] <= maximum);
+    }
+
+    function validUserProfile(userId) {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'email', 'name', 'createdAt'])
+        && data.id == userId
+        && validShortString(data.email, 320)
+        && validShortString(data.name, 120)
+        && validIsoDate(data.createdAt)
+        && (!('email' in request.auth.token)
+          || data.email == request.auth.token.email)
+        && validOptionalNumber(data, 'age', 13, 120)
+        && validOptionalNumber(data, 'height', 100, 250)
+        && validOptionalNumber(data, 'weight', 25, 400)
+        && validOptionalNumber(data, 'targetWeight', 25, 400)
+        && (!('gender' in data)
+          || data.gender == null
+          || data.gender in ['male', 'female', 'other'])
+        && (!('nutrition_safety_profile' in data)
+          || data.nutrition_safety_profile is map)
+        && (!('nutrition_profile' in data)
+          || data.nutrition_profile is map)
+        && (!('workout_profile' in data)
+          || data.workout_profile is map)
+        && (!('health_profile' in data)
+          || data.health_profile is map);
+    }
+
+    function validBodyMetric() {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(['userId', 'weight', 'bmi', 'recordedAt'])
+        && data.weight is number
+        && data.weight >= 25
+        && data.weight <= 400
+        && data.bmi is number
+        && data.bmi > 0
+        && data.bmi <= 150
+        && validIsoDate(data.recordedAt);
+    }
+
+    function validMealLog(documentId) {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(
+          ['id', 'userId', 'name', 'date', 'mealType', 'items', 'isCompleted'])
+        && data.id == documentId
+        && validShortString(data.name, 200)
+        && validIsoDate(data.date)
+        && data.mealType in ['breakfast', 'lunch', 'dinner', 'snack',
+          'sang', 'trua', 'toi', 'phu']
+        && data.items is list
+        && data.items.size() <= 100
+        && data.isCompleted is bool;
+    }
+
+    function validExerciseLog(documentId) {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(
+          ['id', 'userId', 'name', 'date', 'duration', 'caloriesBurned',
+           'type', 'intensity', 'isCompleted', 'timeOfDay'])
+        && data.id == documentId
+        && validShortString(data.name, 200)
+        && validIsoDate(data.date)
+        && data.duration is int
+        && data.duration > 0
+        && data.duration <= 1440
+        && data.caloriesBurned is number
+        && data.caloriesBurned >= 0
+        && data.caloriesBurned <= 20000
+        && validShortString(data.type, 64)
+        && validShortString(data.intensity, 32)
+        && data.isCompleted is bool
+        && validShortString(data.timeOfDay, 32);
+    }
+
+    function validLifestyleLog(documentId) {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(['id', 'userId', 'date'])
+        && data.id == documentId
+        && validIsoDate(data.date)
+        && validOptionalNumber(data, 'moodScore', 1, 5)
+        && validOptionalNumber(data, 'sleepHours', 0, 24)
+        && validOptionalNumber(data, 'stressScore', 1, 5)
+        && validOptionalNumber(data, 'waterIntakeMl', 0, 20000)
+        && (!('notes' in data) || validShortString(data.notes, 2000));
+    }
+
+    function validLifestyleReminder(documentId) {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(
+          ['id', 'userId', 'title', 'type', 'time', 'isActive', 'note'])
+        && data.id == documentId
+        && validShortString(data.title, 200)
+        && validShortString(data.type, 64)
+        && validShortString(data.time, 16)
+        && data.isActive is bool
+        && validShortString(data.note, 1000);
+    }
+
+    function validWaterIntake() {
+      let data = request.resource.data;
+      return isOwned(data)
+        && data.keys().hasAll(['userId', 'amount', 'date'])
+        && data.amount is number
+        && data.amount > 0
+        && data.amount <= 10000
+        && validIsoDate(data.date);
+    }
+
+    match /nguoi_dung/{userId} {
+      allow read, delete: if isOwnerId(userId);
+      allow create, update: if isOwnerId(userId) && validUserProfile(userId);
+    }
+
+    match /chi_so_co_the/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validBodyMetric();
+      allow update: if isOwned(resource.data) && validBodyMetric();
+    }
+
+    match /nhat_ky_an_uong/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validMealLog(documentId);
+      allow update: if isOwned(resource.data) && validMealLog(documentId);
+    }
+
+    match /nhat_ky_tap_luyen/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validExerciseLog(documentId);
+      allow update: if isOwned(resource.data) && validExerciseLog(documentId);
+    }
+
+    match /lifestyle_logs/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validLifestyleLog(documentId);
+      allow update: if isOwned(resource.data) && validLifestyleLog(documentId);
+    }
+
+    match /lifestyle_reminders/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validLifestyleReminder(documentId);
+      allow update: if isOwned(resource.data)
+        && validLifestyleReminder(documentId);
+    }
+
+    match /water_intake/{documentId} {
+      allow read, delete: if isOwned(resource.data);
+      allow create: if validWaterIntake();
+      allow update: if isOwned(resource.data) && validWaterIntake();
+    }
+
+    // Catalogs, plans, chat, RAG and research remain behind the backend.
+    // Unknown collections are denied instead of becoming an accidental second
+    // source of truth.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

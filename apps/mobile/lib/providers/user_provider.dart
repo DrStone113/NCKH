@@ -5,9 +5,14 @@ import '../models/user_model.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../constants/firestore_collections.dart';
 import '../models/app_state_value.dart';
+import '../services/firestore_references.dart';
 
 class UserProvider with ChangeNotifier {
   static const _notSet = Object();
+  // Only the isolated browser-acceptance build enables this.  It makes the
+  // already existing demo account complete its otherwise lengthy onboarding;
+  // it is not a production login bypass and remains false in normal builds.
+  static const bool _planV2E2EDemo = bool.fromEnvironment('PLAN_V2_E2E_DEMO');
   UserModel? _currentUser;
   bool _isInitialized = false;
   DataStatus _profileStatus = DataStatus.notLoaded;
@@ -22,9 +27,19 @@ class UserProvider with ChangeNotifier {
       _currentUser?.needsWorkoutAccountIntake ?? false;
   bool get needsAccountHealthIntake =>
       _currentUser?.needsAccountHealthIntake ?? false;
+  bool get needsBasicProfileIntake =>
+      _currentUser?.needsBasicProfileIntake ?? false;
 
   UserProvider() {
-    _restoreSession();
+    if (_planV2E2EDemo) {
+      // The acceptance build has an explicit bearer-backed test principal.
+      // Recreate only its local display session after a browser refresh so the
+      // test can verify server read-back/reconnect rather than Firebase state.
+      setDemoUser();
+      _isInitialized = true;
+    } else {
+      _restoreSession();
+    }
   }
 
   /// Tự động restore session từ Firebase Auth khi app khởi động
@@ -33,16 +48,7 @@ class UserProvider with ChangeNotifier {
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
         debugPrint('🔄 Restoring session for: ${firebaseUser.email}');
-        final doc = await FirebaseFirestore.instance
-            .collection(FirestoreCollections.users)
-            .doc(firebaseUser.uid)
-            .get();
-        if (doc.exists) {
-          _currentUser = UserModel.fromMap(doc.data() as Map<String, dynamic>);
-          _profileStatus = DataStatus.known;
-          _profileReadAt = DateTime.now();
-          debugPrint('✅ Session restored: ${_currentUser!.name}');
-        }
+        await _syncFirebaseUser(firebaseUser);
       }
     } catch (e) {
       _profileStatus = DataStatus.error;
@@ -55,6 +61,21 @@ class UserProvider with ChangeNotifier {
 
   /// Demo mode - set fake user for UI testing without Firebase
   void setDemoUser() {
+    final nutritionProfile = _planV2E2EDemo
+        ? NutritionProfile.completeAccountIntake(
+            null,
+            allergyAndAvoidanceNote: null,
+            foodPreferenceNote: null,
+            nutritionGoalNote: null,
+            nutritionGoal: 'MAINTAIN',
+          )
+        : null;
+    final healthProfile = nutritionProfile == null
+        ? null
+        : HealthProfile.completeAccountIntake(
+            primarySupport: 'NUTRITION',
+            nutritionProfile: nutritionProfile,
+          );
     _currentUser = UserModel(
       id: 'demo',
       email: 'demo@health.app',
@@ -65,6 +86,9 @@ class UserProvider with ChangeNotifier {
       targetWeight: 65,
       activityLevel: 'moderate',
       healthGoal: 'maintain',
+      nutritionProfile: nutritionProfile,
+      healthProfile: healthProfile,
+      basicProfileCompletedAt: _planV2E2EDemo ? DateTime.now() : null,
       createdAt: DateTime.now(),
     );
     _profileStatus = DataStatus.notLoaded;
@@ -72,7 +96,7 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signUp(String email, String password, UserModel userData) async {
+  Future<void> signUp(String email, String password, {String name = ''}) async {
     try {
       final auth = FirebaseAuth.instance;
       final firestore = FirebaseFirestore.instance;
@@ -82,29 +106,13 @@ class UserProvider with ChangeNotifier {
         password: password,
       );
 
-      final user = UserModel(
+      final user = UserModel.newAccount(
         id: credential.user!.uid,
-        email: userData.email,
-        name: userData.name,
-        age: userData.age,
-        gender: userData.gender,
-        equationSex: userData.equationSex,
-        nutritionSafetyProfile: userData.nutritionSafetyProfile,
-        height: userData.height,
-        weight: userData.weight,
-        targetWeight: userData.targetWeight,
-        activityLevel: userData.activityLevel,
-        healthGoal: userData.healthGoal,
-        nutritionProfile: userData.nutritionProfile,
-        workoutProfile: userData.workoutProfile,
-        healthProfile: userData.healthProfile,
-        createdAt: DateTime.now(),
+        email: credential.user!.email ?? email,
+        name: name,
       );
 
-      await firestore
-          .collection(FirestoreCollections.users)
-          .doc(user.id)
-          .set(user.toMap());
+      await FirestoreReferences.users(firestore).doc(user.id).set(user);
       _currentUser = user;
       _profileStatus = DataStatus.known;
       _profileReadAt = DateTime.now();
@@ -172,35 +180,25 @@ class UserProvider with ChangeNotifier {
 
   Future<void> _syncFirebaseUser(User user) async {
     final firestore = FirebaseFirestore.instance;
-    final userDoc = await firestore
-        .collection(FirestoreCollections.users)
-        .doc(user.uid)
-        .get();
+    final userDoc =
+        await FirestoreReferences.users(firestore).doc(user.uid).get();
 
+    final UserModel syncedUser;
     if (userDoc.exists && userDoc.data() != null) {
-      _currentUser = UserModel.fromMap(userDoc.data() as Map<String, dynamic>);
+      syncedUser = userDoc.data()!;
     } else {
-      _currentUser = UserModel(
+      syncedUser = UserModel.newAccount(
         id: user.uid,
         email: user.email ?? '',
-        name: user.displayName ?? 'User',
-        age: 25,
-        height: 170,
-        weight: 68,
-        targetWeight: 65,
-        activityLevel: 'moderate',
-        healthGoal: 'maintain',
-        createdAt: DateTime.now(),
+        name: user.displayName ?? '',
       );
-      try {
-        await firestore
-            .collection(FirestoreCollections.users)
-            .doc(user.uid)
-            .set(_currentUser!.toMap());
-      } catch (e) {
-        debugPrint('⚠️ Firestore set user failed: $e');
-      }
+      await FirestoreReferences.users(firestore)
+          .doc(user.uid)
+          .set(syncedUser);
     }
+    _currentUser = syncedUser;
+    _profileStatus = DataStatus.known;
+    _profileReadAt = DateTime.now();
     notifyListeners();
   }
 
@@ -219,16 +217,30 @@ class UserProvider with ChangeNotifier {
       // Demo mode không có Firebase app/document thật. Vẫn cập nhật state để
       // toàn bộ màn hình có thể kiểm thử và dùng đầy đủ chức năng cài đặt.
       if (updatedUser.id != 'demo') {
-        await FirebaseFirestore.instance
-            .collection(FirestoreCollections.users)
+        await FirestoreReferences.users()
             .doc(updatedUser.id)
-            .set(updatedUser.toMap(), SetOptions(merge: true));
+            .set(updatedUser, SetOptions(merge: true));
       }
       _currentUser = updatedUser;
+      _profileStatus =
+          updatedUser.id == 'demo' ? DataStatus.notLoaded : DataStatus.known;
+      _profileReadAt = updatedUser.id == 'demo' ? null : DateTime.now();
       notifyListeners();
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<void> completeBasicProfile(UserModel updatedUser) async {
+    if (_currentUser == null || updatedUser.id != _currentUser!.id) {
+      throw ArgumentError('BASIC_PROFILE_USER_MISMATCH');
+    }
+    if (!updatedUser.hasValidBasicProfile) {
+      throw ArgumentError('INVALID_BASIC_PROFILE');
+    }
+    await updateProfile(updatedUser.copyWith(
+      basicProfileCompletedAt: DateTime.now(),
+    ));
   }
 
   /// Persist an explicit workout-intake answer captured by the chatbot.
@@ -497,21 +509,22 @@ class UserProvider with ChangeNotifier {
       return false;
     }
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection(FirestoreCollections.users)
+      final doc = await FirestoreReferences.users()
           .doc(user.id)
           .get(const GetOptions(source: Source.server));
       final data = doc.data();
+      if (_currentUser?.id != user.id) return false;
       if (!doc.exists || data == null) {
         _profileStatus = DataStatus.missing;
         return false;
       }
-      _currentUser = UserModel.fromMap(data);
+      _currentUser = data;
       _profileStatus = DataStatus.known;
       _profileReadAt = DateTime.now();
       notifyListeners();
       return true;
     } catch (e) {
+      if (_currentUser?.id != user.id) return false;
       _profileStatus = DataStatus.error;
       return false;
     }

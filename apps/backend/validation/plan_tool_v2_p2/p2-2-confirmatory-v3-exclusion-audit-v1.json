@@ -1,0 +1,11 @@
+{
+  "artifact_version": "PLAN_V2_CONFIRMATORY_V3_EXCLUSION_AUDIT_V1",
+  "excluded_prompt_count": 386,
+  "candidate_count": 180,
+  "exact_overlap": [],
+  "normalized_duplicate_count": 0,
+  "template_overlap": [],
+  "template_duplicate_count": 0,
+  "semantic_overlap_review": [],
+  "confirmed_overlap_count": 0
+}

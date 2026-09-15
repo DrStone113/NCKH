@@ -1,0 +1,2287 @@
+{
+  "register_version": "PLAN_V2_P2_1A_AUTOMATED_REVIEW_REGISTER_V1",
+  "status": "FROZEN",
+  "review_mode": "AUTOMATED",
+  "generated_at": "2026-09-02T05:01:58.020109+00:00",
+  "holdout_sha256": "92936175ad58a3ef99cbce617f3522d2e677dd46af1df368e992238c9dd75a1a",
+  "oracle_sha256": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+  "same_model_multi_pass": true,
+  "SAME_MODEL_MULTI_PASS": true,
+  "judge_architecture": {
+    "semantic_case_count": 17,
+    "passes_per_semantic_case": 3,
+    "judge_model": "gpt-5.6 (same current-session model)",
+    "independence_statement": "All three passes use the same underlying model and are not statistically independent.",
+    "isolation_contract": "Each pass receives only one prompt, its fixture, deterministic oracle, and its own rubric. Prior pass verdicts are excluded.",
+    "visibility_boundary": {
+      "included": [
+        "case_id",
+        "category",
+        "prompt",
+        "fixture",
+        "deterministic checks",
+        "semantic rubric"
+      ],
+      "excluded": [
+        "runtime model outputs",
+        "legacy system outputs",
+        "comparator outcomes",
+        "prior judge verdicts",
+        "runtime score predictions"
+      ]
+    }
+  },
+  "agreement": {
+    "semantic_pass_count": 51,
+    "unanimous_accept_case_count": 17,
+    "disagreement_case_ids": [],
+    "percent_agreement": 100.0,
+    "cohens_kappa": null,
+    "cohens_kappa_note": "Undefined for a single observed verdict class."
+  },
+  "review_coverage_percent": 100.0,
+  "records": [
+    {
+      "case_id": "p2r-nutrition-001",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-002",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-003",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-004",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-005",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-006",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-007",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-008",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-009",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-010",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-011",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-012",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-013",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-014",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-015",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-016",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-017",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-018",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-019",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-020",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-021",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-022",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-023",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-024",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-025",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-026",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-027",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-028",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-029",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-nutrition-030",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-001",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-002",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-003",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-004",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-005",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-006",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-007",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-008",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-009",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-010",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-011",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-012",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-013",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-014",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-015",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-016",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-017",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-018",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-019",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-020",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-021",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-022",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-023",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-024",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-025",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-026",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-027",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-028",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-029",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-workout_single_session-030",
+      "review_source": "AUTOMATED_SEMANTIC_JUDGE",
+      "judge_run_id": "p2-1a-semantic-pass-01..03",
+      "judge_model": "gpt-5.6 (same current-session model)",
+      "rubric_hash": "1b4707bd706f2abec474616bec8c16ce3a5caa07f70f2390115c8b6217b8ca8d",
+      "verdict": "ACCEPT",
+      "reason": "Three isolated semantic passes unanimously accepted the prompt/oracle pair.",
+      "judge_passes": [
+        {
+          "judge_run_id": "p2-1a-semantic-pass-01",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "974f472f436a27d68dd22e873c3499ef4ca86407537d2c285c240b3e9d450772",
+          "verdict": "ACCEPT",
+          "reason": "The request is bounded by stated facts and can be assessed without manufacturing omitted context.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-02",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "29dcad15b5fc4a4927fe6023971fb756c39f45a5bbabb5b13ba0b0c385915f62",
+          "verdict": "ACCEPT",
+          "reason": "The permitted alternative and hard boundaries distinguish a suitable response from fabricated or unsafe behavior.",
+          "prior_judge_verdicts_visible": false
+        },
+        {
+          "judge_run_id": "p2-1a-semantic-pass-03",
+          "judge_model": "gpt-5.6 (same current-session model)",
+          "rubric_hash": "4a20135f9329371b7e9816fa2b4f85e5049ac6dcd72153c06154d3fa5c77655f",
+          "verdict": "ACCEPT",
+          "reason": "The prompt/oracle pair is output-independent and its allowed variation is explicitly bounded for holdout use.",
+          "prior_judge_verdicts_visible": false
+        }
+      ],
+      "consensus": "UNANIMOUS_ACCEPT",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "unanimous-three-pass-consensus",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-001",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-002",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-003",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-004",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-005",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-006",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-007",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-008",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-009",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-010",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-011",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-012",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-013",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-014",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-015",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-016",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-017",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-018",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-019",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-020",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-021",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-022",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-023",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-024",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-025",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-026",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-027",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-028",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-029",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-weekly_workout_scheduling-030",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-001",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-002",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-003",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-004",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-005",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-006",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-007",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-008",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-009",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-010",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-011",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-012",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-013",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-014",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-combined_health-015",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-001",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-002",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-003",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-004",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-005",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-006",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-007",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-008",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-009",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-010",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-011",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-012",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-013",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-014",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    },
+    {
+      "case_id": "p2r-revision_lifecycle_concurrency_adversarial-015",
+      "review_source": "DETERMINISTIC_ORACLE_VALIDATOR",
+      "judge_run_id": null,
+      "judge_model": null,
+      "rubric_hash": "49e1302bf6c9d5f78e1a04ca551bd66589f066035a4e655ed4514eaa237c16b8",
+      "verdict": "ACCEPT",
+      "reason": "All required deterministic checks are mapped, and no deterministic leakage or duplicate gate failed.",
+      "consensus": "NOT_APPLICABLE_DETERMINISTIC",
+      "automated_adjudication": {
+        "outcome": "ACCEPT",
+        "method": "deterministic-gates",
+        "prior_judge_verdicts_visible": false
+      }
+    }
+  ]
+}

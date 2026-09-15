@@ -1,0 +1,24 @@
+{
+  "artifact_version": "PLAN_V2_PLAYWRIGHT_SEMANTICS_ROOT_CAUSE_V1",
+  "capture_scope": "existing pre-repair Flutter web bundle; dashboard only; no Plan API or lifecycle operation",
+  "status": "FAIL",
+  "primary_root_cause": "PLAYWRIGHT_LOCATOR_API_MISMATCH",
+  "semantics_enabled": true,
+  "semantics_placeholder_count": 1,
+  "semantic_node_count": 50,
+  "configuration_marker": {
+    "role": "group",
+    "accessible_name": "Plan V2 E2E configuration active",
+    "locator_count": 1,
+    "aria_disabled": null
+  },
+  "plan_entry": {
+    "rendered_role": "button",
+    "rendered_accessible_name": "Open Plan V2 library",
+    "getByLabel_count": 0,
+    "getByRole_button_name_count": 1,
+    "aria_disabled": null
+  },
+  "finding": "Flutter rendered the Semantics label as the button accessible name, not as a DOM aria-label. getByLabel therefore could not resolve it, while getByRole(button, name) resolved exactly one control.",
+  "sanitized": true
+}

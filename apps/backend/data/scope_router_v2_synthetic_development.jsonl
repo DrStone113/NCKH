@@ -1,0 +1,22 @@
+{"id":"syn-nutrition-001","text":"Bữa sáng này có bao nhiêu protein?","expected_intent":"NUTRITION","expected_scope":"IN_SCOPE_NUTRITION","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-nutrition-002","text":"Tối nay tôi nên ăn món gì?","expected_intent":"NUTRITION","expected_scope":"IN_SCOPE_NUTRITION","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-weight-001","text":"Tôi muốn giảm 2 kí trong 2 tháng thôi","expected_intent":"WEIGHT_MANAGEMENT","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-weight-002","text":"Mục tiêu của tôi là xuống 60 kg nhưng vẫn khỏe","expected_intent":"WEIGHT_MANAGEMENT","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-weight-003","text":"Tôi muốn giảm beo in 2 months tôi","expected_intent":"WEIGHT_MANAGEMENT","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-weight-004","text":"toi wanna lose fat trong 2 months","expected_intent":"WEIGHT_MANAGEMENT","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-meal-001","text":"Lập thực đơn giảm cân bảy ngày cho tôi","expected_intent":"MEAL_PLANNING","expected_scope":"IN_SCOPE_MEAL_PLAN","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-meal-002","text":"Đổi bữa tối thứ ba trong kế hoạch ăn","expected_intent":"MEAL_PLANNING","expected_scope":"IN_SCOPE_MEAL_PLAN","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-fitness-001","text":"Gợi ý bài tập tại nhà trong 20 phút","expected_intent":"FITNESS","expected_scope":"IN_SCOPE_FITNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-fitness-002","text":"Tôi nên chạy bộ mấy buổi mỗi tuần?","expected_intent":"FITNESS","expected_scope":"IN_SCOPE_FITNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-profile-001","text":"Cập nhật cân nặng của tôi thành 62 kg","expected_intent":"HEALTH_PROFILE","expected_scope":"IN_SCOPE_PROFILE_APP","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-profile-002","text":"Tôi muốn sửa mục tiêu sức khỏe trong hồ sơ","expected_intent":"HEALTH_PROFILE","expected_scope":"IN_SCOPE_PROFILE_APP","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-app-001","text":"Flutter app này đang hiển thị sai lượng kcal của tôi","expected_intent":"APP_HEALTH_DATA","expected_scope":"IN_SCOPE_PROFILE_APP","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-app-002","text":"Nhật ký hôm nay chưa hiện bữa trưa tôi đã ghi","expected_intent":"APP_HEALTH_DATA","expected_scope":"IN_SCOPE_PROFILE_APP","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-wellness-001","text":"Đêm qua tôi chỉ ngủ được bốn tiếng","expected_intent":"GENERAL_WELLNESS","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-wellness-002","text":"Gần đây tôi thường xuyên căng thẳng và mệt","expected_intent":"GENERAL_WELLNESS","expected_scope":"IN_SCOPE_GENERAL_WELLNESS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-safety-001","text":"Tôi bị đau ngực và khó thở khi đang tập","expected_intent":"SAFETY_ESCALATION","expected_scope":"SAFETY_ESCALATION","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-safety-002","text":"Tôi vừa ăn xong và đang có dấu hiệu phản vệ","expected_intent":"SAFETY_ESCALATION","expected_scope":"SAFETY_ESCALATION","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-ambiguous-001","text":"Cái đó có ổn không?","expected_intent":"AMBIGUOUS","expected_scope":"AMBIGUOUS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-ambiguous-002","text":"Tôi muốn thay đổi một chút","expected_intent":"AMBIGUOUS","expected_scope":"AMBIGUOUS","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-oos-001","text":"Viết thuật toán quicksort bằng Python","expected_intent":"OUT_OF_SCOPE","expected_scope":"OUT_OF_SCOPE","evidence_class":"SYNTHETIC_DEVELOPMENT"}
+{"id":"syn-oos-002","text":"Dự báo thời tiết ngày mai cho tôi","expected_intent":"OUT_OF_SCOPE","expected_scope":"OUT_OF_SCOPE","evidence_class":"SYNTHETIC_DEVELOPMENT"}

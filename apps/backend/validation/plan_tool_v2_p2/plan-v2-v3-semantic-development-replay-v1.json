@@ -1,0 +1,2422 @@
+{
+  "artifact_version": "PLAN_V2_V3_SEMANTIC_DEVELOPMENT_REPLAY_V1",
+  "replay_mode": "DEVELOPMENT_ONLY_KNOWN_DATA",
+  "not_acceptance": true,
+  "not_confirmatory": true,
+  "historical_result_retained": "FAIL",
+  "semantic_contract_version": "PLAN_V2_SEMANTIC_CONTRACT_V1",
+  "source_hashes": {
+    "holdout": "8256ca62b344957c6e36b2580551777092cced2b85c84a381091b715511b519b",
+    "historical_results": "022a0ef06045f8f053bef9ea1422f19c9c7252b8cb0d437c922910de75e79b0b"
+  },
+  "historical_request_semantic_match_percent": 50.0,
+  "development_replay_request_semantic_match_percent": 100.0,
+  "case_count": 120,
+  "hard_constraint_violations": 0,
+  "planned_to_actual_leakage": 0,
+  "unintended_writes": 0,
+  "cross_user_access": 0,
+  "records": [
+    {
+      "case_id": "p2-2-v3-nutrition-001",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "baab85fd705098288a884c4dfeb844bb2c196940cd3e0b2566f5163bfad98fae"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-002",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "50f15aa79bd98974653ece916395b5d1a5993804f28df7ee23862232e109a53d"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-003",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "a301b42e34bde2b3546aabf23350e06a862109068e3a8cb7136427523746e686"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-004",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "c732e4d66b30c2efced2619dfa8ef77d9b9050fabec4f8f24a96db1013b88d14"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-005",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d56668eef8b36c612adc6f12e92a1d8804dd0156d3780abf71989b0f527967d7"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-006",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "9d6d7e06ed84b91f870cce3697233696cf86b7385163c3b9a2830810a095dbe1"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-007",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2630a06e99eb67062b8659899563732d24248c8cba276892403059695ff2981e"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-008",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "95001f850e46ae0595a1b9f5d43cd072c33ce1cd231530236442b48cf93d88be"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-009",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "00485cf21ab0429638e11a4e37ed7b16b267b328c2cb158283eb2a22f28470ae"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-010",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "c48fadea1ef4c7621caddb7e5741676e01cf16d479982db2d7f74cdbd38c8b5d"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-011",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2d75ac9ce6a1e4de4da4aef86d953b75695f9693ae7f4e17c3df4c8283db7118"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-012",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "e8d9cad1ce40d85abf6a100abf5129463d4e608f00c3713952d2f82a88eb3e1d"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-013",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "21efa2a61851586177cbb1418651d1ed8692f5574d98d17e34d4c1a5b076791d"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-014",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "480a72ba9e91021ecc38fca6f938ac43e27a802fa169d4cb2b0b14ed3aad6ef9"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-015",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "e90ba638ae7bc36d4d8c434973c0a2513e20ba90f8a810091701da23be15625e"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-016",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "0882bf70ebf64a094bce4b510c75d9d7ee1fc0c7a0684625e79e44be35d208ab"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-017",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "6776c5f926eab0297297f8d75e6b80ad436517e7b9029c3bbfb1ec42334eabfc"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-018",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7ff8602e88b090e83a52a3ae758023d520148a6479ea3316f560e8f3fabbc663"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-019",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "eead0e0d14866bce579353120f61bd928682aab9ddde63e1616dab9342a09fa5"
+    },
+    {
+      "case_id": "p2-2-v3-nutrition-020",
+      "category": "nutrition",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "c0f847c9db19c1c1ab5c582470632a6eb001d6e0fc63f641a78faaba16280981"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-001",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "baf93f91fe9c5c6de14b734c244bb80ae29d922e2f5632db09e41d7d2f385fe7"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-002",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "f8e64059bcd4f0845d53c9cda9145f0ef63b097d80b3f79ed2f77d4792ce7be1"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-003",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "14b2226e7ea7c510c03c20150323d60b39037f94584d2015025437d5c9179236"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-004",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "142dd3f65fa9adf542247c92bf0b50b73dc1ee4016c3e39d83bea05b0f680772"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-005",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "49a259570efa3d9b6d125498f499ec57c176742013d6a8325bc1e08098d8a4f0"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-006",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "6236885df1ca1bbcc9c1847b0c7a0892fffaaecb1b9f7ab5f2c43be350a69846"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-007",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "25d8b6f137ac8d88bd1a44382e7a852acb6028aca35f7b699815cd7b96aa7e89"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-008",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "207e709e1a2db6a126704992cae2f7933a534aaa803826a10278cb995e38cc20"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-009",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "c96e6a39719ec060eca0346fadbb887191afbb1508c4341be7b15062fa2ef5b6"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-010",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "4754e7c1652906cfc0b1b1cbd4ce5c415b20e9bdac6ae5d8958770d449944952"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-011",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "6d09c1ec7d39bcc568fc3733b514a72ec2b75f9e4c5d6d4fae2c277128f9e9c3"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-012",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "24fa8ef1d059f60f69cf339381cb1cd954137a0eb0901f2bbb941beeb14f45a6"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-013",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "45849bbdef9b0cc8704395a4b26a295ee35672004622e26321c78930a978fb52"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-014",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2746649b95d4c41164ae986fa3d2abfd3eaf73f699ec820a3ee99548b81e398c"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-015",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "dd1fc45fc3e8f7d29573e9337e4763df51d5b030256def79701978d652a8f14d"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-016",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "3d1faec654a2b55a25051ad2e93103a36b662459743774ebdd94aeeb6a4134e6"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-017",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "288b3f602065e08cc8c638c94efc0aaa255688c27b81bab8c11c2c40762cd299"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-018",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "5a986fcfa6bdeeda374a7d410bf469f924754608ba51539ca454cbcd65cbaf3d"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-019",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "231038e851d6f54ba7ac9e3de72641494d4ac20a64127d838873e6360190a3bd"
+    },
+    {
+      "case_id": "p2-2-v3-single_workout-020",
+      "category": "single_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "b78ef295535dbb352041bb33093d77ac495b52c51e650211cb9b4b9e9db4f7ca"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-001",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "638466b9860ebd4f4210620a7b2f9fa89f5f6eb3ada317f2d725e6f5a8980069"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-002",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "52ebb6967c297c753e3ba454833c806b86591499e6c9cd4a036bd5b6b2e77dc5"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-003",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "735408c66eb3453089010b84b2dc9eb80b09d781ae257d2b20d2728c1537c7ba"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-004",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "ea3e14ec63529267493cdf6507248202ad3f356dacdaaf246ec3563e54d8aa4f"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-005",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "19b876fbd85354cfe83a48079df17ce678b6737d38a8262f2e5149440c976f54"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-006",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7ca5d606ce9dd871848a44663bc826f63e23f61488abc250f6b36308e9e32837"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-007",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "e93ec9e8d1447feaea77708ae794ced8fd5c00136b271a794bd7419c943a6f65"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-008",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7b7357b29cb00ff367cb6bdbd7decbac9a3a4b8a4ccf7f70f9185f1248c0f911"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-009",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d5b3194cc292267f92228e06f5ea4585444c5f0ae58b21dbf065a9ed8d90c4fa"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-010",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "a3ef96b4fd695505261bb8bd0fb4930bbb7175d7c468247f4acc84fd90c83466"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-011",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "215f921aa5abb589c15235175967195cc9af3e6e78660ced0ea31b0b95e2ef83"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-012",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "b372061af87a3636e2e6349b77f7b5018112bba49d9b05f1ad1104a4f4a0cb1c"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-013",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "103b3408eed8865581309b3ff25a1fd872ebf74eefa6e4e9ea3c05b7e19c8e2c"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-014",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "78572c23cb82f641693b6944265fe57bea5eed37237d2611f28c960a3a8c2612"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-015",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d611b6823f864cff2f56ec9372f75fc61e793181eff67bad05face7e8f4804ca"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-016",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "37ea188f8b705f9059837f56aad7dfaa7825acde1aa88fd2cdaba84b5609e201"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-017",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "401fd9461841b7f2f5cbcabd78c1ee7e0c7fa7a600857fe9895b2b3a377ca972"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-018",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "eec0d2196f781ba2280495d2512a34852f874dfe1507d48a6623de0be657b169"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-019",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d5cab9844cf275debc1c1c9d3dddc41299c1a9c2f6341eac399cdef27e5fdd6e"
+    },
+    {
+      "case_id": "p2-2-v3-weekly_workout-020",
+      "category": "weekly_workout",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "missing workout_profile is material context, not a normalizable omission"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "0ebc6744f32807ac5f028a81552e988e84cc6b01dd7e93a9c346b7435e7855cf"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-001",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "1a92234ea08562f328baf1934ef4c3100a4879de88f9d5a8a35fc583df747ec8"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-002",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "8d58a30c9df34890298475dc33d86b90449eeb1ed901e8d642c3f3856748e636"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-003",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d6f3ab5aeacca7a26466ca14a3f9ecfbb0853bc962704e8ebe3eb56e072ae381"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-004",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "f2183165e39f888e300ec78c4a7247830c3679753df28dbff4ae83c6f3d7a7f6"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-005",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d8792493e2ce20975b1f456217a023a7762a73e62333fcde508dbe226fad1803"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-006",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "35e2d1482ac07589f72a121eefe77f70756f95dbec6360c053bc121880979336"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-007",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "85bea3421c8a479df85e4d0afe99cef00aca5e2c64d14986c2d325ca6b2c48b9"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-008",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "f27db37a059da5ab77b9aa8e1ac1d404745318fc7ccdb9340c82ca228bf711b5"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-009",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "119dfec07a654046541ccaca1081df574a317d75201b7a28fa0af4a12897abf8"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-010",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7db15a0d4e7fc2a26910c1b911c7f3bb5628272e2fad242150c478208851374c"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-011",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "4c0d1bbf5e56b03997b4eaf9e842d014ab151a4d8ef46812020bd3fcc247e938"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-012",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "fd1adaaf765db858f026cd46e45b651bc5c4914bae90a27b2c5acbc302be61da"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-013",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "cd265d01d2c1ecbeb27e157fb6e15e610f48cb7ed47c70ee7196c251ab8885fe"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-014",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "4d638d43894cef905430d4ca168c6b0a0cbe7d28fd4175418aa62915c1715f21"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-015",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "b9bee97d4a92f00b333298ec9e5a68bee371f590b081ea53af01c3086fb3a88b"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-016",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "b7ec0cc74a089197ad7a6b40a96346ccb4d4b305c3d5220684f158c21c8a81f7"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-017",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "e207ea7cac846832750a6ef7c47881c45926e403db8758bf0811dd563a08aa62"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-018",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "4fd05662d7878341eec0169e3be3f948ce3a065ab8ae9ba9d470f8a5cd64d3b8"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-019",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "745d421f7fa200cfe646ac224c0c944dbe19380592d4999af23a5ef38a661d14"
+    },
+    {
+      "case_id": "p2-2-v3-combined_health-020",
+      "category": "combined_health",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": [
+          "symbolic child labels cannot bind a combined plan reference chain"
+        ]
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "19c0a06149632c2ddb821f702aac8209a04e350953f94bc2113741ae4624c835"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-001",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "309905d933d3f915f3d1379d9f62e8879dfc2d6786f455fbb80da2d6e8e832a8"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-002",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "60b37a5c530ebf46a27b640ba102e26ff0d9fc1797d56fe85d342ba9c86a8f3c"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-003",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "fc4b9c597d3e544f906d36a6ad922b44adf79eb5e60627452cde6c05194c6564"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-004",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "78532b623ac3c7328cc743ee951168806763f8af26adebd2bed42046194f1bc7"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-005",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "499bff2e6df316a5a352d4c485bf7c071a8167c0956ec4af38d6851987303b62"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-006",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "3171f4afef35269f61ff122a756dba342ccebbcad39fc759c84f3d8b6488f864"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-007",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "ad632b29a3e1a70766364dfe257f756e5d6619ed8d15ef31f4abc268d09eaa7e"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-008",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "0a492583565a02caa36e2c4f36bae1fea255ee608b7d8a8984249486701e2628"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-009",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "1da55ee6f2bb3042c5c385d6c587405c4bce70dd362057914732950a4e8b6a1e"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-010",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "0490f3386e0e7a2b1f966fb1e335790ea659f6ee92be9b6543af8e2a4bb8fb8b"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-011",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "65cd23ae53244a6838d3e5fc502c25045639e99abb99c42d569bd0a28b0a2232"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-012",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "1d26ca66b669971ffe66a2c2e11e55c403ea20c4088f9b4c216bf113addbdbfe"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-013",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "9f60e8b4f90af3bc14d6cc02bce5f10296b3e08215a7ade2eeeb1b2211d73925"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-014",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d5b7abc072c9dbb389d681b4906a3365d57cec1fab35e799ef5a450dab640ea6"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-015",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "8f9c87e01b446af42b3c8b1c3abb7e6d57d43514f57574675d35ab6a668e553a"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-016",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "6025ab48b047c8f2222253db56a8238549d7ed48bec67fbeabae18c5a7f62998"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-017",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "21b48f07f45e166fde224a344e06cbdbee3087bd4559abd33cbf4f9f11a7ffa9"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-018",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "c560db559d6d54b2dbf0ea0a95c98b0c6f2872abe5af3d73101596b6ab0e58f8"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-019",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2bb717be8235f5179f7ecdbfb0455bdc1db0edf0241fd364344083bc1c672b0d"
+    },
+    {
+      "case_id": "p2-2-v3-revision_lifecycle-020",
+      "category": "revision_lifecycle",
+      "v2_status": "READY",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": true,
+        "field_match": true,
+        "value_match": true,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "37b772303632ae36b8bcfedd569ae7ad37790c2ecd87933190a4a21461fc8ce9"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-001",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "8e587b3cb041c91651bfa850acff263760a043d2baf2627927d3a835c33bdd5b"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-002",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "291f1b496b6ec9ce6a69e4e4ac56e57ec7a197310b2d99b0c73b1274e3b36b13"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-003",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "edb7bffd2a0600ca2945d586c2dabf31aa7e7abf8b755df65128500c438bec0a"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-004",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7f428cd040b9dd2366f9c45444f6b449c0d02dec9c3163b002d2d1e3395af2e7"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-005",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "13a0e9b424c690b160f9c6f55431f4ff9a4f8853753aa1de7c6a62bd9699e60a"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-006",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "4dd0f297955f226e24131e6caf89b70086ddfef94c2d019d5a7516517ec16adc"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-007",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "f5f39a0ddf2aa4c979b9c9cf816f252e9100568f65b393aa8a4e3de8ebffc2cc"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-008",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "42e57bdf3d25594e7a5713332febcb3d4521459e3a0d6de3c00188908613b1d4"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-009",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "356ac402daa6dbae5c01c79285313696dd8cadee59c7347fe317a8f5a406e9fd"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-010",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2cab45fee313727f02723714ff34dc7b4c68d444b901f5473a3e60a1220f5385"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-011",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "2979916b7ece5e20053dfd85f116a051a579c3d6fd17f867dd7c860eecd63d32"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-012",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "7483e5efbf676f40b6c5cf51fa36844a5aa352a19f662c27b11695b8258483db"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-013",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "b54c7c863ddef7ae140a2099e8b99ff5121184ea5c9ce3d172b6a7c4df045d80"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-014",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "23937724016ff09439284d6bd19c15314b404db3e5137f4dd46802bce7a74871"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-015",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "ef55cc2e0f936b6a28236c55943474a2fe96e4940558a8e054b7e36c6a9c057b"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-016",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "f7cd0edf4b9f72e206f016f44d585255e460290089e4798de538da384f857189"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-017",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "d3333d02f672c6f1cfe8dfc468b2cf89ca0d656c14d078bdec9383254c5f94fa"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-018",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "908b7ee7466fc91f977f4f8ce040d5460f7d38e40512cf699723d55ac12fcc1d"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-019",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "37d8c9ecab6b50feaefc0d84e0e331d15f603323ef2d6e4fa71ce2382236a54a"
+    },
+    {
+      "case_id": "p2-2-v3-adversarial_safety-020",
+      "category": "adversarial_safety",
+      "v2_status": "CLARIFICATION_REQUIRED",
+      "semantic_match": true,
+      "diagnostics": {
+        "semantic_match": true,
+        "operation_match": true,
+        "target_match": null,
+        "field_match": null,
+        "value_match": null,
+        "missing_semantics": [],
+        "extra_semantics": [],
+        "normalization_notes": []
+      },
+      "errors": [],
+      "captured_write_attempts": [],
+      "raw_execution_sha256": "ec6af870c4460878061cedf77e157eb2276c0e3df6587d0632baa5d96d2af1a5"
+    }
+  ],
+  "generated_at": "2026-09-05T04:34:20.038088+00:00"
+}

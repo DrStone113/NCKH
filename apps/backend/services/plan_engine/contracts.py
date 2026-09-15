@@ -253,6 +253,76 @@ class PlanRevision:
         payload["revision_content_hash"] = self.revision_content_hash
         return payload
 
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "PlanRevision":
+        """Restore an exact server-created preview without involving an LLM."""
+
+        request_raw = dict(raw["request"])
+        request = PlanRequest(
+            domain=PlanDomain(request_raw["domain"]),
+            period_start=date.fromisoformat(str(request_raw["period_start"])),
+            period_end=date.fromisoformat(str(request_raw["period_end"])),
+            timezone=str(request_raw["timezone"]),
+            goal_override=request_raw.get("goal_override"),
+            schedule_constraints=tuple(request_raw.get("schedule_constraints") or ()),
+            temporary_preferences=tuple(request_raw.get("temporary_preferences") or ()),
+            temporary_exclusions=tuple(request_raw.get("temporary_exclusions") or ()),
+            requested_modifications=tuple(request_raw.get("requested_modifications") or ()),
+            request_source=str(request_raw.get("request_source") or "CHAT"),
+        )
+        validation_raw = dict(raw["validation"])
+        validation = PlanValidationResult(
+            status=PlanValidationStatus(validation_raw["status"]),
+            issues=tuple(
+                PlanValidationIssue(
+                    code=str(issue["code"]),
+                    severity=str(issue["severity"]),
+                    plan_item_id=issue.get("plan_item_id"),
+                )
+                for issue in validation_raw.get("issues") or ()
+            ),
+        )
+        items = tuple(
+            PlanItem(
+                plan_item_id=str(item["plan_item_id"]),
+                scheduled_date=date.fromisoformat(str(item["scheduled_date"])),
+                schedule_slot=str(item["schedule_slot"]),
+                item_type=PlanItemType(item["item_type"]),
+                canonical_refs=dict(item.get("canonical_refs") or {}),
+                status=PlanItemStatus(item.get("status") or PlanItemStatus.PLANNED.value),
+                reason_codes=tuple(item.get("reason_codes") or ()),
+                policy_provenance=tuple(item.get("policy_provenance") or ()),
+                content=dict(item.get("content") or {}),
+            )
+            for item in raw.get("items") or ()
+        )
+        created_at = datetime.fromisoformat(str(raw["created_at"]).replace("Z", "+00:00"))
+        revision = cls(
+            plan_id=str(raw["plan_id"]),
+            domain=PlanDomain(raw["domain"]),
+            revision_id=str(raw["revision_id"]),
+            revision_number=int(raw["revision_number"]),
+            parent_revision_id=raw.get("parent_revision_id"),
+            owner_user_id=str(raw["owner_user_id"]),
+            request=request,
+            lifecycle_status=PlanLifecycleStatus(raw["lifecycle_status"]),
+            validation=validation,
+            policy_versions=dict(raw.get("policy_versions") or {}),
+            catalog_versions=dict(raw.get("catalog_versions") or {}),
+            goal_snapshot=dict(raw.get("goal_snapshot") or {}),
+            constraint_snapshot=dict(raw.get("constraint_snapshot") or {}),
+            items=items,
+            summary=dict(raw.get("summary") or {}),
+            explanation_metadata=dict(raw.get("explanation_metadata") or {}),
+            provenance=dict(raw.get("provenance") or {}),
+            created_at=created_at,
+            plan_schema_version=str(raw.get("plan_schema_version") or PLAN_SCHEMA_VERSION),
+        )
+        expected_hash = raw.get("revision_content_hash")
+        if expected_hash and revision.revision_content_hash != expected_hash:
+            raise ValueError("PLAN_PREVIEW_HASH_MISMATCH")
+        return revision
+
 
 @dataclass(frozen=True, slots=True)
 class PlanPatch:

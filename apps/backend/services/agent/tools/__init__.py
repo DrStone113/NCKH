@@ -49,7 +49,9 @@ def register_server_tools(
 ) -> None:
     """Register all server-side tool descriptors."""
     registry.register(dish.TOOL_DESCRIPTOR)
+    registry.register(dish.SEARCH_CATALOG_DESCRIPTOR)
     registry.register(workout.TOOL_DESCRIPTOR)
+    registry.register(workout.SEARCH_CATALOG_DESCRIPTOR)
     registry.register(BUILD_PERSONALIZED_WORKOUT_DESCRIPTOR)
     registry.register(GET_WORKOUT_SUBSTITUTIONS_DESCRIPTOR)
     registry.register(SAVE_WORKOUT_PLAN_DESCRIPTOR)
@@ -288,13 +290,14 @@ def register_client_tools(registry: ToolRegistry) -> None:
 DOMAIN_MODULE_MAP = {
     "nutrition": [
         "get_today_meals", "get_meal_log_range", "log_meal",
-        "update_nutrition_profile", "calculate_tdee", "search_food_nutrition", "suggest_dish"
+        "update_nutrition_profile", "calculate_tdee", "search_food_nutrition",
+        "suggest_dish", "search_dish_catalog", "search_recipe_web"
     ],
     "fitness": [
         "get_today_exercises", "get_exercise_log_range", "log_exercise",
         "log_weight", "get_weight_history", "update_workout_profile", "suggest_workout",
         "build_personalized_workout", "get_workout_substitutions",
-        "save_workout_plan", "log_workout_result"
+        "save_workout_plan", "log_workout_result", "search_exercise_catalog"
     ],
     "lifestyle": [
         "get_lifestyle_logs", "log_lifestyle", "set_lifestyle_reminder"

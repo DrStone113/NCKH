@@ -223,6 +223,50 @@ def test_build_system_prompt_integrates_user_profile():
     assert "Chưa có ghi chú đặc biệt ngoài thông tin hồ sơ và nhật ký bên dưới." in prompt
 
 
+def test_interaction_contract_applies_to_light_and_full_prompts():
+    light_prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        mode="light",
+    )
+    full_prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        mode="full",
+    )
+
+    for prompt in (light_prompt, full_prompt):
+        assert "HỢP ĐỒNG ỨNG XỬ VỚI NGƯỜI DÙNG" in prompt
+        assert "chưa tối ưu nhưng vẫn có thể lựa chọn" in prompt.casefold()
+        assert "chưa đủ dữ liệu để kết luận" in prompt.casefold()
+        assert "không phán xét" in prompt.casefold()
+        assert "không đổ lỗi cho người dùng" in prompt.casefold()
+        assert "xác minh thành công" in prompt.casefold()
+
+    assert "không an toàn/không được phép" in full_prompt
+    assert "chưa biết khác với bằng 0" in full_prompt
+    assert "Chỉ xác nhận hành động khi ứng dụng đã xác minh thành công" in full_prompt
+
+
+def test_full_prompt_covers_non_judgmental_cross_domain_behavior():
+    prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        mode="full",
+    )
+
+    assert "ỨNG XỬ THEO TỪNG LĨNH VỰC" in prompt
+    assert "Không gọi món ăn là \"tốt/xấu\"" in prompt
+    assert "Không biến vận động thành hình phạt hoặc món nợ calo" in prompt
+    assert "Không quy đổi một món ăn thành số phút tập cần để đốt hết" in prompt
+    assert "Phản hồi đồng cảm nhưng không chẩn đoán từ một câu nói" in prompt
+    assert "Không tự biến gợi ý thành kế hoạch" in prompt
+    assert "không biến kế hoạch thành nhật ký" in prompt
+
+
 @pytest.mark.asyncio
 async def test_orchestrator_injects_user_context_into_prompt_first_turn():
     llm = CapturingLLM([LLMResponse(content_stream=_stream(["Xin chào"]), full_text="Xin chào")])
@@ -239,9 +283,15 @@ async def test_orchestrator_injects_user_context_into_prompt_first_turn():
         "health_goal": "lose_weight",
     }
 
-    await orchestrator.handleChatMessage("sess-test-1", "Chào bạn", user_context=user_context)
+    await orchestrator.handleChatMessage(
+        "sess-test-1",
+        "Tư vấn mục tiêu giảm cân hiện tại của tôi",
+        user_context=user_context,
+    )
 
-    # Prompt gửi cho LLM phải chứa thông tin thể trạng và mục tiêu ngay từ lượt đầu tiên
+    # A real coaching turn receives the relevant profile immediately. Pure
+    # greetings deliberately use the light prompt and do not dump private
+    # body metrics into an otherwise unrelated exchange.
     first_msg_content = llm.last_messages[0]["content"]
     assert "Lê Hoàng" in first_msg_content
     assert "lose_weight" in first_msg_content or "Giảm cân" in first_msg_content

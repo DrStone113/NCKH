@@ -1,8 +1,8 @@
 services:
   fastapi_backend:
-    # Reuse the verified Python 3.11 dependency image while serving the current
-    # working tree. This avoids rebuilding a multi-GB image for source edits.
-    image: nckh_backend:d212
+    build:
+      context: ./apps/backend
+      target: runtime
     command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./apps/backend:/app

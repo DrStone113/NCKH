@@ -1,7 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../models/app_state_value.dart';
+
+class PlanCreationException implements Exception {
+  const PlanCreationException({required this.message, this.code});
+
+  final String message;
+  final String? code;
+
+  @override
+  String toString() => message;
+}
 
 /// Service để gọi backend API
 /// Hỗ trợ cả local development và production
@@ -23,6 +34,136 @@ class BackendApiService {
   }
 
   final http.Client _client = http.Client();
+
+  // The browser acceptance build may supply a short-lived test JWT via
+  // --dart-define. Normal signed-in builds forward their identity token. A
+  // Plan V2 route never treats a caller-supplied user id as authentication.
+  static const String _planV2TestToken =
+      String.fromEnvironment('PLAN_V2_TEST_TOKEN');
+  // N3.2.1 development/shadow E2E uses the same owner-bound API surface as a
+  // signed-in user. It is empty in normal builds and never persisted.
+  static const String _n3FeedbackTestToken =
+      String.fromEnvironment('N3_2_1_TEST_TOKEN');
+
+  Future<Map<String, String>> _planV2Headers() async {
+    final token = _n3FeedbackTestToken.isNotEmpty
+        ? _n3FeedbackTestToken
+        : _planV2TestToken.isNotEmpty
+            ? _planV2TestToken
+            : await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (token == null || token.trim().isEmpty) {
+      throw StateError('PLAN_V2_AUTHENTICATION_REQUIRED');
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  Future<Map<String, String>> _authenticatedHeaders() => _planV2Headers();
+
+  Map<String, dynamic> _planV2Body(http.Response response,
+      {required String operation}) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw StateError('$operation failed: HTTP_${response.statusCode}');
+  }
+
+  Future<List<Map<String, dynamic>>> listAuthoritativePlanV2() async {
+    final response = await _client
+        .get(
+          Uri.parse('$baseUrl/api/plan-v2/plans'),
+          headers: await _planV2Headers(),
+        )
+        .timeout(const Duration(seconds: 10));
+    final body = _planV2Body(response, operation: 'PLAN_V2_LIST');
+    final plans = body['plans'];
+    if (plans is! List) return const [];
+    return plans
+        .whereType<Map>()
+        .map((plan) => Map<String, dynamic>.from(plan))
+        .toList(growable: false);
+  }
+
+  Future<Map<String, dynamic>?> readAuthoritativePlanV2({
+    required String planId,
+    required String revisionId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/plan-v2/plans/$planId')
+        .replace(queryParameters: {'revision_id': revisionId});
+    final response = await _client
+        .get(uri, headers: await _planV2Headers())
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode == 404) return null;
+    final body = _planV2Body(response, operation: 'PLAN_V2_READ');
+    final plan = body['plan'];
+    return plan is Map ? Map<String, dynamic>.from(plan) : null;
+  }
+
+  Future<ActivePlanReadResult> readAuthoritativeActivePlanV2(
+      String domain) async {
+    try {
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl/api/plan-v2/plans/active/$domain'),
+            headers: await _planV2Headers(),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 404) return const ActivePlanReadResult.none();
+      final body = _planV2Body(response, operation: 'PLAN_V2_ACTIVE_READ');
+      final plan = body['plan'];
+      return plan is Map
+          ? ActivePlanReadResult.found(Map<String, dynamic>.from(plan))
+          : const ActivePlanReadResult.error('PLAN_V2_INVALID_RESPONSE');
+    } catch (e) {
+      debugPrint('Plan V2 active read failed: $e');
+      return const ActivePlanReadResult.error('PLAN_V2_ACTIVE_READ_ERROR');
+    }
+  }
+
+  Future<Map<String, dynamic>> saveAuthoritativePlanV2({
+    required String planId,
+    required String revisionId,
+    required String revisionContentHash,
+    required String actionId,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/api/plan-v2/plans/save'),
+          headers: await _planV2Headers(),
+          body: jsonEncode({
+            'plan_id': planId,
+            'revision_id': revisionId,
+            'revision_content_hash': revisionContentHash,
+            'action_id': actionId,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    return _planV2Body(response, operation: 'PLAN_V2_SAVE');
+  }
+
+  Future<Map<String, dynamic>> changeAuthoritativePlanV2Lifecycle({
+    required String planId,
+    required String revisionId,
+    required int expectedRevisionNumber,
+    required String operation,
+    required String actionId,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse(
+              '$baseUrl/api/plan-v2/plans/$planId/revisions/$revisionId/$operation'),
+          headers: await _planV2Headers(),
+          body: jsonEncode({
+            'expected_revision_number': expectedRevisionNumber,
+            'action_id': actionId,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    return _planV2Body(response, operation: 'PLAN_V2_$operation');
+  }
 
   // Cache
   List<Map<String, dynamic>>? _cachedDishes;
@@ -83,7 +224,7 @@ class BackendApiService {
     try {
       debugPrint('🌐 BackendAPI: Fetching Vietnamese foods...');
       final response = await _client
-          .get(Uri.parse('$baseUrl/api/nutrition/vietnamese-foods'))
+          .get(Uri.parse('$baseUrl/api/nutrition/vietnamese-foods?limit=1000'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -133,7 +274,7 @@ class BackendApiService {
   Future<Map<String, dynamic>?> getDishById(String id) async {
     final dishes = await getVietnameseDishes();
     try {
-      return dishes.firstWhere((dish) => dish['id'] == id);
+      return dishes.firstWhere((dish) => dish['id']?.toString() == id);
     } catch (e) {
       return null;
     }
@@ -143,7 +284,10 @@ class BackendApiService {
   Future<Map<String, dynamic>?> getFoodById(String id) async {
     final foods = await getVietnameseFoods();
     try {
-      return foods.firstWhere((food) => food['id'] == id);
+      return foods.firstWhere((food) =>
+          food['food_id']?.toString() == id ||
+          food['ma_so']?.toString() == id ||
+          food['stt']?.toString() == id);
     } catch (e) {
       return null;
     }
@@ -156,7 +300,8 @@ class BackendApiService {
     required String planId,
     required String requestId,
     bool activate = false,
-  }) => _postWorkout(
+  }) =>
+      _postWorkout(
         '/workouts/plans/$planId/save',
         {
           'user_id': userId,
@@ -172,7 +317,8 @@ class BackendApiService {
     required String sessionCompletionStatus,
     required String painDiscomfortStatus,
     List<Map<String, dynamic>> exerciseResults = const [],
-  }) => _postWorkout(
+  }) =>
+      _postWorkout(
         '/workouts/plans/$planId/results',
         {
           'user_id': userId,
@@ -188,14 +334,73 @@ class BackendApiService {
     final response = await _client
         .post(
           Uri.parse('$baseUrl$path'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 15));
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
     throw Exception('Workout write failed: ${response.statusCode}');
+  }
+
+  /// N3.2 development/shadow feedback only. The server refuses this endpoint
+  /// outside shadow mode and it never changes the canonical recipe catalog.
+  Future<Map<String, dynamic>> recordAdaptiveRecommendationFeedback({
+    required String recommendationEventId,
+    required String candidateId,
+    required String policyVersion,
+    required String idempotencyKey,
+    required String eventType,
+    String? reasonCode,
+    String? recommendationId,
+    Map<String, dynamic> metadata = const <String, dynamic>{},
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/api/nutrition/adaptive/recommendations/feedback'),
+          headers: {
+            ...await _planV2Headers(),
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'recommendation_event_id': recommendationEventId,
+            'candidate_id': candidateId,
+            'policy_version': policyVersion,
+            'idempotency_key': idempotencyKey,
+            'event_type': eventType,
+            if (reasonCode != null) 'reason_code': reasonCode,
+            if (recommendationId != null) 'recommendation_id': recommendationId,
+            if (metadata.isNotEmpty) 'metadata': metadata,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception(
+        'Adaptive recommendation feedback failed: ${response.statusCode}');
+  }
+
+  /// Read only the current user's exact recommendation event after a refresh.
+  /// This intentionally has no "latest recommendation" fallback.
+  Future<Map<String, dynamic>> getAdaptiveRecommendationFeedbackState(
+      String recommendationEventId) async {
+    final response = await _client
+        .get(
+          Uri.parse(
+              '$baseUrl/api/nutrition/adaptive/recommendations/$recommendationEventId'),
+          headers: await _planV2Headers(),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception(
+        'Adaptive recommendation feedback state failed: ${response.statusCode}');
   }
 
   /// Clear cache
@@ -227,7 +432,7 @@ class BackendApiService {
     final response = await _client
         .post(
           Uri.parse('$baseUrl/plans'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 180));
@@ -236,52 +441,73 @@ class BackendApiService {
       return json.decode(utf8.decode(response.bodyBytes))
           as Map<String, dynamic>;
     }
-    throw Exception('Create plan failed: ${response.statusCode}');
+    String? code;
+    String? message;
+    try {
+      final decoded = json.decode(utf8.decode(response.bodyBytes));
+      if (decoded is Map<String, dynamic>) {
+        final detail = decoded['detail'];
+        if (detail is Map<String, dynamic>) {
+          code = detail['code']?.toString();
+          message = detail['message']?.toString();
+        } else if (detail is String) {
+          message = detail;
+        }
+      }
+    } catch (_) {
+      // A non-JSON proxy response still becomes a safe user-facing failure.
+    }
+    debugPrint(
+        'BackendAPI: plan creation failed (${response.statusCode}, ${code ?? 'UNKNOWN'})');
+    throw PlanCreationException(
+      code: code,
+      message: message?.trim().isNotEmpty == true
+          ? message!.trim()
+          : 'Chưa thể tạo kế hoạch lúc này. Vui lòng thử lại.',
+    );
   }
 
   Future<Map<String, dynamic>?> getActivePlan(String userId) async {
-    try {
-      final response = await _client
-          .get(Uri.parse('$baseUrl/plans/$userId/active'))
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(utf8.decode(response.bodyBytes))
-            as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      debugPrint('⚠️ BackendAPI: Get active plan failed or empty: $e');
-      return null;
+    final result = await readAuthoritativeActivePlanV2('NUTRITION');
+    if (result.status == ActivePlanStatus.activePlanFound) return result.plan;
+    if (result.status == ActivePlanStatus.readError) {
+      throw Exception(result.errorCode ?? 'PLAN_V2_READ_FAILED');
     }
+    return _readLegacyActivePlan(userId, detail: false);
   }
 
   Future<Map<String, dynamic>?> getActivePlanDetail(String userId) async {
     final result = await readActivePlanDetail(userId);
-    return result.status == ActivePlanStatus.activePlanFound
-        ? result.plan
-        : null;
+    if (result.status == ActivePlanStatus.activePlanFound) return result.plan;
+    if (result.status == ActivePlanStatus.readError) {
+      throw Exception(result.errorCode ?? 'PLAN_V2_READ_FAILED');
+    }
+    return _readLegacyActivePlan(userId, detail: true);
+  }
+
+  Future<Map<String, dynamic>?> _readLegacyActivePlan(
+    String userId, {
+    required bool detail,
+  }) async {
+    final suffix = detail ? '/detail' : '';
+    final response = await _client
+        .get(
+          Uri.parse('$baseUrl/plans/$userId/active$suffix'),
+          headers: await _authenticatedHeaders(),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode == 404) return null;
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
+    }
+    throw Exception('Legacy active plan read failed: ${response.statusCode}');
   }
 
   Future<ActivePlanReadResult> readActivePlanDetail(String userId) async {
-    try {
-      final response = await _client
-          .get(Uri.parse('$baseUrl/plans/$userId/active/detail'))
-          .timeout(const Duration(seconds: 10));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final plan = json.decode(utf8.decode(response.bodyBytes))
-            as Map<String, dynamic>;
-        return ActivePlanReadResult.found(plan);
-      }
-      if (response.statusCode == 404) {
-        return const ActivePlanReadResult.none();
-      }
-      return ActivePlanReadResult.error(
-        'HTTP_${response.statusCode}',
-      );
-    } catch (e) {
-      debugPrint('⚠️ BackendAPI: Get active plan detail failed: $e');
-      return const ActivePlanReadResult.error('ACTIVE_PLAN_READ_ERROR');
-    }
+    // Keep the parameter while callers migrate; it is intentionally never
+    // sent to the authoritative API. Ownership comes from the bearer token.
+    return readAuthoritativeActivePlanV2('NUTRITION');
   }
 
   Future<void> updatePlanItemCompletion({
@@ -291,7 +517,7 @@ class BackendApiService {
     final response = await _client
         .patch(
           Uri.parse('$baseUrl/plans/items/$itemId'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode({'completed': completed}),
         )
         .timeout(const Duration(seconds: 10));
@@ -316,7 +542,7 @@ class BackendApiService {
     final response = await _client
         .post(
           Uri.parse('$baseUrl/plans/checkins'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 10));
@@ -332,8 +558,9 @@ class BackendApiService {
     final uri = Uri.parse('$baseUrl/chat/sessions').replace(queryParameters: {
       if (userId != null && userId.isNotEmpty) 'user_id': userId,
     });
-    final response =
-        await _client.get(uri).timeout(const Duration(seconds: 10));
+    final response = await _client
+        .get(uri, headers: await _authenticatedHeaders())
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final list =
           json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
@@ -346,7 +573,10 @@ class BackendApiService {
   Future<List<Map<String, dynamic>>> getSessionMessages(
       String sessionId) async {
     final response = await _client
-        .get(Uri.parse('$baseUrl/chat/sessions/$sessionId/messages'))
+        .get(
+          Uri.parse('$baseUrl/chat/sessions/$sessionId/messages'),
+          headers: await _authenticatedHeaders(),
+        )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final list =
@@ -359,7 +589,10 @@ class BackendApiService {
   /// Delete a chat session
   Future<void> deleteChatSession(String sessionId) async {
     final response = await _client
-        .delete(Uri.parse('$baseUrl/chat/sessions/$sessionId'))
+        .delete(
+          Uri.parse('$baseUrl/chat/sessions/$sessionId'),
+          headers: await _authenticatedHeaders(),
+        )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Delete chat session failed: ${response.statusCode}');
@@ -367,23 +600,25 @@ class BackendApiService {
   }
 
   /// Get active proactive check-in nudge
-  Future<Map<String, dynamic>?> getActiveCheckin(
-      {String userId = 'default_user'}) async {
-    try {
-      final uri = Uri.parse('$baseUrl/checkin/active')
-          .replace(queryParameters: {'user_id': userId});
-      final response =
-          await _client.get(uri).timeout(const Duration(seconds: 10));
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (response.body.isEmpty || response.body == 'null') return null;
-        return json.decode(utf8.decode(response.bodyBytes))
-            as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      debugPrint('❌ BackendAPI: Error getting active checkin: $e');
-      return null;
+  Future<Map<String, dynamic>?> getActiveCheckin({
+    required String userId,
+    Map<String, dynamic>? userContext,
+  }) async {
+    final uri = Uri.parse('$baseUrl/checkin/active')
+        .replace(queryParameters: {'user_id': userId});
+    final response = await _client
+        .post(
+          uri,
+          headers: await _authenticatedHeaders(),
+          body: jsonEncode(userContext),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty || response.body == 'null') return null;
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
+    throw Exception('Get active checkin failed: ${response.statusCode}');
   }
 
   /// Respond to proactive check-in
@@ -402,7 +637,7 @@ class BackendApiService {
     final response = await _client
         .post(
           Uri.parse('$baseUrl/checkin/respond'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode(payload),
         )
         .timeout(const Duration(seconds: 10));
@@ -419,8 +654,9 @@ class BackendApiService {
       {String userId = 'default_user'}) async {
     final uri = Uri.parse('$baseUrl/checkin/settings')
         .replace(queryParameters: {'user_id': userId});
-    final response =
-        await _client.get(uri).timeout(const Duration(seconds: 10));
+    final response = await _client
+        .get(uri, headers: await _authenticatedHeaders())
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return json.decode(utf8.decode(response.bodyBytes))
           as Map<String, dynamic>;
@@ -438,7 +674,7 @@ class BackendApiService {
     final response = await _client
         .put(
           uri,
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authenticatedHeaders(),
           body: jsonEncode(settings),
         )
         .timeout(const Duration(seconds: 10));

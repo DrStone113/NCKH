@@ -1,128 +1,119 @@
-# Hướng dẫn Thiết lập Firebase & Cấu trúc Database
+# Thiết lập Firebase cho Health App
 
-Dưới đây là hướng dẫn từng bước để tạo dự án Firebase, kết nối với ứng dụng Flutter của bạn và cách thiết kế cấu trúc database NoSQL (Firestore) dựa trên sơ đồ DBML bạn vừa cung cấp.
+Firebase của dự án này chỉ chịu trách nhiệm xác thực, hồ sơ người dùng và một
+số nhật ký cá nhân đang được Flutter truy cập trực tiếp. PostgreSQL/backend vẫn
+là nguồn dữ liệu chính cho Plan V2, chat, RAG, catalog và dữ liệu nghiên cứu.
+Không tạo các collection Firestore để sao chép các hệ thống đó.
 
----
+Thiết kế và ma trận ownership đầy đủ nằm tại
+[`docs/firebase/firebase_architecture.md`](../firebase/firebase_architecture.md).
 
-## Phần 1: Tạo và Kết nối Firebase
+## Công cụ đã chuẩn hóa
 
-### Bước 1: Tạo Project Firebase
-1. Truy cập [Firebase Console](https://console.firebase.google.com/).
-2. Bấm **Add project** (Thêm dự án).
-3. Đặt tên là `HealthApp` (hoặc tên tùy ý) và tiếp tục.
-4. Tắt Google Analytics (để đơn giản hóa lúc đầu) và đợi dự án khởi tạo xong.
+- Firebase CLI: `15.30.0`
+- FlutterFire CLI: `1.4.1`
+- Flutter/Dart của dự án: `.fvmrc`, Flutter `3.44.8`, Dart `3.12.2`
+- Firebase Emulator: JDK 21 qua biến user `FIREBASE_JAVA_HOME`
+- Android/Gradle: tiếp tục dùng JDK 17 qua `JAVA_HOME`
 
-### Bước 2: Bật Authentication (Đăng nhập)
-1. Trong menu bên trái, chọn **Build** -> **Authentication**.
-2. Bấm **Get started**.
-3. Tab **Sign-in method**, bật 2 phương thức:
-   - **Email/Password**: Bật công tắc Enable và Save.
-   - **Google**: Bật công tắc Enable, chọn mội Project support email (email của bạn) và Save.
+Firebase Emulator tooling hỗ trợ Node 20, 22 hoặc 24. Node 26 hiện chạy được bộ
+test nhưng không phải phiên bản được khai báo hỗ trợ; nên dùng Node 24 LTS cho
+CI hoặc trước khi coi toolchain là production-ready.
 
-### Bước 3: Bật Cloud Firestore (Database)
-1. Trong menu bên trái, chọn **Build** -> **Firestore Database**.
-2. Bấm **Create database**.
-3. Chọn Location (Nên chọn `asia-southeast1` - Singapore cho gần Việt Nam).
-4. Chọn **Start in Test mode** (Cho phép đọc/ghi thoải mái trong quá trình dev) và bấm Enable.
+## Cấu hình cố định
 
-### Bước 4: Kết nối với Flutter bằng FlutterFire CLI
-Để app Flutter hiểu được Firebase, bạn cần thiết lập cấu hình. Mở Terminal trong VSCode (hoặc PowerShell tại thư mục `C:\Project\Chatbot\apps\mobile`) và chạy:
+- Firebase project dự kiến: `healthcare-191d8`
+- Android package: `com.example.app`
+- Debug SHA-1: `DC:60:5D:E3:F6:70:EF:D5:BA:32:B8:1F:F0:91:B1:2F:FB:5B:E9:80`
+- Debug SHA-256: `01:78:8F:DF:20:A3:C5:B8:40:53:EC:38:51:64:2E:6C:BC:15:94:70:17:5B:0E:35:26:CA:27:00:8C:A0:71:82`
 
-1. Cài đặt Firebase CLI (nếu chưa có):
-```bash
-npm install -g firebase-tools
+Fingerprint phải được lấy lại bằng `android\gradlew.bat signingReport` nếu
+debug keystore thay đổi.
+
+## Chạy kiểm tra local
+
+Từ thư mục gốc repository:
+
+```powershell
+.\scripts\firebase\run-emulator-tests.ps1
+```
+
+Lệnh này dùng project giả `demo-healthcare-f1`, khởi động Firestore Emulator,
+chạy rule tests rồi tự tắt. Nó không thể ghi vào production.
+
+Để chạy app Flutter với Auth và Firestore Emulator:
+
+```powershell
+firebase emulators:start --only auth,firestore --project demo-healthcare-f1
+cd apps\mobile
+.\.fvm\flutter_sdk\bin\flutter.bat run `
+  --dart-define=USE_FIREBASE_EMULATORS=true
+```
+
+Trên Android emulator/LDPlayer, app dùng `10.0.2.2` để truy cập emulator trên
+máy host. Web dùng `127.0.0.1`. Nếu không truyền dart-define, production Firebase
+là mặc định.
+
+## Audit cloud trước khi thay đổi
+
+Đăng nhập bằng tài khoản có quyền với project hiện hữu:
+
+```powershell
 firebase login
+.\scripts\firebase\bootstrap.ps1
 ```
-2. Cài đặt FlutterFire CLI:
-```bash
-dart pub global activate flutterfire_cli
+
+Bootstrap mặc định là `AUDIT_ONLY`: xác minh project, Android app, SHA và
+Firestore nhưng không tạo/deploy gì.
+
+## Áp dụng cloud có kiểm soát
+
+Không chạy tất cả cờ cùng lúc khi chưa đọc output audit. Ví dụ, nếu Android app
+đã tồn tại nhưng thiếu SHA/config:
+
+```powershell
+.\scripts\firebase\bootstrap.ps1 `
+  -ApplyCloud `
+  -RegisterSha `
+  -DownloadGoogleServices `
+  -ConfigureFlutterFire
 ```
-3. Cấu hình Firebase cho Project:
-```bash
-flutterfire configure
+
+Chỉ tạo Android app nếu audit xác nhận app `com.example.app` chưa tồn tại:
+
+```powershell
+.\scripts\firebase\bootstrap.ps1 `
+  -ApplyCloud `
+  -CreateMissingAndroidApp `
+  -RegisterSha `
+  -DownloadGoogleServices `
+  -ConfigureFlutterFire
 ```
-*Giao diện dòng lệnh sẽ hiện ra, bạn dùng phím mũi tên chọn project `HealthApp` vừa tạo, sau đó ấn Enter để chọn nền tảng (Android, iOS, Web). CLI sẽ tự động tải file `google-services.json` và tạo file `firebase_options.dart`.*
 
----
+Deploy Firestore chỉ sau khi rule tests pass:
 
-## Phần 2: Chuyển đổi DBML sang Cấu trúc NoSQL (Firestore)
+```powershell
+.\scripts\firebase\bootstrap.ps1 -ApplyCloud -DeployFirestore
+```
 
-Vì Firestore là cơ sở dữ liệu NoSQL (lưu dạng Document thay vì Table), ta cần chuyển đổi các Table DBML của bạn thành các **Collections** (Tập hợp) và **Documents** (Tài liệu). Dưới đây là sơ đồ mapping tối ưu:
+Deploy Email/Password và Google Sign-In cần email hỗ trợ thuộc quyền sở hữu của
+người quản trị OAuth:
 
-### 1. Tập hợp (Collection): `users`
-*(Thay thế bảng `nguoi_dung`)*
-- `id` (Document ID mặc định của Firebase Auth)
-- `ho_ten`: String
-- `email`: String
-- `gioi_tinh`: String ("nam", "nu", "khac")
-- `ngay_sinh`: Timestamp
-- `chieu_cao`: Number (cm)
-- `can_nang_muc_tieu`: Number (kg)
-- `muc_do_van_dong`: String ("it", "nhe", "vua", "nhieu", "rat_nhieu")
-- `ngay_tao`: Timestamp
+```powershell
+.\scripts\firebase\bootstrap.ps1 `
+  -ApplyCloud `
+  -DeployAuth `
+  -SupportEmail 'owner@example.com'
+```
 
-### 2. Tập hợp (Collection): `body_metrics`
-*(Thay thế bảng `chi_so_co_the`)*
-Khuyên dùng: Tạo root collection `body_metrics` để dễ truy vấn theo ngày.
-- `id` (Auto-generated Document ID)
-- `userId`: String (Tham chiếu tới Document ID của `users`)
-- `can_nang`: Number (kg)
-- `bmi`: Number
-- `ngay_ghi_nhan`: Timestamp
+Script sinh config Auth tạm trong thư mục đã ignore và chỉ deploy `auth`. Không
+lưu support email vào source nếu không cần.
 
-### 3. Tập hợp (Collection): `foods`
-*(Thay thế bảng `mon_an`)*
-- `id` (Auto-generated Document ID)
-- `userId`: String (Gán `"system"` nếu là món do hệ thống cung cấp)
-- `ten_mon`: String
-- `calo_tren_100g`: Number
-- `protein_tren_100g`: Number
-- `chat_beo_tren_100g`: Number
-- `carbs_tren_100g`: Number
-- `vi_chat_dinh_duong`: Map (Object)
-- `danh_muc`: String
-- `la_mon_he_thong`: Boolean
+## File cấu hình Android
 
-### 4. Tập hợp (Collection): `menus` & `menu_details`
-*(Thay thế bảng `thuc_don` và `chi_tiet_thuc_don`)*
-Vì Firestore hỗ trợ lưu Array of Objects, ta kết hợp 2 bảng này vào một Document.
-**Collection `menus`**:
-- `id` (Auto-generated)
-- `userId`: String (hoặc null/"system")
-- `ten_thuc_don`: String
-- `loai_muc_tieu`: String ("giam_can", "duy_tri", "tang_co", "tuy_chinh")
-- `mo_ta`: String
-- `cong_khai`: Boolean
-- `mon_an_chi_tiet`: Array of Maps (Mảng chứa các Map)
-  - `[0]`: `{ mon_an_id: "id_mon1", luong_gram: 200, bua_an: "sang" }`
-  - `[1]`: `{ mon_an_id: "id_mon2", luong_gram: 150, bua_an: "trua" }`
+`apps/mobile/android/app/google-services.json` phải được tải từ Firebase bằng
+CLI hoặc Console sau khi Android app và SHA hợp lệ. File được Git ignore và
+không được tạo giả. Sau khi có file, Gradle tự bật plugin Google Services.
 
-### 5. Tập hợp (Collection): `meal_logs`
-*(Thay thế bảng `nhat_ky_an_uong`)*
-- `id` (Auto-generated)
-- `userId`: String
-- `mon_an_id`: String
-- `khoi_luong_an`: Number
-- `loai_bua_an`: String ("sang", "trua", "toi", "phu")
-- `ngay_ghi_nhan`: Timestamp
-
-### 6. Tập hợp (Collection): `exercises` & `exercise_logs`
-*(Thay thế bảng `bai_tap` và `nhat_ky_tap_luyen`)*
-**Collection `exercises`**:
-- `id` (Auto)
-- `ten_bai_tap`: String
-- `chi_so_met`: Number
-- `mo_ta`: String
-
-**Collection `exercise_logs`**:
-- `id` (Auto)
-- `userId`: String
-- `bai_tap_id`: String
-- `thoi_gian_phut`: Number
-- `calo_tieu_thu`: Number
-- `ngay_ghi_nhan`: Timestamp
-
-### 7. Nhóm Chatbot & Triệu chứng
-Với bảng DBML `trieu_chung`, `thieu_hut_vi_chat`, `ban_do_trieu_chung`, `thuc_pham_bo_sung`:
-Vì nội dung này ít khi thay đổi (kiến thức y khoa cố định), **cách tốt nhất để tối ưu chi phí Firebase (tránh tốn lượt đọc)** là hardcode database này thành các class Dart trong file `providers/chat_provider.dart` (như cách ứng dụng hiện tại đang làm).
-Nếu bạn vẫn muốn lưu trên Firebase để sau này admin tự thêm bớt không cần update app, hãy tạo collection `chatbot_knowledge`, trong đó mỗi Document ứng với một "Triệu Chứng" (gộp mô tả, thiếu hụt, cách bổ sung thành 1 array).
+Không tạo Firestore ở Test mode. Rules production phải đến từ
+`firebase/firestore.rules`, đã qua Emulator, rồi deploy scoped.

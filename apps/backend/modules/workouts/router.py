@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
 from services.workout_planner.integration import WorkoutIntegrationService, WorkoutRuntimeContext
+from services.auth import AuthenticatedPrincipal, require_authenticated_principal, require_owner
 
 
 router = APIRouter(prefix="/workouts", tags=["workouts"])
@@ -66,7 +67,13 @@ def _runtime(request: Request, user_id: str) -> WorkoutRuntimeContext:
 
 
 @router.post("/plans/{plan_id}/save")
-async def save_workout_plan(plan_id: str, body: SaveWorkoutPlanRequest, request: Request) -> dict[str, Any]:
+async def save_workout_plan(
+    plan_id: str,
+    body: SaveWorkoutPlanRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
+) -> dict[str, Any]:
+    require_owner(principal, body.user_id)
     runtime = _runtime(request, body.user_id)
     return await WorkoutIntegrationService(runtime.db_session).save_plan(
         runtime, plan_id, body.request_id, activate=body.activate
@@ -74,7 +81,13 @@ async def save_workout_plan(plan_id: str, body: SaveWorkoutPlanRequest, request:
 
 
 @router.post("/plans/{plan_id}/results")
-async def log_workout_result(plan_id: str, body: LogWorkoutResultRequest, request: Request) -> dict[str, Any]:
+async def log_workout_result(
+    plan_id: str,
+    body: LogWorkoutResultRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
+) -> dict[str, Any]:
+    require_owner(principal, body.user_id)
     runtime = _runtime(request, body.user_id)
     payload = body.model_dump(mode="json")
     payload.pop("user_id", None)

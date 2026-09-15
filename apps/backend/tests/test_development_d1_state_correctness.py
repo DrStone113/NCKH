@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from config import Settings
 from modules.plans.router import get_active_plan
+from services.auth import AuthenticatedPrincipal
 from services.agent.context_trace import ContextTraceRecorder
 
 
@@ -95,11 +96,15 @@ async def test_no_active_plan_is_distinct_from_database_failure(monkeypatch):
     monkeypatch.setattr(db_status, "is_db_offline", lambda: False)
 
     with pytest.raises(HTTPException) as no_plan:
-        await get_active_plan("synthetic-user", _NoPlanDb())
+        await get_active_plan(
+            "synthetic-user", _NoPlanDb(), AuthenticatedPrincipal("synthetic-user")
+        )
     assert no_plan.value.status_code == 404
 
     with pytest.raises(HTTPException) as read_error:
-        await get_active_plan("synthetic-user", _BrokenDb())
+        await get_active_plan(
+            "synthetic-user", _BrokenDb(), AuthenticatedPrincipal("synthetic-user")
+        )
     assert read_error.value.status_code == 503
 
 

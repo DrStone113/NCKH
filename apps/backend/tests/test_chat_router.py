@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from modules.chat.router import get_session_messages, list_chat_sessions
+from services.auth import AuthenticatedPrincipal
 
 
 class _FakeResult:
@@ -62,11 +63,15 @@ async def test_session_history_returns_only_safe_public_trace() -> None:
     )
     db = _FakeDb([row])
 
-    messages = await get_session_messages("session-id", db=db)  # type: ignore[arg-type]
+    messages = await get_session_messages(
+        "session-id",
+        db=db,  # type: ignore[arg-type]
+        principal=AuthenticatedPrincipal("user-1"),
+    )
 
     assert "thoughts" not in db.sql
     assert "public_trace" in db.sql
-    assert db.params == {"sid": "session-id"}
+    assert db.params == {"sid": "session-id", "owner": "user-1"}
     assert messages == [
         {
             "id": "message-id",
@@ -93,6 +98,7 @@ async def test_session_list_is_scoped_to_the_requested_user() -> None:
         user_id="user-1",
         limit=20,
         db=db,  # type: ignore[arg-type]
+        principal=AuthenticatedPrincipal("user-1"),
     )
 
     assert sessions == []

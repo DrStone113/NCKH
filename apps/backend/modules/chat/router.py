@@ -1,7 +1,8 @@
-from fastapi import APIRouter, WebSocket, Depends, Query
+from fastapi import APIRouter, WebSocket, Depends, Query, HTTPException
 from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from config import settings
 from db.database import ScopedSession, get_db
 
 from services.agent.chat_gateway import ChatGateway
@@ -9,6 +10,7 @@ from services.agent.orchestrator import AgentOrchestrator
 from services.agent.memory_service import MemoryService
 from db.session_store import DbSessionStore
 from services.agent.tool_dispatcher import ToolDispatcher
+from services.auth import AuthenticatedPrincipal, require_authenticated_principal, require_owner
 
 router = APIRouter(tags=["chat"])
 
@@ -18,8 +20,11 @@ async def list_chat_sessions(
     user_id: str | None = Query(None),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ) -> list[dict[str, Any]]:
     """List chat sessions with their title (first user message)."""
+    if user_id is not None:
+        require_owner(principal, user_id)
     sql = text(
         """
         SELECT 
@@ -35,15 +40,12 @@ async def list_chat_sessions(
                 LIMIT 1
             ) AS title
         FROM chat_sessions s
-        WHERE (
-            (CAST(:user_id AS text) IS NULL AND s.user_id = 'anonymous')
-            OR s.user_id = :user_id
-        )
+        WHERE s.user_id = :user_id
         ORDER BY s.last_active DESC
         LIMIT :limit
         """
     )
-    result = await db.execute(sql, {"user_id": user_id, "limit": limit})
+    result = await db.execute(sql, {"user_id": principal.user_id, "limit": limit})
     rows = result.fetchall()
     
     sessions = []
@@ -65,18 +67,21 @@ async def list_chat_sessions(
 async def get_session_messages(
     session_id: str,
     db: AsyncSession = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ) -> list[dict[str, Any]]:
     """Get all user & assistant messages for a session."""
     sql = text(
         """
-        SELECT id, session_id, role, content, structured_data, public_trace, created_at
-        FROM chat_messages
-        WHERE session_id = :sid
-          AND role IN ('user', 'assistant')
-        ORDER BY created_at ASC, id ASC
+        SELECT m.id, m.session_id, m.role, m.content, m.structured_data, m.public_trace, m.created_at
+        FROM chat_messages m
+        JOIN chat_sessions s ON s.id = m.session_id
+        WHERE m.session_id = :sid
+          AND s.user_id = :owner
+          AND m.role IN ('user', 'assistant')
+        ORDER BY m.created_at ASC, m.id ASC
         """
     )
-    result = await db.execute(sql, {"sid": session_id})
+    result = await db.execute(sql, {"sid": session_id, "owner": principal.user_id})
     rows = result.fetchall()
     
     messages = []
@@ -97,23 +102,39 @@ async def get_session_messages(
 async def delete_chat_session(
     session_id: str,
     db: AsyncSession = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ) -> dict[str, str]:
     """Delete a chat session and its history."""
     await db.execute(
-        text("DELETE FROM chat_messages WHERE session_id = :sid"),
-        {"sid": session_id},
+        text(
+            "DELETE FROM chat_messages WHERE session_id = :sid "
+            "AND EXISTS (SELECT 1 FROM chat_sessions s WHERE s.id = :sid AND s.user_id = :owner)"
+        ),
+        {"sid": session_id, "owner": principal.user_id},
     )
-    await db.execute(
-        text("DELETE FROM chat_sessions WHERE id = :sid"),
-        {"sid": session_id},
+    deleted = await db.execute(
+        text("DELETE FROM chat_sessions WHERE id = :sid AND user_id = :owner"),
+        {"sid": session_id, "owner": principal.user_id},
     )
+    if deleted.rowcount == 0:
+        await db.rollback()
+        raise HTTPException(status_code=404, detail="CHAT_SESSION_NOT_FOUND")
     await db.commit()
     return {"status": "ok", "message": "Session deleted"}
 
 
 @router.websocket("/chat/stream")
 async def chat_stream(websocket: WebSocket):
-    await websocket.accept()
+    requested_protocols = {
+        item.strip()
+        for item in websocket.headers.get("sec-websocket-protocol", "").split(",")
+        if item.strip()
+    }
+    await websocket.accept(
+        subprotocol="health-auth-v1"
+        if "health-auth-v1" in requested_protocols
+        else None
+    )
     import uuid
     session_id = websocket.query_params.get("session_id")
     try:
@@ -131,10 +152,17 @@ async def chat_stream(websocket: WebSocket):
     # chat history mid-conversation. ScopedSession hands out a fresh session per
     # statement instead.
     app = websocket.app
-    db_session = ScopedSession()
+    db_session = ScopedSession(
+        metrics=getattr(app.state, "backend_cost_metrics", None),
+        admission_controller=getattr(app.state, "chat_admission", None),
+    )
     memory = MemoryService(db_session, app.state.rag_service)
     session_store = DbSessionStore(db_session)
-    dispatcher = ToolDispatcher(app.state.registry, db_session=db_session)
+    dispatcher = ToolDispatcher(
+        app.state.registry,
+        db_session=db_session,
+        snapshot_cache=getattr(app.state, "private_snapshot_cache", None),
+    )
     
     orchestrator = AgentOrchestrator(
         llm=app.state.llm,
@@ -143,10 +171,23 @@ async def chat_stream(websocket: WebSocket):
         memory=memory,
         session_store=session_store,
         dispatcher=dispatcher,
-        gateway=None
+        gateway=None,
+        scope_guard=getattr(app.state, "scope_guard", None),
+        metrics=getattr(app.state, "backend_cost_metrics", None),
+        memory_semaphore=getattr(app.state, "background_memory_semaphore", None),
     )
     
-    gateway = ChatGateway(websocket, orchestrator, session_id, db_session=db_session)
+    gateway = ChatGateway(
+        websocket,
+        orchestrator,
+        session_id,
+        db_session=db_session,
+        admission=getattr(app.state, "chat_admission", None),
+        metrics=getattr(app.state, "backend_cost_metrics", None),
+        queue_size=settings.chat_queue_size,
+        enforce_backpressure=settings.backend_cost_mode == "enforce",
+        retry_after_ms=settings.chat_admission_retry_after_ms,
+    )
     if not await gateway.authenticate():
         return
     orchestrator.gateway = gateway

@@ -1,0 +1,36 @@
+{
+  "artifact_version": "backend-optimization-policy-v2.0.0",
+  "inference_policy_version": "inference-policy-v2.0.0",
+  "status": "TRUSTED_SHADOW_UNQUALIFIED",
+  "generated_at": "2026-09-14T00:00:00+07:00",
+  "runtime_default": "observe",
+  "automatic_promotion": false,
+  "random_health_exploration": false,
+  "retrieval": {
+    "cascade": ["EXACT", "LEXICAL", "DENSE", "WEIGHTED_RRF", "NEAR_DUPLICATE_MMR"],
+    "lexical_confidence_threshold": 0.18,
+    "lexical_margin_ratio": 1.5,
+    "threshold_status": "DEVELOPMENT_DEFAULT_REQUIRES_GRID_SEARCH",
+    "top_k": {"exact": 1, "clear_lexical": 3, "maximum": 8},
+    "dense_batch": {"window_ms": 10, "maximum": 8},
+    "cpu_threads": 2,
+    "inference_concurrency": 1
+  },
+  "scope_slm": {"batch_window_ms": 5, "maximum": 16},
+  "hard_gates": [
+    "SAFETY_100_PERCENT",
+    "ALLERGY_100_PERCENT",
+    "OWNER_ISOLATION_100_PERCENT",
+    "PERSISTENCE_CORRECTNESS_100_PERCENT",
+    "UNSUPPORTED_HIGH_RISK_CLAIMS_ZERO"
+  ],
+  "promotion_gates": {
+    "paid_llm_call_reduction_min": 0.35,
+    "sql_per_turn_reduction_min": 0.40,
+    "cpu_seconds_reduction_min": 0.25,
+    "p95_latency_reduction_min": 0.20,
+    "task_success_percentage_point_gain_min": 3.0,
+    "single_call_completion_min": 0.80,
+    "dense_call_reduction_non_evidence_min": 0.60
+  }
+}

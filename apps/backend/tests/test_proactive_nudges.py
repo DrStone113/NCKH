@@ -154,6 +154,23 @@ async def test_llm_failure_falls_back_to_the_template():
 
 
 @pytest.mark.asyncio
+async def test_slow_llm_times_out_and_falls_back_to_template():
+    import asyncio
+    import time
+
+    class Slow:
+        async def chat(self, *args, **kwargs):
+            await asyncio.sleep(30)
+
+    started = time.monotonic()
+    nudge = await ProactiveService(llm_client=Slow()).generate_active_nudge(
+        "u", UserContext(today_meals_count=0), now=at(20)
+    )
+    assert time.monotonic() - started < 3.0
+    assert nudge is not None and len(nudge.message) > 10
+
+
+@pytest.mark.asyncio
 async def test_runaway_llm_output_is_rejected():
     """A notification must stay a notification."""
     llm = _StubLLM("x" * 400)

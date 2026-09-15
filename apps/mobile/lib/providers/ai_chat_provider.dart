@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:uuid/uuid.dart';
 import '../models/user_model.dart';
+import '../models/profile_readiness.dart';
 import '../models/chat_message.dart';
 import '../models/wger_models.dart';
 import '../models/exercise_model.dart';
@@ -13,6 +15,7 @@ import '../models/app_state_value.dart';
 import '../models/canonical_weight.dart';
 import '../constants/ai_chatbot_config.dart';
 import '../services/backend_api_service.dart';
+import '../services/semantic_router/semantic_router.dart';
 import 'exercise_provider.dart';
 import 'nutrition_provider.dart';
 import 'lifestyle_provider.dart';
@@ -22,10 +25,8 @@ import '../utils/location_helper.dart';
 import '../utils/meal_nutrition_utils.dart';
 import '../utils/streaming_typewriter.dart';
 
-enum _ProfileContextScope { nutrition, workout, both, general }
-
 const bool _developerTraceBuild =
-    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: false);
+    bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: kDebugMode);
 
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
@@ -34,6 +35,16 @@ class AIChatProvider extends ChangeNotifier {
   bool _isStreaming = false;
   String? _streamingMessageId;
   String? _errorMessage;
+  ProfileReadiness? _profileReadiness;
+  String? _profileIssue;
+  bool _checkingProfile = false;
+  bool _sendingMessage = false;
+  bool _pendingActionActive = false;
+  String? _unsentDraft;
+  String? _draftOwner;
+
+  String? pendingDraftFor(String userId) =>
+      _draftOwner == userId ? _unsentDraft : null;
   Timer? _timeoutTimer;
   late final StreamingTypewriter _responseTypewriter;
   Map<String, dynamic>? _pendingDoneData;
@@ -41,13 +52,16 @@ class AIChatProvider extends ChangeNotifier {
   final _uuid = const Uuid();
   String? _sessionId;
   final BackendApiService _backendApi = BackendApiService();
+  late final SemanticRouter _semanticRouter;
   double? _latitude;
   double? _longitude;
-  _ProfileContextScope _activeProfileScope = _ProfileContextScope.general;
+  ProfileContextScope _activeProfileScope = ProfileContextScope.general;
 
   AIChatProvider({
     Duration typewriterInterval = const Duration(milliseconds: 18),
+    SemanticRouter? semanticRouter,
   }) {
+    _semanticRouter = semanticRouter ?? SemanticRouter();
     _responseTypewriter = StreamingTypewriter(
       interval: typewriterInterval,
       onChunk: _appendTypewriterChunk,
@@ -93,6 +107,18 @@ class AIChatProvider extends ChangeNotifier {
   List<AIChatMessage> get messages => List.unmodifiable(_messages);
   bool get isStreaming => _isStreaming;
   String? get errorMessage => _errorMessage;
+  ProfileReadiness? get profileReadiness => _profileReadiness;
+  String? get profileIssue {
+    final current = _userProvider?.currentUser;
+    if (_profileReadiness?.canSend == false &&
+        current != null &&
+        ProfileReadiness.assess(current).canSend) {
+      return null;
+    }
+    return _profileIssue;
+  }
+
+  bool get isCheckingProfile => _checkingProfile;
   bool get canRetry => _lastMessageText != null && _lastUser != null;
   String? get currentSessionId => _sessionId;
 
@@ -285,12 +311,18 @@ class AIChatProvider extends ChangeNotifier {
     _sessionId = sessionId;
     disconnect();
 
-    debugPrint('🔌 [AIChatProvider] Connecting to ${AIChatbotConfig.wsUrl}...');
-
     try {
-      _channel = WebSocketChannel.connect(
-        Uri.parse(AIChatbotConfig.wsUrl),
+      final firebaseToken =
+          await FirebaseAuth.instance.currentUser?.getIdToken();
+      final wsUrl = AIChatbotConfig.wsUrlFor(
+        sessionId: sessionId,
       );
+      debugPrint('🔌 [AIChatProvider] Connecting authenticated chat...');
+      final channel = WebSocketChannel.connect(
+        Uri.parse(wsUrl),
+        protocols: AIChatbotConfig.wsProtocolsFor(firebaseToken: firebaseToken),
+      );
+      _channel = channel;
 
       // Chờ kết nối với timeout 3 giây
       await _channel!.ready.timeout(
@@ -314,9 +346,17 @@ class AIChatProvider extends ChangeNotifier {
         onDone: () {
           debugPrint('🔌 [AIChatProvider] Connection closed');
           final wasStreaming = _isStreaming;
+          final closeCode = channel.closeCode;
           disconnect(); // Clear resources and set _channel = null
           if (wasStreaming) {
-            _onError('CONNECTION_ERROR', 'Kết nối bị ngắt');
+            _onError(
+              closeCode == 4401
+                  ? 'AUTHENTICATION_REQUIRED'
+                  : 'CONNECTION_ERROR',
+              closeCode == 4401
+                  ? 'Phiên xác thực không hợp lệ'
+                  : 'Kết nối bị ngắt',
+            );
           }
         },
       );
@@ -333,17 +373,6 @@ class AIChatProvider extends ChangeNotifier {
   Future<void> retryLastMessage() async {
     if (_lastMessageText == null || _lastUser == null) return;
 
-    // Xóa tin nhắn user cuối cùng (sẽ được thêm lại trong sendMessage)
-    // Tìm từ cuối lên để xử lý cả trường hợp có partial bot message
-    final lastUserIdx = _messages.lastIndexWhere((m) => m.isUser);
-    if (lastUserIdx != -1) {
-      // Xóa user message và tất cả bot message sau nó (partial response)
-      _messages.removeRange(lastUserIdx, _messages.length);
-    }
-
-    _errorMessage = null;
-    notifyListeners();
-
     await sendMessage(
       _lastMessageText!,
       _lastUser!,
@@ -353,11 +382,12 @@ class AIChatProvider extends ChangeNotifier {
       todayExercisesCount: _lastTodayExercisesCount,
       todayMeals: _lastTodayMeals,
       todayExercises: _lastTodayExercises,
+      replaceLastAttempt: true,
     );
   }
 
   /// Gửi tin nhắn người dùng và tạo streaming placeholder
-  Future<void> sendMessage(
+  Future<bool> sendMessage(
     String text,
     UserModel user, {
     double todayCalories = 0,
@@ -369,222 +399,293 @@ class AIChatProvider extends ChangeNotifier {
     List<Map<String, dynamic>> exerciseHistory = const [],
     String exerciseHistoryStatus = 'NOT_LOADED',
     DateTime? exerciseHistoryObservedAt,
+    bool replaceLastAttempt = false,
   }) async {
-    debugPrint('📤 [AIChatProvider] Sending message: $text');
-    debugPrint('👤 [AIChatProvider] User: ${user.name}, age: ${user.age}');
+    if (_checkingProfile || _isStreaming || _sendingMessage) return false;
+    _sendingMessage = true;
+    _unsentDraft = text;
+    _draftOwner = user.id;
+    try {
+      final currentProfile = await checkProfileBeforeSend(text, user);
+      if (currentProfile == null) return false;
+      user = currentProfile;
 
-    // Lưu context để có thể retry
-    _lastMessageText = text;
-    _lastUser = user;
-    _lastTodayCalories = todayCalories;
-    _lastTodayMealsCount = todayMealsCount;
-    _lastTodayCaloriesBurned = todayCaloriesBurned;
-    _lastTodayExercisesCount = todayExercisesCount;
-    _lastTodayMeals = todayMeals;
-    _lastTodayExercises = todayExercises;
+      // Lưu context để có thể retry
+      _lastMessageText = text;
+      _lastUser = user;
+      _lastTodayCalories = todayCalories;
+      _lastTodayMealsCount = todayMealsCount;
+      _lastTodayCaloriesBurned = todayCaloriesBurned;
+      _lastTodayExercisesCount = todayExercisesCount;
+      _lastTodayMeals = todayMeals;
+      _lastTodayExercises = todayExercises;
 
-    if (_channel == null) {
-      debugPrint('🔌 [AIChatProvider] No connection, connecting...');
-      await connect(_sessionId ?? _uuid.v4());
-      if (_channel == null) return;
-    }
+      if (_channel == null) {
+        debugPrint('🔌 [AIChatProvider] No connection, connecting...');
+        await connect(_sessionId ?? _uuid.v4());
+        if (_channel == null) return false;
+      }
 
-    // 1. Thêm user message vào list
-    _messages.add(AIChatMessage(
-      id: _uuid.v4(),
-      text: text,
-      isUser: true,
-      isStreaming: false,
-      timestamp: DateTime.now(),
-    ));
+      if (_userProvider?.currentUser?.id != user.id) return false;
+      if (replaceLastAttempt) {
+        final lastUserIdx =
+            _messages.lastIndexWhere((message) => message.isUser);
+        if (lastUserIdx != -1) {
+          _messages.removeRange(lastUserIdx, _messages.length);
+        }
+      }
 
-    // 2. Tạo streaming message placeholder — status: thinking
-    _responseTypewriter.clear();
-    _pendingDoneData = null;
-    _deferredResponseText = '';
-    final streamingId = _uuid.v4();
-    _streamingMessageId = streamingId;
-    _isStreaming = true;
-    _errorMessage = null;
-    _messages.add(AIChatMessage(
-      id: streamingId,
-      text: '',
-      isUser: false,
-      isStreaming: true,
-      status: MessageStatus.thinking,
-      timestamp: DateTime.now(),
-    ));
-    notifyListeners();
+      // 1. Thêm user message vào list
+      _messages.add(AIChatMessage(
+        id: _uuid.v4(),
+        text: text,
+        isUser: true,
+        isStreaming: false,
+        timestamp: DateTime.now(),
+      ));
 
-    // Bắt đầu timeout 30 giây
-    _timeoutTimer?.cancel();
-    _timeoutTimer = Timer(AIChatbotConfig.streamTimeout, () {
-      debugPrint('⏰ [AIChatProvider] Stream timeout');
-      _onError('TIMEOUT', 'Phản hồi quá lâu');
-    });
+      // 2. Tạo streaming message placeholder — status: thinking
+      _responseTypewriter.clear();
+      _pendingDoneData = null;
+      _deferredResponseText = '';
+      final streamingId = _uuid.v4();
+      _streamingMessageId = streamingId;
+      _isStreaming = true;
+      _errorMessage = null;
+      _messages.add(AIChatMessage(
+        id: streamingId,
+        text: '',
+        isUser: false,
+        isStreaming: true,
+        status: MessageStatus.thinking,
+        timestamp: DateTime.now(),
+      ));
+      notifyListeners();
 
-    // 3. Gửi ChatRequest JSON qua WebSocket kèm user_context phong phú
-    final canonicalNutrition = user.canonicalNutrition;
-    final dailyNutritionSummary =
-        _nutritionProvider?.canonicalDailySummary(canonicalNutrition);
-    final calculationFormulaIds = <String>{
-      ...canonicalNutrition.formulaIds,
-      ...?dailyNutritionSummary?.formulaIds,
-    }.toList(growable: false);
-    final profileScope = _scopeForMessage(text);
-    _activeProfileScope = profileScope;
-    final Map<String, dynamic> userContext = {
-      'user_id': user.id,
-      'name': user.name,
-      // Shared general values are a compact typed view of the authoritative
-      // user root. They are available to both domain flows without injecting
-      // the full HealthProfile envelope.
-      'general_profile': user.generalProfile.toJson(),
-      'age': user.age,
-      'gender': user.gender,
-      'equation_sex': user.equationSex,
-      'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
-      'nutrition_profile': user.nutritionProfile?.toJson(),
-      'dietary_restrictions':
-          user.nutritionProfile?.canonicalDietaryRestrictions,
-      'height': user.height,
-      'weight': user.weight,
-      'target_weight': user.targetWeight,
-      'activity_level': user.activityLevel,
-      'health_goal': user.healthGoal,
-      'bmi': user.bmi,
-      'bmi_category': user.bmiCategory,
-      'bmr': user.bmr,
-      'tdee': user.tdee,
-      'recommended_calories': user.recommendedCalories,
-      'daily_water_goal': user.dailyWaterGoal,
-      'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
-      'today_calories_consumed': todayCalories,
-      'today_meals_count': todayMealsCount,
-      'today_calories_burned': todayCaloriesBurned,
-      'today_exercises_count': todayExercisesCount,
-      'today_meals': todayMeals,
-      'today_exercises': todayExercises,
-      // E4.1 fields are separate from the frozen nutrition state manifest.
-      // A caller supplies legacy history only after a Firestore server read.
-      'workout_profile': user.workoutProfile?.toJson(),
-      'training_state': {
-        'workout_profile_present': user.workoutProfile != null,
+      // Bắt đầu timeout 30 giây
+      _timeoutTimer?.cancel();
+      _timeoutTimer = Timer(AIChatbotConfig.streamTimeout, () {
+        debugPrint('⏰ [AIChatProvider] Stream timeout');
+        _onError('TIMEOUT', 'Phản hồi quá lâu');
+      });
+
+      // 3. Gửi ChatRequest JSON qua WebSocket kèm user_context phong phú
+      final canonicalNutrition = user.canonicalNutrition;
+      final dailyNutritionSummary =
+          _nutritionProvider?.canonicalDailySummary(canonicalNutrition);
+      final calculationFormulaIds = <String>{
+        ...canonicalNutrition.formulaIds,
+        ...?dailyNutritionSummary?.formulaIds,
+      }.toList(growable: false);
+      final profileScope = _scopeForMessage(text);
+      _activeProfileScope = profileScope;
+      final Map<String, dynamic> userContext = {
+        'user_id': user.id,
+        'name': user.name,
+        'profile_readiness': _profileReadiness!.toJson(),
+        // Shared general values are a compact typed view of the authoritative
+        // user root. They are available to both domain flows without injecting
+        // the full HealthProfile envelope.
+        'general_profile': user.generalProfile.toJson(),
+        'age': user.age,
+        'gender': user.gender,
+        'equation_sex': user.equationSex,
+        'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
+        'nutrition_profile': user.effectiveNutritionProfile?.toJson(),
+        'dietary_restrictions':
+            user.effectiveNutritionProfile?.canonicalDietaryRestrictions,
+        'height': user.height,
+        'weight': user.weight,
+        'target_weight': user.targetWeight,
+        'activity_level': user.activityLevel,
+        'health_goal': user.healthGoal,
+        'bmi': canonicalNutrition.bmi,
+        'bmi_category': user.bmiCategory,
+        'bmr': user.bmr,
+        'tdee': user.tdee,
+        'recommended_calories': user.recommendedCalories,
+        'daily_water_goal': user.dailyWaterGoal,
+        'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
+        'today_calories_consumed': todayCalories,
+        'today_meals_count': todayMealsCount,
+        'today_calories_burned': todayCaloriesBurned,
+        'today_exercises_count': todayExercisesCount,
+        'today_meals': todayMeals,
+        'today_exercises': todayExercises,
+        // E4.1 fields are separate from the frozen nutrition state manifest.
+        // A caller supplies legacy history only after a Firestore server read.
+        'workout_profile': user.effectiveWorkoutProfile?.toJson(),
+        'training_state': {
+          'workout_profile_present': user.effectiveWorkoutProfile != null,
+          'exercise_history_status': exerciseHistoryStatus,
+          'exercise_history_observed_at':
+              exerciseHistoryObservedAt?.toUtc().toIso8601String(),
+        },
+        'exercise_history': exerciseHistory,
         'exercise_history_status': exerciseHistoryStatus,
+        'exercise_history_loaded': exerciseHistoryStatus == 'KNOWN',
         'exercise_history_observed_at':
             exerciseHistoryObservedAt?.toUtc().toIso8601String(),
-      },
-      'exercise_history': exerciseHistory,
-      'exercise_history_status': exerciseHistoryStatus,
-      'exercise_history_loaded': exerciseHistoryStatus == 'KNOWN',
-      'exercise_history_observed_at':
-          exerciseHistoryObservedAt?.toUtc().toIso8601String(),
-      'state_manifest': _buildSendTimeStateManifest(
-        user,
-        todayCalories: todayCalories,
-        todayMealsCount: todayMealsCount,
-        todayCaloriesBurned: todayCaloriesBurned,
-        todayExercisesCount: todayExercisesCount,
-        todayMeals: todayMeals,
-        todayExercises: todayExercises,
-      ),
-      'calculation_manifest': {
-        'policy_version': canonicalNutrition.policyVersion,
-        'formula_ids': calculationFormulaIds,
-        'formula_provenance': calculationFormulaIds
-            .map((id) => {
-                  'formula_id': id,
-                  'policy_version': canonicalNutrition.policyVersion,
-                })
-            .toList(growable: false),
-        'inputs': {
-          'weight_kg': user.weight,
-          'height_cm': user.height,
-          'age': user.age,
-          'equation_sex': user.equationSex,
-          'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
-          'activity_level': user.activityLevel,
-          'health_goal': user.healthGoal,
+        'state_manifest': _buildSendTimeStateManifest(
+          user,
+          todayCalories: todayCalories,
+          todayMealsCount: todayMealsCount,
+          todayCaloriesBurned: todayCaloriesBurned,
+          todayExercisesCount: todayExercisesCount,
+          todayMeals: todayMeals,
+          todayExercises: todayExercises,
+        ),
+        'calculation_manifest': {
+          'policy_version': canonicalNutrition.policyVersion,
+          'formula_ids': calculationFormulaIds,
+          'formula_provenance': calculationFormulaIds
+              .map((id) => {
+                    'formula_id': id,
+                    'policy_version': canonicalNutrition.policyVersion,
+                  })
+              .toList(growable: false),
+          'inputs': {
+            'weight_kg': user.weight,
+            'height_cm': user.height,
+            'age': user.age,
+            'equation_sex': user.equationSex,
+            'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
+            'activity_level': user.activityLevel,
+            'health_goal': user.healthGoal,
+          },
+          'outputs': {
+            ...canonicalNutrition.toJson(),
+            'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
+          },
         },
-        'outputs': {
-          ...canonicalNutrition.toJson(),
-          'daily_nutrition_summary': dailyNutritionSummary?.toJson(),
-        },
-      },
-    };
+      };
 
-    // Only attach the profile domain needed by this turn. This prevents an
-    // unrelated nutrition request from repeatedly exposing workout/safety
-    // details (and vice versa) while retaining the exact safety data needed by
-    // each deterministic policy.
-    userContext['profile_context_domains'] = switch (profileScope) {
-      _ProfileContextScope.nutrition => const [
-          'general',
-          'nutrition',
-          'nutrition_safety',
-          'canonical_nutrition'
-        ],
-      _ProfileContextScope.workout => const [
-          'general',
-          'workout',
-          'exercise_safety',
-          'training_state'
-        ],
-      _ProfileContextScope.both => const [
-          'general',
-          'nutrition',
-          'nutrition_safety',
-          'canonical_nutrition',
-          'workout',
-          'exercise_safety',
-          'training_state'
-        ],
-      _ProfileContextScope.general => const ['general'],
-    };
+      // Only attach the profile domain needed by this turn. This prevents an
+      // unrelated nutrition request from repeatedly exposing workout/safety
+      // details (and vice versa) while retaining the exact safety data needed by
+      // each deterministic policy.
+      userContext['profile_context_domains'] = switch (profileScope) {
+        ProfileContextScope.nutrition => const [
+            'general',
+            'nutrition',
+            'nutrition_safety',
+            'canonical_nutrition'
+          ],
+        ProfileContextScope.workout => const [
+            'general',
+            'workout',
+            'exercise_safety',
+            'training_state'
+          ],
+        ProfileContextScope.both => const [
+            'general',
+            'nutrition',
+            'nutrition_safety',
+            'canonical_nutrition',
+            'workout',
+            'exercise_safety',
+            'training_state'
+          ],
+        ProfileContextScope.general => const ['general'],
+      };
 
-    // `state_manifest` is a mixed send-time snapshot. Prune it alongside the
-    // top-level payload so a nutrition turn never receives exercise details
-    // and a workout turn never receives meal/nutrition details by accident.
-    void pruneStateManifest(Iterable<String> keys) {
-      final raw = userContext['state_manifest'];
-      if (raw is! Map) return;
-      final scoped = Map<String, dynamic>.from(raw);
-      for (final key in keys) {
-        scoped.remove(key);
-      }
-      userContext['state_manifest'] = scoped;
-    }
-
-    switch (profileScope) {
-      case _ProfileContextScope.nutrition:
-        for (final key in const [
-          'workout_profile',
-          'training_state',
-          'exercise_history',
-          'exercise_history_status',
-          'exercise_history_loaded',
-          'exercise_history_observed_at',
-          'today_calories_burned',
-          'today_exercises_count',
-          'today_exercises',
-        ]) {
-          userContext.remove(key);
+      // `state_manifest` is a mixed send-time snapshot. Prune it alongside the
+      // top-level payload so a nutrition turn never receives exercise details
+      // and a workout turn never receives meal/nutrition details by accident.
+      void pruneStateManifest(Iterable<String> keys) {
+        final raw = userContext['state_manifest'];
+        if (raw is! Map) return;
+        final scoped = Map<String, dynamic>.from(raw);
+        for (final key in keys) {
+          scoped.remove(key);
         }
-        pruneStateManifest(const [
-          'today.calories_burned',
-          'today.exercise_count',
-          'today.exercises',
-        ]);
-      case _ProfileContextScope.workout:
+        userContext['state_manifest'] = scoped;
+      }
+
+      switch (profileScope) {
+        case ProfileContextScope.nutrition:
+          for (final key in const [
+            'workout_profile',
+            'training_state',
+            'exercise_history',
+            'exercise_history_status',
+            'exercise_history_loaded',
+            'exercise_history_observed_at',
+            'today_calories_burned',
+            'today_exercises_count',
+            'today_exercises',
+          ]) {
+            userContext.remove(key);
+          }
+          pruneStateManifest(const [
+            'today.calories_burned',
+            'today.exercise_count',
+            'today.exercises',
+          ]);
+        case ProfileContextScope.workout:
+          for (final key in const [
+            'nutrition_profile',
+            'dietary_restrictions',
+            'nutrition_safety_profile',
+            'daily_nutrition_summary',
+            'today_calories_consumed',
+            'today_meals_count',
+            'today_meals',
+            'calculation_manifest',
+            'bmi',
+            'bmi_category',
+            'bmr',
+            'tdee',
+            'recommended_calories',
+            'daily_water_goal',
+          ]) {
+            userContext.remove(key);
+          }
+          pruneStateManifest(const [
+            'today.calories_consumed',
+            'today.consumed_meal_count',
+            'today.meals',
+            'water_target',
+            'water_consumed_today',
+          ]);
+        case ProfileContextScope.general:
+          for (final key in const [
+            'nutrition_profile',
+            'dietary_restrictions',
+            'nutrition_safety_profile',
+            'daily_nutrition_summary',
+            'workout_profile',
+            'training_state',
+            'exercise_history',
+            'exercise_history_status',
+            'exercise_history_loaded',
+            'exercise_history_observed_at',
+            'today_calories_consumed',
+            'today_meals_count',
+            'today_meals',
+            'today_calories_burned',
+            'today_exercises_count',
+            'today_exercises',
+            'calculation_manifest',
+          ]) {
+            userContext.remove(key);
+          }
+        case ProfileContextScope.both:
+          break;
+      }
+
+      if (user.id == 'demo') {
         for (final key in const [
-          'nutrition_profile',
-          'dietary_restrictions',
+          'age',
+          'general_profile',
+          'gender',
+          'equation_sex',
           'nutrition_safety_profile',
-          'daily_nutrition_summary',
-          'today_calories_consumed',
-          'today_meals_count',
-          'today_meals',
-          'calculation_manifest',
+          'height',
+          'weight',
+          'target_weight',
+          'activity_level',
+          'health_goal',
           'bmi',
           'bmi_category',
           'bmr',
@@ -594,86 +695,93 @@ class AIChatProvider extends ChangeNotifier {
         ]) {
           userContext.remove(key);
         }
-        pruneStateManifest(const [
-          'today.calories_consumed',
-          'today.consumed_meal_count',
-          'today.meals',
-          'water_target',
-          'water_consumed_today',
-        ]);
-      case _ProfileContextScope.general:
-        for (final key in const [
-          'nutrition_profile',
-          'dietary_restrictions',
-          'nutrition_safety_profile',
-          'daily_nutrition_summary',
-          'workout_profile',
-          'training_state',
-          'exercise_history',
-          'exercise_history_status',
-          'exercise_history_loaded',
-          'exercise_history_observed_at',
-          'today_calories_consumed',
-          'today_meals_count',
-          'today_meals',
-          'today_calories_burned',
-          'today_exercises_count',
-          'today_exercises',
-          'calculation_manifest',
-        ]) {
-          userContext.remove(key);
-        }
-      case _ProfileContextScope.both:
-        break;
-    }
-
-    if (user.id == 'demo') {
-      for (final key in const [
-        'age',
-        'general_profile',
-        'gender',
-        'equation_sex',
-        'nutrition_safety_profile',
-        'height',
-        'weight',
-        'target_weight',
-        'activity_level',
-        'health_goal',
-        'bmi',
-        'bmi_category',
-        'bmr',
-        'tdee',
-        'recommended_calories',
-        'daily_water_goal',
-      ]) {
-        userContext.remove(key);
+        userContext['calculation_manifest'] = {
+          'inputs': <String, Object?>{},
+          'outputs': <String, Object?>{},
+          'formula_provenance': <Object?>[],
+        };
       }
-      userContext['calculation_manifest'] = {
-        'inputs': <String, Object?>{},
-        'outputs': <String, Object?>{},
-        'formula_provenance': <Object?>[],
+
+      final Map<String, dynamic> request = {
+        'type': 'chat',
+        'session_id': _sessionId,
+        'user_id': user.id,
+        'message': text,
+        'user_context': userContext,
       };
-    }
+      final semanticTurnId = _uuid.v4();
+      request['turn_id'] = semanticTurnId;
+      if (_latitude != null && _longitude != null) {
+        request['latitude'] = _latitude;
+        request['longitude'] = _longitude;
+      }
 
-    final Map<String, dynamic> request = {
-      'type': 'chat',
-      'session_id': _sessionId,
-      'user_id': user.id,
-      'message': text,
-      'user_context': userContext,
-    };
-    if (_latitude != null && _longitude != null) {
-      request['latitude'] = _latitude;
-      request['longitude'] = _longitude;
+      try {
+        debugPrint('📡 [AIChatProvider] Sending chat request');
+        _channel!.sink.add(jsonEncode(request));
+        _unsentDraft = null;
+        debugPrint('✅ [AIChatProvider] Request sent');
+        // Shadow analysis never delays or mutates the authoritative chat turn.
+        // Its sanitized result travels in a separate non-routing message.
+        unawaited(_runSemanticShadow(
+          rawText: text,
+          turnId: semanticTurnId,
+          pendingActionActive: _pendingActionActive,
+        ));
+        return true;
+      } catch (e) {
+        debugPrint('❌ [AIChatProvider] Send error: $e');
+        _onError('CONNECTION_ERROR', e.toString());
+        return false;
+      }
+    } finally {
+      _sendingMessage = false;
     }
+  }
 
+  /// Validate the current owner and authoritative profile before any chat send.
+  /// Supplemental gaps travel with the scoped context so the bot can ask only
+  /// what it needs. They never become assumed negative safety answers.
+  Future<UserModel?> checkProfileBeforeSend(
+      String text, UserModel supplied) async {
+    _checkingProfile = true;
+    _profileIssue = null;
+    _profileReadiness = null;
+    notifyListeners();
     try {
-      debugPrint('📡 [AIChatProvider] Sending chat request');
-      _channel!.sink.add(jsonEncode(request));
-      debugPrint('✅ [AIChatProvider] Request sent');
-    } catch (e) {
-      debugPrint('❌ [AIChatProvider] Send error: $e');
-      _onError('CONNECTION_ERROR', e.toString());
+      final provider = _userProvider;
+      if (provider == null || provider.currentUser?.id != supplied.id) {
+        _profileIssue =
+            'Chưa xác định được hồ sơ hiện tại. Vui lòng đăng nhập lại.';
+        return null;
+      }
+      if (supplied.id != 'demo' && !await provider.refreshCurrentUser()) {
+        _profileIssue =
+            'Chưa đọc được hồ sơ mới nhất. Kiểm tra kết nối rồi thử lại.';
+        return null;
+      }
+      final current = provider.currentUser;
+      if (current == null || current.id != supplied.id) {
+        _profileIssue =
+            'Tài khoản đã thay đổi. Vui lòng gửi lại từ tài khoản hiện tại.';
+        return null;
+      }
+      _profileReadiness = ProfileReadiness.assess(
+        current,
+        scope: ProfileReadiness.scopeForMessage(text),
+      );
+      if (!_profileReadiness!.canSend) {
+        _profileIssue =
+            'Cần bổ sung: ${_profileReadiness!.requiredFields.values.join(', ')}.';
+        return null;
+      }
+      return current;
+    } catch (_) {
+      _profileIssue = 'Chưa kiểm tra được hồ sơ. Vui lòng thử lại.';
+      return null;
+    } finally {
+      _checkingProfile = false;
+      notifyListeners();
     }
   }
 
@@ -704,7 +812,7 @@ class AIChatProvider extends ChangeNotifier {
         case 'action_state':
           // Human-readable state is already reflected by the final assistant
           // response; keep it as a stream heartbeat, never as raw tool data.
-          _onStatusReceived();
+          _onActionStateReceived(data['state']);
           break;
         case 'status':
           _onStatusReceived();
@@ -726,6 +834,54 @@ class AIChatProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Parse error: $e');
     }
+  }
+
+  void _onActionStateReceived(dynamic rawState) {
+    if (rawState is Map) {
+      final status = rawState['status']?.toString();
+      _pendingActionActive = status == 'PENDING_CONFIRMATION' ||
+          status == 'IN_PROGRESS' ||
+          status == 'CLARIFICATION_REQUIRED';
+    }
+    _onStatusReceived();
+  }
+
+  Future<void> _runSemanticShadow({
+    required String rawText,
+    required String turnId,
+    required bool pendingActionActive,
+  }) async {
+    final observation = await _semanticRouter.analyze(
+      rawText,
+      pendingActionActive: pendingActionActive,
+      recentReferenceKind: _recentVisibleReferenceKind(),
+    );
+    if (observation.mode.name == 'off') return;
+    debugPrint(
+      '🧭 [SemanticRouter] ${observation.reasonCode}; '
+      'slm=${observation.slmInvoked}; rawLength=${observation.rawLength}',
+    );
+    final channel = _channel;
+    if (channel == null) return;
+    try {
+      channel.sink.add(jsonEncode({
+        'type': 'semantic_shadow',
+        'session_id': _sessionId,
+        'turn_id': turnId,
+        'observation': observation.toTelemetryJson(),
+      }));
+    } catch (_) {
+      // Telemetry is fail-open and must never fail the user chat path.
+    }
+  }
+
+  String? _recentVisibleReferenceKind() {
+    for (final message in _messages.reversed) {
+      if (message.isUser) continue;
+      final structured = message.structuredResponse;
+      if (structured != null) return structured.type;
+    }
+    return null;
   }
 
   /// Xử lý Tool Call từ Backend
@@ -816,23 +972,28 @@ class AIChatProvider extends ChangeNotifier {
             'user_id': profile.id,
             'id': profile.id,
             'name': profile.name,
+            'profile_readiness': ProfileReadiness.assess(
+              effectiveProfile,
+              scope: _activeProfileScope,
+            ).toJson(),
             'general_profile': effectiveProfile.generalProfile.toJson(),
             'age': profile.age,
             'gender': profile.gender,
             'equation_sex': profile.equationSex,
             'nutrition_safety_profile': profile.nutritionSafetyProfile.toJson(),
-            'nutrition_profile': profile.nutritionProfile?.toJson(),
+            'nutrition_profile': profile.effectiveNutritionProfile?.toJson(),
             'dietary_restrictions':
-                profile.nutritionProfile?.canonicalDietaryRestrictions,
+                profile.effectiveNutritionProfile?.canonicalDietaryRestrictions,
             'height': profile.height,
             'weight': canonicalWeight.value,
             'profile_weight': profile.weight,
             'target_weight': profile.targetWeight,
             'activity_level': profile.activityLevel,
             'health_goal': profile.healthGoal,
-            'workout_profile': profile.workoutProfile?.toJson(),
+            'workout_profile': profile.effectiveWorkoutProfile?.toJson(),
             'training_state': {
-              'workout_profile_present': profile.workoutProfile != null,
+              'workout_profile_present':
+                  profile.effectiveWorkoutProfile != null,
               'exercise_history_status': historyRead ? 'KNOWN' : 'NOT_LOADED',
             },
             'bmi': canonicalNutrition.bmi,
@@ -858,10 +1019,10 @@ class AIChatProvider extends ChangeNotifier {
             },
           };
           switch (_activeProfileScope) {
-            case _ProfileContextScope.nutrition:
+            case ProfileContextScope.nutrition:
               resultData.remove('workout_profile');
               resultData.remove('training_state');
-            case _ProfileContextScope.workout:
+            case ProfileContextScope.workout:
               for (final key in const [
                 'nutrition_safety_profile',
                 'nutrition_profile',
@@ -876,7 +1037,7 @@ class AIChatProvider extends ChangeNotifier {
               ]) {
                 resultData.remove(key);
               }
-            case _ProfileContextScope.general:
+            case ProfileContextScope.general:
               for (final key in const [
                 'nutrition_safety_profile',
                 'nutrition_profile',
@@ -893,23 +1054,23 @@ class AIChatProvider extends ChangeNotifier {
               ]) {
                 resultData.remove(key);
               }
-            case _ProfileContextScope.both:
+            case ProfileContextScope.both:
               break;
           }
           resultData['profile_context_domains'] = switch (_activeProfileScope) {
-            _ProfileContextScope.nutrition => const [
+            ProfileContextScope.nutrition => const [
                 'general',
                 'nutrition',
                 'nutrition_safety',
                 'canonical_nutrition'
               ],
-            _ProfileContextScope.workout => const [
+            ProfileContextScope.workout => const [
                 'general',
                 'workout',
                 'exercise_safety',
                 'training_state'
               ],
-            _ProfileContextScope.both => const [
+            ProfileContextScope.both => const [
                 'general',
                 'nutrition',
                 'nutrition_safety',
@@ -918,7 +1079,7 @@ class AIChatProvider extends ChangeNotifier {
                 'exercise_safety',
                 'training_state'
               ],
-            _ProfileContextScope.general => const ['general'],
+            ProfileContextScope.general => const ['general'],
           };
         } else {
           isOk = false;
@@ -2093,7 +2254,8 @@ class AIChatProvider extends ChangeNotifier {
     final structuredData = data['structured'] as Map<String, dynamic>?;
     final rawPublicTrace = data['public_trace'];
     final publicTrace = rawPublicTrace is Map
-        ? PublicReasoningTrace.fromJson(Map<String, dynamic>.from(rawPublicTrace))
+        ? PublicReasoningTrace.fromJson(
+            Map<String, dynamic>.from(rawPublicTrace))
         : null;
     final suggestionsRaw = data['suggestions'] as List<dynamic>? ?? [];
     final optionsRaw = data['options'] as List<dynamic>? ?? [];
@@ -2158,11 +2320,18 @@ class AIChatProvider extends ChangeNotifier {
         _errorMessage =
             'Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.';
         break;
+      case 'LLM_QUOTA_EXHAUSTED':
+        _errorMessage =
+            'Dịch vụ AI đã hết hạn mức. Vui lòng liên hệ quản trị viên.';
+        break;
       case 'TIMEOUT':
         _errorMessage = 'Phản hồi quá lâu. Vui lòng thử lại.';
         break;
       case 'CONNECTION_ERROR':
         _errorMessage = 'Không thể kết nối đến server. Kiểm tra kết nối mạng.';
+        break;
+      case 'AUTHENTICATION_REQUIRED':
+        _errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
         break;
       default:
         _errorMessage = 'Có lỗi xảy ra. Nhấn để thử lại.';
@@ -2171,19 +2340,8 @@ class AIChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  _ProfileContextScope _scopeForMessage(String message) {
-    final normalized = message.toLowerCase();
-    final asksNutrition = RegExp(
-      r'(ăn|uống|món|bữa|thực đơn|dinh dưỡng|calo|đạm|protein|carb|kiêng|dị ứng|giảm cân|tăng cân)',
-    ).hasMatch(normalized);
-    final asksWorkout = RegExp(
-      r'(tập|workout|bài tập|hiệp|reps|rpe|rir|tạ|gym|chạy|cardio|cơ bụng|cơ vai|cơ ngực)',
-    ).hasMatch(normalized);
-    if (asksNutrition && asksWorkout) return _ProfileContextScope.both;
-    if (asksNutrition) return _ProfileContextScope.nutrition;
-    if (asksWorkout) return _ProfileContextScope.workout;
-    return _ProfileContextScope.general;
-  }
+  ProfileContextScope _scopeForMessage(String message) =>
+      ProfileReadiness.scopeForMessage(message);
 
   /// Ngắt kết nối WebSocket và hủy tất cả subscriptions
   void disconnect() {
@@ -2202,6 +2360,7 @@ class AIChatProvider extends ChangeNotifier {
   void dispose() {
     disconnect();
     _responseTypewriter.dispose();
+    unawaited(_semanticRouter.dispose());
     super.dispose();
   }
 

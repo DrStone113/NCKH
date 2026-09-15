@@ -18,6 +18,24 @@ from uuid import uuid4
 _AFFIRMATIVE: Final[frozenset[str]] = frozenset(
     {"có", "co", "ok", "oke", "đồng ý", "dong y", "yes", "y"}
 )
+_NEGATIVE: Final[frozenset[str]] = frozenset(
+    {
+        "không",
+        "khong",
+        "không cần",
+        "khong can",
+        "không lưu",
+        "khong luu",
+        "thôi",
+        "thoi",
+        "bỏ qua",
+        "bo qua",
+        "hủy",
+        "huy",
+        "no",
+        "nope",
+    }
+)
 _PENDING: Final[str] = "PENDING_CONFIRMATION"
 _CLAIMED: Final[str] = "EXECUTING"
 _EXECUTED: Final[str] = "EXECUTED"
@@ -28,6 +46,10 @@ _TERMINAL: Final[frozenset[str]] = frozenset({_EXECUTED, _SUPERSEDED, _EXPIRED})
 
 def is_explicit_confirmation(text: str) -> bool:
     return " ".join(text.strip().lower().split()) in _AFFIRMATIVE
+
+
+def is_explicit_rejection(text: str) -> bool:
+    return " ".join(text.strip().lower().split()) in _NEGATIVE
 
 
 @dataclass(slots=True)
@@ -253,7 +275,9 @@ class PendingUserActionStore:
     def claim_confirmation(
         self, session_id: str, owner_user_id: str, text: str
     ) -> PendingActionResolution:
-        if not is_explicit_confirmation(text):
+        is_confirmation = is_explicit_confirmation(text)
+        is_rejection = is_explicit_rejection(text)
+        if not is_confirmation and not is_rejection:
             return PendingActionResolution("NO_MATCH")
         owner = owner_user_id or "anonymous"
         with self._lock:
@@ -269,8 +293,13 @@ class PendingUserActionStore:
                 return PendingActionResolution("AMBIGUOUS")
             if len(pending) == 1:
                 action = pending[0]
+                if is_rejection:
+                    action.status = _SUPERSEDED
+                    return PendingActionResolution("REJECTED", action)
                 action.status = _CLAIMED
                 return PendingActionResolution("CLAIMED", action)
+            if is_rejection:
+                return PendingActionResolution("NO_MATCH")
             claimed = [a for a in own_actions if a.status == _CLAIMED]
             if claimed:
                 return PendingActionResolution("IN_PROGRESS", claimed[-1])
@@ -327,5 +356,6 @@ __all__ = [
     "PendingUserAction",
     "PendingUserActionStore",
     "is_explicit_confirmation",
+    "is_explicit_rejection",
     "pending_user_actions",
 ]

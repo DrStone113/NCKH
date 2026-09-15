@@ -31,6 +31,27 @@ class MealDishVisual {
 }
 
 abstract final class MealPresentation {
+  static IconData dishIcon(String name) => switch (dishVisual(name).emoji) {
+        '🍕' => Icons.local_pizza_outlined,
+        '🍔' => Icons.lunch_dining_outlined,
+        '🍣' => Icons.set_meal_outlined,
+        '🍝' => Icons.ramen_dining_outlined,
+        '🍜' => Icons.ramen_dining_outlined,
+        '🍚' => Icons.rice_bowl_outlined,
+        '🥣' => Icons.soup_kitchen_outlined,
+        '🥖' => Icons.bakery_dining_outlined,
+        '🍗' => Icons.fastfood_outlined,
+        '🦐' => Icons.set_meal_outlined,
+        '🐟' => Icons.set_meal_outlined,
+        '🥩' => Icons.outdoor_grill_outlined,
+        '🥗' => Icons.eco_outlined,
+        '🥤' => Icons.local_drink_outlined,
+        '☕' => Icons.coffee_outlined,
+        '🍎' => Icons.spa_outlined,
+        '🍳' => Icons.egg_outlined,
+        '🍰' => Icons.cake_outlined,
+        _ => Icons.restaurant_outlined,
+      };
   static Color accent(String? mealType) {
     switch (MealTypeUtils.normalize(mealType)) {
       case 'sang':
@@ -59,6 +80,41 @@ abstract final class MealPresentation {
 
   static MealDishVisual dishVisual(String name) {
     final lower = name.toLowerCase().trim();
+    if (_containsAny(lower, const ['pizza'])) {
+      return const MealDishVisual(
+        '🍕',
+        Color(0xFFFFF3E0),
+        Color(0xFFFFB74D),
+      );
+    }
+    if (_containsAny(lower, const ['burger', 'hamburger'])) {
+      return const MealDishVisual(
+        '🍔',
+        Color(0xFFFFF8E1),
+        Color(0xFFFFD54F),
+      );
+    }
+    if (_containsAny(lower, const ['sushi', 'sashimi'])) {
+      return const MealDishVisual(
+        '🍣',
+        Color(0xFFFCE4EC),
+        Color(0xFFF48FB1),
+      );
+    }
+    if (_containsAny(lower, const ['pasta', 'spaghetti', 'macaroni'])) {
+      return const MealDishVisual(
+        '🍝',
+        Color(0xFFFFECE7),
+        Color(0xFFFFAB91),
+      );
+    }
+    if (_containsAny(lower, const ['steak', 'beefsteak', 'bít tết'])) {
+      return const MealDishVisual(
+        '🥩',
+        Color(0xFFFCE4EC),
+        Color(0xFFF48FB1),
+      );
+    }
     if (_containsAny(lower, const [
       'phở',
       'bún',
@@ -143,6 +199,20 @@ abstract final class MealPresentation {
         Color(0xFFCE93D8),
       );
     }
+    if (_containsAny(lower, const ['cà phê', 'coffee'])) {
+      return const MealDishVisual(
+        '☕',
+        Color(0xFFEFEBE9),
+        Color(0xFFBCAAA4),
+      );
+    }
+    if (_containsAny(lower, const ['bánh ngọt', 'cupcake', 'cheesecake'])) {
+      return const MealDishVisual(
+        '🍰',
+        Color(0xFFFCE4EC),
+        Color(0xFFF48FB1),
+      );
+    }
     if (_containsAny(lower, const ['chuối', 'táo', 'cam', 'trái cây'])) {
       return const MealDishVisual(
         '🍎',
@@ -203,7 +273,8 @@ class MealSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = MealPresentation.accent(mealType);
     final visual = MealPresentation.dishVisual(name);
-    final totalGrams = ingredients.fold<double>(0, (sum, i) => sum + i.grams);
+    final totalGrams =
+        ingredients.fold<double>(0, (sum, item) => sum + item.grams);
 
     return Container(
       margin: margin,
@@ -251,8 +322,11 @@ class MealSummaryCard extends StatelessWidget {
                             color: AppColors.success,
                             size: 22,
                           )
-                        : Text(visual.emoji,
-                            style: const TextStyle(fontSize: 21)),
+                        : Text(
+                            visual.emoji,
+                            semanticsLabel: 'Biểu tượng món $name',
+                            style: const TextStyle(fontSize: 21),
+                          ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(

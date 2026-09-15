@@ -6,6 +6,7 @@ import '../../../providers/exercise_provider.dart';
 import '../../../providers/health_provider.dart';
 import '../../../providers/chat_provider.dart';
 import '../../../providers/ai_chat_provider.dart';
+import '../../../providers/plan_provider.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/animated_card.dart';
 import '../../../widgets/animated_counter.dart';
@@ -14,6 +15,10 @@ import 'health_stats_screen.dart';
 import '../../nutrition/screens/nutrition_screen.dart';
 import '../../exercise/screens/exercise_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
+import '../../plans/screens/plan_list_screen.dart';
+import '../../plans/widgets/plan_library_navigation_action.dart';
+import '../../plans/widgets/planned_day_plan_section.dart';
+import '../../plans/plan_snapshot.dart';
 import '../../auth/screens/auth_wrapper.dart';
 import '../../settings/screens/goal_settings_screen.dart';
 import '../../settings/screens/account_settings_screen.dart';
@@ -30,10 +35,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const String _planV2E2EConfigurationMarker = String.fromEnvironment(
+    'PLAN_V2_E2E_CONFIGURATION_MARKER',
+  );
+  static const String _expectedPlanV2E2EConfigurationMarker =
+      'PLAN_V2_E2E_CONFIGURED_V1';
+
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
-    _DashboardTab(onOpenChat: () => _openChatModal(context)),
+    _DashboardTab(
+      onOpenChat: () => _openChatModal(context),
+      onOpenPlans: () => _openPlanLibrary(context),
+    ),
     const NutritionScreen(),
     const ExerciseScreen(),
     const AccountSettingsScreen(),
@@ -77,22 +91,60 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openPlanLibrary(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanListScreen(
+          onOpenChat: () {
+            Navigator.of(context).pop();
+            _openChatModal(context);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId =
-          Provider.of<UserProvider>(context, listen: false).currentUser?.id;
-      if (userId != null) {
-        Provider.of<NutritionProvider>(context, listen: false)
-            .loadTodayMeals(userId);
-        Provider.of<ExerciseProvider>(context, listen: false)
-            .loadTodayExercises(userId);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final user =
+          Provider.of<UserProvider>(context, listen: false).currentUser;
+      final userId = user?.id;
+      if (userId != null && user != null) {
+        final nutrition =
+            Provider.of<NutritionProvider>(context, listen: false);
+        final exercise = Provider.of<ExerciseProvider>(context, listen: false);
+        await Future.wait([
+          nutrition.loadTodayMeals(userId),
+          exercise.loadTodayExercises(userId),
+        ]);
+        if (!mounted) return;
+        Provider.of<PlanProvider>(context, listen: false)
+            .loadForUser(userId)
+            .catchError((_) => const <PlanSnapshot>[]);
+        if (!mounted) return;
         Provider.of<HealthProvider>(context, listen: false)
             .loadTodayWaterIntake(userId);
-        Provider.of<NutritionProvider>(context, listen: false).loadSavedMeals();
+        nutrition.loadSavedMeals();
         Provider.of<ProactiveProvider>(context, listen: false)
-            .loadActiveCheckin(userId);
+            .loadActiveCheckin(
+          userId,
+          userContext: {
+            'age': user.age,
+            'gender': user.gender,
+            'equation_sex': user.equationSex,
+            'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
+            'height': user.height,
+            'weight': user.weight,
+            'activity_level': user.activityLevel,
+            'health_goal': user.healthGoal,
+            'today_calories_consumed': nutrition.consumedCalories,
+            'today_meals_count': nutrition.completedMealsCount,
+            'today_calories_burned': exercise.totalCaloriesBurned,
+            'today_exercises_count': exercise.completedCount,
+          },
+        );
       }
       // Initialize ChatProvider
       Provider.of<ChatProvider>(context, listen: false).initialize();
@@ -138,63 +190,43 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      // ===== CENTER RAISED CHATBOT BUBBLE =====
-      floatingActionButton: GestureDetector(
-        onTap: () => _openChatModal(context),
-        child: Container(
-          width: 62,
-          height: 62,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF8C00), Color(0xFFFF5500)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF6F00).withValues(alpha: 0.5),
-                blurRadius: 16,
-                spreadRadius: 3,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(
-                Icons.smart_toy,
-                color: Colors.white,
-                size: 32,
-              ),
-              Positioned(
-                right: 4,
-                top: 4,
-                child: CircleAvatar(
-                  radius: 5,
-                  backgroundColor: Color(0xFF00C853),
+      body:
+          _planV2E2EConfigurationMarker == _expectedPlanV2E2EConfigurationMarker
+              ? Semantics(
+                  container: true,
+                  label: 'Plan V2 E2E configuration active',
+                  child: IndexedStack(
+                    index: _currentIndex,
+                    children: _screens,
+                  ),
+                )
+              : IndexedStack(
+                  index: _currentIndex,
+                  children: _screens,
                 ),
-              ),
-            ],
-          ),
-        ),
+      // ===== CENTER RAISED CHATBOT BUBBLE =====
+      floatingActionButton: _AIAssistantFab(
+        onTap: () => _openChatModal(context),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       // ===== CURVED NOTCHED BOTTOM BAR =====
       bottomNavigationBar: BottomAppBar(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         clipBehavior: Clip.antiAlias,
         color: AppColors.surface,
-        elevation: 12,
-        child: SizedBox(
+        elevation: 0,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: Colors.black.withValues(alpha: 0.04),
+                width: 1,
+              ),
+            ),
+          ),
           height: 64,
           child: Row(
             children: [
@@ -202,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _buildNavItem(
                   index: 0,
-                  activeIcon: Icons.dashboard,
+                  activeIcon: Icons.dashboard_rounded,
                   inactiveIcon: Icons.dashboard_outlined,
                   label: 'Tổng quan',
                 ),
@@ -211,18 +243,18 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _buildNavItem(
                   index: 1,
-                  activeIcon: Icons.restaurant,
+                  activeIcon: Icons.restaurant_rounded,
                   inactiveIcon: Icons.restaurant_outlined,
                   label: 'Dinh dưỡng',
                 ),
               ),
               // Vùng trống ở tâm dành cho nút chatbot.
-              const Spacer(),
+              const SizedBox(width: 64),
               // Tab 2: Vận động
               Expanded(
                 child: _buildNavItem(
                   index: 2,
-                  activeIcon: Icons.fitness_center,
+                  activeIcon: Icons.fitness_center_rounded,
                   inactiveIcon: Icons.fitness_center_outlined,
                   label: 'Vận động',
                 ),
@@ -231,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _buildNavItem(
                   index: 3,
-                  activeIcon: Icons.person,
+                  activeIcon: Icons.person_rounded,
                   inactiveIcon: Icons.person_outlined,
                   label: 'Cài đặt',
                 ),
@@ -250,43 +282,177 @@ class _HomeScreenState extends State<HomeScreen> {
     required String label,
   }) {
     final bool isSelected = _currentIndex == index;
-    return InkWell(
+    final navigationTarget = switch (index) {
+      0 => 'overview',
+      1 => 'nutrition',
+      2 => 'activity',
+      3 => 'settings',
+      _ => 'unknown',
+    };
+    return Semantics(
+      label: 'Main navigation $navigationTarget',
+      button: true,
       onTap: () => _onTabChanged(index),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              size: 24,
-            ),
-            const SizedBox(height: 2),
-            SizedBox(
-              width: double.infinity,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: () => _onTabChanged(index),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.05)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedScale(
+                scale: isSelected ? 1.08 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutBack,
+                child: Icon(
+                  isSelected ? activeIcon : inactiveIcon,
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 3),
+              SizedBox(
+                width: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _AIAssistantFab extends StatefulWidget {
+  final VoidCallback onTap;
+  const _AIAssistantFab({required this.onTap});
+
+  @override
+  State<_AIAssistantFab> createState() => _AIAssistantFabState();
+}
+
+class _AIAssistantFabState extends State<_AIAssistantFab>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Semantics(
+            label: 'n3-open-chat',
+            button: true,
+            child: GestureDetector(
+              onTap: widget.onTap,
+              child: Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withValues(
+                        alpha: 0.35 + (_pulseAnimation.value * 0.25),
+                      ),
+                      blurRadius: 16 + (_pulseAnimation.value * 8),
+                      spreadRadius: 1 + (_pulseAnimation.value * 2),
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.smart_toy_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.accent,
+                          border: Border.all(
+                              color: AppColors.primaryDark, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -294,7 +460,9 @@ class _HomeScreenState extends State<HomeScreen> {
 // ===== DASHBOARD TAB =====
 class _DashboardTab extends StatelessWidget {
   final VoidCallback? onOpenChat;
-  const _DashboardTab({this.onOpenChat});
+  final VoidCallback? onOpenPlans;
+
+  const _DashboardTab({this.onOpenChat, this.onOpenPlans});
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +511,14 @@ class _DashboardTab extends StatelessWidget {
                         context, nutritionProvider, exerciseProvider, user),
 
                 const SizedBox(height: 24),
+
+                PlannedDayPlanSection(
+                  userId: user.id,
+                  date: DateTime.now(),
+                  domain: 'NUTRITION',
+                  snapshots: context.watch<PlanProvider>().plans,
+                  compact: true,
+                ),
 
                 // Quick Actions
                 AnimatedCard(
@@ -498,26 +674,40 @@ class _DashboardTab extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user) {
-    final hour = DateTime.now().hour;
+    final now = DateTime.now();
+    final hour = now.hour;
     String greeting;
     IconData greetIcon;
-    if (hour < 12) {
+    Color greetColor;
+    if (hour >= 5 && hour < 11) {
       greeting = 'Chào buổi sáng';
-      greetIcon = Icons.wb_sunny;
-    } else if (hour < 18) {
+      greetIcon = Icons.wb_sunny_rounded;
+      greetColor = const Color(0xFFF59E0B);
+    } else if (hour >= 11 && hour < 14) {
+      greeting = 'Chào buổi trưa';
+      greetIcon = Icons.wb_sunny_outlined;
+      greetColor = const Color(0xFFF59E0B);
+    } else if (hour >= 14 && hour < 18) {
       greeting = 'Chào buổi chiều';
-      greetIcon = Icons.cloud;
+      greetIcon = Icons.cloud_outlined;
+      greetColor = const Color(0xFF0284C7);
     } else {
       greeting = 'Chào buổi tối';
-      greetIcon = Icons.nights_stay;
+      greetIcon = Icons.nightlight_round;
+      greetColor = const Color(0xFF8B5CF6);
     }
 
     final headingSize = ResponsiveUtils.getHeadingSize(context);
     final bodySize = ResponsiveUtils.getBodySize(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
 
+    const weekdays = ['Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7', 'CN'];
+    final weekdayLabel = weekdays[(now.weekday - 1) % 7];
+    final dateBadge = '$weekdayLabel, ${now.day}/${now.month}';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: Column(
@@ -525,13 +715,36 @@ class _DashboardTab extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(greetIcon,
-                      color: AppColors.primary, size: iconSize * 0.8),
-                  const SizedBox(width: 8),
+                  Icon(greetIcon, color: greetColor, size: 16),
+                  const SizedBox(width: 6),
                   Text(
                     greeting,
                     style: TextStyle(
-                        fontSize: bodySize, color: AppColors.textSecondary),
+                      fontSize: bodySize * 0.95,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      dateBadge,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -539,7 +752,10 @@ class _DashboardTab extends StatelessWidget {
               Text(
                 user.name,
                 style: TextStyle(
-                    fontSize: headingSize, fontWeight: FontWeight.bold),
+                  fontSize: headingSize,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -547,35 +763,32 @@ class _DashboardTab extends StatelessWidget {
           ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            GestureDetector(
+            InteractiveCard(
+              padding: EdgeInsets.all(
+                  ResponsiveUtils.getCardPadding(context) * 0.45),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const HealthStatsScreen()),
               ),
-              child: Container(
-                padding: EdgeInsets.all(
-                    ResponsiveUtils.getCardPadding(context) * 0.5),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.bar_chart,
-                    color: AppColors.primary, size: iconSize),
+              child: Icon(
+                Icons.bar_chart_rounded,
+                color: AppColors.primary,
+                size: iconSize * 0.9,
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
+            InteractiveCard(
+              padding: EdgeInsets.all(
+                  ResponsiveUtils.getCardPadding(context) * 0.45),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               onTap: () => _showLogoutDialog(context),
-              child: Container(
-                padding: EdgeInsets.all(
-                    ResponsiveUtils.getCardPadding(context) * 0.5),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.logout,
-                    color: AppColors.textSecondary, size: iconSize),
+              child: Icon(
+                Icons.logout_rounded,
+                color: AppColors.textSecondary,
+                size: iconSize * 0.9,
               ),
             ),
           ],
@@ -956,89 +1169,107 @@ class _DashboardTab extends StatelessWidget {
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
       {
-        'icon': Icons.restaurant,
+        'icon': Icons.restaurant_rounded,
         'label': 'Thêm bữa ăn',
         'color': AppColors.calories,
         'tab': 1
       },
       {
-        'icon': Icons.fitness_center,
+        'icon': Icons.fitness_center_rounded,
         'label': 'Ghi tập luyện',
         'color': AppColors.success,
         'tab': 2
       },
       {
-        'icon': Icons.chat_bubble,
-        'label': 'Hỏi chatbot',
-        'color': AppColors.accent,
+        'icon': Icons.smart_toy_rounded,
+        'label': 'Hỏi Trợ lý AI',
+        'color': const Color(0xFF6366F1),
         'tab': -3
       },
       {
-        'icon': Icons.flag,
-        'label': 'Thay đổi mục tiêu',
-        'color': AppColors.primary,
+        'icon': Icons.event_note_rounded,
+        'label': 'Kế hoạch',
+        'color': AppColors.info,
+        'tab': -4
+      },
+      {
+        'icon': Icons.flag_rounded,
+        'label': 'Mục tiêu',
+        'color': const Color(0xFFF59E0B),
         'tab': -2
       },
     ];
 
     final smallSize = ResponsiveUtils.getSmallSize(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
-    final cardPadding = ResponsiveUtils.getCardPadding(context);
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: actions.map((action) {
-        return Flexible(
-          child: GestureDetector(
-            onTap: () {
-              if (action['tab'] == -3) {
-                onOpenChat?.call();
-              } else if (action['tab'] == -1) {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const HealthStatsScreen()));
-              } else if (action['tab'] == -2) {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const GoalSettingsScreen()));
-              } else {
-                final homeState =
-                    context.findAncestorStateOfType<_HomeScreenState>();
-                homeState?._onTabChanged(action['tab'] as int);
-              }
-            },
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: cardPadding * 0.25),
-              child: Column(
-                children: [
-                  Container(
-                    width: iconSize * 2,
-                    height: iconSize * 2,
-                    decoration: BoxDecoration(
-                      color: (action['color'] as Color).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(action['icon'] as IconData,
-                        color: action['color'] as Color, size: iconSize),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    height: smallSize * 2.8,
-                    child: Text(
-                      action['label'] as String,
-                      style: TextStyle(
-                          fontSize: smallSize, color: AppColors.textSecondary),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+        final color = action['color'] as Color;
+        void actionTap() {
+          if (action['tab'] == -3) {
+            onOpenChat?.call();
+          } else if (action['tab'] == -4) {
+            onOpenPlans?.call();
+          } else if (action['tab'] == -1) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const HealthStatsScreen()));
+          } else if (action['tab'] == -2) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const GoalSettingsScreen()));
+          } else {
+            final homeState =
+                context.findAncestorStateOfType<_HomeScreenState>();
+            homeState?._onTabChanged(action['tab'] as int);
+          }
+        }
+
+        final actionCard = InteractiveCard(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          onTap: actionTap,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: iconSize * 1.8,
+                height: iconSize * 1.8,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  action['icon'] as IconData,
+                  color: color,
+                  size: iconSize * 0.9,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                action['label'] as String,
+                style: TextStyle(
+                  fontSize: smallSize * 0.95,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        );
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: action['tab'] == -4
+                ? PlanLibraryNavigationAction(
+                    onActivate: actionTap,
+                    child: actionCard,
+                  )
+                : actionCard,
           ),
         );
       }).toList(),

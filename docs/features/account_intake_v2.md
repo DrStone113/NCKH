@@ -62,6 +62,34 @@ existing female profile state.
 
 ## Existing-User Migration
 
+### Basic account details (2026-09-08)
+
+Authentication now opens the existing personal-profile form in account-setup
+mode before the domain questionnaire. Both email registration and first Google
+login create an incomplete user document: age, height, weight, activity and
+goal remain null until supplied. A Google/display name is only a prefill.
+
+The required form asks for name, age, gender (with an explicit decline option),
+height, weight, activity and goal. Equation sex remains a separate optional
+answer and is never inferred from gender. Measurements are shown before the
+optional nutrition-safety questions. The same validated form remains available
+in Settings.
+
+`users.basic_profile_completed_at` records successful confirmation independently
+of the V2 nutrition/workout envelope. Accounts missing this marker confirm their
+existing values once; even a completed V2 envelope cannot bypass this step.
+Invalid required values reopen the form. Saving must succeed in Firestore before
+the provider marks completion or the auth wrapper advances. A failed save keeps
+the entries and displays a retryable error. Restoring a Firebase session with a
+missing user document uses the same incomplete-account creation path.
+
+Root cause: both authentication paths previously invented age 25, height 170 cm,
+weight 68 kg and target weight 65 kg. The V2 questionnaire only asked domain
+preferences and exercise safety, and its completion gate never checked the
+general profile. These defaults must not be restored to real account creation.
+The nutrition-only save also no longer validates hidden exercise/pregnancy
+answers when a user has selected female in the basic form.
+
 Any account without `health_profile.schema_version >= 2` is routed to the V2
 screen. Existing values are prefilled. A completed V1 workout profile is kept;
 only the new V2 priority/nutrition information is requested.
@@ -111,11 +139,27 @@ workout-first medical-form flow.
 
 ## Tests
 
+- `apps/mobile/test/basic_account_profile_test.dart`
+- `apps/mobile/test/widgets/basic_account_intake_test.dart`
 - `apps/mobile/test/health_profile_v2_test.dart`
 - `apps/mobile/test/widgets/workout_account_intake_screen_test.dart`
 - `apps/mobile/test/workout_profile_memory_test.dart`
 - `apps/backend/tests/test_dynamic_system_prompt.py`
 - `apps/backend/tests/test_tool_catalog.py`
+
+Basic-profile verification on 2026-09-08: **38 Flutter tests passed** across
+the two new test files, existing settings/intake widgets, HealthProfile V2 and
+canonical nutrition integration. Dart analysis of the six affected source
+files and three new/updated test files reported no issues. Widget checks use
+a 390 × 844 viewport and cover blank submission, exact decimal measurements,
+transition to domain intake, failed persistence and retry. Provider tests use
+the isolated demo account; this is not a live Firebase signup qualification.
+
+The first test attempt found a pre-existing SDK mismatch: generated package
+configuration referenced `C:/Tools/flutter` while the runner used the project's
+Flutter 3.44.8 SDK. Running the pinned SDK's `flutter pub get --offline`
+regenerated that configuration and aligned the four SDK-constrained transitive
+dependencies in `pubspec.lock`. No SDK source was patched.
 
 ## Research Invariance
 
@@ -123,8 +167,44 @@ No frozen research A/B/C artifact, nutrition-policy-v1.0.1,
 exercise-prescription-policy-v1.1.0, E2 catalog, D3 validation artifact, or
 workout explicit-write behavior was modified by this feature.
 
-## Remaining Issues
+## Profile completeness before chat (2026-09-08)
 
-Account-intake free-text editing is available in onboarding and via explicit
-chat updates. A dedicated profile-settings editor for every optional V2 field
-can be added later without a schema migration.
+`ProfileReadiness` checks actual required values, basic confirmation, and the
+completed domain payload. A schema/version marker alone cannot bypass missing
+data. The existing app-entry gate reopens the relevant intake for incomplete
+accounts, including existing accounts.
+
+The chat screen shows an actionable missing-fields checklist. Each item opens
+the basic profile or nutrition/workout form, and a successful save returns to
+chat. Nutrition questions check confirmed allergies/restrictions and missing
+energy/safety inputs; workout questions check workout intake. General questions
+do not demand unrelated sensitive details. Explicit empty allergy/restriction
+selections remain confirmed empty lists after serialization; absent or legacy
+answers remain unconfirmed.
+
+Before each send (including retry), real accounts refresh the user document
+from Firestore server. Missing required data, read errors or an account switch
+stop submission before WebSocket connection. Failed checks preserve the draft;
+an owner-scoped in-memory draft also survives navigation back through intake.
+The isolated demo uses its local profile and is not relabelled server-backed.
+
+Optional personalization gaps do not block general conversation. They are sent
+as allowlisted field IDs to the backend, whose prompt asks only for information
+needed by the current request before personalizing the affected advice. Declined
+or unknown answers remain unknown. This prompt guidance complements existing
+deterministic safety gates; it is not a new backend authorization mechanism.
+Checked, scoped snapshots replace prior WebSocket context so omitted fields
+from earlier turns cannot silently return.
+
+Verification uses synthetic model/provider fixtures and Flutter widgets, with
+no live Firebase signup or live chatbot qualification. Focused tests cover
+missing actual fields despite completion stamps, confirmed empty lists,
+round trips, fresh versus stale profiles, read failure, account changes, form
+navigation and successful return to chat. Backend tests cover prompt formatting,
+malformed identifiers and replacement of stale context.
+
+Focused result on 2026-09-08: **56 Flutter tests passed** across readiness,
+completion notice, basic account, settings/intake, health/workout profile,
+canonical nutrition integration and chat history tests; **20 backend tests
+passed** across readiness prompt, dynamic prompt and chat gateway. Dart analysis
+of the eight affected source files and three new/updated tests found no issues.

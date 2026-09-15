@@ -1,0 +1,133 @@
+{
+  "canonical_auto_promotion": false,
+  "components": [
+    {
+      "component": "BASELINE_RANKER",
+      "configuration": {
+        "adaptive_authoritative": false,
+        "authoritative_path": "services.agent.tools.dish.suggest_dish",
+        "comparison_input": "authorised_baseline_ranked_candidate_ids",
+        "delivery_path_caveat": "dedicated N3.2.1 development endpoint already delivers RankerV2; chat preserves suggest_dish",
+        "kcal_bounds": [
+          0.7,
+          1.5
+        ],
+        "order": "preferred_non_recent_pool_else_fallback; region_priority_then_abs_scale_minus_one_then_abs_kcal_error_then_catalog_id",
+        "portion_scale_bounds": [
+          0.65,
+          1.6
+        ]
+      },
+      "feature_set": [
+        "canonical_catalog_filter",
+        "deterministic_portion_scaling"
+      ],
+      "source_paths": [
+        "apps/backend/services/agent/tools/dish.py"
+      ],
+      "source_sha256": {
+        "apps/backend/services/agent/tools/dish.py": "168b5e25e6cd8d8c66dc30aa3c8d4879cb5bc310a39caf262caee35388c957c6"
+      },
+      "version": "SUGGEST_DISH_DETERMINISTIC_BASELINE"
+    },
+    {
+      "component": "ADAPTIVE_RANKER",
+      "configuration": {
+        "budget_weight": 0.02,
+        "cooking_effort_weight": 0.02,
+        "diversity_weight": 0.07,
+        "hard_filter_before_soft_ranking": true,
+        "mapping_quality_weight": 0.1,
+        "novelty_weight": 0.05,
+        "nutrition_weight": 0.3,
+        "portion_fit_weight": 0.1,
+        "preference_weight": 0.22,
+        "source_quality_weight": 0.12
+      },
+      "feature_set": [
+        "canonical_nutrition",
+        "owner_private_preference_evidence",
+        "source_and_mapping_quality",
+        "owner_private_portion_fit",
+        "recent_recommendation_memory",
+        "explicit_dish_intent",
+        "effort_and_budget"
+      ],
+      "source_paths": [
+        "apps/backend/modules/nutrition/adaptive/intelligence.py"
+      ],
+      "source_sha256": {
+        "apps/backend/modules/nutrition/adaptive/intelligence.py": "597a8eb3411ec37e5f6ab74ccc832180f1d03761c627a4e052b2f8cb085974cf"
+      },
+      "version": "RECOMMENDATION_RANKER_V2_WEIGHT_POLICY_V1"
+    },
+    {
+      "component": "DIVERSITY_RERANKER",
+      "configuration": {
+        "cuisine_penalty": 0.15,
+        "exact_dish_penalty": 0.7,
+        "explicit_same_dish_clears_all_repeat_penalties": true,
+        "hard_constraint_bypass": false,
+        "preparation_penalty": 0.12,
+        "primary_protein_penalty": 0.35
+      },
+      "feature_set": [
+        "dish",
+        "primary_protein",
+        "cuisine",
+        "preparation",
+        "recent_memory"
+      ],
+      "source_paths": [
+        "apps/backend/modules/nutrition/adaptive/intelligence.py"
+      ],
+      "source_sha256": {
+        "apps/backend/modules/nutrition/adaptive/intelligence.py": "597a8eb3411ec37e5f6ab74ccc832180f1d03761c627a4e052b2f8cb085974cf"
+      },
+      "version": "RECOMMENDATION_RANKER_V2_DIVERSITY_COMPONENT_V1"
+    },
+    {
+      "component": "SHADOW_BANDIT_POLICY",
+      "configuration": {
+        "controls_production": false,
+        "counterfactual_policy_evaluation": "NOT_SUPPORTED_WITHOUT_VALID_PROPENSITIES",
+        "observation_only": true,
+        "shown_and_opened_reward": null
+      },
+      "feature_set": [
+        "ranked_valid_candidates",
+        "bound_feedback_outcome",
+        "candidate_set_fingerprint"
+      ],
+      "source_paths": [
+        "apps/backend/modules/nutrition/adaptive/intelligence.py",
+        "apps/backend/modules/nutrition/adaptive_router.py"
+      ],
+      "source_sha256": {
+        "apps/backend/modules/nutrition/adaptive/intelligence.py": "597a8eb3411ec37e5f6ab74ccc832180f1d03761c627a4e052b2f8cb085974cf",
+        "apps/backend/modules/nutrition/adaptive_router.py": "70c79949874df4ddebd0f8516738644ec440ce22c5301050902891a87b19ce03"
+      },
+      "version": "CONTEXTUAL_BANDIT_SHADOW_V1"
+    }
+  ],
+  "preference_event_affinities": {
+    "ACTUALLY_CONSUMED": 0.5,
+    "DISLIKED": -0.9,
+    "LIKED": 0.85,
+    "REPEATED": 0.65,
+    "REPEATED_CONSUMPTION": 0.8,
+    "SAVED": 0.25,
+    "SUBSTITUTED": -0.1
+  },
+  "preference_half_life_days": 90,
+  "production_adaptive_ranking": false,
+  "purpose": "PRODUCT_ENGINEERING_SHADOW_ONLY",
+  "shadow_bandit_reward_policy": {
+    "ACTUALLY_CONSUMED": 1,
+    "DISLIKED": -0.8,
+    "LIKED": 0.8,
+    "REJECTED": -0.45,
+    "REPEATED_CONSUMPTION": 1,
+    "SAVED": 0.35
+  }
+}

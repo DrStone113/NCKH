@@ -63,11 +63,15 @@ from __future__ import annotations
 
 import json
 import logging
+import unicodedata
+from copy import deepcopy
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
 from config import settings
+from modules.wger.canonical_exercises import load_canonical_exercise_catalog
 from services.agent.tool_registry import ToolDescriptor
 from services.workout_planner.integration import (
     WorkoutIntegrationService,
@@ -1007,6 +1011,211 @@ def suggest_workout(
     }
 
 
+@lru_cache(maxsize=1)
+def _search_exercise_records() -> tuple[dict[str, Any], ...]:
+    """Keep the complete canonical catalog immutable for read-only search."""
+
+    return tuple(load_canonical_exercise_catalog())
+
+
+def _normalize_catalog_text(value: object) -> str:
+    text = unicodedata.normalize("NFKD", str(value or "").casefold())
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    return " ".join(text.replace("đ", "d").split())
+
+
+def _named_values(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    names: list[str] = []
+    for item in value:
+        if isinstance(item, Mapping):
+            name = item.get("name")
+        else:
+            name = item
+        if isinstance(name, str) and name.strip():
+            names.append(name.strip())
+    return names
+
+
+def _exercise_catalog_page(
+    page: int, page_size: int, *, include_details: bool
+) -> tuple[int, int]:
+    if (
+        isinstance(page, bool)
+        or isinstance(page_size, bool)
+        or not isinstance(page, int)
+        or not isinstance(page_size, int)
+        or page < 1
+        or page_size < 1
+        or page_size > 20
+    ):
+        raise ValueError("INVALID_CATALOG_PAGE")
+    if include_details and page_size > 5:
+        raise ValueError("DETAIL_PAGE_TOO_LARGE")
+    start = (page - 1) * page_size
+    return start, start + page_size
+
+
+def _exercise_search_rank(record: Mapping[str, Any], query: str) -> int | None:
+    if not query:
+        return 4
+    name_en = _normalize_catalog_text(record.get("name_en"))
+    name_vi = _normalize_catalog_text(record.get("name_vi"))
+    if query in {name_en, name_vi}:
+        return 0
+    if name_en.startswith(query) or name_vi.startswith(query):
+        return 1
+    if query in name_en or query in name_vi:
+        return 2
+    instructions = record.get("instructions")
+    instruction_text = (
+        instructions.get("text", "") if isinstance(instructions, Mapping) else ""
+    )
+    aliases = (
+        instructions.get("aliases", [])
+        if isinstance(instructions, Mapping)
+        else []
+    )
+    searchable = _normalize_catalog_text(
+        " ".join(
+            [
+                name_en,
+                name_vi,
+                str(instruction_text),
+                *[str(item) for item in aliases if isinstance(item, str)],
+                *_named_values(record.get("primary_muscles")),
+                *_named_values(record.get("secondary_muscles")),
+                *_named_values(record.get("equipment")),
+            ]
+        )
+    )
+    if all(token in searchable for token in query.split()):
+        return 3
+    return None
+
+
+def _catalog_exercise_payload(
+    record: Mapping[str, Any],
+    recommendation: _ExerciseRecord | None,
+    *,
+    include_details: bool,
+) -> dict[str, Any]:
+    category = record.get("category")
+    category_name = category.get("name") if isinstance(category, Mapping) else None
+    payload: dict[str, Any] = {
+        "exercise_id": int(record["source_exercise_id"]),
+        "name": record.get("name_vi") or record.get("name_en"),
+        "name_en": record.get("name_en"),
+        "name_vi": record.get("name_vi"),
+        "category": category_name,
+        "equipment": _named_values(record.get("equipment")),
+        "primary_muscles": _named_values(record.get("primary_muscles")),
+        "secondary_muscles": _named_values(record.get("secondary_muscles")),
+        "derived_level": recommendation.derived_level if recommendation else None,
+        "recommendation_eligible": recommendation is not None,
+        "review_status": record.get("review_status"),
+        "has_instructions": bool(
+            isinstance(record.get("instructions"), Mapping)
+            and record["instructions"].get("text")
+        ),
+    }
+    if include_details:
+        payload.update(
+            {
+                "instructions": deepcopy(record.get("instructions")),
+                "media": deepcopy(record.get("media")),
+                "difficulty": deepcopy(record.get("difficulty")),
+                "movement_pattern": deepcopy(record.get("movement_pattern")),
+                "laterality": deepcopy(record.get("laterality")),
+                "quality_flags": list(record.get("quality_flags") or []),
+                "source": record.get("source"),
+                "source_version": record.get("source_version"),
+                "source_license_metadata": deepcopy(
+                    record.get("source_license_metadata")
+                ),
+            }
+        )
+    return payload
+
+
+def search_exercise_catalog(
+    query: str = "",
+    exercise_id: int | None = None,
+    muscle_group: str | None = None,
+    equipment: str | None = None,
+    level: str | None = None,
+    page: int = 1,
+    page_size: int = 5,
+    include_details: bool = False,
+) -> dict[str, Any]:
+    """Search all canonical exercise rows before applying pagination."""
+
+    if not isinstance(query, str) or len(query) > 160:
+        raise ValueError("INVALID_CATALOG_QUERY")
+    if exercise_id is not None and (
+        isinstance(exercise_id, bool)
+        or not isinstance(exercise_id, int)
+        or exercise_id < 1
+    ):
+        raise ValueError("INVALID_EXERCISE_ID")
+    if muscle_group is not None and muscle_group not in _VALID_MUSCLE_GROUPS:
+        raise ValueError("INVALID_MUSCLE_GROUP")
+    if equipment is not None and equipment not in _VALID_EQUIPMENT:
+        raise ValueError("INVALID_EQUIPMENT")
+    if level is not None and level not in _VALID_LEVELS:
+        raise ValueError("INVALID_LEVEL")
+    start, end = _exercise_catalog_page(
+        page, page_size, include_details=include_details
+    )
+    clean_query = _normalize_catalog_text(query)
+    recommendation_by_id = {record.id: record for record in _EXERCISES}
+    matches: list[tuple[int, int, Mapping[str, Any], _ExerciseRecord | None]] = []
+    records = _search_exercise_records()
+    for record in records:
+        source_id = int(record["source_exercise_id"])
+        recommendation = recommendation_by_id.get(source_id)
+        category = record.get("category")
+        category_name = category.get("name") if isinstance(category, Mapping) else None
+        if exercise_id is not None and source_id != exercise_id:
+            continue
+        if (
+            muscle_group is not None
+            and category_name not in _MUSCLE_TO_CATEGORIES[muscle_group]
+        ):
+            continue
+        if equipment is not None and equipment != "any":
+            if recommendation is None or not _equipment_matches(
+                recommendation, equipment
+            ):
+                continue
+        if level is not None and (
+            recommendation is None or recommendation.derived_level != level
+        ):
+            continue
+        rank = _exercise_search_rank(record, clean_query)
+        if rank is not None:
+            matches.append((rank, source_id, record, recommendation))
+    matches.sort(key=lambda item: (item[0], item[1]))
+    return {
+        "catalog": "CANONICAL_WGER_EXERCISE_CATALOG",
+        "catalog_size": len(records),
+        "recommendation_catalog_size": len(_EXERCISES),
+        "scanned_count": len(records),
+        "matched_count": len(matches),
+        "page": page,
+        "page_size": page_size,
+        "has_more": end < len(matches),
+        "next_page": page + 1 if end < len(matches) else None,
+        "results": [
+            _catalog_exercise_payload(
+                record, recommendation, include_details=include_details
+            )
+            for _, _, record, recommendation in matches[start:end]
+        ],
+    }
+
+
 _LEGACY_TO_E4_GOAL = {
     "general_fitness": "GENERAL_FITNESS",
     "weight_loss": "WEIGHT_MANAGEMENT",
@@ -1014,6 +1223,49 @@ _LEGACY_TO_E4_GOAL = {
     "strength": "STRENGTH",
     "endurance": "MUSCULAR_ENDURANCE",
     "recovery": "MOBILITY",
+}
+
+_SEARCH_EXERCISE_CATALOG_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "query": {
+            "type": "string",
+            "maxLength": 160,
+            "default": "",
+            "description": "Tên bài, cơ, dụng cụ hoặc nội dung hướng dẫn; để trống để duyệt toàn bộ catalog.",
+        },
+        "exercise_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Wger source exercise ID chính xác.",
+        },
+        "muscle_group": {
+            "type": "string",
+            "enum": sorted(_VALID_MUSCLE_GROUPS),
+        },
+        "equipment": {
+            "type": "string",
+            "enum": sorted(_VALID_EQUIPMENT),
+        },
+        "level": {
+            "type": "string",
+            "enum": sorted(_VALID_LEVELS),
+            "description": "Lọc theo mức khó suy ra của recommendation catalog.",
+        },
+        "page": {"type": "integer", "minimum": 1, "default": 1},
+        "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 5,
+        },
+        "include_details": {
+            "type": "boolean",
+            "default": False,
+            "description": "Trả hướng dẫn, media và provenance; tối đa 5 kết quả mỗi trang.",
+        },
+    },
+    "additionalProperties": False,
 }
 
 
@@ -1103,9 +1355,25 @@ TOOL_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
     idempotent=True,
 )
 
+SEARCH_CATALOG_DESCRIPTOR: ToolDescriptor = ToolDescriptor(
+    name="search_exercise_catalog",
+    description=(
+        "Quét toàn bộ catalog bài tập canonical trước khi lọc và phân trang. "
+        "Tìm theo tên, nhóm cơ, dụng cụ, hướng dẫn hoặc Wger ID; dùng "
+        "include_details=true với tối đa 5 kết quả để đọc hướng dẫn và nguồn. "
+        "Kết quả tra cứu không tự động trở thành một khuyến nghị tập luyện."
+    ),
+    parameters_schema=_SEARCH_EXERCISE_CATALOG_SCHEMA,
+    side="server",
+    fn=search_exercise_catalog,
+    idempotent=True,
+)
+
 
 __all__ = [
+    "SEARCH_CATALOG_DESCRIPTOR",
     "TOOL_DESCRIPTOR",
+    "search_exercise_catalog",
     "suggest_workout",
     "suggest_workout_facade",
 ]

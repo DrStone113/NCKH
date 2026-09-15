@@ -1,0 +1,55 @@
+{
+  "artifact_version": "PLAN_V2_PLAYWRIGHT_SEMANTICS_PROBE_V1",
+  "status": "PASS",
+  "semantics_enabled": true,
+  "semantics_placeholder_count": 1,
+  "semantic_node_count": 50,
+  "configuration_marker": {
+    "role": "group",
+    "accessible_name": "Plan V2 E2E configuration active",
+    "locator_count": 1,
+    "aria_disabled": null
+  },
+  "plan_library_locator": {
+    "role": "button",
+    "accessible_name": "app-nav-plan-library",
+    "locator_count": 1,
+    "visible": true,
+    "actionable": true,
+    "aria_disabled": null
+  },
+  "surrounding_navigation": [
+    {
+      "role": "button",
+      "accessible_name": "Main navigation overview",
+      "locator_count": 1,
+      "visible": true,
+      "actionable": true,
+      "aria_disabled": null
+    },
+    {
+      "role": "button",
+      "accessible_name": "Main navigation nutrition",
+      "locator_count": 1,
+      "visible": true,
+      "actionable": true,
+      "aria_disabled": null
+    },
+    {
+      "role": "button",
+      "accessible_name": "Main navigation activity",
+      "locator_count": 1,
+      "visible": true,
+      "actionable": true,
+      "aria_disabled": null
+    },
+    {
+      "role": "button",
+      "accessible_name": "Main navigation settings",
+      "locator_count": 1,
+      "visible": true,
+      "actionable": true,
+      "aria_disabled": null
+    }
+  ]
+}

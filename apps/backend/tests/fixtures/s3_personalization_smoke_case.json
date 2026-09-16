@@ -1,0 +1,17 @@
+{
+  "test_case_id": "s3-personalization-smoke-001",
+  "user_query": "Hãy dùng công cụ để tính nhu cầu năng lượng hằng ngày của tôi, sau đó đề xuất cách điều chỉnh lượng ăn phù hợp với mục tiêu, mức vận động và các hạn chế ăn uống trong hồ sơ.",
+  "profile": {
+    "profile_id": "fixture-s3-adult-001",
+    "age": 30,
+    "sex": "female",
+    "height_cm": 165,
+    "weight_kg": 60,
+    "activity_level": "moderate",
+    "goal": "lose_weight",
+    "target_weight_kg": 55,
+    "dietary_restrictions": ["vegetarian"],
+    "allergies": ["peanut"],
+    "food_preferences": ["Vietnamese food"]
+  }
+}

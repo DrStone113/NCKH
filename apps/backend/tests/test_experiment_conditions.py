@@ -347,6 +347,23 @@ def _case(profile: ExperimentProfile) -> ExperimentTestCase:
     )
 
 
+@pytest.mark.parametrize(
+    "fixture_name",
+    (
+        "s2_calculation_smoke_case.json",
+        "s3_personalization_smoke_case.json",
+    ),
+)
+def test_s0_s3_smoke_fixtures_are_valid(fixture_name: str) -> None:
+    fixture_path = Path(__file__).parent / "fixtures" / fixture_name
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+    case = ExperimentTestCase.model_validate(payload)
+
+    assert case.test_case_id.startswith(("s2-", "s3-"))
+    assert case.profile.profile_id.startswith("fixture-")
+
+
 @pytest.mark.asyncio
 async def test_runner_bypasses_production_turn_routing(
     monkeypatch: pytest.MonkeyPatch, profile: ExperimentProfile

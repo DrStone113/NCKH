@@ -128,3 +128,8 @@ does not pre-register a completed statistical analysis.
   statistical significance have not been established.
 - Multi-turn and the eight-arm full factorial remain later protocols.
 - No production capability or adaptive-ranking flag is enabled by this work.
+
+The tracked S2/S3 smoke fixtures follow this separation: the S2 calculation
+query contains every numeric/tool input while its profile is a hidden sentinel;
+the S3 query omits those values and receives them only through the explicit
+fixture profile.

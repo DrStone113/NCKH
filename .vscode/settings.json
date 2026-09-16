@@ -12,8 +12,20 @@
   "python.testing.pytestEnabled": true,
   "dart.flutterSdkPath": "C:\\flutter",
   "files.exclude": {
+    "**/.agents": true,
+    "**/.fvm": true,
+    "**/.venv": true,
+    "**/.venv-*": true,
     "**/__pycache__": true,
     "**/.pytest_cache": true,
-    "**/.dart_tool": true
+    "**/.hypothesis": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.dart_tool": true,
+    "**/.kiro": true,
+    "**/.playwright": true,
+    "**/.playwright-cli": true,
+    "**/.flutter-plugins-dependencies": true,
+    "**/build": true
   }
 }

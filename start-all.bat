@@ -5,6 +5,7 @@ title HealthApp - Khoi Dong Tat Ca Service
 set "ROOT_DIR=%~dp0"
 set "DEV_COMPOSE=%~dp0docker-compose.dev.yml"
 set "MOBILE_DIR=%~dp0apps\mobile"
+set "CLEANUP_SCRIPT=%~dp0scripts\cleanup-generated.ps1"
 set "WEB_HASH_SCRIPT=%MOBILE_DIR%\tool\web_build_fingerprint.ps1"
 set "WEB_BUILD_HASH=%MOBILE_DIR%\build\web\.source_hash"
 set "WEB_INDEX=%MOBILE_DIR%\build\web\index.html"
@@ -14,8 +15,20 @@ echo   DANG KHOI DONG HE THONG HEALTHAPP
 echo ========================================================
 echo.
 
-REM 1. Deploy Database Docker
-echo [1/4] Kiem tra va khoi dong Database Postgres (pgvector)...
+REM 1. Remove stale generated artifacts and release the old local web listener.
+echo [1/5] Don artefact tam va tien trinh Web cu...
+if exist "%CLEANUP_SCRIPT%" (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%CLEANUP_SCRIPT%" -Phase Start
+    if errorlevel 1 echo [!] Cleanup gap loi; tiep tuc khoi dong dich vu.
+) else (
+    echo [!] Khong tim thay cleanup helper: %CLEANUP_SCRIPT%
+)
+
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr /R /C:":3000 .*LISTENING"') do taskkill /t /f /pid %%a >nul 2>&1
+
+REM 2. Deploy Database Docker
+echo.
+echo [2/5] Kiem tra va khoi dong Database Postgres (pgvector)...
 
 REM Detect Docker Desktop path
 set "DOCKER_EXE=docker"
@@ -33,9 +46,9 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b %ERRORLEVEL%
 )
 
-REM 2. Prepare Flutter Web
+REM 3. Prepare Flutter Web
 echo.
-echo [2/4] Kiem tra ban build Flutter Web...
+echo [3/5] Kiem tra ban build Flutter Web...
 
 set "CURRENT_WEB_HASH="
 for /f "usebackq delims=" %%H in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%WEB_HASH_SCRIPT%"`) do set "CURRENT_WEB_HASH=%%H"
@@ -69,10 +82,10 @@ if "%WEB_NEEDS_BUILD%"=="1" (
     echo [+] Khong co thay doi. Su dung ban build hien tai.
 )
 
-REM 3. Launch Backend in the pinned Python 3.11 Docker environment.
+REM 4. Launch Backend in the pinned Python 3.11 Docker environment.
 REM The repository-local venv is optional and is not present on every machine.
 echo.
-echo [3/4] Khoi dong Backend FastAPI (Port 8080)...
+echo [4/5] Khoi dong Backend FastAPI (Port 8080)...
 pushd "%ROOT_DIR%"
 "%DOCKER_EXE%" compose -f docker-compose.yml -f docker-compose.dev.yml up -d fastapi_backend
 if errorlevel 1 (
@@ -95,18 +108,18 @@ exit /b 1
 
 :backend_ready
 echo [+] Backend da san sang.
-start "HealthApp Backend" /min cmd /k "cd /d %ROOT_DIR% && docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f fastapi_backend"
+start "HealthApp Backend" /D "%ROOT_DIR%" /min "%DOCKER_EXE%" compose -f docker-compose.yml -f docker-compose.dev.yml logs -f fastapi_backend
 
-REM 4. Launch Web Server
+REM 5. Launch Web Server
 echo.
-echo [4/4] Khoi dong Web Server (Port 3000)...
+echo [5/5] Khoi dong Web Server (Port 3000)...
 where python >nul 2>&1
 if errorlevel 1 (
     echo [!] Khong tim thay Python tren PATH de chay static web server.
     pause
     exit /b 1
 )
-start "HealthApp Web Server" /min cmd /k "cd /d %MOBILE_DIR% && python serve_web.py"
+start "HealthApp Web Server" /D "%MOBILE_DIR%" /min python serve_web.py
 
 echo [*] Doi Web Server san sang...
 for /l %%I in (1,1,30) do (

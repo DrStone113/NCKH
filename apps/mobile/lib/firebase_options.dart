@@ -53,8 +53,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDdPEY1qvG2fhDZbQwNKKVAMS2zS8iKhDk',
-    appId: '1:474333392741:android:0ad44b7c221c6f05a23b8c',
+    apiKey: 'AIzaSyB3X9kRzFUB1iLj9o9lPpEzpU5NklQzh3c',
+    appId: '1:474333392741:android:9cef1d4548afe2bda23b8c',
     messagingSenderId: '474333392741',
     projectId: 'healthcare-191d8',
     storageBucket: 'healthcare-191d8.firebasestorage.app',

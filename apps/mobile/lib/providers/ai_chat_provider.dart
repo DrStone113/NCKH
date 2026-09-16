@@ -312,15 +312,27 @@ class AIChatProvider extends ChangeNotifier {
     disconnect();
 
     try {
-      final firebaseToken =
-          await FirebaseAuth.instance.currentUser?.getIdToken();
+      String? firebaseToken;
+      try {
+        firebaseToken =
+            await FirebaseAuth.instance.currentUser?.getIdToken(true);
+      } on FirebaseAuthException catch (error) {
+        _onError('AUTHENTICATION_REQUIRED', error.code);
+        return;
+      }
       final wsUrl = AIChatbotConfig.wsUrlFor(
         sessionId: sessionId,
       );
+      final protocols =
+          AIChatbotConfig.wsProtocolsFor(firebaseToken: firebaseToken);
+      if (protocols.length < 2) {
+        _onError('AUTHENTICATION_REQUIRED', 'Firebase user is unavailable');
+        return;
+      }
       debugPrint('🔌 [AIChatProvider] Connecting authenticated chat...');
       final channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),
-        protocols: AIChatbotConfig.wsProtocolsFor(firebaseToken: firebaseToken),
+        protocols: protocols,
       );
       _channel = channel;
 

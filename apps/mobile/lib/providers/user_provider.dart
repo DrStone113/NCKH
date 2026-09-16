@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +19,7 @@ class UserProvider with ChangeNotifier {
   bool _isInitialized = false;
   DataStatus _profileStatus = DataStatus.notLoaded;
   DateTime? _profileReadAt;
+  StreamSubscription<User?>? _authSubscription;
 
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
@@ -38,29 +41,56 @@ class UserProvider with ChangeNotifier {
       setDemoUser();
       _isInitialized = true;
     } else {
-      _restoreSession();
+      _watchSession();
     }
   }
 
-  /// Tự động restore session từ Firebase Auth khi app khởi động
-  Future<void> _restoreSession() async {
+  /// Keep application identity aligned with Firebase, including expiry/signout.
+  void _watchSession() {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser != null) {
-        debugPrint('🔄 Restoring session for: ${firebaseUser.email}');
-        await _syncFirebaseUser(firebaseUser);
-      }
+      _authSubscription = FirebaseAuth.instance.idTokenChanges().listen(
+        _applyFirebaseSession,
+        onError: (Object error, StackTrace stackTrace) {
+          debugPrint('Session observer failed: $error');
+          _clearFirebaseSession(status: DataStatus.error);
+        },
+      );
+    } catch (e) {
+      debugPrint('Session observer unavailable: $e');
+      _clearFirebaseSession(status: DataStatus.error);
+    }
+  }
+
+  Future<void> _applyFirebaseSession(User? firebaseUser) async {
+    if (firebaseUser == null) {
+      _clearFirebaseSession();
+      return;
+    }
+    try {
+      debugPrint('Restoring Firebase session for: ${firebaseUser.email}');
+      await _syncFirebaseUser(firebaseUser);
+      _isInitialized = true;
+      notifyListeners();
     } catch (e) {
       _profileStatus = DataStatus.error;
-      debugPrint('⚠️ Session restore failed: $e');
-    } finally {
       _isInitialized = true;
+      debugPrint('Session restore failed: $e');
       notifyListeners();
     }
   }
 
+  void _clearFirebaseSession({DataStatus status = DataStatus.notLoaded}) {
+    _currentUser = null;
+    _profileStatus = status;
+    _profileReadAt = null;
+    _isInitialized = true;
+    notifyListeners();
+  }
+
   /// Demo mode - set fake user for UI testing without Firebase
   void setDemoUser() {
+    unawaited(_authSubscription?.cancel());
+    _authSubscription = null;
     final nutritionProfile = _planV2E2EDemo
         ? NutritionProfile.completeAccountIntake(
             null,
@@ -98,6 +128,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> signUp(String email, String password, {String name = ''}) async {
     try {
+      if (_authSubscription == null && !_planV2E2EDemo) _watchSession();
       final auth = FirebaseAuth.instance;
       final firestore = FirebaseFirestore.instance;
 
@@ -124,6 +155,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> signIn(String email, String password) async {
     try {
+      if (_authSubscription == null && !_planV2E2EDemo) _watchSession();
       final auth = FirebaseAuth.instance;
       UserCredential credential = await auth.signInWithEmailAndPassword(
         email: email.trim(),
@@ -142,6 +174,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> signInWithGoogle() async {
     try {
+      if (_authSubscription == null && !_planV2E2EDemo) _watchSession();
       if (kIsWeb) {
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
@@ -192,9 +225,7 @@ class UserProvider with ChangeNotifier {
         email: user.email ?? '',
         name: user.displayName ?? '',
       );
-      await FirestoreReferences.users(firestore)
-          .doc(user.uid)
-          .set(syncedUser);
+      await FirestoreReferences.users(firestore).doc(user.uid).set(syncedUser);
     }
     _currentUser = syncedUser;
     _profileStatus = DataStatus.known;
@@ -595,5 +626,11 @@ class UserProvider with ChangeNotifier {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

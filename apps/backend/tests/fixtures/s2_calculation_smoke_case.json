@@ -1,6 +1,6 @@
 {
   "test_case_id": "s2-calculation-smoke-001",
-  "user_query": "Hãy dùng công cụ để tính nhu cầu năng lượng hằng ngày từ các dữ liệu sau: age=30, sex=male, height_cm=175, weight_kg=70, activity_level=moderate, goal=maintain. Nêu rõ BMI, RMR, TDEE và mục tiêu năng lượng nếu policy cho phép.",
+  "user_query": "Một tô phở bò có bao nhiêu năng lượng theo nguồn được cung cấp? Đồng thời hãy dùng công cụ để tính nhu cầu năng lượng hằng ngày từ các dữ liệu sau: age=30, sex=male, height_cm=175, weight_kg=70, activity_level=moderate, goal=maintain. Nêu rõ BMI, RMR, TDEE, mục tiêu năng lượng nếu policy cho phép và so sánh khẩu phần phở với mục tiêu đó.",
   "profile": {
     "profile_id": "fixture-s2-hidden-profile",
     "age": 45,

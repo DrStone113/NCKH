@@ -1,6 +1,6 @@
 {
   "test_case_id": "s3-personalization-smoke-001",
-  "user_query": "Hãy dùng công cụ để tính nhu cầu năng lượng hằng ngày của tôi, sau đó đề xuất cách điều chỉnh lượng ăn phù hợp với mục tiêu, mức vận động và các hạn chế ăn uống trong hồ sơ.",
+  "user_query": "Một tô phở bò có bao nhiêu năng lượng theo nguồn được cung cấp? Hãy dùng công cụ để tính nhu cầu năng lượng hằng ngày của tôi, sau đó đánh giá khẩu phần này và đề xuất cách điều chỉnh phù hợp với mục tiêu, mức vận động và các hạn chế ăn uống trong hồ sơ.",
   "profile": {
     "profile_id": "fixture-s3-adult-001",
     "age": 30,

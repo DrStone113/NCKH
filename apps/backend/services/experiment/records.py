@@ -17,6 +17,7 @@ class ExperimentRunRecord(BaseModel):
     experiment_id: str
     run_id: str
     condition: str
+    protocol_id: str | None = None
     test_case_id: str
     timestamp: str
     config: dict[str, Any]
@@ -31,6 +32,7 @@ class ExperimentRunRecord(BaseModel):
     tools_offered: list[str]
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     retrieval_trace: dict[str, Any] | None = None
+    token_usage: dict[str, int] | None = None
     final_response: str
     latency_ms: float
     error: str | None

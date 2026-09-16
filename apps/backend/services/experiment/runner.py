@@ -80,6 +80,7 @@ class ResearchExperimentRunner:
         final_response = ""
         tool_calls: list[dict] = []
         retrieval_trace: dict | None = None
+        token_usage: dict[str, int] | None = None
         error: str | None = None
         registry = build_research_tool_registry(config)
 
@@ -114,6 +115,7 @@ class ResearchExperimentRunner:
             model_actual = result.model_actual
             final_response = result.final_response
             tool_calls = list(result.tool_calls)
+            token_usage = result.token_usage
         except ExperimentError as exc:
             error = str(exc)
         except Exception as exc:  # defensive boundary for a durable run record
@@ -123,6 +125,7 @@ class ResearchExperimentRunner:
             experiment_id=experiment_id,
             run_id=run_id,
             condition=config.condition,
+            protocol_id=config.protocol_id,
             test_case_id=test_case.test_case_id,
             timestamp=timestamp,
             config=config.serialize(),
@@ -137,6 +140,7 @@ class ResearchExperimentRunner:
             tools_offered=registry.names(),
             tool_calls=tool_calls,
             retrieval_trace=retrieval_trace,
+            token_usage=token_usage,
             final_response=final_response,
             latency_ms=round((time.perf_counter() - started) * 1000, 3),
             error=error,

@@ -9,7 +9,12 @@ from typing import Any, Sequence
 import pytest
 from pydantic import ValidationError
 
-from services.experiment.config import ExperimentConfig
+from services.experiment.config import (
+    LEGACY_PROTOCOL_ID,
+    NUTRITION_ABLATION_PROMPT_VERSION,
+    NUTRITION_ABLATION_PROTOCOL_ID,
+    ExperimentConfig,
+)
 from services.experiment.context import assemble_research_context
 from services.experiment.errors import ExperimentError
 from services.experiment.llm import (
@@ -25,7 +30,11 @@ from services.experiment.models import (
 )
 from services.experiment.runner import ResearchExperimentRunner
 from services.experiment.records import append_jsonl
-from services.experiment.tools import build_research_tool_registry
+from services.experiment.tools import (
+    build_research_tool_registry,
+    execute_research_tool,
+)
+from scripts.run_experiment import _config_from_args, _parser
 
 
 @pytest.fixture
@@ -72,8 +81,14 @@ def _context(
     profile: ExperimentProfile,
     rag_chunk: FrozenRagChunk,
 ):
+    prompt_version = (
+        NUTRITION_ABLATION_PROMPT_VERSION
+        if condition.startswith("S")
+        else "research-v1"
+    )
     config = ExperimentConfig(
         condition=condition,
+        prompt_version=prompt_version,
         frozen_time=datetime(2025, 1, 2, 3, 4, tzinfo=timezone.utc),
     )
     registry = build_research_tool_registry(config)
@@ -140,6 +155,75 @@ def test_condition_d_actual_context_has_only_calculate_tdee_tool(
         assert forbidden not in context.rendered_system_prompt
 
 
+@pytest.mark.parametrize(
+    ("arm", "profile_enabled", "rag_enabled", "tools_enabled"),
+    (
+        ("S0", False, False, False),
+        ("S1", False, True, False),
+        ("S2", False, True, True),
+        ("S3", True, True, True),
+    ),
+)
+def test_s0_s3_incremental_ablation_flags_and_context(
+    arm: str,
+    profile_enabled: bool,
+    rag_enabled: bool,
+    tools_enabled: bool,
+    profile: ExperimentProfile,
+    rag_chunk: FrozenRagChunk,
+) -> None:
+    config, context = _context(arm, profile, rag_chunk)
+
+    assert config.protocol_id == NUTRITION_ABLATION_PROTOCOL_ID
+    assert config.profile_enabled is profile_enabled
+    assert config.rag_enabled is rag_enabled
+    assert config.nutrition_tools_enabled is tools_enabled
+    assert ("PROFILE-SENTINEL" in context.rendered_system_prompt) is profile_enabled
+    assert ("RAG-CONTENT-SENTINEL" in context.rendered_system_prompt) is rag_enabled
+    assert bool(context.tool_schemas) is tools_enabled
+    assert "TRỢ LÝ NGHIÊN CỨU DINH DƯỠNG" in context.rendered_system_prompt
+
+
+def test_legacy_protocol_hashes_and_semantics_remain_frozen() -> None:
+    expected_hashes = {
+        "A": "d86e653a0737492efddaccfec0efd20e4cc972375d0811a5f03d989f08638710",
+        "B": "5e19f545276858b65e1f9fd1c7464111b83fb7e35bf8d57870ed0bd25a950585",
+        "C": "6c59f13b05c4f7e552f4a4a6371314e492e8ed8705e7a3439e323f145a265df7",
+        "D": "2f209028b5dc14ffca629d39eeba916d0ebdf0b6c68c6dbf7588d05350a6083d",
+    }
+
+    for condition, expected_hash in expected_hashes.items():
+        config = ExperimentConfig(condition=condition)
+        assert config.protocol_id == LEGACY_PROTOCOL_ID
+        assert config.config_hash() == expected_hash
+
+
+@pytest.mark.asyncio
+async def test_s2_tool_uses_canonical_nutrition_policy_v1_0_1() -> None:
+    config = ExperimentConfig(
+        condition="S2", prompt_version=NUTRITION_ABLATION_PROMPT_VERSION
+    )
+    registry = build_research_tool_registry(config)
+
+    result = await execute_research_tool(
+        registry,
+        "calculate_tdee",
+        {
+            "age": 30,
+            "sex": "male",
+            "height_cm": 175,
+            "weight_kg": 70,
+            "activity_level": "moderate",
+            "goal": "maintain",
+        },
+    )
+
+    assert result["policy_version"] == "nutrition-policy-v1.0.1"
+    assert result["status"] == "READY"
+    assert result["bmi"] == pytest.approx(22.86)
+    assert result["tdee"] == pytest.approx(2556.0)
+
+
 def test_context_has_no_memory_history_live_state_or_production_markers(
     profile: ExperimentProfile, rag_chunk: FrozenRagChunk
 ) -> None:
@@ -180,6 +264,16 @@ def test_config_hash_is_deterministic() -> None:
     second = ExperimentConfig(condition="C")
     assert first.config_hash() == second.config_hash()
     assert first.config_hash() != ExperimentConfig(condition="D").config_hash()
+
+
+def test_s0_s3_cli_selects_the_versioned_prompt_by_default() -> None:
+    args = _parser().parse_args(
+        ["--condition", "S1", "--case", "fixture.json"]
+    )
+    config = _config_from_args(args)
+
+    assert config.condition == "S1"
+    assert config.prompt_version == NUTRITION_ABLATION_PROMPT_VERSION
 
 
 def test_profile_is_immutable(profile: ExperimentProfile) -> None:
@@ -296,6 +390,7 @@ async def test_b_run_record_contains_required_fields_and_writes_jsonl(
         "experiment_id",
         "run_id",
         "condition",
+        "protocol_id",
         "test_case_id",
         "timestamp",
         "config",
@@ -310,6 +405,7 @@ async def test_b_run_record_contains_required_fields_and_writes_jsonl(
         "tools_offered",
         "tool_calls",
         "retrieval_trace",
+        "token_usage",
         "final_response",
         "latency_ms",
         "error",
@@ -318,6 +414,7 @@ async def test_b_run_record_contains_required_fields_and_writes_jsonl(
     }
     assert required <= payload.keys()
     assert payload["profile_snapshot_or_null"]["profile_id"] == "PROFILE-SENTINEL"
+    assert payload["protocol_id"] == LEGACY_PROTOCOL_ID
     assert payload["tools_offered"] == []
     assert payload["git_commit"] == "abc123"
     assert payload["worktree_clean"] is False
@@ -360,10 +457,23 @@ async def test_d_executes_only_allowlisted_deterministic_tool(
     client = _CapturingCompletionClient(
         [
             ResearchLLMResponse(
-                content="", model_actual="fixed-model", tool_calls=(tool_call,)
+                content="",
+                model_actual="fixed-model",
+                tool_calls=(tool_call,),
+                token_usage={
+                    "prompt_tokens": 10,
+                    "completion_tokens": 2,
+                    "total_tokens": 12,
+                },
             ),
             ResearchLLMResponse(
-                content="tool-backed answer", model_actual="fixed-model"
+                content="tool-backed answer",
+                model_actual="fixed-model",
+                token_usage={
+                    "prompt_tokens": 20,
+                    "completion_tokens": 5,
+                    "total_tokens": 25,
+                },
             ),
         ]
     )
@@ -383,6 +493,11 @@ async def test_d_executes_only_allowlisted_deterministic_tool(
     assert [call["name"] for call in record.tool_calls] == ["calculate_tdee"]
     assert record.tool_calls[0]["ok"] is True
     assert record.final_response == "tool-backed answer"
+    assert record.token_usage == {
+        "prompt_tokens": 30,
+        "completion_tokens": 7,
+        "total_tokens": 37,
+    }
 
 
 class _CompletionsEndpoint:
@@ -406,7 +521,13 @@ def _mock_openai(endpoint: _CompletionsEndpoint) -> Any:
 async def test_fixed_llm_sends_all_controls_and_one_requested_model() -> None:
     message = SimpleNamespace(content="answer", tool_calls=[])
     response = SimpleNamespace(
-        model="actual-revision", choices=[SimpleNamespace(message=message)]
+        model="actual-revision",
+        choices=[SimpleNamespace(message=message)],
+        usage=SimpleNamespace(
+            prompt_tokens=11,
+            completion_tokens=7,
+            total_tokens=18,
+        ),
     )
     endpoint = _CompletionsEndpoint(response=response)
     client = FixedOpenAIResearchClient(
@@ -429,6 +550,11 @@ async def test_fixed_llm_sends_all_controls_and_one_requested_model() -> None:
     )
 
     assert result.model_actual == "actual-revision"
+    assert result.token_usage == {
+        "prompt_tokens": 11,
+        "completion_tokens": 7,
+        "total_tokens": 18,
+    }
     assert len(endpoint.calls) == 1
     assert endpoint.calls[0]["model"] == "requested-model"
     assert endpoint.calls[0]["temperature"] == 0

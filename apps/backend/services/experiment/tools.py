@@ -1,4 +1,4 @@
-"""Explicit deterministic tool allowlist for research condition D."""
+"""Explicit deterministic tool allowlists for versioned research protocols."""
 
 from __future__ import annotations
 
@@ -7,7 +7,11 @@ import inspect
 from typing import Any
 
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
-from services.experiment.config import ExperimentConfig
+from services.agent.tools.tdee import calculate_tdee as calculate_canonical_tdee
+from services.experiment.config import (
+    NUTRITION_ABLATION_PROTOCOL_ID,
+    ExperimentConfig,
+)
 from services.experiment.errors import ExperimentError, safe_error_detail
 from services.experiment.legacy_nutrition import (
     calculate_tdee_research_legacy_v1,
@@ -63,11 +67,37 @@ def _calculate_tdee_for_research(
     )
 
 
-CALCULATE_TDEE_DESCRIPTOR = ToolDescriptor(
+def _calculate_canonical_tdee_for_ablation(
+    *,
+    age: int,
+    sex: str,
+    height_cm: float,
+    weight_kg: float,
+    activity_level: str,
+    goal: str,
+) -> dict[str, Any]:
+    """Adapt the stable research schema to canonical nutrition-policy-v1.0.1."""
+
+    return calculate_canonical_tdee(
+        {
+            "user_id": "nutrition-ablation-fixture",
+            "age": age,
+            "gender": sex,
+            "equation_sex": sex,
+            "height_cm": height_cm,
+            "weight_kg": weight_kg,
+            "activity_level": activity_level,
+            "health_goal": goal,
+            "dietary_restrictions": [],
+        }
+    )
+
+
+LEGACY_CALCULATE_TDEE_DESCRIPTOR = ToolDescriptor(
     name="calculate_tdee",
     description=(
-        "Deterministically calculate Mifflin-St Jeor BMR, activity-adjusted "
-        "TDEE, and the goal-adjusted daily calorie value from explicit inputs."
+        "Deterministically calculate the frozen legacy Mifflin-St Jeor BMR, "
+        "activity-adjusted TDEE, and goal-adjusted daily calorie value."
     ),
     parameters_schema=CALCULATE_TDEE_SCHEMA,
     side="server",
@@ -75,13 +105,35 @@ CALCULATE_TDEE_DESCRIPTOR = ToolDescriptor(
     idempotent=True,
 )
 
+CANONICAL_CALCULATE_TDEE_DESCRIPTOR = ToolDescriptor(
+    name="calculate_tdee",
+    description=(
+        "Deterministically calculate canonical nutrition-policy-v1.0.1 state, "
+        "including BMI, estimated RMR/TDEE, safety status, calorie target, "
+        "protein planning, and fluid guidance from explicit inputs."
+    ),
+    parameters_schema=CALCULATE_TDEE_SCHEMA,
+    side="server",
+    fn=_calculate_canonical_tdee_for_ablation,
+    idempotent=True,
+)
+
+# Backwards-compatible export for historical callers. New S0-S3 arms select
+# the canonical descriptor inside ``build_research_tool_registry``.
+CALCULATE_TDEE_DESCRIPTOR = LEGACY_CALCULATE_TDEE_DESCRIPTOR
+
 
 def build_research_tool_registry(config: ExperimentConfig) -> ToolRegistry:
     """Build a fresh registry containing only tools authorized by condition."""
 
     registry = ToolRegistry()
     if config.nutrition_tools_enabled:
-        registry.register(CALCULATE_TDEE_DESCRIPTOR)
+        descriptor = (
+            CANONICAL_CALCULATE_TDEE_DESCRIPTOR
+            if config.protocol_id == NUTRITION_ABLATION_PROTOCOL_ID
+            else LEGACY_CALCULATE_TDEE_DESCRIPTOR
+        )
+        registry.register(descriptor)
     return registry
 
 
@@ -112,8 +164,10 @@ async def execute_research_tool(
 
 
 __all__ = [
+    "CANONICAL_CALCULATE_TDEE_DESCRIPTOR",
     "CALCULATE_TDEE_DESCRIPTOR",
     "CALCULATE_TDEE_SCHEMA",
+    "LEGACY_CALCULATE_TDEE_DESCRIPTOR",
     "build_research_tool_registry",
     "execute_research_tool",
 ]

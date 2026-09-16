@@ -1,0 +1,114 @@
+# Nutrition Ablation S0-S3 V1
+
+## Status
+
+This document defines the implementation boundary for
+`nutrition-ablation-s0-s3-v1`. It is a development-ready experiment protocol,
+not evidence that the benchmark, human review, or statistical analysis has
+already been completed.
+
+## Why this is a new protocol
+
+The repository already contains a frozen A-D experiment family:
+
+| Historical condition | Profile | RAG | Nutrition tool |
+|---|---:|---:|---:|
+| A | no | no | no |
+| B | yes | no | no |
+| C | yes | yes | no |
+| D | yes | yes | legacy tool |
+
+That family adds profile before RAG and therefore cannot answer the new
+incremental research questions by renaming its conditions. Its configuration
+hashes, historical records, frozen corpus, and legacy condition-D calculator
+remain unchanged.
+
+The new protocol adds independent arm names with the requested order:
+
+| Arm | Profile | RAG | Canonical nutrition tool | Primary comparison |
+|---|---:|---:|---:|---|
+| S0 | no | no | no | baseline LLM |
+| S1 | no | yes | no | S0 vs S1: contribution of RAG |
+| S2 | no | yes | yes | S1 vs S2: contribution of deterministic tools |
+| S3 | yes | yes | yes | S2 vs S3: contribution of personalization |
+
+All arms use the same isolated runner, fixed model controls, frozen time,
+single-turn request shape, logging path, and prompt version
+`nutrition-ablation-v1`. Only the three treatment flags differ.
+
+## Isolation and safety contracts
+
+- The experiment package does not import the production chat orchestrator,
+  memory, live Firebase profile, production router, or production tool registry.
+- Profile data comes only from an explicit immutable fixture and appears only in
+  S3.
+- RAG uses only the versioned frozen research corpus and appears only in S1-S3.
+- The only tool available in S2-S3 is the idempotent `calculate_tdee` adapter.
+- S2-S3 delegate calculations to canonical `nutrition-policy-v1.0.1`; formulas
+  are not copied into the experiment package.
+- Safety, allergy, and dietary constraints remain deterministic benchmark
+  requirements. Personalization never authorizes a canonical write, meal log,
+  plan mutation, adaptive-ranking promotion, or web nutrition source.
+- A missing RAG result or tool failure is recorded as an explicit experiment
+  error. It does not silently fall back to a different treatment.
+
+## Run contract
+
+From `apps/backend`, one smoke case can be run with:
+
+```powershell
+python -m scripts.run_experiment `
+  --condition S0 `
+  --case tests/fixtures/example_experiment_case.json `
+  --experiment-id nutrition-ablation-smoke
+```
+
+Repeat with S1, S2, and S3 using the same model and non-treatment settings.
+For S0-S3, the CLI selects `nutrition-ablation-v1` unless an explicit prompt
+version is supplied. Every record contains the protocol ID, full serialized
+configuration and hash, requested/actual model, exact prompt, retrieval trace,
+tool calls, aggregated provider token usage when available, latency, Git commit,
+and dirty-worktree state.
+
+## Benchmark design boundary
+
+The existing versioned benchmark schema already supports required facts,
+immutable sources, numerical expected values, dietary/allergy constraints,
+retrieval recall/MRR, citations, latency, token usage, and human annotations.
+It does not yet contain a frozen 300-case benchmark file.
+
+Before collecting final responses:
+
+1. Build and review a development/pilot/final benchmark with no LLM-generated
+   answer used as ground truth.
+2. Keep calculation cases and personalization cases distinct. S2 calculation
+   prompts must contain their explicit numeric inputs; S2 personalization
+   prompts must not receive the hidden fixture profile.
+3. Use paired profile cases for S2 vs S3 and annotate goal, activity, allergy,
+   dietary, and safety requirements separately.
+4. Freeze the benchmark file, manifest, prompt, model identifier, corpus hash,
+   canonical nutrition policy version, run count, and evaluator rubric before
+   the confirmatory run.
+5. Keep development/tuning responses separate from confirmatory evidence.
+
+## Evaluation boundary
+
+Use deterministic scoring where possible and explicit blinded human annotation
+where free text requires judgment. LLM-as-a-judge may be reported as a secondary
+analysis but is not the sole ground truth.
+
+For paired binary outcomes use an overall repeated-measures test followed by
+predeclared adjacent comparisons with multiple-comparison correction. For
+ordinal human scores use the corresponding paired non-parametric analysis.
+Report effect sizes and confidence intervals in addition to p-values. Final test
+selection must be reviewed against the actual endpoint distribution; this file
+does not pre-register a completed statistical analysis.
+
+## Not yet complete
+
+- No frozen 300-case benchmark or human-review pack exists yet.
+- S0-S3 have not been run against a live provider in a clean worktree.
+- Retrieval quality, response quality, cost, test-retest reliability, and
+  statistical significance have not been established.
+- Multi-turn and the eight-arm full factorial remain later protocols.
+- No production capability or adaptive-ranking flag is enabled by this work.

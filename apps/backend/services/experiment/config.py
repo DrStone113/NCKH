@@ -1,4 +1,4 @@
-"""Immutable, authoritative configuration for A/B/C/D experiments."""
+"""Immutable, authoritative configuration for controlled experiments."""
 
 from __future__ import annotations
 
@@ -9,13 +9,33 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-ExperimentCondition = Literal["A", "B", "C", "D"]
+LegacyExperimentCondition = Literal["A", "B", "C", "D"]
+NutritionAblationArm = Literal["S0", "S1", "S2", "S3"]
+ExperimentCondition = Literal["A", "B", "C", "D", "S0", "S1", "S2", "S3"]
+
+LEGACY_PROTOCOL_ID = "legacy-profile-first-a-d"
+NUTRITION_ABLATION_PROTOCOL_ID = "nutrition-ablation-s0-s3-v1"
+NUTRITION_ABLATION_PROMPT_VERSION = "nutrition-ablation-v1"
+NUTRITION_ABLATION_ARMS: tuple[NutritionAblationArm, ...] = (
+    "S0",
+    "S1",
+    "S2",
+    "S3",
+)
 
 _CONDITION_FLAGS: dict[str, tuple[bool, bool, bool]] = {
+    # Historical profile-first protocol. These mappings and their serialized
+    # hashes are frozen and must remain unchanged.
     "A": (False, False, False),
     "B": (True, False, False),
     "C": (True, True, False),
     "D": (True, True, True),
+    # Incremental ablation requested by the core NCKH research protocol.
+    # Tuple order is profile, RAG, deterministic nutrition tools.
+    "S0": (False, False, False),
+    "S1": (False, True, False),
+    "S2": (False, True, True),
+    "S3": (True, True, True),
 }
 
 
@@ -24,7 +44,9 @@ class ExperimentConfig(BaseModel):
 
     Treatment flags are properties rather than constructor fields. This makes
     inconsistent combinations such as ``condition='A', use_profile=True``
-    impossible to construct.
+    impossible to construct. A/B/C/D retain the historical profile-first
+    protocol; S0/S1/S2/S3 implement the RAG -> tools -> personalization
+    incremental ablation without rewriting historical runs.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -75,6 +97,12 @@ class ExperimentConfig(BaseModel):
         return _CONDITION_FLAGS[self.condition][2]
 
     @property
+    def protocol_id(self) -> str:
+        if self.condition in NUTRITION_ABLATION_ARMS:
+            return NUTRITION_ABLATION_PROTOCOL_ID
+        return LEGACY_PROTOCOL_ID
+
+    @property
     def fallback_models(self) -> tuple[str, ...]:
         """Research mode never has a fallback model."""
 
@@ -106,4 +134,13 @@ class ExperimentConfig(BaseModel):
         return hashlib.sha256(canonical).hexdigest()
 
 
-__all__ = ["ExperimentCondition", "ExperimentConfig"]
+__all__ = [
+    "ExperimentCondition",
+    "ExperimentConfig",
+    "LEGACY_PROTOCOL_ID",
+    "LegacyExperimentCondition",
+    "NUTRITION_ABLATION_ARMS",
+    "NUTRITION_ABLATION_PROMPT_VERSION",
+    "NUTRITION_ABLATION_PROTOCOL_ID",
+    "NutritionAblationArm",
+]

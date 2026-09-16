@@ -6,7 +6,10 @@ import json
 from collections.abc import Sequence
 
 from services.agent.tool_registry import ToolRegistry
-from services.experiment.config import ExperimentConfig
+from services.experiment.config import (
+    NUTRITION_ABLATION_PROMPT_VERSION,
+    ExperimentConfig,
+)
 from services.experiment.errors import ExperimentError
 from services.experiment.models import (
     ExperimentProfile,
@@ -23,6 +26,22 @@ Use only the information explicitly included in this request. Do not invent user
 food composition values, citations, or completed actions. Explain uncertainty clearly.
 Do not diagnose disease or prescribe medication. If a request indicates an emergency,
 advise the person to seek immediate professional help.
+
+REFERENCE TIME (FROZEN): {frozen_time}
+""".strip(),
+    NUTRITION_ABLATION_PROMPT_VERSION: """TRỢ LÝ NGHIÊN CỨU DINH DƯỠNG
+
+Bạn cung cấp thông tin chung về dinh dưỡng và vận động cho người trưởng thành
+khỏe mạnh trong một nghiên cứu có kiểm soát. Luôn trả lời bằng tiếng Việt, rõ
+ràng và ngắn gọn. Không chẩn đoán bệnh, kê thuốc hoặc thay thế chuyên gia y tế.
+Nếu yêu cầu có dấu hiệu cấp cứu hoặc vượt ngoài phạm vi nghiên cứu, hãy nói rõ
+giới hạn và khuyến nghị tìm hỗ trợ chuyên môn phù hợp.
+
+Chỉ sử dụng hồ sơ, bằng chứng RAG và công cụ khi các khối tương ứng thực sự có
+trong request. Không suy đoán dữ liệu hồ sơ còn thiếu, không tạo nguồn hoặc số
+liệu giả, và không tuyên bố đã thực hiện hành động ngoài đời thực. Khi có khối
+FROZEN RAG CONTEXT, các khẳng định dựa trên khối đó phải trích chunk_id dưới
+dạng [chunk_id]. Khi bằng chứng không đủ, hãy nói rõ là chưa đủ thông tin.
 
 REFERENCE TIME (FROZEN): {frozen_time}
 """.strip(),
@@ -46,7 +65,7 @@ def assemble_research_context(
     rag_chunks: Sequence[FrozenRagChunk] | None,
     tool_registry: ToolRegistry,
 ) -> ResearchContext:
-    """Build exactly the context authorized by A/B/C/D.
+    """Build exactly the context authorized by the selected research arm.
 
     The initial message list always has two entries: one system message and the
     current user query. No production history or memory object is accepted by

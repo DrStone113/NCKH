@@ -1,4 +1,4 @@
-"""Run one isolated A/B/C/D research test case and append a JSONL record.
+"""Run one isolated research test case and append a JSONL record.
 
 Example (run from ``apps/backend``)::
 
@@ -16,7 +16,11 @@ from typing import Any, Sequence
 
 from pydantic import ValidationError
 
-from services.experiment.config import ExperimentConfig
+from services.experiment.config import (
+    NUTRITION_ABLATION_ARMS,
+    NUTRITION_ABLATION_PROMPT_VERSION,
+    ExperimentConfig,
+)
 from services.experiment.llm import FixedOpenAIResearchClient
 from services.experiment.models import ExperimentTestCase
 from services.experiment.rag import PostgresFrozenRagProvider
@@ -28,7 +32,11 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Execute one controlled nutrition-chatbot experiment run."
     )
-    parser.add_argument("--condition", required=True, choices=("A", "B", "C", "D"))
+    parser.add_argument(
+        "--condition",
+        required=True,
+        choices=("A", "B", "C", "D", *NUTRITION_ABLATION_ARMS),
+    )
     parser.add_argument("--case", required=True, type=Path, dest="case_path")
     parser.add_argument(
         "--output",
@@ -53,6 +61,11 @@ def _parser() -> argparse.ArgumentParser:
 
 def _config_from_args(args: argparse.Namespace) -> ExperimentConfig:
     values: dict[str, Any] = {"condition": args.condition}
+    if (
+        args.condition in NUTRITION_ABLATION_ARMS
+        and args.prompt_version is None
+    ):
+        values["prompt_version"] = NUTRITION_ABLATION_PROMPT_VERSION
     for field, argument in (
         ("model", "model"),
         ("temperature", "temperature"),

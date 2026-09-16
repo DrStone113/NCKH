@@ -27,6 +27,7 @@ class ResearchLLMResponse:
     content: str
     model_actual: str
     tool_calls: tuple[ResearchToolCall, ...] = ()
+    token_usage: dict[str, int] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,7 @@ class ResearchExecutionResult:
     final_response: str
     model_actual: str
     tool_calls: tuple[dict[str, Any], ...]
+    token_usage: dict[str, int] | None = None
 
 
 class ResearchCompletionClient(Protocol):
@@ -128,10 +130,22 @@ class FixedOpenAIResearchClient:
                 )
             )
 
+        usage = getattr(response, "usage", None)
+        token_usage: dict[str, int] = {}
+        for field in ("prompt_tokens", "completion_tokens", "total_tokens"):
+            value = (
+                usage.get(field)
+                if isinstance(usage, dict)
+                else getattr(usage, field, None)
+            )
+            if isinstance(value, int) and value >= 0:
+                token_usage[field] = value
+
         return ResearchLLMResponse(
             content=str(getattr(message, "content", "") or ""),
             model_actual=str(getattr(response, "model", "") or config.model),
             tool_calls=tuple(parsed_calls),
+            token_usage=token_usage or None,
         )
 
 
@@ -148,6 +162,12 @@ async def execute_fixed_agent(
     messages = [dict(message) for message in initial_messages]
     recorded_calls: list[dict[str, Any]] = []
     actual_model: str | None = None
+    accumulated_usage = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
+    has_token_usage = False
 
     for step in range(1, config.max_agent_steps + 1):
         response = await client.complete(
@@ -163,11 +183,17 @@ async def execute_fixed_agent(
                 f"{actual_model} -> {response.model_actual}",
             )
 
+        if response.token_usage:
+            has_token_usage = True
+            for field in accumulated_usage:
+                accumulated_usage[field] += int(response.token_usage.get(field, 0))
+
         if not response.tool_calls:
             return ResearchExecutionResult(
                 final_response=response.content,
                 model_actual=actual_model,
                 tool_calls=tuple(recorded_calls),
+                token_usage=(dict(accumulated_usage) if has_token_usage else None),
             )
 
         if not tool_schemas:

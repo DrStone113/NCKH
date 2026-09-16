@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from services.experiment.config import (
     NUTRITION_ABLATION_ARMS,
+    NUTRITION_ABLATION_MODEL,
     NUTRITION_ABLATION_PROMPT_VERSION,
     ExperimentConfig,
 )
@@ -66,6 +67,8 @@ def _config_from_args(args: argparse.Namespace) -> ExperimentConfig:
         and args.prompt_version is None
     ):
         values["prompt_version"] = NUTRITION_ABLATION_PROMPT_VERSION
+    if args.condition in NUTRITION_ABLATION_ARMS and args.model is None:
+        values["model"] = NUTRITION_ABLATION_MODEL
     for field, argument in (
         ("model", "model"),
         ("temperature", "temperature"),

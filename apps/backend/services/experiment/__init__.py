@@ -6,6 +6,7 @@ memory service, turn router, or production tool registry.
 
 from services.experiment.config import (
     NUTRITION_ABLATION_ARMS,
+    NUTRITION_ABLATION_MODEL,
     NUTRITION_ABLATION_PROTOCOL_ID,
     ExperimentConfig,
 )
@@ -17,6 +18,7 @@ __all__ = [
     "ExperimentProfile",
     "ExperimentTestCase",
     "NUTRITION_ABLATION_ARMS",
+    "NUTRITION_ABLATION_MODEL",
     "NUTRITION_ABLATION_PROTOCOL_ID",
     "ResearchExperimentRunner",
 ]

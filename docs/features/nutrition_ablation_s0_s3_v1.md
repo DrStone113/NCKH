@@ -34,7 +34,10 @@ The new protocol adds independent arm names with the requested order:
 
 All arms use the same isolated runner, fixed model controls, frozen time,
 single-turn request shape, logging path, and prompt version
-`nutrition-ablation-v1`. Only the three treatment flags differ.
+`nutrition-ablation-v1`. The S0-S3 CLI default is pinned to
+`ram/qwen-3.8-flash`; an actual run must record the provider-returned model and
+must fail rather than substitute another model. Only the three treatment flags
+differ within a comparison.
 
 ## Isolation and safety contracts
 
@@ -65,7 +68,8 @@ python -m scripts.run_experiment `
 
 Repeat with S1, S2, and S3 using the same model and non-treatment settings.
 For S0-S3, the CLI selects `nutrition-ablation-v1` unless an explicit prompt
-version is supplied. Every record contains the protocol ID, full serialized
+version is supplied, and selects `ram/qwen-3.8-flash` unless an explicit model
+is supplied. Every record contains the protocol ID, full serialized
 configuration and hash, requested/actual model, exact prompt, retrieval trace,
 tool calls, aggregated provider token usage when available, latency, Git commit,
 and dirty-worktree state.

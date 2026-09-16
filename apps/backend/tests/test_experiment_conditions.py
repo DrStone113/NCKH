@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from services.experiment.config import (
     LEGACY_PROTOCOL_ID,
+    NUTRITION_ABLATION_MODEL,
     NUTRITION_ABLATION_PROMPT_VERSION,
     NUTRITION_ABLATION_PROTOCOL_ID,
     ExperimentConfig,
@@ -273,7 +274,17 @@ def test_s0_s3_cli_selects_the_versioned_prompt_by_default() -> None:
     config = _config_from_args(args)
 
     assert config.condition == "S1"
+    assert config.model == NUTRITION_ABLATION_MODEL
     assert config.prompt_version == NUTRITION_ABLATION_PROMPT_VERSION
+
+
+def test_legacy_cli_keeps_the_historical_default_model() -> None:
+    args = _parser().parse_args(
+        ["--condition", "A", "--case", "fixture.json"]
+    )
+    config = _config_from_args(args)
+
+    assert config.model == "rk/llms/qwen-3.7-plus"
 
 
 def test_profile_is_immutable(profile: ExperimentProfile) -> None:

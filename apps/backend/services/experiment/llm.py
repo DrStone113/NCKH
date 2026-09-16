@@ -28,6 +28,7 @@ class ResearchLLMResponse:
     model_actual: str
     tool_calls: tuple[ResearchToolCall, ...] = ()
     token_usage: dict[str, int] | None = None
+    finish_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +37,7 @@ class ResearchExecutionResult:
     model_actual: str
     tool_calls: tuple[dict[str, Any], ...]
     token_usage: dict[str, int] | None = None
+    finish_reasons: tuple[str | None, ...] = ()
 
 
 class ResearchCompletionClient(Protocol):
@@ -106,6 +108,7 @@ class FixedOpenAIResearchClient:
         if not choices:
             raise ExperimentError("EXPERIMENT_LLM_INVALID_RESPONSE", "no choices")
         message = choices[0].message
+        finish_reason = getattr(choices[0], "finish_reason", None)
 
         parsed_calls: list[ResearchToolCall] = []
         for index, raw_call in enumerate(getattr(message, "tool_calls", None) or []):
@@ -146,6 +149,7 @@ class FixedOpenAIResearchClient:
             model_actual=str(getattr(response, "model", "") or config.model),
             tool_calls=tuple(parsed_calls),
             token_usage=token_usage or None,
+            finish_reason=(str(finish_reason) if finish_reason is not None else None),
         )
 
 
@@ -168,6 +172,7 @@ async def execute_fixed_agent(
         "total_tokens": 0,
     }
     has_token_usage = False
+    finish_reasons: list[str | None] = []
 
     for step in range(1, config.max_agent_steps + 1):
         response = await client.complete(
@@ -187,6 +192,7 @@ async def execute_fixed_agent(
             has_token_usage = True
             for field in accumulated_usage:
                 accumulated_usage[field] += int(response.token_usage.get(field, 0))
+        finish_reasons.append(response.finish_reason)
 
         if not response.tool_calls:
             return ResearchExecutionResult(
@@ -194,6 +200,7 @@ async def execute_fixed_agent(
                 model_actual=actual_model,
                 tool_calls=tuple(recorded_calls),
                 token_usage=(dict(accumulated_usage) if has_token_usage else None),
+                finish_reasons=tuple(finish_reasons),
             )
 
         if not tool_schemas:

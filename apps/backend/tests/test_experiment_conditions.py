@@ -434,6 +434,7 @@ async def test_b_run_record_contains_required_fields_and_writes_jsonl(
         "tool_calls",
         "retrieval_trace",
         "token_usage",
+        "completion_finish_reasons",
         "final_response",
         "latency_ms",
         "error",
@@ -493,6 +494,7 @@ async def test_d_executes_only_allowlisted_deterministic_tool(
                     "completion_tokens": 2,
                     "total_tokens": 12,
                 },
+                finish_reason="tool_calls",
             ),
             ResearchLLMResponse(
                 content="tool-backed answer",
@@ -502,6 +504,7 @@ async def test_d_executes_only_allowlisted_deterministic_tool(
                     "completion_tokens": 5,
                     "total_tokens": 25,
                 },
+                finish_reason="stop",
             ),
         ]
     )
@@ -526,6 +529,46 @@ async def test_d_executes_only_allowlisted_deterministic_tool(
         "completion_tokens": 7,
         "total_tokens": 37,
     }
+    assert record.completion_finish_reasons == ["tool_calls", "stop"]
+
+
+@pytest.mark.asyncio
+async def test_truncated_final_response_is_retained_and_marked_invalid(
+    profile: ExperimentProfile,
+) -> None:
+    client = _CapturingCompletionClient(
+        [
+            ResearchLLMResponse(
+                content="partial answer",
+                model_actual="fixed-model",
+                token_usage={
+                    "prompt_tokens": 10,
+                    "completion_tokens": 4,
+                    "total_tokens": 14,
+                },
+                finish_reason="length",
+            )
+        ]
+    )
+    runner = ResearchExperimentRunner(
+        completion_client=client,
+        repository_probe=lambda: ("commit", True),
+    )
+
+    record = await runner.run(
+        experiment_id="test",
+        config=ExperimentConfig(condition="A", model="fixed-model"),
+        test_case=_case(profile),
+    )
+
+    assert record.error == "EXPERIMENT_OUTPUT_TRUNCATED"
+    assert record.final_response == "partial answer"
+    assert record.token_usage == {
+        "prompt_tokens": 10,
+        "completion_tokens": 4,
+        "total_tokens": 14,
+    }
+    assert record.completion_finish_reasons == ["length"]
 
 
 class _CompletionsEndpoint:
@@ -550,7 +593,7 @@ async def test_fixed_llm_sends_all_controls_and_one_requested_model() -> None:
     message = SimpleNamespace(content="answer", tool_calls=[])
     response = SimpleNamespace(
         model="actual-revision",
-        choices=[SimpleNamespace(message=message)],
+        choices=[SimpleNamespace(message=message, finish_reason="stop")],
         usage=SimpleNamespace(
             prompt_tokens=11,
             completion_tokens=7,
@@ -583,6 +626,7 @@ async def test_fixed_llm_sends_all_controls_and_one_requested_model() -> None:
         "completion_tokens": 7,
         "total_tokens": 18,
     }
+    assert result.finish_reason == "stop"
     assert len(endpoint.calls) == 1
     assert endpoint.calls[0]["model"] == "requested-model"
     assert endpoint.calls[0]["temperature"] == 0

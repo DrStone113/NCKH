@@ -72,7 +72,9 @@ version is supplied, and selects `chr/charm/qwen3.8-flash` unless an explicit mo
 is supplied. Every record contains the protocol ID, full serialized
 configuration and hash, requested/actual model, exact prompt, retrieval trace,
 tool calls, aggregated provider token usage when available, latency, Git commit,
-and dirty-worktree state.
+dirty-worktree state, and every provider completion finish reason. A final
+`finish_reason=length` is retained for audit but marks the run as
+`EXPERIMENT_OUTPUT_TRUNCATED`; it must not be scored as a successful response.
 
 ### Provider preflight on 2026-09-16
 

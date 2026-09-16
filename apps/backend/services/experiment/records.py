@@ -33,6 +33,7 @@ class ExperimentRunRecord(BaseModel):
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     retrieval_trace: dict[str, Any] | None = None
     token_usage: dict[str, int] | None = None
+    completion_finish_reasons: list[str | None] = Field(default_factory=list)
     final_response: str
     latency_ms: float
     error: str | None

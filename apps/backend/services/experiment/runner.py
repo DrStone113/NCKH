@@ -81,6 +81,7 @@ class ResearchExperimentRunner:
         tool_calls: list[dict] = []
         retrieval_trace: dict | None = None
         token_usage: dict[str, int] | None = None
+        completion_finish_reasons: list[str | None] = []
         error: str | None = None
         registry = build_research_tool_registry(config)
 
@@ -116,6 +117,12 @@ class ResearchExperimentRunner:
             final_response = result.final_response
             tool_calls = list(result.tool_calls)
             token_usage = result.token_usage
+            completion_finish_reasons = list(result.finish_reasons)
+            if (
+                completion_finish_reasons
+                and completion_finish_reasons[-1] == "length"
+            ):
+                error = "EXPERIMENT_OUTPUT_TRUNCATED"
         except ExperimentError as exc:
             error = str(exc)
         except Exception as exc:  # defensive boundary for a durable run record
@@ -141,6 +148,7 @@ class ResearchExperimentRunner:
             tool_calls=tool_calls,
             retrieval_trace=retrieval_trace,
             token_usage=token_usage,
+            completion_finish_reasons=completion_finish_reasons,
             final_response=final_response,
             latency_ms=round((time.perf_counter() - started) * 1000, 3),
             error=error,

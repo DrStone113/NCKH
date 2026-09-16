@@ -97,6 +97,7 @@ desktop.ini
 # LOGS & TMP
 # =============================================================
 *.log
+apps/backend/logs/*.jsonl
 *.tmp
 *.bak
 *.swp

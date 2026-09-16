@@ -16,7 +16,7 @@ ExperimentCondition = Literal["A", "B", "C", "D", "S0", "S1", "S2", "S3"]
 LEGACY_PROTOCOL_ID = "legacy-profile-first-a-d"
 NUTRITION_ABLATION_PROTOCOL_ID = "nutrition-ablation-s0-s3-v1"
 NUTRITION_ABLATION_PROMPT_VERSION = "nutrition-ablation-v1"
-NUTRITION_ABLATION_MODEL = "ram/qwen-3.8-flash"
+NUTRITION_ABLATION_MODEL = "chr/charm/qwen3.8-flash"
 NUTRITION_ABLATION_ARMS: tuple[NutritionAblationArm, ...] = (
     "S0",
     "S1",

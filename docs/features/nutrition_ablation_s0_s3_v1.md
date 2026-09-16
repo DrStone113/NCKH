@@ -35,7 +35,7 @@ The new protocol adds independent arm names with the requested order:
 All arms use the same isolated runner, fixed model controls, frozen time,
 single-turn request shape, logging path, and prompt version
 `nutrition-ablation-v1`. The S0-S3 CLI default is pinned to
-`ram/qwen-3.8-flash`; an actual run must record the provider-returned model and
+`chr/charm/qwen3.8-flash`; an actual run must record the provider-returned model and
 must fail rather than substitute another model. Only the three treatment flags
 differ within a comparison.
 
@@ -68,11 +68,23 @@ python -m scripts.run_experiment `
 
 Repeat with S1, S2, and S3 using the same model and non-treatment settings.
 For S0-S3, the CLI selects `nutrition-ablation-v1` unless an explicit prompt
-version is supplied, and selects `ram/qwen-3.8-flash` unless an explicit model
+version is supplied, and selects `chr/charm/qwen3.8-flash` unless an explicit model
 is supplied. Every record contains the protocol ID, full serialized
 configuration and hash, requested/actual model, exact prompt, retrieval trace,
 tool calls, aggregated provider token usage when available, latency, Git commit,
 and dirty-worktree state.
+
+### Provider preflight on 2026-09-16
+
+This is operational development evidence only, not a scored benchmark result.
+The configured Vilao endpoint authenticated successfully. The originally
+requested route `ram/qwen-3.8-flash` returned `503 MODEL_INACTIVE`. Short
+availability probes showed that `wen/qwen3.8-flash` reported a different actual
+model identity and `heg/qwen3.8-flash` omitted model identity/token usage. The
+selected route `chr/charm/qwen3.8-flash` completed successfully and reported
+`qwen3.8-flash`, so it is the pinned S0-S3 route until the confirmatory protocol
+is frozen. Provider availability must be rechecked without substituting another
+route inside a scored run.
 
 ## Benchmark design boundary
 

@@ -62,9 +62,13 @@ def test_runtime_gate_is_current_python_310_patch_and_pytest_is_pinned() -> None
     assert sys.version_info[:3] == (3, 10, 21)
     assert pytest.__version__ == "8.4.2"
     requirements = (BACKEND_DIR / "requirements.txt").read_text(encoding="utf-8")
-    assert "pytest==8.4.2" in requirements
-    assert "hypothesis==6.151.9" in requirements
-    assert "pytest-asyncio==1.2.0" in requirements
+    development_requirements = (BACKEND_DIR / "requirements-dev.txt").read_text(
+        encoding="utf-8"
+    )
+    assert "-r requirements-dev.txt" in requirements
+    assert "pytest==8.4.2" in development_requirements
+    assert "hypothesis==6.151.9" in development_requirements
+    assert "pytest-asyncio==1.2.0" in development_requirements
 
 
 def test_profile_and_request_are_immutable_and_keep_unknown_experience() -> None:

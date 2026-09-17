@@ -4,11 +4,11 @@
   "category_counts": {
     "energy_calculation": 60
   },
-  "generation_commit": "83ac336f6aa057821c9b5d250887ac7875334f54",
+  "generation_commit": "937d6e0cb03e45f3df607051873d68e90c24fbb8",
   "generation_worktree_clean": true,
   "generator_version": "calculation-candidates-v1.0.0",
-  "manifest_hash": "c2be715f284f9f8e7137aed6fae8115f0e1cee0190c0724f2aa04b6591c7c929",
-  "policy_file_sha256": "e521a889afffcb535254c38c959aada5e64398ddd9f9f0613ac82be119f72127",
+  "manifest_hash": "12fa73b085a4a0fefbc3e2ba62c344fc82eab11edfa23af7f3d132da3dcad83e",
+  "policy_content_sha256": "3b335118ba052427fd8a206cef9f934976e9c15b4bfd50302f7753abc0d5fa8d",
   "policy_version": "nutrition-policy-v1.0.1",
   "proposed_split_counts": {
     "development": 60

@@ -72,3 +72,30 @@ the canonical policy is an acceptable study reference. Approval of this draft
 does not automatically freeze split assignment or promote cases. A separate
 promotion step must validate the completed register, assign development/pilot/
 final splits, create the benchmark manifest, and record reviewer provenance.
+
+## AI-assisted technical review
+
+The repository includes a fail-closed technical review command. It compares
+all immutable CSV fields with the hash-bound template, recalculates BMI, RMR,
+TDEE, and the calorie target through an implementation that does not call the
+production calculator, then verifies units, tolerances, applicability gates,
+formula provenance, estimate wording, and RQ2 metadata:
+
+```powershell
+python -m scripts.review_calculation_candidates `
+  --reviewer-id codex-ai-assisted-review-v1
+```
+
+The completed CSV and its manifest retain the reviewer kind, timestamp, source
+pack hashes, decision counts, checks, references, limitations, and clean Git
+provenance. This review may make unanimously approved cases eligible for a
+later **development-only** promotion. It is explicitly not a human clinician
+or independent domain-expert signature and cannot freeze pilot/final cases.
+
+Scientific interpretation is intentionally narrow. The BMI definition and
+the healthy-adult basis of the Mifflin-St Jeor equation are checked against the
+WHO fact sheet and the original paper record (PMID 2305711, DOI
+10.1093/ajcn/51.2.241). Activity factors and calorie adjustments are reviewed
+as versioned product-policy heuristics. Therefore an `APPROVE` decision means
+"correct gold under `nutrition-policy-v1.0.1` for RQ2," not universal clinical
+ground truth.

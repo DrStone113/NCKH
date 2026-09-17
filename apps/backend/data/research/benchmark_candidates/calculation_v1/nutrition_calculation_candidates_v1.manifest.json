@@ -1,0 +1,18 @@
+{
+  "candidate_count": 60,
+  "candidate_file_sha256": "8c6b64f53c79ba72cce89ff1afc40b84636c19864fb7bc4ba567275e9d8ac7d4",
+  "category_counts": {
+    "energy_calculation": 60
+  },
+  "generation_commit": "83ac336f6aa057821c9b5d250887ac7875334f54",
+  "generation_worktree_clean": true,
+  "generator_version": "calculation-candidates-v1.0.0",
+  "manifest_hash": "c2be715f284f9f8e7137aed6fae8115f0e1cee0190c0724f2aa04b6591c7c929",
+  "policy_file_sha256": "e521a889afffcb535254c38c959aada5e64398ddd9f9f0613ac82be119f72127",
+  "policy_version": "nutrition-policy-v1.0.1",
+  "proposed_split_counts": {
+    "development": 60
+  },
+  "review_template_sha256": "12ebed2e4e0c6bc6dcff13b019ce758b9838031bbdf6cf767e95c11abea81a57",
+  "schema_version": "1.0"
+}

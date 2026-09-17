@@ -121,7 +121,7 @@ class CalculationCandidateManifest(BaseModel):
     schema_version: str
     generator_version: str
     policy_version: str
-    policy_file_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    policy_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     candidate_count: int = Field(ge=1)
     category_counts: dict[str, int]
     proposed_split_counts: dict[str, int]
@@ -406,6 +406,16 @@ def _atomic_write(path: Path, content: bytes, *, overwrite: bool) -> None:
         raise
 
 
+def _policy_content_hash() -> str:
+    try:
+        payload = json.loads(POLICY_FILE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ExperimentError(
+            "EXPERIMENT_CANDIDATE_POLICY_UNREADABLE", safe_error_detail(exc)
+        ) from exc
+    return sha256_canonical(payload)
+
+
 def write_calculation_candidate_pack(
     output_dir: Path,
     *,
@@ -440,7 +450,7 @@ def write_calculation_candidate_pack(
         "schema_version": CALCULATION_CANDIDATE_SCHEMA_VERSION,
         "generator_version": CALCULATION_CANDIDATE_GENERATOR_VERSION,
         "policy_version": POLICY_VERSION,
-        "policy_file_sha256": sha256_file(POLICY_FILE_PATH),
+        "policy_content_sha256": _policy_content_hash(),
         "candidate_count": len(candidate_file.candidates),
         "category_counts": dict(sorted(category_counts.items())),
         "proposed_split_counts": dict(sorted(split_counts.items())),
@@ -493,7 +503,7 @@ def load_and_verify_calculation_candidate_pack(
         sha256_canonical(payload) == stored_hash,
         sha256_file(candidate_path) == manifest.candidate_file_sha256,
         sha256_file(review_path) == manifest.review_template_sha256,
-        sha256_file(POLICY_FILE_PATH) == manifest.policy_file_sha256,
+        _policy_content_hash() == manifest.policy_content_sha256,
         manifest.candidate_count == len(candidate_file.candidates),
         manifest.policy_version == candidate_file.policy_version,
         manifest.generator_version == candidate_file.generator_version,

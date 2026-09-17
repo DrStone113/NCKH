@@ -48,8 +48,9 @@ The default output directory is
 
 - `nutrition_calculation_candidates_v1.json`: typed candidate records, proposed
   benchmark cases, expected values, formula IDs, and canonical-output hashes;
-- `nutrition_calculation_candidates_v1.manifest.json`: candidate/review/policy
-  hashes plus clean-worktree Git provenance;
+- `nutrition_calculation_candidates_v1.manifest.json`: byte hashes for the
+  LF-normalized candidate/review files, a line-ending-independent canonical
+  policy-content hash, and clean-worktree Git provenance;
 - `nutrition_calculation_review_template_v1.csv`: an editable review template.
 
 The JSON file is intentionally not a `BenchmarkFile`, so the batch runner

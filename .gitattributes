@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Research manifests hash these generated files byte-for-byte.
+apps/backend/data/research/benchmark_candidates/** text eol=lf

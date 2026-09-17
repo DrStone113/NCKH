@@ -76,6 +76,32 @@ dirty-worktree state, and every provider completion finish reason. A final
 `finish_reason=length` is retained for audit but marks the run as
 `EXPERIMENT_OUTPUT_TRUNCATED`; it must not be scored as a successful response.
 
+For a reviewed benchmark plus its integrity manifest, validate the complete
+paired schedule without making API or database calls:
+
+```powershell
+python -m scripts.run_benchmark `
+  --benchmark path/to/nutrition-benchmark-v1.json `
+  --manifest path/to/nutrition-benchmark-v1.manifest.json `
+  --split development `
+  --repetitions 2 `
+  --plan-only
+```
+
+Remove `--plan-only` to execute the schedule. The batch runner reuses one
+fixed-model client and one frozen-corpus provider, varies only the S0-S3
+treatment condition, and appends each result immediately to
+`logs/nutrition-ablation-results.jsonl` by default. Every record includes the
+benchmark file hash, manifest hash, case hash, split, deterministic schedule
+seed, repetition index, and schedule index. A provider or corpus error remains
+a failed durable record and makes the command exit non-zero after the schedule
+finishes.
+
+The SHA-256 schedule order is reproducible from the same benchmark, selected
+arms, repetition count, and schedule seed. A `final` split additionally
+requires a clean Git worktree and an output path outside the repository or
+ignored by Git, preventing result writes from invalidating later run metadata.
+
 ### Provider preflight on 2026-09-16
 
 This is operational development evidence only, not a scored benchmark result.
@@ -125,7 +151,8 @@ does not pre-register a completed statistical analysis.
 ## Not yet complete
 
 - No frozen 300-case benchmark or human-review pack exists yet.
-- S0-S3 have not been run against a live provider in a clean worktree.
+- A clean-worktree S0-S3 development smoke completed on 2026-09-16; it is not
+  a scored benchmark or confirmatory result.
 - Retrieval quality, response quality, cost, test-retest reliability, and
   statistical significance have not been established.
 - Multi-turn and the eight-arm full factorial remain later protocols.

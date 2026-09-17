@@ -18,6 +18,20 @@ class ExperimentRunRecord(BaseModel):
     run_id: str
     condition: str
     protocol_id: str | None = None
+    benchmark_version: str | None = None
+    benchmark_file_sha256: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    benchmark_manifest_hash: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    benchmark_case_hash: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
+    benchmark_split: str | None = None
+    batch_schedule_seed: int | None = None
+    repetition_index: int | None = Field(default=None, ge=1)
+    schedule_index: int | None = Field(default=None, ge=1)
     test_case_id: str
     timestamp: str
     config: dict[str, Any]

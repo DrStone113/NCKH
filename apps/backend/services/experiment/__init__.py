@@ -10,6 +10,7 @@ from services.experiment.config import (
     NUTRITION_ABLATION_PROTOCOL_ID,
     ExperimentConfig,
 )
+from services.experiment.batch import NutritionAblationBatchRunner
 from services.experiment.models import ExperimentProfile, ExperimentTestCase
 from services.experiment.runner import ResearchExperimentRunner
 
@@ -20,5 +21,6 @@ __all__ = [
     "NUTRITION_ABLATION_ARMS",
     "NUTRITION_ABLATION_MODEL",
     "NUTRITION_ABLATION_PROTOCOL_ID",
+    "NutritionAblationBatchRunner",
     "ResearchExperimentRunner",
 ]

@@ -102,6 +102,36 @@ arms, repetition count, and schedule seed. A `final` split additionally
 requires a clean Git worktree and an output path outside the repository or
 ignored by Git, preventing result writes from invalidating later run metadata.
 
+After a batch completes, export only integrity-checked deterministic metrics:
+
+```powershell
+python -m scripts.evaluate_benchmark `
+  --benchmark path/to/nutrition-benchmark-v1.json `
+  --manifest path/to/nutrition-benchmark-v1.manifest.json `
+  --records logs/nutrition-ablation-results.jsonl `
+  --split development `
+  --repetitions 2
+```
+
+The evaluator requires the full `case × arm × repetition` product, contiguous
+schedule indices, one Git commit, one requested/actual model identity, equal
+non-treatment controls, and matching benchmark, manifest, case, config, corpus,
+profile, and tool metadata. It refuses a tampered or incomplete batch. Failed
+provider/corpus/truncated runs remain in the evaluation export as `run_error`
+with no metrics, so partial text cannot be scored as a successful answer.
+
+Free-text judgments are not inferred automatically. Optional blinded human
+annotations can be supplied as JSONL with `--annotations`:
+
+```json
+{"run_id":"...","annotations":{"observed_values":{},"satisfied_constraint_ids":[],"violated_constraint_ids":[],"cited_source_ids":[]}}
+```
+
+Without an annotation, metrics that require human judgment are explicitly
+marked `requires_annotation`. The default evaluation output is the ignored
+file `logs/nutrition-ablation-evaluations.jsonl`; an existing output is not
+overwritten unless `--overwrite` is given.
+
 ### Provider preflight on 2026-09-16
 
 This is operational development evidence only, not a scored benchmark result.

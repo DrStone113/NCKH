@@ -121,7 +121,7 @@ class ScoringMetadata(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     answerability: Answerability
-    research_questions: tuple[Literal["RQ1", "RQ2"], ...]
+    research_questions: tuple[Literal["RQ1", "RQ2", "RQ3"], ...]
     objective_metrics: tuple[str, ...]
     human_rubrics: tuple[
         Literal[

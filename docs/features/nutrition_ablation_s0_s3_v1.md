@@ -151,6 +151,11 @@ immutable sources, numerical expected values, dietary/allergy constraints,
 retrieval recall/MRR, citations, latency, token usage, and human annotations.
 It does not yet contain a frozen 300-case benchmark file.
 
+The deterministic 60-case calculation draft and review workflow are documented
+in [Nutrition Calculation Candidate Authoring V1](nutrition_calculation_candidate_authoring_v1.md).
+Those candidates remain runner-ineligible and development-only until human
+review and explicit promotion.
+
 Before collecting final responses:
 
 1. Build and review a development/pilot/final benchmark with no LLM-generated

@@ -3,3 +3,4 @@
 
 # Research manifests hash these generated files byte-for-byte.
 apps/backend/data/research/benchmark_candidates/** text eol=lf
+apps/backend/data/research/benchmarks/** text eol=lf

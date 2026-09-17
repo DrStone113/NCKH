@@ -15,6 +15,12 @@ from services.experiment.errors import ExperimentError
 from services.experiment.models import ExperimentProfile
 
 BENCHMARK_VERSION = "nutrition-benchmark-v1.0.0"
+CALCULATION_DEVELOPMENT_BENCHMARK_VERSION = (
+    "nutrition-calculation-development-v1.0.0"
+)
+SUPPORTED_BENCHMARK_VERSIONS = frozenset(
+    {BENCHMARK_VERSION, CALCULATION_DEVELOPMENT_BENCHMARK_VERSION}
+)
 BENCHMARK_SCHEMA_VERSION = "1.0"
 RUBRIC_VERSION = "human-rubric-v1.0.0"
 COMPATIBLE_CORPUS_VERSION = "offline-v1-636"
@@ -176,14 +182,44 @@ class BenchmarkFile(BaseModel):
 
     @model_validator(mode="after")
     def _validate_cases(self) -> "BenchmarkFile":
-        if self.benchmark_version != BENCHMARK_VERSION:
+        if self.benchmark_version not in SUPPORTED_BENCHMARK_VERSIONS:
             raise ValueError("unsupported benchmark version")
         if self.schema_version != BENCHMARK_SCHEMA_VERSION:
             raise ValueError("unsupported benchmark schema version")
         ids = [case.case_id for case in self.cases]
         if len(ids) != len(set(ids)):
             raise ValueError("benchmark case IDs must be unique")
+        if self.benchmark_version == CALCULATION_DEVELOPMENT_BENCHMARK_VERSION:
+            if len(self.cases) != 60:
+                raise ValueError(
+                    "calculation development benchmark must contain 60 cases"
+                )
+            if any(
+                case.category != BenchmarkCategory.ENERGY_CALCULATION
+                or case.split != BenchmarkSplit.DEVELOPMENT
+                or case.scoring_metadata.research_questions != ("RQ2",)
+                for case in self.cases
+            ):
+                raise ValueError(
+                    "calculation development benchmark cases must remain RQ2 development calculations"
+                )
         return self
+
+
+class BenchmarkPromotionProvenance(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    promotion_pipeline_version: str = Field(min_length=1)
+    promotion_scope: Literal["DEVELOPMENT_ONLY"]
+    source_candidate_manifest_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_review_manifest_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_completed_review_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    review_protocol_version: str = Field(min_length=1)
+    review_status: str = Field(min_length=1)
+    reviewer_kind: str = Field(min_length=1)
+    human_domain_signoff: bool
+    source_candidate_count: int = Field(ge=1)
+    approved_candidate_count: int = Field(ge=1)
 
 
 class BenchmarkManifest(BaseModel):
@@ -200,7 +236,28 @@ class BenchmarkManifest(BaseModel):
     rubric_version: str
     reference_source_versions: dict[str, str]
     corpus_version: str
+    promotion_provenance: BenchmarkPromotionProvenance | None = None
     manifest_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def _validate_promotion_boundary(self) -> "BenchmarkManifest":
+        provenance = self.promotion_provenance
+        if self.benchmark_version == CALCULATION_DEVELOPMENT_BENCHMARK_VERSION:
+            if provenance is None:
+                raise ValueError(
+                    "calculation development benchmark requires promotion provenance"
+                )
+            if self.case_count != 60 or self.split_counts != {"development": 60}:
+                raise ValueError(
+                    "calculation development manifest must remain development-only"
+                )
+            if (
+                provenance.promotion_scope != "DEVELOPMENT_ONLY"
+                or provenance.source_candidate_count != self.case_count
+                or provenance.approved_candidate_count != self.case_count
+            ):
+                raise ValueError("calculation development promotion count mismatch")
+        return self
 
 
 def canonical_json_bytes(value: Any, *, indent: int | None = None) -> bytes:
@@ -240,14 +297,15 @@ def load_and_verify_benchmark(
 ) -> tuple[BenchmarkFile, BenchmarkManifest]:
     benchmark = load_benchmark(benchmark_path)
     try:
-        manifest = BenchmarkManifest.model_validate_json(
-            manifest_path.read_text(encoding="utf-8")
-        )
+        raw_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(raw_manifest, dict):
+            raise ValueError("benchmark manifest must be an object")
+        manifest = BenchmarkManifest.model_validate(raw_manifest)
     except Exception as exc:
         raise ExperimentError("EXPERIMENT_BENCHMARK_MANIFEST_INVALID", str(exc)[:500]) from exc
 
-    payload = manifest.model_dump(mode="json")
-    stored_manifest_hash = payload.pop("manifest_hash")
+    payload = dict(raw_manifest)
+    stored_manifest_hash = payload.pop("manifest_hash", None)
     if sha256_canonical(payload) != stored_manifest_hash:
         raise ExperimentError("EXPERIMENT_BENCHMARK_MANIFEST_HASH_MISMATCH")
     if sha256_file(benchmark_path) != manifest.benchmark_file_sha256:
@@ -265,6 +323,18 @@ def load_and_verify_benchmark(
         raise ExperimentError("EXPERIMENT_BENCHMARK_CATEGORY_COUNT_MISMATCH")
     if dict(sorted(splits.items())) != manifest.split_counts:
         raise ExperimentError("EXPERIMENT_BENCHMARK_SPLIT_COUNT_MISMATCH")
+    reference_versions: dict[str, str] = {}
+    for case in benchmark.cases:
+        for source in case.reference_sources:
+            existing = reference_versions.get(source.source_id)
+            if existing is not None and existing != source.version:
+                raise ExperimentError(
+                    "EXPERIMENT_BENCHMARK_REFERENCE_VERSION_CONFLICT",
+                    source.source_id,
+                )
+            reference_versions[source.source_id] = source.version
+    if dict(sorted(reference_versions.items())) != manifest.reference_source_versions:
+        raise ExperimentError("EXPERIMENT_BENCHMARK_REFERENCE_VERSION_MISMATCH")
     return benchmark, manifest
 
 
@@ -272,10 +342,12 @@ __all__ = [
     "Answerability",
     "BENCHMARK_SCHEMA_VERSION",
     "BENCHMARK_VERSION",
+    "CALCULATION_DEVELOPMENT_BENCHMARK_VERSION",
     "BenchmarkCase",
     "BenchmarkCategory",
     "BenchmarkFile",
     "BenchmarkManifest",
+    "BenchmarkPromotionProvenance",
     "BenchmarkSplit",
     "COMPATIBLE_CORPUS_VERSION",
     "ObjectiveExpectedValue",
@@ -284,6 +356,7 @@ __all__ = [
     "RequiredConstraint",
     "RequiredFact",
     "ScoringMetadata",
+    "SUPPORTED_BENCHMARK_VERSIONS",
     "canonical_json_bytes",
     "load_and_verify_benchmark",
     "load_benchmark",

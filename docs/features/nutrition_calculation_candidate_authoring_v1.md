@@ -99,3 +99,25 @@ WHO fact sheet and the original paper record (PMID 2305711, DOI
 as versioned product-policy heuristics. Therefore an `APPROVE` decision means
 "correct gold under `nutrition-policy-v1.0.1` for RQ2," not universal clinical
 ground truth.
+
+## Development promotion
+
+A unanimous, integrity-valid review can be promoted with:
+
+```powershell
+python -m scripts.promote_calculation_benchmark
+```
+
+The command creates a separate `BenchmarkFile` and standard benchmark manifest
+under `data/research/benchmarks/calculation_development_v1`. Promotion is
+fail-closed unless the source pack, completed review, and both manifests verify;
+all 60 decisions are `APPROVE`; and the Git worktree is clean. The output uses
+the immutable version `nutrition-calculation-development-v1.0.0` so later
+knowledge, personalization, pilot, or final additions cannot silently change
+this benchmark under the same version.
+
+The benchmark manifest retains the candidate-manifest hash, review-manifest
+hash, completed-review file hash, review protocol/status/kind, decision count,
+and the explicit `DEVELOPMENT_ONLY` scope. The schema rejects moving a case to
+pilot/final, while the promotion verifier rejects any change to a reviewed
+case.

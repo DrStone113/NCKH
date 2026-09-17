@@ -1,0 +1,53 @@
+{
+  "candidate_count": 60,
+  "candidate_file_sha256": "8c6b64f53c79ba72cce89ff1afc40b84636c19864fb7bc4ba567275e9d8ac7d4",
+  "completed_review_sha256": "3a86dd85960d99ee0b1da6b2e653b074f90393144c80746e335d7778bfd00e28",
+  "decision_counts": {
+    "APPROVE": 60
+  },
+  "development_promotion_eligible": true,
+  "human_domain_signoff": false,
+  "independent_checks": [
+    "immutable CSV fields match the hash-bound source template",
+    "query wording and all explicit inputs match the proposed profile",
+    "BMI, Mifflin-St Jeor RMR, TDEE, and goal target were independently recalculated",
+    "ROUND_HALF_UP storage precision, units, metrics, and tolerances match the policy",
+    "all synthetic profiles remain inside adult, BMI, and minimum-energy applicability gates",
+    "formula provenance, estimate qualifier, RQ2 mapping, and development split are present"
+  ],
+  "limitations": [
+    "This is an AI-assisted technical review, not a human clinician or independent domain-expert signoff.",
+    "Approval establishes policy-concordant benchmark gold for RQ2, not universal clinical ground truth.",
+    "Activity factors and calorie adjustments are versioned product-policy heuristics.",
+    "The reviewed grid covers four synthetic adult profiles and does not cover safety or boundary cases.",
+    "Approval permits development promotion only; pilot/final freeze requires an explicit later step."
+  ],
+  "manifest_hash": "f1a5a59aeb98e17e12643e66e114d62f2efe4cfeec14c824938ea617997a4c66",
+  "promotion_scope": "DEVELOPMENT_ONLY",
+  "review_execution_commit": "c5c0f3a018e52e8cded7c793734d04535bfa05af",
+  "review_execution_worktree_clean": true,
+  "review_protocol_version": "calculation-review-v1.0.0",
+  "review_template_sha256": "12ebed2e4e0c6bc6dcff13b019ce758b9838031bbdf6cf767e95c11abea81a57",
+  "reviewed_at": "2026-09-17T06:58:25Z",
+  "reviewer_id": "codex-ai-assisted-review-v1",
+  "reviewer_kind": "AI_ASSISTED_TECHNICAL_REVIEW",
+  "schema_version": "1.0",
+  "source_candidate_manifest_hash": "12fa73b085a4a0fefbc3e2ba62c344fc82eab11edfa23af7f3d132da3dcad83e",
+  "source_references": [
+    {
+      "review_scope": "Existence and healthy-adult basis of the Mifflin-St Jeor RMR equation.",
+      "source_id": "mifflin-1990",
+      "stable_identifier": "PMID:2305711; DOI:10.1093/ajcn/51.2.241",
+      "title": "A new predictive equation for resting energy expenditure in healthy individuals",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/2305711/"
+    },
+    {
+      "review_scope": "Adult BMI definition as weight in kilograms divided by height in metres squared.",
+      "source_id": "who-bmi-definition",
+      "stable_identifier": "WHO fact sheet: obesity-and-overweight",
+      "title": "WHO obesity and overweight fact sheet",
+      "url": "https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight"
+    }
+  ],
+  "status": "AI_ASSISTED_TECHNICAL_REVIEW_COMPLETE"
+}

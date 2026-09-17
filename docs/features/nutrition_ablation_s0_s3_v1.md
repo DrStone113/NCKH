@@ -153,8 +153,11 @@ It does not yet contain a frozen 300-case benchmark file.
 
 The deterministic 60-case calculation draft and review workflow are documented
 in [Nutrition Calculation Candidate Authoring V1](nutrition_calculation_candidate_authoring_v1.md).
-Those candidates remain runner-ineligible and development-only until human
-review and explicit promotion.
+An [AI-assisted technical review](../reports/nutrition_calculation_ai_assisted_review_v1.md)
+approved all 60 cases on 2026-09-17, with its non-human reviewer kind and
+development-only boundary recorded in a hash-bound manifest. The candidate
+file remains runner-ineligible until explicit promotion, and human domain
+signoff remains outstanding for any pilot/final freeze.
 
 Before collecting final responses:
 
@@ -185,7 +188,9 @@ does not pre-register a completed statistical analysis.
 
 ## Not yet complete
 
-- No frozen 300-case benchmark or human-review pack exists yet.
+- No frozen 300-case benchmark or completed human domain-review pack exists
+  yet; the 60 calculation cases have only a completed AI-assisted technical
+  review for development promotion.
 - A clean-worktree S0-S3 development smoke completed on 2026-09-16; it is not
   a scored benchmark or confirmatory result.
 - Retrieval quality, response quality, cost, test-retest reliability, and

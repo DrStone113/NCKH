@@ -1,0 +1,33 @@
+{
+  "benchmark_file_sha256": "e65a0d1c6bf72fe138db3c46175a0189fdcccdec881ee917226d475e1658b262",
+  "benchmark_version": "nutrition-calculation-development-v1.0.0",
+  "case_count": 60,
+  "category_counts": {
+    "energy_calculation": 60
+  },
+  "corpus_version": "offline-v1-636",
+  "creation_commit": "a039fb0b4e10daa57fb8ac3198d6fe2de8c25001",
+  "creation_worktree_clean": true,
+  "manifest_hash": "a367c70a3b2006c8aadda716cacd9000cf826dfd4078e6e8172d562667ff5787",
+  "promotion_provenance": {
+    "approved_candidate_count": 60,
+    "human_domain_signoff": false,
+    "promotion_pipeline_version": "calculation-promotion-v1.0.0",
+    "promotion_scope": "DEVELOPMENT_ONLY",
+    "review_protocol_version": "calculation-review-v1.0.0",
+    "review_status": "AI_ASSISTED_TECHNICAL_REVIEW_COMPLETE",
+    "reviewer_kind": "AI_ASSISTED_TECHNICAL_REVIEW",
+    "source_candidate_count": 60,
+    "source_candidate_manifest_hash": "12fa73b085a4a0fefbc3e2ba62c344fc82eab11edfa23af7f3d132da3dcad83e",
+    "source_completed_review_sha256": "3a86dd85960d99ee0b1da6b2e653b074f90393144c80746e335d7778bfd00e28",
+    "source_review_manifest_hash": "f1a5a59aeb98e17e12643e66e114d62f2efe4cfeec14c824938ea617997a4c66"
+  },
+  "reference_source_versions": {
+    "nutrition-policy-v1.0.1": "nutrition-policy-v1.0.1"
+  },
+  "rubric_version": "human-rubric-v1.0.0",
+  "schema_version": "1.0",
+  "split_counts": {
+    "development": 60
+  }
+}

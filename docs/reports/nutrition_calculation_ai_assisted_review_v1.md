@@ -58,8 +58,11 @@ universal clinical ground truth. Activity factors and the ±10% calorie
 adjustments remain declared product-policy heuristics, and the grid does not
 cover safety or boundary cases.
 
-## Remaining gate
+## Promotion status and remaining gate
 
-Promotion must create a separate versioned `BenchmarkFile` and manifest. It
-may consume these approvals only for a development split. Human domain review
-is still recommended before any pilot/final freeze or confirmatory claim.
+The approved cases were promoted on 2026-09-17 to the separate, immutable
+`nutrition-calculation-development-v1.0.0` benchmark. See the
+[development promotion report](nutrition_calculation_development_promotion_v1.md).
+The promotion consumes these approvals only for the development split. Human
+domain review is still recommended before any pilot/final freeze or
+confirmatory claim.

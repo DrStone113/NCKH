@@ -156,8 +156,10 @@ in [Nutrition Calculation Candidate Authoring V1](nutrition_calculation_candidat
 An [AI-assisted technical review](../reports/nutrition_calculation_ai_assisted_review_v1.md)
 approved all 60 cases on 2026-09-17, with its non-human reviewer kind and
 development-only boundary recorded in a hash-bound manifest. The candidate
-file remains runner-ineligible until explicit promotion, and human domain
-signoff remains outstanding for any pilot/final freeze.
+file remains runner-ineligible. A separate
+[calculation development benchmark](../reports/nutrition_calculation_development_promotion_v1.md)
+was promoted and accepted by the standard batch planner as a 240-run S0-S3
+schedule. Human domain signoff remains outstanding for any pilot/final freeze.
 
 Before collecting final responses:
 

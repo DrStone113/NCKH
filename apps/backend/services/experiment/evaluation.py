@@ -37,6 +37,10 @@ OBJECTIVE_METRICS: tuple[MetricDefinition, ...] = (
     MetricDefinition(name="retrieval_MRR", direction="higher_is_better", unit="reciprocal rank", deterministic_inputs=("retrieval trace", "corpus references"), description="Reciprocal rank of the first relevant frozen corpus record."),
     MetricDefinition(name="latency", direction="lower_is_better", unit="milliseconds", deterministic_inputs=("run record",), description="Measured isolated run latency, excluding embedding prewarm."),
     MetricDefinition(name="token_usage", direction="descriptive", unit="tokens", deterministic_inputs=("provider usage",), description="Provider-reported prompt, completion, and total tokens."),
+    MetricDefinition(name="calculate_tdee_tool_invoked", direction="higher_is_better", unit="binary", deterministic_inputs=("run tool trace",), description="Whether calculate_tdee was invoked when the arm offered it."),
+    MetricDefinition(name="calculate_tdee_tool_succeeded", direction="higher_is_better", unit="binary", deterministic_inputs=("run tool trace",), description="Whether at least one calculate_tdee invocation completed successfully."),
+    MetricDefinition(name="calculate_tdee_argument_match_rate", direction="higher_is_better", unit="proportion", deterministic_inputs=("benchmark profile", "tool arguments"), description="Exact match rate between benchmark profile fields and calculate_tdee arguments."),
+    MetricDefinition(name="tool_numerical_absolute_error", direction="lower_is_better", unit="source unit", deterministic_inputs=("expected", "structured tool result"), description="Absolute difference between a benchmark value and the corresponding structured calculate_tdee result."),
 )
 
 
@@ -63,6 +67,17 @@ class MetricResult(BaseModel):
 def _normalize(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text.casefold())
     return "".join(char for char in decomposed if not unicodedata.combining(char))
+
+
+def _visible_response(text: str) -> str:
+    """Exclude provider-exposed reasoning blocks from answer-content metrics."""
+
+    return re.sub(
+        r"<think\b[^>]*>.*?</think>",
+        "",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
 
 
 def _fact_coverage(case: BenchmarkCase, response: str) -> MetricResult:
@@ -122,20 +137,136 @@ def _retrieval_metrics(case: BenchmarkCase, record: ExperimentRunRecord) -> list
     ]
 
 
-def extract_numeric_value(response: str, labels: tuple[str, ...]) -> float | None:
-    """Extract a nearby number without semantic inference or an LLM judge."""
+_NUMBER_TOKEN = (
+    r"-?(?:\d{1,3}(?:[ .\u00a0,]\d{3})+|\d+)(?:[.,]\d+)?"
+)
 
-    normalized = _normalize(response).replace(",", ".")
+
+def _parse_localized_number(token: str) -> float | None:
+    compact = re.sub(r"[\s\u00a0]", "", token)
+    if not compact:
+        return None
+    sign = ""
+    if compact[0] in "+-":
+        sign, compact = compact[0], compact[1:]
+    if not compact:
+        return None
+
+    if "." in compact and "," in compact:
+        decimal_separator = "." if compact.rfind(".") > compact.rfind(",") else ","
+        thousands_separator = "," if decimal_separator == "." else "."
+        compact = compact.replace(thousands_separator, "")
+        compact = compact.replace(decimal_separator, ".")
+    elif "." in compact or "," in compact:
+        separator = "." if "." in compact else ","
+        groups = compact.split(separator)
+        if (
+            len(groups) > 2
+            and all(len(group) == 3 for group in groups[1:])
+        ) or (
+            len(groups) == 2
+            and 1 <= len(groups[0]) <= 3
+            and len(groups[1]) == 3
+        ):
+            compact = "".join(groups)
+        elif len(groups) == 2:
+            compact = ".".join(groups)
+        else:
+            return None
+    try:
+        return float(sign + compact)
+    except ValueError:
+        return None
+
+
+def extract_numeric_value(
+    response: str,
+    labels: tuple[str, ...],
+    *,
+    unit: str | None = None,
+) -> float | None:
+    """Extract a same-line keyed value followed by its declared unit.
+
+    Requiring the unit avoids treating section ordinals, activity factors, and
+    percentage adjustments as the requested result.  We intentionally do not
+    infer a value from an unkeyed number elsewhere in the answer.
+    """
+
+    normalized = _normalize(_visible_response(response))
+    normalized = normalized.replace("{,}", ",").replace("{.}", ".")
+    lines = normalized.splitlines()
+    unit_aliases = {
+        "kg/m^2": ("kg/m^2", "kg/m2", "kg/m²"),
+        "kcal/day": ("kcal/day", "kcal/ngay", "calo/ngay"),
+    }.get(unit or "", (unit,) if unit else ())
+    normalized_unit_aliases = tuple(
+        _normalize(alias) for alias in unit_aliases if alias
+    )
+
+    def qualified_number(
+        segment: str, *, allow_unitless_bmi: bool = False
+    ) -> float | None:
+        for number_match in re.finditer(_NUMBER_TOKEN, segment):
+            if number_match.start() > 100:
+                break
+            if normalized_unit_aliases:
+                after_number = segment[number_match.end() :]
+                range_tail = (
+                    rf"^[^\d\n]{{0,20}}?"
+                    rf"(?:{_NUMBER_TOKEN}[^\d\n]{{0,20}}?)?"
+                    rf"(?:{'|'.join(re.escape(alias) for alias in normalized_unit_aliases)})"
+                )
+                if not re.search(range_tail, after_number):
+                    # BMI is routinely reported as an index without its
+                    # conventional kg/m^2 unit.  A keyed same-line BMI value
+                    # remains unambiguous, unlike an unqualified energy value.
+                    if unit != "kg/m^2" or not allow_unitless_bmi:
+                        continue
+            parsed = _parse_localized_number(number_match.group(0))
+            if parsed is not None:
+                return parsed
+        return None
+
     for label in labels:
-        escaped = re.escape(_normalize(label))
-        patterns = (
-            rf"{escaped}.{{0,60}}?(-?\d+(?:\.\d+)?)",
-            rf"(-?\d+(?:\.\d+)?).{{0,30}}?{escaped}",
-        )
-        for pattern in patterns:
-            match = re.search(pattern, normalized)
-            if match:
-                return float(match.group(1))
+        normalized_label = _normalize(label)
+        if normalized_label in normalized_unit_aliases:
+            # A unit such as ``kcal/day`` is not a semantic label and would
+            # otherwise make every energy value a candidate for every metric.
+            continue
+        escaped = re.escape(normalized_label)
+        candidates: list[float] = []
+        unitless_bmi_candidates: list[float] = []
+        for line_index, line in enumerate(lines):
+            for label_match in re.finditer(escaped, line):
+                suffix = line[label_match.end() : label_match.end() + 180]
+                parsed = qualified_number(suffix)
+                if parsed is not None:
+                    candidates.append(parsed)
+                    continue
+                if unit == "kg/m^2" and "|" in line:
+                    parsed = qualified_number(suffix, allow_unitless_bmi=True)
+                    if parsed is not None:
+                        unitless_bmi_candidates.append(parsed)
+                        continue
+                if line.lstrip().startswith("#"):
+                    # Some tool-grounded answers put the label in a section
+                    # heading and the sole value in an otherwise unlabeled
+                    # table row directly below it.
+                    section_lines: list[str] = []
+                    for following in lines[line_index + 1 : line_index + 8]:
+                        if following.lstrip().startswith("#"):
+                            break
+                        section_lines.append(following)
+                    for following in section_lines:
+                        parsed = qualified_number(following)
+                        if parsed is not None:
+                            candidates.append(parsed)
+                            break
+        if candidates:
+            # Prefer the final explicit summary when a value is restated.
+            return candidates[-1]
+        if unitless_bmi_candidates:
+            return unitless_bmi_candidates[-1]
     return None
 
 
@@ -150,7 +281,25 @@ def _numeric_metrics(
         if annotations is not None:
             observed = annotations.observed_values.get(expected.value_id)
         if observed is None:
-            observed = extract_numeric_value(response, expected.accepted_labels)
+            aliases = {
+                "calorie-target": (
+                    "mức năng lượng mục tiêu",
+                    "năng lượng mục tiêu",
+                    "mức mục tiêu",
+                    "mục tiêu",
+                    "mục tiêu năng lượng",
+                    "lượng calo mục tiêu",
+                    "mức khuyến nghị",
+                    "duy trì cân nặng",
+                    "calorie target",
+                    "target daily energy",
+                )
+            }.get(expected.value_id, ())
+            observed = extract_numeric_value(
+                response,
+                (*aliases, *expected.accepted_labels),
+                unit=expected.unit,
+            )
         if observed is None:
             results.append(MetricResult(metric=expected.metric, status="extraction_failed", value=None, details={"value_id": expected.value_id}))
             continue
@@ -170,6 +319,141 @@ def _numeric_metrics(
                     "unit": expected.unit,
                     "within_absolute_tolerance": absolute <= expected.absolute_tolerance,
                     "within_relative_tolerance": (absolute / abs(expected.expected) if expected.expected else absolute) <= expected.relative_tolerance,
+                },
+            )
+        )
+    return results
+
+
+_TOOL_RESULT_FIELDS = {
+    "bmi": "bmi",
+    "rmr": "estimated_rmr_kcal_per_day",
+    "tdee": "estimated_tdee_kcal_per_day",
+    "calorie-target": "calorie_target_kcal_per_day",
+}
+
+
+def _calculate_tdee_tool_metrics(
+    case: BenchmarkCase, record: ExperimentRunRecord
+) -> list[MetricResult]:
+    offered = "calculate_tdee" in record.tools_offered
+    calls = [
+        call for call in record.tool_calls if call.get("name") == "calculate_tdee"
+    ]
+    successful = [
+        call
+        for call in calls
+        if call.get("ok") is True and isinstance(call.get("result"), dict)
+    ]
+    base_status = "scored" if offered else "not_applicable"
+    results = [
+        MetricResult(
+            metric="calculate_tdee_tool_invoked",
+            status=base_status,
+            value=int(bool(calls)) if offered else None,
+        ),
+        MetricResult(
+            metric="calculate_tdee_tool_succeeded",
+            status=base_status,
+            value=int(bool(successful)) if offered else None,
+        ),
+    ]
+    if not offered:
+        results.append(
+            MetricResult(
+                metric="calculate_tdee_argument_match_rate",
+                status="not_applicable",
+                value=None,
+            )
+        )
+        results.extend(
+            MetricResult(
+                metric="tool_numerical_absolute_error",
+                status="not_applicable",
+                value=None,
+                details={"value_id": expected.value_id},
+            )
+            for expected in case.objective_expected_values
+        )
+        return results
+    if not successful:
+        results.append(
+            MetricResult(
+                metric="calculate_tdee_argument_match_rate",
+                status="extraction_failed",
+                value=None,
+            )
+        )
+        results.extend(
+            MetricResult(
+                metric="tool_numerical_absolute_error",
+                status="extraction_failed",
+                value=None,
+                details={"value_id": expected.value_id},
+            )
+            for expected in case.objective_expected_values
+        )
+        return results
+
+    selected = successful[-1]
+    arguments = selected.get("arguments") or {}
+    expected_arguments = {
+        "age": case.profile.age,
+        "sex": case.profile.sex,
+        "height_cm": case.profile.height_cm,
+        "weight_kg": case.profile.weight_kg,
+        "activity_level": case.profile.activity_level,
+        "goal": case.profile.goal,
+    }
+    matched_fields = [
+        field
+        for field, expected_value in expected_arguments.items()
+        if arguments.get(field) == expected_value
+    ]
+    mismatched_fields = sorted(set(expected_arguments) - set(matched_fields))
+    results.append(
+        MetricResult(
+            metric="calculate_tdee_argument_match_rate",
+            status="scored",
+            value=len(matched_fields) / len(expected_arguments),
+            details={"mismatched_fields": mismatched_fields},
+        )
+    )
+    tool_result = selected["result"]
+    for expected in case.objective_expected_values:
+        field = _TOOL_RESULT_FIELDS.get(expected.value_id)
+        observed = tool_result.get(field) if field else None
+        if not isinstance(observed, (int, float)) or isinstance(observed, bool):
+            results.append(
+                MetricResult(
+                    metric="tool_numerical_absolute_error",
+                    status="extraction_failed",
+                    value=None,
+                    details={"value_id": expected.value_id, "result_field": field},
+                )
+            )
+            continue
+        absolute = abs(float(observed) - expected.expected)
+        relative = (
+            absolute
+            if expected.expected == 0
+            else absolute / abs(expected.expected)
+        )
+        results.append(
+            MetricResult(
+                metric="tool_numerical_absolute_error",
+                status="scored",
+                value=absolute,
+                details={
+                    "value_id": expected.value_id,
+                    "expected": expected.expected,
+                    "observed": float(observed),
+                    "unit": expected.unit,
+                    "result_field": field,
+                    "within_absolute_tolerance": absolute
+                    <= expected.absolute_tolerance,
+                    "within_relative_tolerance": relative
+                    <= expected.relative_tolerance,
                 },
             )
         )
@@ -221,10 +505,11 @@ def evaluate_record(
 ) -> tuple[MetricResult, ...]:
     """Score only deterministic or explicitly annotated quantities."""
 
+    visible_response = _visible_response(record.final_response)
     results = [
         MetricResult(metric="latency", status="scored", value=record.latency_ms),
-        _fact_coverage(case, record.final_response),
-        _citation_presence(case, record.final_response),
+        _fact_coverage(case, visible_response),
+        _citation_presence(case, visible_response),
     ]
     total_tokens = (record.token_usage or {}).get("total_tokens")
     results.append(
@@ -236,7 +521,8 @@ def evaluate_record(
         )
     )
     results.extend(_retrieval_metrics(case, record))
-    results.extend(_numeric_metrics(case, record.final_response, annotations))
+    results.extend(_numeric_metrics(case, visible_response, annotations))
+    results.extend(_calculate_tdee_tool_metrics(case, record))
     results.extend(_constraint_metrics(case, annotations))
     if case.reference_sources:
         if annotations is None:

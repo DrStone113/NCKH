@@ -7,7 +7,9 @@ import subprocess
 from pathlib import Path
 from typing import Any, Callable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from services.experiment.errors import ExperimentError, safe_error_detail
 
 
 class ExperimentRunRecord(BaseModel):
@@ -96,6 +98,35 @@ def append_jsonl(path: Path, record: ExperimentRunRecord) -> None:
         handle.write("\n")
 
 
+def load_jsonl_records(path: Path) -> tuple[ExperimentRunRecord, ...]:
+    """Load a complete JSONL record sequence and reject partial/tampered rows."""
+
+    if not path.exists():
+        return ()
+    records: list[ExperimentRunRecord] = []
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    raise ExperimentError(
+                        "EXPERIMENT_BATCH_RESUME_BLANK_LINE", str(line_number)
+                    )
+                try:
+                    records.append(ExperimentRunRecord.model_validate_json(line))
+                except (ValidationError, ValueError) as exc:
+                    raise ExperimentError(
+                        "EXPERIMENT_BATCH_RESUME_RECORD_INVALID",
+                        f"line={line_number}; {safe_error_detail(exc)}",
+                    ) from exc
+    except ExperimentError:
+        raise
+    except (OSError, UnicodeError) as exc:
+        raise ExperimentError(
+            "EXPERIMENT_BATCH_RESUME_FILE_INVALID", safe_error_detail(exc)
+        ) from exc
+    return tuple(records)
+
+
 RepositoryStateProbe = Callable[[], tuple[str | None, bool | None]]
 
 
@@ -103,5 +134,6 @@ __all__ = [
     "ExperimentRunRecord",
     "RepositoryStateProbe",
     "append_jsonl",
+    "load_jsonl_records",
     "repository_state",
 ]

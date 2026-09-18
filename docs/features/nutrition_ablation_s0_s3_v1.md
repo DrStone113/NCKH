@@ -97,6 +97,13 @@ seed, repetition index, and schedule index. A provider or corpus error remains
 a failed durable record and makes the command exit non-zero after the schedule
 finishes.
 
+For a long development run interrupted between records, rerun the identical
+command with `--resume`. Resume accepts only an exact prefix of the deterministic
+schedule with the same experiment ID, benchmark/manifest hashes, configuration,
+model route, Git commit, clean-worktree state, repetitions, and seed. Existing
+failed rows remain immutable and are not retried. Without `--resume`, an
+existing output file is rejected to prevent accidental duplicate appends.
+
 The SHA-256 schedule order is reproducible from the same benchmark, selected
 arms, repetition count, and schedule seed. A `final` split additionally
 requires a clean Git worktree and an output path outside the repository or

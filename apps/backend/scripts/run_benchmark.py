@@ -38,6 +38,7 @@ from services.experiment.errors import ExperimentError, safe_error_detail
 from services.experiment.llm import FixedOpenAIResearchClient
 from services.experiment.rag import PostgresFrozenRagProvider
 from services.experiment.records import repository_state
+from services.experiment.records import load_jsonl_records
 from services.experiment.runner import ResearchExperimentRunner
 
 
@@ -73,6 +74,14 @@ def _parser() -> argparse.ArgumentParser:
         default=Path("logs/nutrition-ablation-results.jsonl"),
     )
     parser.add_argument("--experiment-id", default="nutrition-ablation-batch")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "Resume only from an exact verified prefix already present in "
+            "--output. Existing failed records remain failed and are not retried."
+        ),
+    )
     parser.add_argument(
         "--plan-only",
         action="store_true",
@@ -190,6 +199,17 @@ async def _run(args: argparse.Namespace) -> int:
         return 0
 
     repo_root = Path(__file__).resolve().parents[3]
+    if args.output.exists() and not args.resume:
+        raise ExperimentError("EXPERIMENT_BATCH_OUTPUT_EXISTS", str(args.output))
+    resume_records = load_jsonl_records(args.output) if args.resume else ()
+    commit, worktree_clean = repository_state(repo_root)
+    if worktree_clean is not True:
+        raise ExperimentError("EXPERIMENT_BATCH_REQUIRES_CLEAN_WORKTREE")
+    if any(
+        record.git_commit != commit or record.worktree_clean is not True
+        for record in resume_records
+    ):
+        raise ExperimentError("EXPERIMENT_BATCH_RESUME_GIT_STATE_MISMATCH")
     if split == BenchmarkSplit.FINAL:
         _require_final_execution_state(repo_root, args.output)
 
@@ -214,6 +234,7 @@ async def _run(args: argparse.Namespace) -> int:
         repetitions=args.repetitions,
         schedule_seed=schedule_seed,
         output_path=args.output,
+        resume_records=resume_records,
     )
     print(
         json.dumps(

@@ -20,7 +20,7 @@ from services.experiment.config import (
 )
 from services.experiment.errors import ExperimentError
 from services.experiment.models import ExperimentTestCase
-from services.experiment.records import append_jsonl
+from services.experiment.records import ExperimentRunRecord, append_jsonl
 from services.experiment.runner import ResearchExperimentRunner
 
 
@@ -48,6 +48,8 @@ class BatchRunSummary(BaseModel):
     repetitions: int = Field(ge=1)
     schedule_seed: int
     scheduled_runs: int = Field(ge=1)
+    resumed_runs: int = Field(default=0, ge=0)
+    executed_runs: int = Field(default=0, ge=0)
     completed_runs: int = Field(ge=0)
     failed_runs: int = Field(ge=0)
 
@@ -155,6 +157,45 @@ def build_schedule(
     )
 
 
+def validate_resume_prefix(
+    records: Sequence[ExperimentRunRecord],
+    schedule: Sequence[BatchScheduleItem],
+    *,
+    experiment_id: str,
+    benchmark: BenchmarkFile,
+    manifest: BenchmarkManifest,
+    split: BenchmarkSplit,
+    configs: Mapping[NutritionAblationArm, ExperimentConfig],
+    schedule_seed: int,
+) -> None:
+    """Require an exact, duplicate-free prefix of the immutable schedule."""
+
+    if len(records) > len(schedule):
+        raise ExperimentError("EXPERIMENT_BATCH_RESUME_TOO_MANY_RECORDS")
+    for index, record in enumerate(records):
+        item = schedule[index]
+        config = configs[item.condition]
+        checks = (
+            record.schedule_index == item.schedule_index,
+            record.repetition_index == item.repetition_index,
+            record.condition == item.condition,
+            record.test_case_id == item.test_case_id,
+            record.benchmark_case_hash == item.benchmark_case_hash,
+            record.experiment_id == experiment_id,
+            record.benchmark_version == benchmark.benchmark_version,
+            record.benchmark_file_sha256 == manifest.benchmark_file_sha256,
+            record.benchmark_manifest_hash == manifest.manifest_hash,
+            record.benchmark_split == split.value,
+            record.batch_schedule_seed == schedule_seed,
+            record.config_hash == config.config_hash(),
+            record.config == config.serialize(),
+            record.model_requested == config.model,
+        )
+        if not all(checks):
+            raise ExperimentError(
+                "EXPERIMENT_BATCH_RESUME_PREFIX_MISMATCH",
+                f"record={index + 1}",
+            )
 class NutritionAblationBatchRunner:
     """Execute and durably append every item in a verified benchmark split."""
 
@@ -172,6 +213,7 @@ class NutritionAblationBatchRunner:
         repetitions: int,
         schedule_seed: int,
         output_path: Path,
+        resume_records: Sequence[ExperimentRunRecord] = (),
     ) -> BatchRunSummary:
         if manifest.benchmark_version != benchmark.benchmark_version:
             raise ExperimentError("EXPERIMENT_BENCHMARK_VERSION_MISMATCH")
@@ -192,10 +234,21 @@ class NutritionAblationBatchRunner:
             repetitions=repetitions,
             schedule_seed=schedule_seed,
         )
+        validate_resume_prefix(
+            resume_records,
+            schedule,
+            experiment_id=experiment_id,
+            benchmark=benchmark,
+            manifest=manifest,
+            split=split,
+            configs=configs,
+            schedule_seed=schedule_seed,
+        )
         case_by_id = {case.case_id: case for case in benchmark.cases}
-        failed_runs = 0
+        failed_runs = sum(record.error is not None for record in resume_records)
+        resumed_runs = len(resume_records)
 
-        for item in schedule:
+        for item in schedule[resumed_runs:]:
             case = case_by_id[item.test_case_id]
             record = await self.runner.run(
                 experiment_id=experiment_id,
@@ -230,6 +283,8 @@ class NutritionAblationBatchRunner:
             repetitions=repetitions,
             schedule_seed=schedule_seed,
             scheduled_runs=len(schedule),
+            resumed_runs=resumed_runs,
+            executed_runs=len(schedule) - resumed_runs,
             completed_runs=len(schedule) - failed_runs,
             failed_runs=failed_runs,
         )
@@ -241,4 +296,5 @@ __all__ = [
     "NutritionAblationBatchRunner",
     "build_schedule",
     "configs_for_arms",
+    "validate_resume_prefix",
 ]

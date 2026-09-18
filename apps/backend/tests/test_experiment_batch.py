@@ -32,6 +32,7 @@ from services.experiment.config import (
     NUTRITION_ABLATION_PROMPT_VERSION,
     ExperimentConfig,
 )
+from services.experiment.errors import ExperimentError
 from services.experiment.llm import ResearchLLMResponse
 from services.experiment.models import (
     ExperimentProfile,
@@ -39,6 +40,7 @@ from services.experiment.models import (
     RetrievalTrace,
 )
 from services.experiment.runner import ResearchExperimentRunner
+from services.experiment.records import load_jsonl_records
 from scripts import run_benchmark
 
 
@@ -326,6 +328,8 @@ async def test_batch_runner_persists_paired_metadata_and_all_runs(
         for line in output.read_text(encoding="utf-8").splitlines()
     ]
     assert summary.scheduled_runs == 8
+    assert summary.resumed_runs == 0
+    assert summary.executed_runs == 8
     assert summary.completed_runs == 8
     assert summary.failed_runs == 0
     assert len(rows) == 8
@@ -353,3 +357,101 @@ async def test_batch_runner_persists_paired_metadata_and_all_runs(
     assert by_condition["S1"]["retrieval_trace"] is not None
     assert by_condition["S2"]["tools_offered"] == ["calculate_tdee"]
     assert by_condition["S3"]["tools_offered"] == ["calculate_tdee"]
+
+
+@pytest.mark.asyncio
+async def test_batch_runner_resumes_an_exact_prefix_without_duplicates(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "resume.jsonl"
+    first_client = _CompletionClient()
+    first_runner = NutritionAblationBatchRunner(
+        ResearchExperimentRunner(
+            completion_client=first_client,
+            rag_provider=_RagProvider(),
+            repository_probe=lambda: ("clean-commit", True),
+        )
+    )
+    await first_runner.run(
+        experiment_id="resume-test",
+        benchmark=_benchmark(),
+        manifest=_manifest(),
+        split=BenchmarkSplit.DEVELOPMENT,
+        configs=configs_for_arms(_template()),
+        repetitions=2,
+        schedule_seed=42,
+        output_path=output,
+    )
+    prefix = output.read_text(encoding="utf-8").splitlines()[:3]
+    output.write_text("\n".join(prefix) + "\n", encoding="utf-8")
+    resume_records = load_jsonl_records(output)
+
+    second_client = _CompletionClient()
+    second_runner = NutritionAblationBatchRunner(
+        ResearchExperimentRunner(
+            completion_client=second_client,
+            rag_provider=_RagProvider(),
+            repository_probe=lambda: ("clean-commit", True),
+        )
+    )
+    summary = await second_runner.run(
+        experiment_id="resume-test",
+        benchmark=_benchmark(),
+        manifest=_manifest(),
+        split=BenchmarkSplit.DEVELOPMENT,
+        configs=configs_for_arms(_template()),
+        repetitions=2,
+        schedule_seed=42,
+        output_path=output,
+        resume_records=resume_records,
+    )
+
+    rows = load_jsonl_records(output)
+    assert summary.scheduled_runs == 8
+    assert summary.resumed_runs == 3
+    assert summary.executed_runs == 5
+    assert len(second_client.calls) == 5
+    assert len(rows) == 8
+    assert [row.schedule_index for row in rows] == list(range(1, 9))
+
+
+@pytest.mark.asyncio
+async def test_batch_runner_rejects_a_tampered_resume_prefix(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "tampered-resume.jsonl"
+    client = _CompletionClient()
+    runner = NutritionAblationBatchRunner(
+        ResearchExperimentRunner(
+            completion_client=client,
+            rag_provider=_RagProvider(),
+            repository_probe=lambda: ("clean-commit", True),
+        )
+    )
+    await runner.run(
+        experiment_id="resume-test",
+        benchmark=_benchmark(),
+        manifest=_manifest(),
+        split=BenchmarkSplit.DEVELOPMENT,
+        configs=configs_for_arms(_template()),
+        repetitions=1,
+        schedule_seed=42,
+        output_path=output,
+    )
+    records = list(load_jsonl_records(output))
+    records[0] = records[0].model_copy(update={"test_case_id": "tampered-case"})
+
+    with pytest.raises(
+        ExperimentError, match="EXPERIMENT_BATCH_RESUME_PREFIX_MISMATCH"
+    ):
+        await runner.run(
+            experiment_id="resume-test",
+            benchmark=_benchmark(),
+            manifest=_manifest(),
+            split=BenchmarkSplit.DEVELOPMENT,
+            configs=configs_for_arms(_template()),
+            repetitions=1,
+            schedule_seed=42,
+            output_path=output,
+            resume_records=records,
+        )

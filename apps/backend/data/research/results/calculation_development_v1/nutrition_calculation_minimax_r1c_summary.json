@@ -1,0 +1,1174 @@
+{
+  "analysis": {
+    "analysis_commit": "bfc636af05de67fee8c4b9e6c7a00d55fb787f12",
+    "analysis_worktree_clean": true
+  },
+  "arms": {
+    "S0": {
+      "answer": {
+        "all_values_correct": {
+          "rate": 0.11666666666666667,
+          "successes": 7,
+          "total": 60,
+          "wilson_95": [
+            0.0576772064005603,
+            0.2217878802417086
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.014999999999999711,
+              "median": 0.015000000000000568,
+              "n": 58,
+              "p95": 0.019999999999999574
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9666666666666667,
+              "successes": 58,
+              "total": 60,
+              "wilson_95": [
+                0.886362257256914,
+                0.9908106807438021
+              ]
+            },
+            "extraction": {
+              "rate": 0.9666666666666667,
+              "successes": 58,
+              "total": 60,
+              "wilson_95": [
+                0.886362257256914,
+                0.9908106807438021
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 823.7625,
+              "median": 294.0,
+              "n": 60,
+              "p95": 2454.5
+            },
+            "correct_over_all_runs": {
+              "rate": 0.13333333333333333,
+              "successes": 8,
+              "total": 60,
+              "wilson_95": [
+                0.06914109480586972,
+                0.24165159676499615
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 112.13559322033899,
+              "median": 0.0,
+              "n": 59,
+              "p95": 1306.9
+            },
+            "correct_over_all_runs": {
+              "rate": 0.8333333333333334,
+              "successes": 50,
+              "total": 60,
+              "wilson_95": [
+                0.7196838683638547,
+                0.9068682302080855
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 395.6316666666667,
+              "median": 32.5,
+              "n": 60,
+              "p95": 2572.25
+            },
+            "correct_over_all_runs": {
+              "rate": 0.5,
+              "successes": 30,
+              "total": 60,
+              "wilson_95": [
+                0.3773502424155577,
+                0.6226497575844423
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          }
+        }
+      },
+      "finish_reasons": {
+        "stop": 60
+      },
+      "latency_ms": {
+        "mean": 15725.495283333334,
+        "median": 15252.511999999999,
+        "n": 60,
+        "p95": 20378.1191
+      },
+      "runs": 60,
+      "tool": {
+        "all_values_correct": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "arguments_exact": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          }
+        },
+        "invoked": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "succeeded": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        }
+      },
+      "total_tokens": {
+        "mean": 1920.7166666666667,
+        "median": 1930.0,
+        "n": 60,
+        "p95": 2343.7
+      }
+    },
+    "S1": {
+      "answer": {
+        "all_values_correct": {
+          "rate": 0.18333333333333332,
+          "successes": 11,
+          "total": 60,
+          "wilson_95": [
+            0.10557796889197638,
+            0.2991975374646805
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.01499999999999968,
+              "median": 0.015000000000000568,
+              "n": 60,
+              "p95": 0.019999999999999574
+            },
+            "correct_over_all_runs": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 762.4916666666667,
+              "median": 225.0,
+              "n": 60,
+              "p95": 2381.6
+            },
+            "correct_over_all_runs": {
+              "rate": 0.25,
+              "successes": 15,
+              "total": 60,
+              "wilson_95": [
+                0.15776522530056675,
+                0.37232070077047824
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 105.79474576271187,
+              "median": 0.0,
+              "n": 59,
+              "p95": 1276.4489999999998
+            },
+            "correct_over_all_runs": {
+              "rate": 0.8666666666666667,
+              "successes": 52,
+              "total": 60,
+              "wilson_95": [
+                0.7583484032350039,
+                0.9308589051941303
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 506.74983050847453,
+              "median": 1.0,
+              "n": 59,
+              "p95": 2424.935
+            },
+            "correct_over_all_runs": {
+              "rate": 0.6333333333333333,
+              "successes": 38,
+              "total": 60,
+              "wilson_95": [
+                0.5068300063010303,
+                0.7437908331277456
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          }
+        }
+      },
+      "finish_reasons": {
+        "stop": 60
+      },
+      "latency_ms": {
+        "mean": 16852.8178,
+        "median": 17168.089500000002,
+        "n": 60,
+        "p95": 21004.5138
+      },
+      "runs": 60,
+      "tool": {
+        "all_values_correct": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "arguments_exact": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": null,
+              "median": null,
+              "n": 0,
+              "p95": null
+            },
+            "correct_over_all_runs": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            },
+            "extraction": {
+              "rate": 0.0,
+              "successes": 0,
+              "total": 60,
+              "wilson_95": [
+                0.0,
+                0.06017185214208986
+              ]
+            }
+          }
+        },
+        "invoked": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        },
+        "succeeded": {
+          "rate": null,
+          "successes": 0,
+          "total": 0,
+          "wilson_95": null
+        }
+      },
+      "total_tokens": {
+        "mean": 3958.633333333333,
+        "median": 3980.5,
+        "n": 60,
+        "p95": 4327.7
+      }
+    },
+    "S2": {
+      "answer": {
+        "all_values_correct": {
+          "rate": 0.7166666666666667,
+          "successes": 43,
+          "total": 60,
+          "wilson_95": [
+            0.5923271483560882,
+            0.8149317157156729
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.010499999999999747,
+              "median": 0.010000000000001563,
+              "n": 60,
+              "p95": 0.019999999999999574
+            },
+            "correct_over_all_runs": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 34.87931034482759,
+              "median": 0.0,
+              "n": 58,
+              "p95": 248.2
+            },
+            "correct_over_all_runs": {
+              "rate": 0.8166666666666667,
+              "successes": 49,
+              "total": 60,
+              "wilson_95": [
+                0.7008024625353194,
+                0.8944220311080237
+              ]
+            },
+            "extraction": {
+              "rate": 0.9666666666666667,
+              "successes": 58,
+              "total": 60,
+              "wilson_95": [
+                0.886362257256914,
+                0.9908106807438021
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 6.283333333333333,
+              "median": 0.0,
+              "n": 60,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9666666666666667,
+              "successes": 58,
+              "total": 60,
+              "wilson_95": [
+                0.886362257256914,
+                0.9908106807438021
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 200.42416666666668,
+              "median": 0.0,
+              "n": 60,
+              "p95": 1375.85
+            },
+            "correct_over_all_runs": {
+              "rate": 0.7333333333333333,
+              "successes": 44,
+              "total": 60,
+              "wilson_95": [
+                0.6099128690331636,
+                0.8286735999671945
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          }
+        }
+      },
+      "finish_reasons": {
+        "stop": 60,
+        "tool_calls": 59
+      },
+      "latency_ms": {
+        "mean": 14283.301666666666,
+        "median": 14032.4455,
+        "n": 60,
+        "p95": 18976.344
+      },
+      "runs": 60,
+      "tool": {
+        "all_values_correct": {
+          "rate": 0.8333333333333334,
+          "successes": 50,
+          "total": 60,
+          "wilson_95": [
+            0.7196838683638547,
+            0.9068682302080855
+          ]
+        },
+        "arguments_exact": {
+          "rate": 0.847457627118644,
+          "successes": 50,
+          "total": 59,
+          "wilson_95": [
+            0.7348201621622644,
+            0.9176153600140352
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.0,
+              "median": 0.0,
+              "n": 59,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 39.0,
+              "median": 0.0,
+              "n": 59,
+              "p95": 275.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.8333333333333334,
+              "successes": 50,
+              "total": 60,
+              "wilson_95": [
+                0.7196838683638547,
+                0.9068682302080855
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 0.0,
+              "median": 0.0,
+              "n": 59,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 39.6271186440678,
+              "median": 0.0,
+              "n": 59,
+              "p95": 291.2
+            },
+            "correct_over_all_runs": {
+              "rate": 0.8333333333333334,
+              "successes": 50,
+              "total": 60,
+              "wilson_95": [
+                0.7196838683638547,
+                0.9068682302080855
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          }
+        },
+        "invoked": {
+          "rate": 0.9833333333333333,
+          "successes": 59,
+          "total": 60,
+          "wilson_95": [
+            0.9114487027240993,
+            0.9970518402052136
+          ]
+        },
+        "succeeded": {
+          "rate": 0.9833333333333333,
+          "successes": 59,
+          "total": 60,
+          "wilson_95": [
+            0.9114487027240993,
+            0.9970518402052136
+          ]
+        }
+      },
+      "total_tokens": {
+        "mean": 9024.316666666668,
+        "median": 9086.5,
+        "n": 60,
+        "p95": 9419.0
+      }
+    },
+    "S3": {
+      "answer": {
+        "all_values_correct": {
+          "rate": 0.7333333333333333,
+          "successes": 44,
+          "total": 60,
+          "wilson_95": [
+            0.6099128690331636,
+            0.8286735999671945
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.05966666666666646,
+              "median": 0.010000000000001563,
+              "n": 60,
+              "p95": 0.019999999999999574
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 56.28333333333333,
+              "median": 0.0,
+              "n": 60,
+              "p95": 272.9
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9,
+              "successes": 54,
+              "total": 60,
+              "wilson_95": [
+                0.7985053527602123,
+                0.9533571655261158
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 18.483333333333334,
+              "median": 0.0,
+              "n": 60,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 343.695,
+              "median": 0.0,
+              "n": 60,
+              "p95": 2324.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.7666666666666667,
+              "successes": 46,
+              "total": 60,
+              "wilson_95": [
+                0.6456372962239805,
+                0.8556043826335717
+              ]
+            },
+            "extraction": {
+              "rate": 1.0,
+              "successes": 60,
+              "total": 60,
+              "wilson_95": [
+                0.93982814785791,
+                0.9999999999999998
+              ]
+            }
+          }
+        }
+      },
+      "finish_reasons": {
+        "stop": 60,
+        "tool_calls": 59
+      },
+      "latency_ms": {
+        "mean": 15159.610883333335,
+        "median": 14790.567,
+        "n": 60,
+        "p95": 18766.28325
+      },
+      "runs": 60,
+      "tool": {
+        "all_values_correct": {
+          "rate": 0.9,
+          "successes": 54,
+          "total": 60,
+          "wilson_95": [
+            0.7985053527602123,
+            0.9533571655261158
+          ]
+        },
+        "arguments_exact": {
+          "rate": 0.9152542372881356,
+          "successes": 54,
+          "total": 59,
+          "wilson_95": [
+            0.8164820473258972,
+            0.9632579669823632
+          ]
+        },
+        "by_value": {
+          "bmi": {
+            "absolute_error": {
+              "mean": 0.0,
+              "median": 0.0,
+              "n": 59,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "calorie-target": {
+            "absolute_error": {
+              "mean": 22.203389830508474,
+              "median": 0.0,
+              "n": 59,
+              "p95": 246.8
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9,
+              "successes": 54,
+              "total": 60,
+              "wilson_95": [
+                0.7985053527602123,
+                0.9533571655261158
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "rmr": {
+            "absolute_error": {
+              "mean": 0.0,
+              "median": 0.0,
+              "n": 59,
+              "p95": 0.0
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          },
+          "tdee": {
+            "absolute_error": {
+              "mean": 22.47457627118644,
+              "median": 0.0,
+              "n": 59,
+              "p95": 228.8
+            },
+            "correct_over_all_runs": {
+              "rate": 0.9,
+              "successes": 54,
+              "total": 60,
+              "wilson_95": [
+                0.7985053527602123,
+                0.9533571655261158
+              ]
+            },
+            "extraction": {
+              "rate": 0.9833333333333333,
+              "successes": 59,
+              "total": 60,
+              "wilson_95": [
+                0.9114487027240993,
+                0.9970518402052136
+              ]
+            }
+          }
+        },
+        "invoked": {
+          "rate": 0.9833333333333333,
+          "successes": 59,
+          "total": 60,
+          "wilson_95": [
+            0.9114487027240993,
+            0.9970518402052136
+          ]
+        },
+        "succeeded": {
+          "rate": 0.9833333333333333,
+          "successes": 59,
+          "total": 60,
+          "wilson_95": [
+            0.9114487027240993,
+            0.9970518402052136
+          ]
+        }
+      },
+      "total_tokens": {
+        "mean": 9318.65,
+        "median": 9422.0,
+        "n": 60,
+        "p95": 9912.25
+      }
+    }
+  },
+  "classification": {
+    "artifact_class": "DEVELOPMENT_ONLY",
+    "clinical_validation": false,
+    "confirmatory_evidence": false,
+    "production_rollout_authority": false
+  },
+  "experiment": {
+    "actual_models": [
+      "MiniMax-M2.7"
+    ],
+    "benchmark_file_sha256": "e65a0d1c6bf72fe138db3c46175a0189fdcccdec881ee917226d475e1658b262",
+    "benchmark_manifest_hash": "a367c70a3b2006c8aadda716cacd9000cf826dfd4078e6e8172d562667ff5787",
+    "benchmark_version": "nutrition-calculation-development-v1.0.0",
+    "case_count": 60,
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "corpus_version": "offline-v1-636",
+    "execution_commits": [
+      "154398a472b5621de485fce0a548d1d5ed283152"
+    ],
+    "experiment_id": "nutrition-calculation-development-v1-minimax-r1c-20260918",
+    "max_tokens": 4000,
+    "prompt_version": "nutrition-ablation-v1",
+    "protocol_id": "nutrition-ablation-s0-s3-v1",
+    "rag_threshold": 0.5,
+    "rag_top_k": 5,
+    "records_sha256": "b1ac8060b75fc6a2d42d4273a745001238e19f017652204fbbd9b4ab84d17098",
+    "requested_models": [
+      "mn/MiniMax-M2.7"
+    ],
+    "run_count": 240,
+    "temperature": 0.0
+  },
+  "interpretation": {
+    "notes": [
+      "Calculation cases have no source-linked knowledge gold, so S0/S1 do not test RQ1.",
+      "Queries contain the same explicit profile facts available to S3, so S2/S3 do not isolate hidden-profile personalization for RQ3.",
+      "Missing answer values count as incorrect in all-values correctness.",
+      "Tool accuracy includes model argument selection and the deterministic tool result; it is not substituted for answer accuracy."
+    ],
+    "primary_development_contrast": "S1_to_S2",
+    "rq1_supported_by_this_benchmark": false,
+    "rq3_supported_by_this_benchmark": false
+  },
+  "paired_answer_comparisons": {
+    "S1_to_S2": {
+      "absolute_rate_difference": 0.5333333333333333,
+      "baseline": "S1",
+      "baseline_correct": 11,
+      "both_correct": 9,
+      "both_incorrect": 15,
+      "exact_mcnemar_p_two_sided": 1.941225491464138e-08,
+      "improved": 34,
+      "pairs": 60,
+      "treatment": "S2",
+      "treatment_correct": 43,
+      "worsened": 2
+    },
+    "S2_to_S3_descriptive_only": {
+      "absolute_rate_difference": 0.016666666666666666,
+      "baseline": "S2",
+      "baseline_correct": 43,
+      "both_correct": 35,
+      "both_incorrect": 8,
+      "exact_mcnemar_p_two_sided": 1.0,
+      "improved": 9,
+      "pairs": 60,
+      "treatment": "S3",
+      "treatment_correct": 44,
+      "worsened": 8
+    }
+  },
+  "schema_version": "1.0"
+}

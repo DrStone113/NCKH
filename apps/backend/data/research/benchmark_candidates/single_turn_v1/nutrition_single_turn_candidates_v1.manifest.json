@@ -1,0 +1,17 @@
+{
+  "calculation_benchmark_manifest_hash": "a367c70a3b2006c8aadda716cacd9000cf826dfd4078e6e8172d562667ff5787",
+  "candidate_count": 270,
+  "candidate_file_sha256": "ab82eb601c7ae27d48afa3e5146e9c4eaf0b04fdec0066f04b762b030f9a8d50",
+  "category_counts": {
+    "energy_calculation": 60,
+    "personalized_recommendation": 80,
+    "rag_knowledge_questions": 100,
+    "safety_boundary_cases": 30
+  },
+  "corpus_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+  "generation_commit": "fdeafdc696776360abcdedd28d60404899db6beb",
+  "generation_worktree_clean": true,
+  "generator_version": "nutrition-single-turn-candidates-v1.0.0",
+  "manifest_hash": "835145abc95e10326fe1983a476dcd2990ffe73fdcc526885646ad75a12971a2",
+  "schema_version": "1.0"
+}

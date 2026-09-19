@@ -879,8 +879,17 @@ def write_single_turn_review(
             "Term-based constraints require later blinded human validation before confirmatory use.",
         ),
     }
+    unsigned_manifest = SingleTurnReviewManifest.model_construct(
+        **manifest_base, manifest_hash="0" * 64
+    )
+    manifest_payload = unsigned_manifest.model_dump(
+        mode="json", exclude={"manifest_hash"}
+    )
     manifest = SingleTurnReviewManifest.model_validate(
-        {**manifest_base, "manifest_hash": sha256_canonical(manifest_base)}
+        {
+            **manifest_payload,
+            "manifest_hash": sha256_canonical(manifest_payload),
+        }
     )
     _atomic_write(review_path, review_bytes, overwrite=overwrite)
     _atomic_write(

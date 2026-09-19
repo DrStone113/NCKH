@@ -1,0 +1,25 @@
+{
+  "candidate_count": 270,
+  "completed_review_sha256": "e39543cbc89a22d065b7d3988d43bdfa78f5dc18100ab32f176f65c9b4d5bad4",
+  "decision_counts": {
+    "APPROVE": 270
+  },
+  "development_promotion_eligible": true,
+  "human_domain_signoff": false,
+  "limitations": [
+    "This is an AI-assisted technical review, not independent human review.",
+    "No clinician or registered dietitian has signed off the benchmark.",
+    "Term-based constraints require later blinded human validation before confirmatory use."
+  ],
+  "manifest_hash": "69e00cacab1645bcd452ce48050d2c3c38dca171f72f9c84fd842b21ed865c65",
+  "promotion_scope": "DEVELOPMENT_ONLY",
+  "review_execution_commit": "7d33167449b17c95e904dc927d4dbdee47596ba8",
+  "review_execution_worktree_clean": true,
+  "review_protocol_version": "nutrition-single-turn-review-v1.0.0",
+  "reviewed_at": "2026-09-19T05:04:54Z",
+  "reviewer_id": "codex-ai-assisted-technical-reviewer",
+  "reviewer_kind": "AI_ASSISTED_TECHNICAL_REVIEW",
+  "schema_version": "1.0",
+  "source_candidate_manifest_hash": "835145abc95e10326fe1983a476dcd2990ffe73fdcc526885646ad75a12971a2",
+  "status": "AI_ASSISTED_TECHNICAL_REVIEW_COMPLETE"
+}

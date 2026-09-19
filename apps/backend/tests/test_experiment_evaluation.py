@@ -6,6 +6,8 @@ from services.experiment.benchmark import (
     BenchmarkCategory,
     BenchmarkSplit,
     ObjectiveExpectedValue,
+    ReferenceSource,
+    RequiredConstraint,
     ScoringMetadata,
 )
 from services.experiment.evaluation import evaluate_record, extract_numeric_value
@@ -198,3 +200,160 @@ def test_evaluate_record_scores_structured_tool_result_and_arguments() -> None:
     }
     assert tool_error.value == 200
     assert tool_error.details["within_absolute_tolerance"] is False
+
+
+def test_evaluate_record_scores_declared_constraint_terms_without_annotation() -> None:
+    profile = ExperimentProfile(
+        profile_id="constraint-profile",
+        age=25,
+        sex="male",
+        height_cm=170,
+        weight_kg=70,
+        activity_level="moderate",
+        goal="lose_weight",
+    )
+    case = BenchmarkCase(
+        case_id="constraint-case-001",
+        category=BenchmarkCategory.PERSONALIZED_RECOMMENDATION,
+        split=BenchmarkSplit.DEVELOPMENT,
+        user_query="Tôi nên điều chỉnh thế nào?",
+        profile=profile,
+        required_facts=(),
+        required_constraints=(
+            RequiredConstraint(
+                constraint_id="goal",
+                constraint_type="goal_alignment",
+                description="Acknowledge the weight-loss goal.",
+                required_terms=("giảm cân", "thâm hụt"),
+            ),
+            RequiredConstraint(
+                constraint_id="unsafe",
+                constraint_type="safety_boundary",
+                description="Do not promise a crash diet.",
+                prohibited_terms=("giảm 10 kg trong một tuần",),
+            ),
+        ),
+        reference_sources=(),
+        objective_expected_values=(),
+        safety_flags=(),
+        scoring_metadata=ScoringMetadata(
+            answerability=Answerability.CONSTRAINT_BASED,
+            research_questions=("RQ3",),
+            objective_metrics=("constraint_satisfaction_rate",),
+            human_rubrics=("personalization", "safety"),
+        ),
+    )
+    record = ExperimentRunRecord(
+        experiment_id="constraint-test",
+        run_id="constraint-run",
+        condition="S3",
+        test_case_id=case.case_id,
+        timestamp="2026-09-18T00:00:00Z",
+        config={},
+        config_hash="a" * 64,
+        user_query=case.user_query,
+        profile_snapshot_or_null=profile.model_dump(mode="json"),
+        rendered_system_prompt="fixture",
+        model_requested="fixture",
+        model_actual="fixture",
+        temperature=0,
+        seed=1,
+        tools_offered=[],
+        final_response="Mục tiêu giảm cân nên dùng mức thâm hụt vừa phải.",
+        latency_ms=1,
+        error=None,
+        git_commit="fixture",
+        worktree_clean=True,
+    )
+
+    metrics = evaluate_record(case, record)
+    constraint = next(
+        metric for metric in metrics if metric.metric == "constraint_satisfaction_rate"
+    )
+
+    assert constraint.value == 1.0
+    assert constraint.details["scoring_mode"] == "declared_term_rules"
+
+
+def test_evaluate_record_scores_exact_retrieval_chunk_citation() -> None:
+    profile = ExperimentProfile(
+        profile_id="citation-profile",
+        age=25,
+        sex="female",
+        height_cm=165,
+        weight_kg=60,
+        activity_level="light",
+        goal="maintain",
+    )
+    source = ReferenceSource(
+        source_id="source-1",
+        source_type="frozen_corpus_record",
+        title="Fixture food",
+        version="dataset-hash",
+        corpus_version="offline-v1-636",
+        dataset_file="fixture.json",
+        source_record_id="fixture:1",
+        content_hash="b" * 64,
+    )
+    case = BenchmarkCase(
+        case_id="citation-case-001",
+        category=BenchmarkCategory.RAG_KNOWLEDGE_QUESTIONS,
+        split=BenchmarkSplit.DEVELOPMENT,
+        user_query="Fixture có bao nhiêu năng lượng?",
+        profile=profile,
+        required_facts=(),
+        required_constraints=(),
+        reference_sources=(source,),
+        objective_expected_values=(),
+        safety_flags=(),
+        scoring_metadata=ScoringMetadata(
+            answerability=Answerability.ANSWERABLE_FROM_CORPUS,
+            research_questions=("RQ1",),
+            objective_metrics=("citation_presence",),
+            human_rubrics=("groundedness",),
+            citation_required=True,
+        ),
+    )
+    record = ExperimentRunRecord(
+        experiment_id="citation-test",
+        run_id="citation-run",
+        condition="S1",
+        test_case_id=case.case_id,
+        timestamp="2026-09-18T00:00:00Z",
+        config={},
+        config_hash="a" * 64,
+        user_query=case.user_query,
+        profile_snapshot_or_null=None,
+        rendered_system_prompt="fixture",
+        model_requested="fixture",
+        model_actual="fixture",
+        temperature=0,
+        seed=1,
+        tools_offered=[],
+        retrieval_trace={
+            "chunks": [
+                {
+                    "chunk_id": "chunk-1",
+                    "source": {
+                        "dataset_file": "fixture.json",
+                        "source_record_id": "fixture:1",
+                    },
+                }
+            ]
+        },
+        final_response="Khoảng 100 kcal [chunk-1].",
+        latency_ms=1,
+        error=None,
+        git_commit="fixture",
+        worktree_clean=True,
+    )
+
+    metrics = evaluate_record(case, record)
+    by_name = {metric.metric: metric for metric in metrics}
+
+    assert by_name["citation_presence"].value == 1
+    assert by_name["citation_source_correctness"].value == 1.0
+    assert (
+        by_name["citation_source_correctness"].details["scoring_mode"]
+        == "retrieval_chunk_id"
+    )

@@ -18,8 +18,15 @@ BENCHMARK_VERSION = "nutrition-benchmark-v1.0.0"
 CALCULATION_DEVELOPMENT_BENCHMARK_VERSION = (
     "nutrition-calculation-development-v1.0.0"
 )
+SINGLE_TURN_DEVELOPMENT_BENCHMARK_VERSION = (
+    "nutrition-single-turn-development-v1.0.0"
+)
 SUPPORTED_BENCHMARK_VERSIONS = frozenset(
-    {BENCHMARK_VERSION, CALCULATION_DEVELOPMENT_BENCHMARK_VERSION}
+    {
+        BENCHMARK_VERSION,
+        CALCULATION_DEVELOPMENT_BENCHMARK_VERSION,
+        SINGLE_TURN_DEVELOPMENT_BENCHMARK_VERSION,
+    }
 )
 BENCHMARK_SCHEMA_VERSION = "1.0"
 RUBRIC_VERSION = "human-rubric-v1.0.0"
@@ -203,6 +210,22 @@ class BenchmarkFile(BaseModel):
                 raise ValueError(
                     "calculation development benchmark cases must remain RQ2 development calculations"
                 )
+        if self.benchmark_version == SINGLE_TURN_DEVELOPMENT_BENCHMARK_VERSION:
+            counts = Counter(case.category for case in self.cases)
+            expected_counts = {
+                BenchmarkCategory.ENERGY_CALCULATION: 60,
+                BenchmarkCategory.RAG_KNOWLEDGE_QUESTIONS: 100,
+                BenchmarkCategory.PERSONALIZED_RECOMMENDATION: 80,
+                BenchmarkCategory.SAFETY_BOUNDARY_CASES: 30,
+            }
+            if len(self.cases) != 270 or counts != expected_counts:
+                raise ValueError(
+                    "single-turn development benchmark must preserve its 270-case category design"
+                )
+            if any(case.split != BenchmarkSplit.DEVELOPMENT for case in self.cases):
+                raise ValueError(
+                    "single-turn development benchmark may contain only development cases"
+                )
         return self
 
 
@@ -352,6 +375,7 @@ __all__ = [
     "COMPATIBLE_CORPUS_VERSION",
     "ObjectiveExpectedValue",
     "RUBRIC_VERSION",
+    "SINGLE_TURN_DEVELOPMENT_BENCHMARK_VERSION",
     "ReferenceSource",
     "RequiredConstraint",
     "RequiredFact",

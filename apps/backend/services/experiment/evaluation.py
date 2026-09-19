@@ -97,13 +97,88 @@ def _fact_coverage(case: BenchmarkCase, response: str) -> MetricResult:
     )
 
 
-def _citation_presence(case: BenchmarkCase, response: str) -> MetricResult:
+def _cited_retrieval_chunks(
+    record: ExperimentRunRecord, response: str
+) -> list[dict[str, Any]]:
+    if record.retrieval_trace is None:
+        return []
+    return [
+        chunk
+        for chunk in record.retrieval_trace.get("chunks", [])
+        if isinstance(chunk.get("chunk_id"), str)
+        and f"[{chunk['chunk_id']}]" in response
+    ]
+
+
+def _citation_presence(
+    case: BenchmarkCase, response: str, record: ExperimentRunRecord
+) -> MetricResult:
     if not case.scoring_metadata.citation_required:
         return MetricResult(metric="citation_presence", status="not_applicable", value=None)
     normalized = _normalize(response)
     markers = ("nguon", "source", "vien dinh duong", "who", "doi:")
-    present = any(marker in normalized for marker in markers)
-    return MetricResult(metric="citation_presence", status="scored", value=int(present))
+    cited_chunks = _cited_retrieval_chunks(record, response)
+    present = bool(cited_chunks) or any(marker in normalized for marker in markers)
+    return MetricResult(
+        metric="citation_presence",
+        status="scored",
+        value=int(present),
+        details={"cited_retrieval_chunk_ids": [chunk["chunk_id"] for chunk in cited_chunks]},
+    )
+
+
+def _citation_source_correctness(
+    case: BenchmarkCase,
+    response: str,
+    record: ExperimentRunRecord,
+    annotations: EvaluationAnnotations | None,
+) -> MetricResult:
+    if not case.reference_sources:
+        return MetricResult(
+            metric="citation_source_correctness",
+            status="not_applicable",
+            value=None,
+        )
+    valid = {source.source_id for source in case.reference_sources}
+    if annotations is not None and annotations.cited_source_ids:
+        cited = set(annotations.cited_source_ids)
+        return MetricResult(
+            metric="citation_source_correctness",
+            status="scored",
+            value=len(cited & valid) / len(cited),
+            details={"scoring_mode": "explicit_annotation"},
+        )
+
+    relevant_coordinates = {
+        (source.dataset_file, source.source_record_id)
+        for source in case.reference_sources
+        if source.source_type == "frozen_corpus_record"
+    }
+    cited_chunks = _cited_retrieval_chunks(record, response)
+    if record.retrieval_trace is None or not relevant_coordinates:
+        return MetricResult(
+            metric="citation_source_correctness",
+            status="requires_annotation",
+            value=None,
+        )
+    correct = sum(
+        (
+            chunk.get("source", {}).get("dataset_file"),
+            chunk.get("source", {}).get("source_record_id"),
+        )
+        in relevant_coordinates
+        for chunk in cited_chunks
+    )
+    return MetricResult(
+        metric="citation_source_correctness",
+        status="scored",
+        value=0.0 if not cited_chunks else correct / len(cited_chunks),
+        details={
+            "scoring_mode": "retrieval_chunk_id",
+            "cited_count": len(cited_chunks),
+            "correct_count": correct,
+        },
+    )
 
 
 def _retrieval_metrics(case: BenchmarkCase, record: ExperimentRunRecord) -> list[MetricResult]:
@@ -461,7 +536,9 @@ def _calculate_tdee_tool_metrics(
 
 
 def _constraint_metrics(
-    case: BenchmarkCase, annotations: EvaluationAnnotations | None
+    case: BenchmarkCase,
+    response: str,
+    annotations: EvaluationAnnotations | None,
 ) -> list[MetricResult]:
     if not case.required_constraints:
         return [
@@ -469,17 +546,38 @@ def _constraint_metrics(
             MetricResult(metric="allergen_violation_rate", status="not_applicable", value=None),
             MetricResult(metric="dietary_restriction_violation_rate", status="not_applicable", value=None),
         ]
+    scoring_mode = "explicit_annotation"
     if annotations is None:
-        return [
-            MetricResult(metric=name, status="requires_annotation", value=None)
-            for name in (
-                "constraint_satisfaction_rate",
-                "allergen_violation_rate",
-                "dietary_restriction_violation_rate",
+        if any(
+            not constraint.required_terms and not constraint.prohibited_terms
+            for constraint in case.required_constraints
+        ):
+            return [
+                MetricResult(metric=name, status="requires_annotation", value=None)
+                for name in (
+                    "constraint_satisfaction_rate",
+                    "allergen_violation_rate",
+                    "dietary_restriction_violation_rate",
+                )
+            ]
+        scoring_mode = "declared_term_rules"
+        normalized = _normalize(response)
+        satisfied = set()
+        violated = set()
+        for constraint in case.required_constraints:
+            required_ok = not constraint.required_terms or any(
+                _normalize(term) in normalized for term in constraint.required_terms
             )
-        ]
-    satisfied = set(annotations.satisfied_constraint_ids)
-    violated = set(annotations.violated_constraint_ids)
+            prohibited_hit = any(
+                _normalize(term) in normalized for term in constraint.prohibited_terms
+            )
+            if prohibited_hit:
+                violated.add(constraint.constraint_id)
+            if required_ok and not prohibited_hit:
+                satisfied.add(constraint.constraint_id)
+    else:
+        satisfied = set(annotations.satisfied_constraint_ids)
+        violated = set(annotations.violated_constraint_ids)
     all_ids = {constraint.constraint_id for constraint in case.required_constraints}
     allergen_ids = {constraint.constraint_id for constraint in case.required_constraints if constraint.constraint_type == "allergen_exclusion"}
     dietary_ids = {constraint.constraint_id for constraint in case.required_constraints if constraint.constraint_type == "dietary_restriction"}
@@ -489,10 +587,24 @@ def _constraint_metrics(
         if not ids:
             return MetricResult(metric=metric, status="not_applicable", value=None)
         selected = violated if violation else satisfied
-        return MetricResult(metric=metric, status="scored", value=len(ids & selected) / len(ids))
+        return MetricResult(
+            metric=metric,
+            status="scored",
+            value=len(ids & selected) / len(ids),
+            details={"scoring_mode": scoring_mode},
+        )
 
     return [
-        MetricResult(metric="constraint_satisfaction_rate", status="scored", value=len(all_ids & satisfied) / len(all_ids)),
+        MetricResult(
+            metric="constraint_satisfaction_rate",
+            status="scored",
+            value=len(all_ids & satisfied) / len(all_ids),
+            details={
+                "scoring_mode": scoring_mode,
+                "satisfied_constraint_ids": sorted(all_ids & satisfied),
+                "violated_constraint_ids": sorted(all_ids & violated),
+            },
+        ),
         rate(allergen_ids, violation=True),
         rate(dietary_ids, violation=True),
     ]
@@ -509,7 +621,7 @@ def evaluate_record(
     results = [
         MetricResult(metric="latency", status="scored", value=record.latency_ms),
         _fact_coverage(case, visible_response),
-        _citation_presence(case, visible_response),
+        _citation_presence(case, visible_response, record),
     ]
     total_tokens = (record.token_usage or {}).get("total_tokens")
     results.append(
@@ -523,14 +635,12 @@ def evaluate_record(
     results.extend(_retrieval_metrics(case, record))
     results.extend(_numeric_metrics(case, visible_response, annotations))
     results.extend(_calculate_tdee_tool_metrics(case, record))
-    results.extend(_constraint_metrics(case, annotations))
-    if case.reference_sources:
-        if annotations is None:
-            results.append(MetricResult(metric="citation_source_correctness", status="requires_annotation", value=None))
-        else:
-            valid = {source.source_id for source in case.reference_sources}
-            cited = set(annotations.cited_source_ids)
-            results.append(MetricResult(metric="citation_source_correctness", status="scored" if cited else "not_applicable", value=(len(cited & valid) / len(cited)) if cited else None))
+    results.extend(_constraint_metrics(case, visible_response, annotations))
+    results.append(
+        _citation_source_correctness(
+            case, visible_response, record, annotations
+        )
+    )
     return tuple(results)
 
 

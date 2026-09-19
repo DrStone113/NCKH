@@ -863,7 +863,7 @@ def write_single_turn_review(
         "status": SINGLE_TURN_REVIEW_STATUS,
         "reviewer_id": reviewer_id,
         "reviewer_kind": SINGLE_TURN_REVIEWER_KIND,
-        "reviewed_at": reviewed_at,
+        "reviewed_at": reviewed_at.isoformat(),
         "human_domain_signoff": False,
         "promotion_scope": "DEVELOPMENT_ONLY",
         "development_promotion_eligible": True,

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+
+import '../config/backend_endpoint_config.dart';
 import '../models/app_state_value.dart';
 
 @visibleForTesting
@@ -31,17 +33,7 @@ class BackendApiService {
   factory BackendApiService() => _instance;
   BackendApiService._internal();
 
-  // Backend URL - ưu tiên lấy từ --dart-define API_BASE_URL.
-  static const String _defaultBaseUrl = 'http://localhost:8080';
-  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
-
-  String get baseUrl {
-    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8080';
-    }
-    return _defaultBaseUrl;
-  }
+  String get baseUrl => BackendEndpointConfig.baseUrl;
 
   final http.Client _client = http.Client();
 

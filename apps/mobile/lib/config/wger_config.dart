@@ -1,18 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'backend_endpoint_config.dart';
 
 /// Cấu hình cho wger API Integration
 class WgerConfig {
-  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
-  static const String _defaultBackendBaseUrl = 'http://localhost:8080';
-
   // Base URL của backend proxy (thay vì gọi trực tiếp wger.de)
-  static String get backendBaseUrl {
-    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8080';
-    }
-    return _defaultBackendBaseUrl;
-  }
+  static String get backendBaseUrl => BackendEndpointConfig.baseUrl;
 
   static String get baseUrl => '$backendBaseUrl/wger';
 

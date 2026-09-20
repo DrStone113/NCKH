@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart';
+import '../config/backend_endpoint_config.dart';
 
 class AIChatbotConfig {
-  // Reuse same base as REST API so WS always follows current environment.
-  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
   // Isolated development E2E only. In normal and production builds this is
   // empty, so WebSocket authentication continues to use the normal session.
   // The value is never rendered, logged, or persisted by the app.
@@ -15,8 +13,6 @@ class AIChatbotConfig {
       String.fromEnvironment('N3_2_1_E2E_CONFIGURATION_MARKER');
   static const bool n3E2ERuntimeConfigurationActive =
       n3E2ERuntimeConfigurationMarker == 'N3_2_1_E2E_CONFIGURED_V1';
-  static const String _defaultHttpBaseUrl = 'http://localhost:8080';
-
   // Android emulator
   // static const String wsBaseUrl = 'ws://10.0.2.2:8000';
 
@@ -29,12 +25,7 @@ class AIChatbotConfig {
   static const String wsEndpoint = '/chat/stream';
 
   static String wsUrlFor({required String sessionId, String? firebaseToken}) {
-    var httpBase = _envBaseUrl.isNotEmpty ? _envBaseUrl : _defaultHttpBaseUrl;
-    if (httpBase == 'http://localhost:8080' &&
-        !kIsWeb &&
-        defaultTargetPlatform == TargetPlatform.android) {
-      httpBase = 'http://10.0.2.2:8080';
-    }
+    final httpBase = BackendEndpointConfig.baseUrl;
     final rawUrl = httpBase.startsWith('https://')
         ? httpBase.replaceFirst('https://', 'wss://') + wsEndpoint
         : httpBase.startsWith('http://')

@@ -1,6 +1,6 @@
 # HealthApp — Ứng dụng quản lý sức khỏe AI
 
-Ứng dụng Flutter + FastAPI + Ollama cho phép theo dõi dinh dưỡng, tập luyện và tư vấn sức khỏe bằng AI.
+Ứng dụng Flutter + FastAPI dùng LLM API tương thích OpenAI (hoặc Ollama cục bộ) để theo dõi dinh dưỡng, tập luyện và tư vấn sức khỏe bằng AI.
 
 ## Yêu cầu cài đặt
 
@@ -11,7 +11,8 @@
 | Android SDK| ≥ 34              | ✅ 36.0.0 (`%LOCALAPPDATA%\Android\sdk`) — cần `flutter doctor --android-licenses` | https://developer.android.com/studio |
 | Python     | ≥ 3.10            | ✅                       | https://python.org                           |
 | PostgreSQL | ≥ 14              | ✅ (qua Docker `pgvector`)| https://postgresql.org                       |
-| Ollama     | Latest            | —                        | https://ollama.com                           |
+| LLM API    | OpenAI-compatible | ✅ Vilao API              | https://api.vilao.ai                         |
+| Ollama     | Latest            | Tùy chọn                  | https://ollama.com                           |
 
 > Trình duyệt: máy **chưa cài Chrome**. Dùng `flutter run -d edge` hoặc `-d web-server`.
 > Kiểm tra nhanh: `flutter --version` và `flutter doctor -v`.
@@ -74,7 +75,27 @@ psql -U postgres -d health_db -f db\init.sql
 uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-### 2. Ollama (LLM)
+### 2. LLM API
+
+Điền key riêng vào `.env` (file này đã được Git bỏ qua):
+
+```env
+OPENAI_BASE_URL=https://api.vilao.ai/v1
+OPENAI_API_KEY=<your-api-key>
+LLM_MODEL=wen/qwen3.8-flash
+HEAVY_LLM_MODEL=mn/MiniMax-M2.7
+SCOPE_CLASSIFIER_MODEL=wen/qwen3.8-flash
+LLM_REASONING_EFFORT=none
+HEAVY_LLM_REASONING_EFFORT=high
+LLM_CROSS_MODEL_FALLBACK=true
+LLM_ATTEMPTS_PER_MODEL=1
+```
+
+Chat thường dùng Qwen Flash. Lượt phức tạp dùng MiniMax; khi một route gặp lỗi
+model, backend thử route còn lại đúng một lần. Lỗi tài khoản như `401`/`402`
+không bị retry.
+
+#### Ollama cục bộ (tùy chọn)
 
 ```bat
 # Cài Ollama từ https://ollama.com
@@ -96,7 +117,7 @@ HEAVY_LLM_REASONING_EFFORT=high
 EMBEDDING_MODEL=BAAI/bge-m3
 ```
 
-Khi backend chạy trong Docker, dùng
+Khi chọn Ollama và backend chạy trong Docker, dùng
 `OPENAI_BASE_URL=http://host.docker.internal:11434/v1` trong file `.env` ở
 thư mục gốc. `BAAI/bge-m3` vẫn là embedding model của RAG; Ollama chỉ thay
 model sinh câu trả lời và gọi công cụ.

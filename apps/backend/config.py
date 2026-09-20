@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     scope_router_full_confidence_similarity: float = Field(default=0.50, gt=0, le=1)
     # Uncertain/disagreeing fragments alone may reach this restricted JSON-only
     # judge. It has no tools/history/RAG and never falls back to the answer LLM.
-    scope_classifier_model: Optional[str] = "chr/charm/qwen3.8-flash"
+    scope_classifier_model: Optional[str] = "wen/qwen3.8-flash"
     scope_classifier_timeout_seconds: float = Field(default=2.5, gt=0, le=10)
     scope_classifier_confidence: float = Field(default=0.85, ge=0, le=1)
     development_context_trace: bool = False
@@ -60,8 +60,8 @@ class Settings(BaseSettings):
     # into git history.
     openai_api_key: str = ""
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
-    llm_model: str = "chr/charm/qwen3.8-flash"
-    heavy_llm_model: str = "op/deepseek/deepseek-v4-pro"
+    llm_model: str = "wen/qwen3.8-flash"
+    heavy_llm_model: str = "mn/MiniMax-M2.7"
     # Optional OpenAI-compatible reasoning control. Local Qwen 3 deployments
     # should use ``none`` so the response budget is not consumed by hidden
     # thinking before user-visible text or a tool call is emitted.

@@ -31,6 +31,8 @@ import '../chat_debug_transcript.dart';
 import '../../plans/screens/plan_detail_screen.dart';
 import '../../plans/screens/plan_list_screen.dart';
 import '../../settings/screens/profile_settings_screen.dart';
+import '../chat_presentation.dart';
+import '../chat_tail_follower.dart';
 
 const bool _developerTraceBuild =
     bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: kDebugMode);
@@ -44,9 +46,12 @@ class ChatbotScreen extends StatefulWidget {
   State<ChatbotScreen> createState() => _ChatbotScreenState();
 }
 
-class _ChatbotScreenState extends State<ChatbotScreen> {
+class _ChatbotScreenState extends State<ChatbotScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final ChatTailFollower _tailFollower =
+      ChatTailFollower(_scrollController);
   final BackendApiService _backendApi = BackendApiService();
   Map<String, dynamic>? _activePlan;
   bool _isLoadingPlan = false;
@@ -57,6 +62,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final aiChatProvider =
@@ -126,16 +132,28 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       if (!mounted) return;
       setState(() => _activePlan = null);
     } finally {
-      if (mounted) setState(() => _isLoadingPlan = false);
+      if (mounted) {
+        setState(() => _isLoadingPlan = false);
+        _scrollToBottom(settleFrames: 4);
+      }
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _chatProvider?.removeListener(_onMessagesChanged);
+    _tailFollower.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Safari/iOS and the soft keyboard can resize the visual viewport after
+    // the transcript itself has already laid out.
+    _scrollToBottom(settleFrames: 4);
   }
 
   bool _wasStreaming = false;
@@ -150,16 +168,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _wasStreaming = aiChatProvider.isStreaming;
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  void _scrollToBottom({int? settleFrames}) {
+    _tailFollower.request(settleFrames: settleFrames);
   }
 
   @override
@@ -544,7 +554,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildActivePlanCard() {
-    if (_isLoadingPlan) {
+    // Keep an existing card mounted while it refreshes. Replacing it with a
+    // 2px progress bar changes the transcript viewport twice and used to race
+    // the streaming auto-scroll on short mobile screens.
+    if (_isLoadingPlan && _activePlan == null) {
       return const Padding(
         padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
         child: LinearProgressIndicator(minHeight: 2),
@@ -573,7 +586,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Kế hoạch active: ${plan['duration_days']} ngày • ${plan['goal']}',
+                    'Kế hoạch hiện tại: ${plan['duration_days']} ngày • '
+                    '${formatActivePlanGoal(plan['goal'])}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w600),
                   ),

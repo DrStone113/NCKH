@@ -456,16 +456,23 @@ class StreamingContent(AsyncIterator[str]):
     def __aiter__(self) -> StreamingContent:
         return self
 
+    def _record_emitted(self, val: StreamingToken) -> StreamingToken:
+        # Provider reasoning may be consumed for observability, but it is
+        # never part of the answer fallback or garbled-output validation.
+        if val.token_type == "thought":
+            return val
+        self.response_obj.full_text += val
+        if not self.garbled_checked:
+            self.garbled_buffer.append(val)
+            if len(self.garbled_buffer) >= GARBLED_CHECK_TOKENS:
+                _check_garbled("".join(self.garbled_buffer))
+                self.garbled_checked = True
+        return val
+
     async def __anext__(self) -> str:
         if self._emit_queue:
             val = self._emit_queue.pop(0)
-            self.response_obj.full_text += val
-            if not self.garbled_checked:
-                self.garbled_buffer.append(val)
-                if len(self.garbled_buffer) >= GARBLED_CHECK_TOKENS:
-                    _check_garbled("".join(self.garbled_buffer))
-                    self.garbled_checked = True
-            return val
+            return self._record_emitted(val)
 
         if self._stream_finished:
             raise StopAsyncIteration
@@ -497,8 +504,10 @@ class StreamingContent(AsyncIterator[str]):
                             if tc_chunk.function.arguments:
                                 self._tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
 
-                # Process reasoning_content
-                reasoning = getattr(delta, "reasoning_content", None)
+                # Providers use either ``reasoning_content`` or ``reasoning``.
+                reasoning = getattr(delta, "reasoning_content", None) or getattr(
+                    delta, "reasoning", None
+                )
                 if reasoning:
                     self._emit_char("thought", reasoning)
 
@@ -509,13 +518,7 @@ class StreamingContent(AsyncIterator[str]):
 
                 if self._emit_queue:
                     val = self._emit_queue.pop(0)
-                    self.response_obj.full_text += val
-                    if not self.garbled_checked:
-                        self.garbled_buffer.append(val)
-                        if len(self.garbled_buffer) >= GARBLED_CHECK_TOKENS:
-                            _check_garbled("".join(self.garbled_buffer))
-                            self.garbled_checked = True
-                    return val
+                    return self._record_emitted(val)
         except StopAsyncIteration:
             self._stream_finished = True
             self._flush_remaining()
@@ -545,8 +548,7 @@ class StreamingContent(AsyncIterator[str]):
                 
             if self._emit_queue:
                 val = self._emit_queue.pop(0)
-                self.response_obj.full_text += val
-                return val
+                return self._record_emitted(val)
                 
             raise StopAsyncIteration
 
@@ -582,8 +584,17 @@ class LLMClient:
         self.reasoning_effort = (
             reasoning_effort.strip().lower() if reasoning_effort else None
         )
-        if self.reasoning_effort not in {None, "none", "low", "medium", "high"}:
-            raise ValueError("reasoning_effort must be none, low, medium, or high")
+        if self.reasoning_effort not in {
+            None,
+            "none",
+            "low",
+            "medium",
+            "high",
+            "max",
+        }:
+            raise ValueError(
+                "reasoning_effort must be none, low, medium, high, or max"
+            )
         self.provider_status = "unknown"
         self.openai = AsyncOpenAI(
             base_url=self.base_url,
@@ -711,8 +722,10 @@ class LLMClient:
                                     if tc_chunk.function.arguments:
                                         tool_calls_map[idx]["function"]["arguments"] += tc_chunk.function.arguments
                         
-                        # Check for reasoning content
-                        reasoning = getattr(delta, "reasoning_content", None)
+                        # Providers use either ``reasoning_content`` or ``reasoning``.
+                        reasoning = getattr(
+                            delta, "reasoning_content", None
+                        ) or getattr(delta, "reasoning", None)
                         if reasoning:
                             buffered_tokens.append(StreamingToken(reasoning, "thought"))
 

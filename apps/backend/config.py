@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # should use ``none`` so the response budget is not consumed by hidden
     # thinking before user-visible text or a tool call is emitted.
     llm_reasoning_effort: str = ""
+    # Optional override for complex turns. When empty, the heavy client uses
+    # the same reasoning effort as the regular client.
+    heavy_llm_reasoning_effort: str = ""
     # Paid-model cost governor. ``off`` is an operational rollback only.
     llm_cost_optimization_mode: Literal["off", "optimized"] = "optimized"
     llm_cross_model_fallback: bool = False
@@ -149,6 +152,10 @@ class Settings(BaseSettings):
             self.development_context_trace
             and self.app_environment.strip().lower() != "production"
         )
+
+    @property
+    def effective_heavy_llm_reasoning_effort(self) -> str:
+        return self.heavy_llm_reasoning_effort or self.llm_reasoning_effort
 
     def debug_trace_allowed_for(self, *, developer_authenticated: bool) -> bool:
         """Enforce developer trace availability on the server, never client input."""

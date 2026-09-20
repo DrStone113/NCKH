@@ -22,15 +22,24 @@ from services.agent.llm_client import (
     LLMUnavailableError,
     ToolCall,
 )
+from config import Settings
 
 # --------------------------------------------------------------------------- #
 # Mocks
 # --------------------------------------------------------------------------- #
 
 class MockDelta:
-    def __init__(self, content=None, tool_calls=None):
+    def __init__(
+        self,
+        content=None,
+        tool_calls=None,
+        reasoning_content=None,
+        reasoning=None,
+    ):
         self.content = content
         self.tool_calls = tool_calls
+        self.reasoning_content = reasoning_content
+        self.reasoning = reasoning
 
 class MockChoice:
     def __init__(self, delta):
@@ -455,4 +464,47 @@ async def test_chat_forwards_configured_reasoning_effort() -> None:
 
     call_kwargs = client.openai.chat.completions.create.call_args.kwargs
     assert call_kwargs["reasoning_effort"] == "none"
+
+
+@pytest.mark.asyncio
+async def test_streaming_reasoning_fields_never_enter_visible_full_text() -> None:
+    client = _make_llm_client()
+    stream = MockStream(
+        [
+            {"reasoning": "private reasoning"},
+            {"reasoning_content": "more private reasoning"},
+            {"content": "visible answer"},
+        ]
+    )
+    client.openai.chat.completions.create = AsyncMock(return_value=stream)
+
+    response = await client.chat(messages=[{"role": "user", "content": "think"}])
+    tokens = [token async for token in response.content_stream]
+
+    assert [token.token_type for token in tokens] == ["thought", "thought", "token"]
+    assert "".join(str(token) for token in tokens[:-1]) == (
+        "private reasoningmore private reasoning"
+    )
+    assert str(tokens[-1]) == "visible answer"
+    assert response.full_text == "visible answer"
+
+
+def test_heavy_reasoning_effort_can_override_regular_client() -> None:
+    configured = Settings(
+        _env_file=None,
+        llm_reasoning_effort="none",
+        heavy_llm_reasoning_effort="high",
+    )
+
+    assert configured.effective_heavy_llm_reasoning_effort == "high"
+
+
+def test_heavy_reasoning_effort_falls_back_to_regular_client() -> None:
+    configured = Settings(
+        _env_file=None,
+        llm_reasoning_effort="none",
+        heavy_llm_reasoning_effort="",
+    )
+
+    assert configured.effective_heavy_llm_reasoning_effort == "none"
 

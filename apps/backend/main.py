@@ -145,7 +145,7 @@ async def lifespan(app: FastAPI):
         api_key=settings.openai_api_key,
         allow_model_fallback=settings.llm_cross_model_fallback,
         max_attempts_per_model=settings.llm_attempts_per_model,
-        reasoning_effort=settings.llm_reasoning_effort,
+        reasoning_effort=settings.effective_heavy_llm_reasoning_effort,
     )
     app.state.scope_guard = None
     if settings.chat_scope_guard_mode == "strict":

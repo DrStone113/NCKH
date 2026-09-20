@@ -65,8 +65,17 @@ class FixedOpenAIResearchClient:
         self._reasoning_effort = (
             reasoning_effort.strip().lower() if reasoning_effort else None
         )
-        if self._reasoning_effort not in {None, "none", "low", "medium", "high"}:
-            raise ValueError("reasoning_effort must be none, low, medium, or high")
+        if self._reasoning_effort not in {
+            None,
+            "none",
+            "low",
+            "medium",
+            "high",
+            "max",
+        }:
+            raise ValueError(
+                "reasoning_effort must be none, low, medium, high, or max"
+            )
         self._client = openai_client or AsyncOpenAI(
             base_url=base_url.rstrip("/"),
             api_key=api_key or "dummy-key",

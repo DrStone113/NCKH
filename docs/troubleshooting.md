@@ -644,3 +644,64 @@
   boundary assertion.
 - **Regression check:** Run `python -m pytest tests/test_external_recipe_discovery_n3_1.py -q`
   from `apps/backend`.
+
+### 63. False refusal on multi-turn continuation turns in Scope Guard
+
+- **Symptom:** During an active health chat, sending short ellipsis or follow-up prompts such as "cho ngày mốt luôn", "thế còn ngày mai", or "đổi sang cá hồi" resulted in the bot replying with a fixed refusal/clarification message ("Mình chưa xác định được câu hỏi này liên quan thế nào đến sức khỏe trong ứng dụng..."), while the reasoning trace simultaneously displayed "Đã kiểm tra thông tin liên quan - Mình dùng các thông tin hồ sơ đã xác nhận...".
+- **Root cause:**
+  1. `ScopeGuard` evaluated each user input strictly in isolation (stateless), lacking session history context. An elliptical continuation turn contains no explicit health keywords on its own, so it was classified as `AMBIGUOUS` and immediately short-circuited.
+  2. `AgentOrchestrator` initialized `public_trace` with `PROFILE_CONTEXT_USED` before running `ScopeGuard`. On early exit, this trace was passed to the mobile client despite the request being refused.
+- **Resolution:**
+  1. Updated `ScopeGuard.classify` to accept `recent_history`. When a turn falls into `AMBIGUOUS`, it checks if the preceding turns were health-related. If so, it passes `recent_context` to `StrictJSONScopeClassifier` to assess in context or fails open as `CONVERSATION_CONTINUATION`, allowing the main agent LLM to interpret it with full history.
+  2. Explicit out-of-scope requests (programming, math, weather, etc.) and emergency medical symptoms remain strictly blocked even during an ongoing conversation.
+  3. On scope early exit, `AgentOrchestrator` emits a clean trace without profile context to prevent UI contradiction.
+### 64. Backend startup delayed for 45+ seconds during `start-all.bat`
+
+- **Symptom:** Running `start-all.bat` stalled at `[*] Doi Backend san sang...` for 45–60 seconds or failed with a 90-second timeout.
+- **Root cause:**
+  1. In `apps/backend/main.py`, the lifespan startup synchronously `await`ed `primary_scope_classifier.prewarm()` with a 45-second timeout (`scope_router_warmup_timeout_seconds`).
+  2. Inside the CPU-bound Docker container, loading the 12-layer multilingual sentence transformer (`paraphrase-multilingual-MiniLM-L12-v2`) and encoding 50+ prototype vectors exceeded the 45-second budget, timing out with a warning while completely blocking Uvicorn from binding the port and serving the `/health` endpoint.
+  3. In `start-all.bat`, the retry loop repeatedly invoked `powershell.exe -NoProfile -Command "Start-Sleep -Seconds 1"`, adding ~1.5 seconds of process creation latency per iteration.
+- **Resolution:**
+  1. Converted `primary_scope_classifier.prewarm()` in `apps/backend/main.py` to an asynchronous background task using `asyncio.create_task(_warmup_scope_classifier())`, identical to the BGE-M3 RAG model pattern.
+  2. FastAPI lifespan startup now completes and opens the `/health` endpoint in < 1 second. While the semantic model loads in the background, `ScopeGuard` safely relies on rule-based classification and the isolated LLM judge, automatically transitioning to the local encoder once ready.
+  3. In `start-all.bat`, replaced `powershell.exe Start-Sleep` with `ping 127.0.0.1 -n 2 >nul`, eliminating process overhead during readiness polling.
+- **Regression check:** Restart `health_backend` via `docker restart health_backend` and verify `curl -i http://localhost:8080/health` responds with `200 OK` within 1–2 seconds.
+
+### 65. Plan V2 0-item card collision and unanswered conversational questions
+
+- **Symptom:** When asking a compound question such as *"Liệu ngày mai tôi có thể ăn burger không? Lên kế hoạch ăn và tập cho ngày mai để mọi thứ oke"*, the mobile chat displayed a workout plan card with 0 items (*"0 ngày • 0 mục dự kiến • Chưa ghi nhận thực tế"*), gave a `404 Not Found` upon tapping "Xem kế hoạch", and completely ignored the user's question about eating a burger.
+- **Root cause:**
+  1. In `apps/backend/services/agent/orchestrator.py`, calling `build_nutrition_plan` followed by `build_workout_schedule` caused `plan_structured` to be unconditionally overwritten by the latter. When `build_workout_schedule` returned `status: CLARIFICATION_REQUIRED` with `days: []` (due to incomplete workout profile/safety context), it wiped out the valid, ready 3-meal nutrition plan previously generated in the same turn.
+  2. The orchestrator's `STRUCTURED_RESULT_DIRECT` optimization triggered early exit with `allow_llm_call=False` because `plan_structured` contained template text (*"Bản kế hoạch workout gồm 0 mục..."*). This prevented the LLM from synthesizing an answer to the conversational question regarding the burger and from asking for workout clarification.
+  3. In `orchestrator.py`, `full_response = str(plan_structured.get("text") or full_response)` and fallback text replaced the LLM's streamed/generated text with the boilerplate card string whenever `plan_structured` existed.
+  4. The unpersisted draft revision with 0 items was rendered in Flutter as a `VersionedPlanCard`, which returned a 404 when the client attempted to fetch `/api/plan-v2/plans/...`.
+- **Resolution:**
+  1. Updated `orchestrator.py` to only accept presentations with valid items and non-clarification status (`status != "CLARIFICATION_REQUIRED"` and non-empty items). Unready draft plans never overwrite existing valid plans.
+  2. Disabled `STRUCTURED_RESULT_DIRECT` early exit when any tool requires clarification, when the turn is `COMPLEX`, when questions (`?`) are present, or when the plan contains 0 items, ensuring the LLM is always invoked to answer conversational questions and articulate clarification needs.
+  3. Fixed `full_response` and fallback text assignment so that rich LLM-generated conversational text is never overwritten by boilerplate card text (`if not full_response.strip():`).
+  4. Added parameter normalization in `tool_dispatcher.py` to automatically coerce single string arguments (e.g. `temporary_preference: "burger"`) into list formats (`["burger"]`) and logged validation failures in `tool_registry.py`.
+### 66. Redundant profile clarification questions ("Kinh nghiệm tập", "Trạng thái hôm nay", "Dụng cụ") when user already configured fitness profile
+
+- **Symptom:** When a user with a fully configured fitness profile asks for a workout (e.g. *"Tạo bài tập hôm nay cho tôi"* -> *"tập chân"*), the bot asks a preliminary safety check (*"hôm nay bạn có bị đau hoặc khó chịu ở đầu gối, háng hay đùi không?"*). When the user replies *"oke"*, the bot suddenly forgets the entire profile and asks 3 fundamental clarification questions from scratch:
+  1. *Kinh nghiệm tập* (training experience)
+  2. *Trạng thái hôm nay* (pain/warning symptoms)
+  3. *Dụng cụ: ngoài thảm, bạn có gì thêm không* (equipment)
+  causing user frustration (*"này đã có trong app rồi mà??"*).
+- **Root cause:**
+  1. **Mobile Profile Context Scoping:** In `apps/mobile/lib/providers/ai_chat_provider.dart`, `_scopeForMessage(text)` evaluated `ProfileReadiness.scopeForMessage(text)` solely on the current user message string. For conversational short replies or follow-up affirmations (such as *"oke"*, *"không"*, *"được"*), the regex matched neither nutrition nor workout keywords, falling back to `ProfileContextScope.general`. In `general` scope, `ai_chat_provider.dart` pruned `workout_profile`, `training_state`, and `exercise_history` from `userContext` before transmission.
+  2. **Chat Gateway Domain Loss:** In `apps/backend/services/agent/chat_gateway.py`, when an incoming context arrived with `profile_readiness.scope == "general"`, it unconditionally replaced `self.user_context = dict(incoming_context)`. This wiped the existing `workout_profile` snapshot held by the session, causing `build_personalized_workout` to evaluate all profile fields as `NOT_LOADED`.
+  3. **Point-in-Time Daily Safety Check Demotion:** In `apps/mobile/lib/models/user_model.dart` `WorkoutProfile.applyChatUpdate`, any patch update automatically set `intakeConfirmationStatus = 'PENDING_CONFIRMATION'`, which would block subsequent workout generation until a full recap was confirmed.
+  4. **Unregistered Daily Safety Clearance:** Answering *"oke"* to a pain question was treated as a regular turn without registering a same-day `safety_checked_at` timestamp. Because E4 requires same-day pain clearance for chat-captured profiles, `current_pain_status` remained `STALE`.
+- **Resolution:**
+  1. Updated `_scopeForMessage` in `ai_chat_provider.dart` to preserve the active domain scope (`_activeProfileScope`) or inherit the domain from recent chat turns when the direct regex yields `general`.
+  2. Updated `chat_gateway.py` so that incoming `general` scope turns preserve existing domain profiles (`workout_profile`, `training_state`, `nutrition_profile`) rather than erasing them.
+  3. Updated `applyChatUpdate` in `user_model.dart` to maintain `CONFIRMED` status when the patch only contains point-in-time daily safety check fields (`current_pain_status`, `safety_checked_at`).
+  4. Added `_detect_safety_pain_response` in `orchestrator.py` to identify affirmative pain clearances (*"oke"*, *"không"*, *"bình thường"*, *"ổn"*) following safety prompts and register `current_pain_status = "NO"` with today's `safety_checked_at` timestamp in `workout_profile`.
+  5. Added fallback in `WorkoutRepository` and `WorkoutIntegrationService.build` to recover confirmed fitness profile data from PostgreSQL `user_facts` if `workout_profile` is missing from the client snapshot.
+- **Regression check:**
+  - Backend: `pytest apps/backend/tests/test_orchestrator.py apps/backend/tests/test_workout_integration_e4_1.py apps/backend/tests/test_chat_gateway.py -q`
+  - Mobile: `flutter test test/profile_readiness_test.dart` from `apps/mobile`.
+
+
+

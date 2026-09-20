@@ -1,3 +1,16 @@
+## [2026-09-20] — Plan-to-Diary Consolidation & Chat Scope Guard Multi-turn Continuation
+
+- **Plan & Diary Consolidation (Nutrition & Exercise):**
+  - Consolidated planned meals and workouts directly into the daily Nutrition and Exercise Diaries (`mealDiary` and `exerciseDiary`).
+  - Eliminated standalone planned section widgets (`PlannedDayPlanSection`) across `NutritionScreen`, `ExerciseScreen`, and `HomeScreen`.
+  - Authoritative active plan items (`readAuthoritativeActivePlanV2`) are materialized directly into `NutritionProvider._allMeals` and `ExerciseProvider._todayExercises` with `isCompleted: false`.
+  - In `NutritionScreen`: Separated into "Nhật ký đã ăn" (`isCompleted: true`) and "Thực đơn dự kiến · chưa ăn" (`isCompleted: false`). Tapping "Ghi nhận đã ăn" immediately marks the meal as completed, updates consumed calories/macros in the daily summary card, and persists the meal to Firestore and the backend plan completion endpoint.
+  - In `ExerciseScreen`: Materialized workout plan exercises appear directly in the workout list with interactive checkboxes. Checking a completed exercise immediately adds its burned calories and duration to the daily stats card and persists the state.
+  - Deleting a planned item remembers the deletion locally (`SharedPreferences`) so deleted items do not re-appear on subsequent plan synchronizations.
+- **Chat Scope Guard Multi-turn Awareness:**
+  - Enhanced `StrictJSONScopeClassifier` and `ScopeGuard` to incorporate recent message history. Short multi-turn follow-ups such as "cho ngày mốt luôn" or "còn ngày mai thì sao" now resolve the conversation context without being falsely classified as `OUT_OF_SCOPE`.
+  - Sanitized early exit trace on `ScopeGuard` refusals to prevent emitting internal thinking trace and maintain a clean user chat experience.
+
 ## [2026-08-31] — Persisted workout-intake memory
 
 - **Account intake V2:** Added versioned `HealthProfile` (`NutritionProfile`, `WorkoutProfile`, `SafetyProfile`) with nutrition-first priority selection, canonical allergy/restriction chips, optional multiline food/workout notes, conditional exercise questions, and a V1-to-V2 prefilled upgrade path. Nutrition-only users are no longer required to finish the workout questionnaire.

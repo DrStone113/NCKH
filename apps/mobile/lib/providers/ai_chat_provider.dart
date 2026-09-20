@@ -2379,8 +2379,22 @@ class AIChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  ProfileContextScope _scopeForMessage(String message) =>
-      ProfileReadiness.scopeForMessage(message);
+  ProfileContextScope _scopeForMessage(String message) {
+    final direct = ProfileReadiness.scopeForMessage(message);
+    if (direct != ProfileContextScope.general) {
+      return direct;
+    }
+    if (_activeProfileScope != ProfileContextScope.general) {
+      return _activeProfileScope;
+    }
+    for (final m in _messages.reversed.take(6)) {
+      final prevScope = ProfileReadiness.scopeForMessage(m.text);
+      if (prevScope != ProfileContextScope.general) {
+        return prevScope;
+      }
+    }
+    return ProfileContextScope.general;
+  }
 
   /// Ngắt kết nối WebSocket và hủy tất cả subscriptions
   void disconnect() {

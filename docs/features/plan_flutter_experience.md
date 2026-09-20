@@ -60,19 +60,19 @@ upserts its returned revision into `PlanProvider` immediately and then refreshes
 the owner-scoped list so server-side superseding is also reflected everywhere.
 Raw UUIDs, hashes, policy IDs, and database IDs are never rendered.
 
-## Planned versus actual and lifecycle behavior
+## Planned versus actual and unified daily diary behavior
 
-Both list and detail explicitly label plans as **dự kiến**. Opening or viewing
-never writes a meal or workout observation. Lifecycle actions use the dedicated
-owner-scoped REST contract and never turn a planned item into actual
-consumption/completion.
+Rather than fragmenting the screen with a disconnected read-only `PlannedDayPlanSection`, planned meals and workouts are unified directly into the daily Nutrition and Exercise Diaries:
 
-Each nutrition day is rendered from that day's exact immutable items. Its
-displayed total is recalculated from those same visible items rather than from
-the current diary or profile. The current day's diary, when available, is shown
-in a separate surface labelled as actual intake. The backend also carries the
-revision's per-day summary, captured daily targets, exact `plan_item_id`,
-serving size, and ingredient components for stable presentation.
+1. **Unified Diary Materialization:**
+   - Active authoritative plans (`readAuthoritativeActivePlanV2`) are projected directly into `NutritionProvider._allMeals` and `ExerciseProvider._todayExercises` with `isCompleted: false`.
+   - In `NutritionScreen`, items appear under **Thực đơn dự kiến · chưa ăn** until eaten.
+   - When the user taps the **Ghi nhận đã ăn** action button (or the exercise checkbox in `ExerciseScreen`), `isCompleted` toggles to `true`.
+   - The meal immediately transfers to **Nhật ký đã ăn**, and its calories/macros are incorporated into daily consumed totals.
+   - The updated item is persisted directly to Firestore (`mealDiary` / `exerciseDiary`) and synchronized with the backend plan item completion endpoint (`updatePlanItemCompletion`).
+
+2. **Clean Deletion Semantics:**
+   - If a user deletes a planned meal or exercise from their diary, its ID is stored in `SharedPreferences` (`nutrition_deleted_plan_items_$userId` / `exercise_deleted_plan_items_$userId`) so subsequent plan syncs do not restore the dismissed item.
 
 ## Chatbot copy and state management
 

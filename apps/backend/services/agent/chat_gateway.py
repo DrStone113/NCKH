@@ -198,8 +198,30 @@ class ChatGateway:
                     if incoming_context is not None:
                         if isinstance(incoming_context, dict) and isinstance(incoming_context.get("profile_readiness"), dict):
                             # Mobile sends a freshly read, domain-scoped snapshot.
-                            # Omitted/removed fields must not reappear from a prior turn.
-                            self.user_context = dict(incoming_context)
+                            # When incoming scope is general, preserve existing domain profiles
+                            # (workout_profile, training_state, nutrition_profile, etc.) so that
+                            # short conversational turns or general follow-ups do not wipe out
+                            # established user fitness/nutrition data.
+                            incoming_scope = incoming_context.get("profile_readiness", {}).get("scope")
+                            if incoming_scope == "general" and isinstance(self.user_context, dict):
+                                merged = {**self.user_context, **incoming_context}
+                                for domain_key in (
+                                    "workout_profile",
+                                    "training_state",
+                                    "exercise_history",
+                                    "exercise_history_status",
+                                    "exercise_history_loaded",
+                                    "exercise_history_observed_at",
+                                    "nutrition_profile",
+                                    "dietary_restrictions",
+                                    "nutrition_safety_profile",
+                                    "daily_nutrition_summary",
+                                ):
+                                    if domain_key not in incoming_context and domain_key in self.user_context:
+                                        merged[domain_key] = self.user_context[domain_key]
+                                self.user_context = merged
+                            else:
+                                self.user_context = dict(incoming_context)
                         elif isinstance(self.user_context, dict) and isinstance(incoming_context, dict):
                             self.user_context = {**self.user_context, **incoming_context}
                         else:

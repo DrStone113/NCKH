@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exercise_model.dart';
 import '../constants/firestore_collections.dart';
 import '../services/exercise_cache_service.dart';
 import '../services/local_exercise_service.dart';
+import '../services/backend_api_service.dart';
+import '../features/plans/plan_display.dart';
 import '../utils/exercise_utils.dart';
 import '../models/app_state_value.dart';
 
@@ -23,9 +26,41 @@ class ExerciseProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   DataStatus get todayExercisesStatus => _todayExercisesStatus;
   DateTime? get todayExercisesObservedAt => _todayExercisesObservedAt;
+
+  @visibleForTesting
+  void setTodayExercisesForTesting(List<ExerciseModel> exercises) {
+    _todayExercises = List.from(exercises);
+    notifyListeners();
+  }
+  final Set<String> _deletedPlanItemIds = {};
+
+  Future<void> _saveDeletedPlanItemIds(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        'exercise_deleted_plan_items_$userId',
+        _deletedPlanItemIds.toList(),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _loadDeletedPlanItemIds(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('exercise_deleted_plan_items_$userId');
+      if (list != null) {
+        _deletedPlanItemIds.addAll(list);
+      }
+    } catch (_) {}
+  }
+
   double get totalCaloriesBurned =>
-      _todayExercises.fold(0, (acc, ex) => acc + ex.caloriesBurned);
+      _todayExercises.where((ex) => ex.isCompleted).fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
   int get totalDuration =>
+      _todayExercises.where((ex) => ex.isCompleted).fold(0, (acc, ex) => acc + ex.duration);
+  double get plannedCaloriesBurned =>
+      _todayExercises.fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
+  int get plannedDuration =>
       _todayExercises.fold(0, (acc, ex) => acc + ex.duration);
 
   static bool _isSameDay(DateTime a, DateTime b) =>
@@ -82,6 +117,7 @@ class ExerciseProvider with ChangeNotifier {
       debugPrint('📦 Using cached exercises for today');
       _todayExercises = List.of(cached);
       _todayExercisesStatus = DataStatus.stale;
+      await _syncExercisesFromBackendPlan(userId, today);
       notifyListeners();
 
       // Pre-fetch nearby dates in background
@@ -110,6 +146,7 @@ class ExerciseProvider with ChangeNotifier {
         return !exercise.date.isBefore(startOfDay) &&
             exercise.date.isBefore(endOfDay);
       }).toList();
+      await _syncExercisesFromBackendPlan(userId, today);
       _todayExercisesStatus = DataStatus.known;
       _todayExercisesObservedAt = DateTime.now();
 
@@ -149,6 +186,7 @@ class ExerciseProvider with ChangeNotifier {
         return !exercise.date.isBefore(startOfDay) &&
             exercise.date.isBefore(endOfDay);
       }).toList();
+      await _syncExercisesFromBackendPlan(userId, today);
       _cacheService.cacheExercises(userId, today, _todayExercises);
       _cacheService.cacheAllExercises(userId, allExercises);
       _todayExercisesStatus = DataStatus.known;
@@ -175,6 +213,83 @@ class ExerciseProvider with ChangeNotifier {
     );
   }
 
+  String _slotToTimeOfDay(dynamic slot) {
+    final s = slot?.toString().toLowerCase().trim() ?? '';
+    if (s.contains('afternoon') || s.contains('chieu') || s.contains('trua')) {
+      return 'afternoon';
+    }
+    if (s.contains('evening') || s.contains('toi')) return 'evening';
+    if (s.contains('night') || s.contains('dem')) return 'night';
+    return 'morning';
+  }
+
+  Future<void> _syncExercisesFromBackendPlan(
+      String userId, DateTime date) async {
+    await _loadDeletedPlanItemIds(userId);
+    try {
+      final read =
+          await BackendApiService().readAuthoritativeActivePlanV2('WORKOUT');
+      if (read.status != ActivePlanStatus.activePlanFound || read.plan == null) return;
+
+      final plan = read.plan!;
+      final day = PlanDisplay.dayForDate(plan, date);
+      if (day == null) return;
+
+      final items = PlanDisplay.items(day);
+      final dateKey =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      bool changed = false;
+
+      for (int idx = 0; idx < items.length; idx++) {
+        final item = items[idx];
+        final itemId = PlanDisplay.itemId(item).isNotEmpty
+            ? PlanDisplay.itemId(item)
+            : 'plan_ex_${dateKey}_$idx';
+
+        if (_deletedPlanItemIds.contains(itemId)) continue;
+        if (_todayExercises.any((ex) => ex.id == itemId)) continue;
+
+        final name = PlanDisplay.itemTitle(item, nutrition: false);
+        final duration = (PlanDisplay.plannedDuration(item) ?? 30).round();
+        final content = item['content'];
+        final num? burnedCalNum = (item['calories_burned'] as num?) ??
+            (content is Map ? content['calories_burned'] as num? : null) ??
+            (item['estimated_calories'] as num?) ??
+            (content is Map ? content['estimated_calories'] as num? : null);
+        final double burned =
+            burnedCalNum?.toDouble() ?? (duration * 6.0);
+        final String exType = (item['type'] ??
+                (content is Map ? content['type'] : null) ??
+                'cardio')
+            .toString()
+            .toLowerCase();
+
+        final isDone =
+            item['is_completed'] == true || item['completed'] == true;
+        final timeOfDay = _slotToTimeOfDay(item['slot']);
+
+        final plannedExercise = ExerciseModel(
+          id: itemId,
+          userId: userId,
+          name: name,
+          date: date,
+          duration: duration,
+          caloriesBurned: burned,
+          type: exType,
+          isCompleted: isDone,
+          timeOfDay: timeOfDay,
+        );
+        _todayExercises.add(plannedExercise);
+        changed = true;
+      }
+      if (changed) {
+        _cacheService.cacheExercises(userId, date, _todayExercises);
+      }
+    } catch (e) {
+      debugPrint('Plan V2 workout status read failed: $e');
+    }
+  }
+
   Future<void> deleteExercise(String exerciseId) async {
     // Find the exercise to get its date
     final index = _todayExercises.indexWhere((ex) => ex.id == exerciseId);
@@ -183,6 +298,8 @@ class ExerciseProvider with ChangeNotifier {
 
     // Optimistic update - remove from cache immediately
     _todayExercises.removeWhere((ex) => ex.id == exerciseId);
+    _deletedPlanItemIds.add(exerciseId);
+    _saveDeletedPlanItemIds(exercise.userId);
     _cacheService.removeExerciseFromCache(
         exercise.userId, exercise.date, exerciseId);
     notifyListeners();
@@ -436,7 +553,15 @@ class ExerciseProvider with ChangeNotifier {
         await _firestore
             .collection(FirestoreCollections.exerciseDiary)
             .doc(exerciseId)
-            .update({'isCompleted': updated.isCompleted});
+            .set(updated.toMap(), SetOptions(merge: true));
+
+        // Update backend plan item if it belongs to plan
+        try {
+          await BackendApiService().updatePlanItemCompletion(
+            itemId: exerciseId,
+            completed: updated.isCompleted,
+          );
+        } catch (_) {}
 
         debugPrint(
             '✅ Exercise completed status updated: ${updated.isCompleted}');

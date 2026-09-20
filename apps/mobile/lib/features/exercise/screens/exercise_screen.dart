@@ -15,7 +15,6 @@ import 'exercise_browser_screen.dart';
 import 'exercise_history_screen.dart';
 import 'workout_simulation_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
-import '../../plans/widgets/planned_day_plan_section.dart';
 
 class ExerciseScreen extends StatefulWidget {
   const ExerciseScreen({super.key});
@@ -131,20 +130,13 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
                 child: _buildCategoryGrid(context, exerciseProvider, user)),
             const SizedBox(height: 22),
 
-            if (user != null)
-              PlannedDayPlanSection(
-                userId: user.id,
-                date: DateTime.now(),
-                domain: 'WORKOUT',
-              ),
-
-            // Actual workout diary. Planned items are shown separately above.
+            // Workout diary (includes planned & recorded items)
             AnimatedCard(
               delay: 200,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Hoạt động đã ghi nhận hôm nay',
+                  const Text('Nhật ký tập luyện hôm nay',
                       style:
                           TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
                   Row(

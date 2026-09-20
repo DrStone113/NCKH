@@ -12,6 +12,7 @@ from services.agent.llm_client import LLMResponse, StreamingToken, ToolCall
 from services.agent.memory_service import Context
 from services.agent.orchestrator import (
     AgentOrchestrator,
+    _detect_safety_pain_response,
     _ground_suggest_dish_queries,
     _select_relevant_tool_schemas,
 )
@@ -2077,3 +2078,123 @@ async def test_direct_exercise_catalog_lookup_returns_exact_source_without_secon
     assert "chưa được duyệt đầy đủ" in reply
     assert "lưu" not in reply.casefold()
     assert "phù hợp" in reply.casefold()  # appears only in the explicit disclaimer
+
+
+@pytest.mark.asyncio
+async def test_plan_collision_and_clarification_preserves_valid_plan_and_llm_answer():
+    """When a turn invokes both nutrition and workout planning, and workout requires clarification,
+    the valid nutrition plan is preserved, early exit is NOT triggered, and the LLM response is retained.
+    """
+    class MultiPlanDispatcher:
+        async def dispatch(self, session_id, call, timeout_ms):
+            if call.name == "build_nutrition_plan":
+                return ToolResult(
+                    ok=True,
+                    data={
+                        "status": "READY",
+                        "plan": {"plan_id": "nut-1", "domain": "NUTRITION"},
+                        "presentation": {
+                            "type": "versioned_plan",
+                            "domain": "NUTRITION",
+                            "text": "Bản kế hoạch nutrition gồm 3 mục.",
+                            "days": [
+                                {
+                                    "date": "2026-09-21",
+                                    "items": [{"name": "Burger bò áp chảo"}],
+                                }
+                            ],
+                        },
+                    },
+                )
+            if call.name == "build_workout_schedule":
+                return ToolResult(
+                    ok=True,
+                    data={
+                        "status": "CLARIFICATION_REQUIRED",
+                        "reason_codes": ["CLARIFICATION_REQUIRED"],
+                        "plan": {"plan_id": "work-1", "domain": "WORKOUT"},
+                        "presentation": {
+                            "type": "versioned_plan",
+                            "domain": "WORKOUT",
+                            "text": "Bản kế hoạch workout gồm 0 mục.",
+                            "days": [],
+                        },
+                    },
+                )
+            return ToolResult(ok=False, error="UNKNOWN_TOOL")
+
+    gateway = FakeGateway()
+    store = FakeStore()
+    llm = ScriptedLLM(
+        [
+            # Step 1: LLM calls both planning tools
+            LLMResponse(
+                tool_calls=[
+                    ToolCall(
+                        id="call-nut",
+                        name="build_nutrition_plan",
+                        arguments={"period_start": "2026-09-21", "period_end": "2026-09-21", "timezone": "Asia/Ho_Chi_Minh"},
+                    ),
+                    ToolCall(
+                        id="call-work",
+                        name="build_workout_schedule",
+                        arguments={"period_start": "2026-09-21", "period_end": "2026-09-21", "timezone": "Asia/Ho_Chi_Minh"},
+                    ),
+                ]
+            ),
+            # Step 2: LLM answers the user directly about the burger and asks for workout clarification
+            LLMResponse(
+                content_stream=_stream([
+                    "Bạn hoàn toàn có thể ăn một chiếc burger vào ngày mai nếu cân đối lượng calo trong ngày. ",
+                    "Mình đã lên kế hoạch ăn uống với món burger bò. ",
+                    "Về phần tập luyện, bạn có thể cho mình biết bạn có đang gặp chấn thương nào không?",
+                ]),
+                full_text=(
+                    "Bạn hoàn toàn có thể ăn một chiếc burger vào ngày mai nếu cân đối lượng calo trong ngày. "
+                    "Mình đã lên kế hoạch ăn uống với món burger bò. "
+                    "Về phần tập luyện, bạn có thể cho mình biết bạn có đang gặp chấn thương nào không?"
+                ),
+            ),
+        ]
+    )
+    orchestrator = AgentOrchestrator(
+        llm, FakeTools(), FakeMemory(), store, MultiPlanDispatcher(), gateway, max_steps=4
+    )
+
+    await orchestrator.handleChatMessage(
+        "s-burger-plan",
+        "Liệu ngày mai tôi có thể ăn burger không? Lên kế hoạch ăn và tập cho ngày mai để mọi thứ oke",
+    )
+
+    # 1. The LLM must be called a second time to synthesize the answer
+    assert llm.calls == 2
+
+    # 2. The reply must directly answer the burger question
+    reply = gateway.done[-1][0]
+    assert "ăn một chiếc burger" in reply
+    assert "chấn thương" in reply
+
+    # 3. The structured data MUST be the valid nutrition plan with 1 day/items, NOT the 0-item workout plan
+    structured = gateway.done[-1][1]
+    assert structured is not None
+    assert structured.get("type") == "versioned_plan"
+    assert structured.get("domain") == "NUTRITION"
+    assert len(structured.get("days", [])) == 1
+    assert structured["days"][0]["items"][0]["name"] == "Burger bò áp chảo"
+
+
+def test_detect_safety_pain_response_clears_on_affirmation():
+    history = [
+        ChatTurn(
+            role="assistant",
+            content="Tôi cần xác nhận một điều an toàn trước khi tạo buổi tập chân cho bạn: hôm nay bạn có bị đau hoặc khó chịu ở đầu gối, háng hay đùi không?",
+        )
+    ]
+    assert _detect_safety_pain_response("oke", history) == "NO"
+    assert _detect_safety_pain_response("không", history) == "NO"
+    assert _detect_safety_pain_response("bình thường", history) == "NO"
+    assert _detect_safety_pain_response("không đau gì cả", history) == "NO"
+    assert _detect_safety_pain_response("có, bị đau gối", history) == "YES"
+    assert _detect_safety_pain_response("hôm nay ăn gì", history) is None
+
+

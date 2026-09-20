@@ -335,6 +335,37 @@ class ToolDispatcher:
                                 profile[key] = value
                     call.arguments["profile"] = profile
 
+            if call.name in {"build_nutrition_plan", "build_workout_schedule"} and isinstance(call.arguments, dict):
+                if "temporary_preference" in call.arguments and "temporary_preferences" not in call.arguments:
+                    call.arguments["temporary_preferences"] = call.arguments.pop("temporary_preference")
+                if "preference" in call.arguments and "temporary_preferences" not in call.arguments:
+                    call.arguments["temporary_preferences"] = call.arguments.pop("preference")
+                if "preferences" in call.arguments and "temporary_preferences" not in call.arguments:
+                    call.arguments["temporary_preferences"] = call.arguments.pop("preferences")
+                if "temporary_exclusion" in call.arguments and "temporary_exclusions" not in call.arguments:
+                    call.arguments["temporary_exclusions"] = call.arguments.pop("temporary_exclusion")
+                if "exclusion" in call.arguments and "temporary_exclusions" not in call.arguments:
+                    call.arguments["temporary_exclusions"] = call.arguments.pop("exclusion")
+                if "exclusions" in call.arguments and "temporary_exclusions" not in call.arguments:
+                    call.arguments["temporary_exclusions"] = call.arguments.pop("exclusions")
+
+                array_keys = {
+                    "schedule_constraints",
+                    "temporary_preferences",
+                    "temporary_exclusions",
+                    "requested_modifications",
+                    "equipment",
+                    "available_days",
+                    "unavailable_days",
+                    "preferred_days",
+                }
+                for k in array_keys:
+                    val = call.arguments.get(k)
+                    if isinstance(val, str):
+                        call.arguments[k] = [val]
+                    elif isinstance(val, tuple):
+                        call.arguments[k] = list(val)
+
             ok, err = self.registry.validate(call.name, call.arguments)
             if not ok:
                 # ``err`` is one of "UNKNOWN_TOOL" / "INVALID_ARGS" per the

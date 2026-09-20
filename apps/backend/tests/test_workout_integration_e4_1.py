@@ -145,3 +145,47 @@ def test_enforced_legacy_facade_never_falls_back_to_generic_algorithm(monkeypatc
     assert result["status"] == "READY"
     assert "presentation" in result
     assert "workout_title" not in result
+
+
+def test_workout_integration_recovers_from_user_facts_when_profile_empty() -> None:
+    class MockFactsRepository:
+        async def load_modern_results(self, user_id):
+            return []
+
+        async def load_active_plan_status(self, user_id):
+            return None
+
+        async def load_user_facts_profile(self, user_id):
+            return {
+                "training_experience": "NOVICE",
+                "training_location": "home",
+                "available_equipment": ["gym mat"],
+                "available_days_per_week": 3,
+                "preferred_training_days": ["Thứ 2", "Thứ 4", "Thứ 6"],
+                "default_session_duration_minutes": 60,
+                "current_pain_status": "NO",
+                "safety_checked_at": datetime.now(timezone.utc).isoformat(),
+                "intake_confirmation_status": "CONFIRMED",
+                "exercise_safety_profile": {
+                    "health_state": "HEALTHY_GENERAL",
+                    "pregnancy_status": "NOT_APPLICABLE",
+                    "warning_symptoms": [],
+                    "acute_injury": False,
+                    "recent_surgery": False,
+                    "technique_screen_confirmed": False,
+                },
+            }
+
+    service = WorkoutIntegrationService()
+    service._repository = MockFactsRepository()
+    runtime = WorkoutRuntimeContext(
+        "user-123", "session",
+        {"user_id": "user-123", "age": 30, "weight": 70.0, "health_goal": "gain_muscle"},
+        None,
+    )
+    outcome = _run(service.build(runtime, requested_body_area="legs"))
+    assert outcome.status == "READY"
+    assert outcome.presentation is not None
+    assert outcome.profile_field_statuses["training_experience"] == "KNOWN"
+    assert outcome.profile_field_statuses["available_equipment"] == "KNOWN"
+

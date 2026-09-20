@@ -1628,10 +1628,22 @@ class WorkoutProfile {
       ),
       currentPainStatus: pain?.toUpperCase(),
       exerciseSafetyProfile: safety(base.exerciseSafetyProfile),
-      intakeConfirmationStatus: 'PENDING_CONFIRMATION',
-      intakeRevision: (base.intakeRevision ?? 0) + 1,
+      intakeConfirmationStatus: (base.intakeConfirmationStatus == 'CONFIRMED' &&
+              patch.keys.every((key) =>
+                  key == 'current_pain_status' || key == 'safety_checked_at'))
+          ? 'CONFIRMED'
+          : 'PENDING_CONFIRMATION',
+      intakeRevision: (base.intakeConfirmationStatus == 'CONFIRMED' &&
+              patch.keys.every((key) =>
+                  key == 'current_pain_status' || key == 'safety_checked_at'))
+          ? base.intakeRevision
+          : (base.intakeRevision ?? 0) + 1,
       intakeCapturedAt: timestamp,
-      intakeConfirmedAt: null,
+      intakeConfirmedAt: (base.intakeConfirmationStatus == 'CONFIRMED' &&
+              patch.keys.every((key) =>
+                  key == 'current_pain_status' || key == 'safety_checked_at'))
+          ? base.intakeConfirmedAt
+          : null,
       safetyCheckedAt: patch.containsKey('current_pain_status') ||
               patch.containsKey('exercise_safety_profile')
           ? timestamp

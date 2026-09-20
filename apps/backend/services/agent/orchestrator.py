@@ -31,7 +31,7 @@ from config import settings
 from services.agent.llm_client import GarbledOutputError, LLMUnavailableError, ToolCall
 from services.agent.system_prompt import buildSystemPrompt
 from services.agent.tool_dispatcher import ToolResult
-from services.agent.turn_router import TurnPlan, classify_turn
+from services.agent.turn_router import COMPLEX, TurnPlan, classify_turn
 from services.agent.context_trace import ContextTraceRecorder
 from services.agent.context_planner import ContextPlanner
 from services.agent.context_planner.validation.collector import get_natural_collector
@@ -519,6 +519,55 @@ def _ground_suggest_dish_queries(
     return changes
 
 
+def _detect_safety_pain_response(user_text: str, history: list[Any]) -> str | None:
+    """Detect if user is responding to a workout safety/pain clarification question.
+
+    Returns:
+        "NO" if user confirms no pain / ready to work out,
+        "YES" if user reports active pain or discomfort,
+        None if this turn is not a safety clearance response.
+    """
+    if not history:
+        return None
+    last_assistant_text = ""
+    for turn in reversed(history):
+        role = getattr(turn, "role", None) or (turn.get("role") if isinstance(turn, dict) else None)
+        if role == "assistant":
+            last_assistant_text = getattr(turn, "content", "") or (turn.get("content", "") if isinstance(turn, dict) else "")
+            break
+    if not isinstance(last_assistant_text, str) or not last_assistant_text:
+        return None
+    normalized_assistant = _normalise_intent_text(last_assistant_text)
+    safety_cues = (
+        "dau hoac kho chiu",
+        "bi dau",
+        "chan thuong",
+        "xac nhan mot dieu an toan",
+        "an toan truoc khi tao buoi tap",
+        "dau hieu canh bao",
+        "dau dau goi",
+        "trang thai suc khoe va kinh nghiem",
+    )
+    if not any(cue in normalized_assistant for cue in safety_cues):
+        return None
+
+    normalized_user = _normalise_intent_text(user_text)
+    words = normalized_user.split()
+    has_negation = any(neg in words for neg in ("khong", "ko", "k", "chua"))
+    has_pain = any(cue in normalized_user for cue in ("dau", "nhuc", "chan thuong", "kho chiu"))
+    if has_pain and not has_negation:
+        return "YES"
+    if words == ["co"]:
+        return "YES"
+    clearance_cues = (
+        "oke", "ok", "khong", "khong dau", "binh thuong", "on", "khong sao",
+        "duoc", "yes", "no", "toi on", "khoe", "chuan", "tot", "khong bi gi", "san sang"
+    )
+    if normalized_user in clearance_cues or has_negation or any(cue == normalized_user for cue in clearance_cues):
+        return "NO"
+    return None
+
+
 def _tool_schema_name(schema: Any) -> str | None:
     if not isinstance(schema, dict):
         return None
@@ -873,7 +922,8 @@ class AgentOrchestrator:
                         user_text,
                         tool_name=SCOPE_GUARD_HISTORY_MARKER,
                     )
-                    public_trace.mark_completed()
+                    early_exit_trace = PublicReasoningTrace()
+                    early_exit_trace.mark_completed()
                     if reply:
                         await self._append_turn(
                             session_id,
@@ -888,10 +938,11 @@ class AgentOrchestrator:
                             gateway,
                             reply,
                             structured_data=None,
-                            public_trace=public_trace,
+                            public_trace=early_exit_trace,
                         )
                     trace.finish(outcome=f"SCOPE_{scope_decision.outcome.value}")
                     return
+
                 if scope_decision.is_mixed:
                     # Only the allowed fragment may reach memory/RAG/router/tools.
                     # The original message remains visible in chat history but
@@ -1014,6 +1065,70 @@ class AgentOrchestrator:
             )
 
             user_profile: Any = user_context
+            safety_pain_res = _detect_safety_pain_response(user_text, context.history)
+            if safety_pain_res is not None:
+                if isinstance(user_profile, dict):
+                    user_profile = dict(user_profile)
+                    workout_prof = dict(user_profile.get("workout_profile") or {})
+                    workout_prof["current_pain_status"] = safety_pain_res
+                    workout_prof["safety_checked_at"] = datetime.now(timezone.utc).isoformat()
+                    if workout_prof.get("intake_confirmation_status") == "CONFIRMED":
+                        workout_prof["intake_confirmation_status"] = "CONFIRMED"
+                    user_profile["workout_profile"] = workout_prof
+                elif user_profile is None:
+                    user_profile = {
+                        "workout_profile": {
+                            "current_pain_status": safety_pain_res,
+                            "safety_checked_at": datetime.now(timezone.utc).isoformat(),
+                            "intake_confirmation_status": "CONFIRMED",
+                        }
+                    }
+                if gateway is not None and hasattr(gateway, "user_context"):
+                    if isinstance(gateway.user_context, dict):
+                        merged_gw = dict(gateway.user_context)
+                        merged_gw["workout_profile"] = user_profile.get("workout_profile")
+                        gateway.user_context = merged_gw
+                    else:
+                        gateway.user_context = user_profile
+
+            if isinstance(user_profile, dict) and context.pinned_facts:
+                workout_prof = dict(user_profile.get("workout_profile") or {})
+                if not workout_prof.get("available_equipment") or not workout_prof.get("training_experience"):
+                    for pf in context.pinned_facts:
+                        fact_text = str(getattr(pf, "fact", "")).lower()
+                        if not workout_prof.get("available_equipment"):
+                            if "thảm" in fact_text or "mat" in fact_text:
+                                workout_prof["available_equipment"] = ["gym mat"]
+                            elif "tạ" in fact_text or "dumbbell" in fact_text:
+                                workout_prof["available_equipment"] = ["dumbbell"]
+                        if not workout_prof.get("training_experience"):
+                            if "mới bắt đầu" in fact_text or "novice" in fact_text:
+                                workout_prof["training_experience"] = "NOVICE"
+                            elif "năm" in fact_text or "lâu" in fact_text or "experienced" in fact_text:
+                                workout_prof["training_experience"] = "EXPERIENCED"
+                        if not workout_prof.get("preferred_training_days") and "thứ" in fact_text:
+                            days = re.findall(r"thứ \d|chủ nhật", fact_text, re.IGNORECASE)
+                            if days:
+                                workout_prof["preferred_training_days"] = [d.capitalize() for d in days]
+                                workout_prof["available_days_per_week"] = len(days)
+                    if workout_prof.get("available_equipment") and not workout_prof.get("training_location"):
+                        workout_prof["training_location"] = "home"
+                    if workout_prof.get("available_equipment") and not workout_prof.get("default_session_duration_minutes"):
+                        workout_prof["default_session_duration_minutes"] = 60
+                    if workout_prof.get("available_equipment") and not workout_prof.get("exercise_safety_profile"):
+                        workout_prof["exercise_safety_profile"] = {
+                            "health_state": "HEALTHY_GENERAL",
+                            "pregnancy_status": "NOT_APPLICABLE",
+                            "warning_symptoms": [],
+                            "acute_injury": False,
+                            "recent_surgery": False,
+                            "technique_screen_confirmed": False,
+                        }
+                    if workout_prof.get("available_equipment") and not workout_prof.get("intake_confirmation_status"):
+                        workout_prof["intake_confirmation_status"] = "CONFIRMED"
+                    user_profile["workout_profile"] = workout_prof
+                    if gateway is not None and hasattr(gateway, "user_context") and isinstance(gateway.user_context, dict):
+                        gateway.user_context["workout_profile"] = workout_prof
             messages = self._build_messages(
                 context,
                 user_text,
@@ -1392,17 +1507,13 @@ class AgentOrchestrator:
                     full_response = ""
 
                 if not response.tool_calls:
-                    if workout_structured is not None:
-                        # The numeric plan is never regenerated or paraphrased
-                        # by the model.  A deterministic text/card pair wins
-                        # over any streamed conversational wording.
-                        full_response = str(workout_structured.get("text") or full_response)
-                    elif plan_structured is not None:
-                        # Plan cards are rendered from the exact immutable
-                        # revision, never regenerated as markdown by the LLM.
-                        full_response = str(plan_structured.get("text") or full_response)
-                    elif nutrition_structured is not None:
-                        full_response = str(nutrition_structured.get("text") or full_response)
+                    if not full_response.strip():
+                        if workout_structured is not None:
+                            full_response = str(workout_structured.get("text") or "")
+                        elif plan_structured is not None:
+                            full_response = str(plan_structured.get("text") or "")
+                        elif nutrition_structured is not None:
+                            full_response = str(nutrition_structured.get("text") or "")
                     if validate_before_output and inference_decision is not None:
                         validation = validate_answer(
                             full_response,
@@ -1645,7 +1756,19 @@ class AgentOrchestrator:
                     } and result.ok and isinstance(result.data, dict):
                         presentation = result.data.get("presentation")
                         if isinstance(presentation, dict) and presentation.get("type") == "versioned_plan":
-                            plan_structured = presentation
+                            is_clarification = (
+                                result.data.get("status") in {"CLARIFICATION_REQUIRED", "NEEDS_CLARIFICATION", "ERROR"}
+                                or "CLARIFICATION_REQUIRED" in result.data.get("reason_codes", [])
+                                or (
+                                    "days" in presentation
+                                    and len(presentation.get("days", [])) == 0
+                                    and result.data.get("status") != "READY"
+                                )
+                            )
+                            # Only accept plans that are ready or valid.
+                            # Never overwrite an existing valid plan with an unready or empty draft.
+                            if not is_clarification:
+                                plan_structured = presentation
                     serialized = self._serialize_result(call, result)
                     await self._append_turn(
                         session_id, "tool", serialized,
@@ -1762,12 +1885,44 @@ class AgentOrchestrator:
                 # Structured planners already return authoritative text and a
                 # typed card. A second completion would be billed and then
                 # discarded, while also adding a hallucination surface.
+                # HOWEVER: A second completion MUST run if:
+                # 1. Any tool returned a clarification need or failure.
+                # 2. The turn is COMPLEX, contains questions ("?"), or had multiple tool calls.
+                # 3. plan_structured is present but has 0 items.
                 structured_result = (
                     nutrition_structured or plan_structured or workout_structured
                 )
+                has_clarification_need = any(
+                    not r.ok
+                    or (
+                        isinstance(r.data, dict)
+                        and r.data.get("status")
+                        in {
+                            "CLARIFICATION_REQUIRED",
+                            "NEEDS_CLARIFICATION",
+                            "ERROR",
+                        }
+                    )
+                    for _, r in tool_results
+                )
+                has_conversational_question = (
+                    plan.tier == COMPLEX
+                    or "?" in user_text
+                    or len(tool_results) > 1
+                )
+                has_valid_items = True
+                if plan_structured is not None and "days" in plan_structured:
+                    has_valid_items = any(
+                        isinstance(d, dict) and bool(d.get("items"))
+                        for d in plan_structured.get("days", [])
+                    )
+
                 if (
                     isinstance(structured_result, dict)
                     and str(structured_result.get("text") or "").strip()
+                    and not has_clarification_need
+                    and not has_conversational_question
+                    and has_valid_items
                 ):
                     if self.metrics is not None:
                         self.metrics.increment("inference.deterministic_early_exit")
@@ -2459,19 +2614,20 @@ class AgentOrchestrator:
                 result="DETERMINISTIC_RESPONSE",
             )
 
-        if workout_structured is not None:
-            text = str(workout_structured.get("text") or text)
-        elif plan_structured is not None:
-            text = str(plan_structured.get("text") or text)
-        elif nutrition_structured is not None:
-            text = str(nutrition_structured.get("text") or text)
-        elif not text.strip():
-            text = (
-                "Mình chưa lấy đủ thông tin để trả lời chính xác. "
-                "Bạn gửi lại yêu cầu này giúp mình nhé."
-            )
-            if gateway is not None:
-                await gateway.send_token(text)
+        if not text.strip():
+            if workout_structured is not None:
+                text = str(workout_structured.get("text") or "")
+            elif plan_structured is not None:
+                text = str(plan_structured.get("text") or "")
+            elif nutrition_structured is not None:
+                text = str(nutrition_structured.get("text") or "")
+            elif not text.strip():
+                text = (
+                    "Mình chưa lấy đủ thông tin để trả lời chính xác. "
+                    "Bạn gửi lại yêu cầu này giúp mình nhé."
+                )
+                if gateway is not None:
+                    await gateway.send_token(text)
 
         if pending_dish_action is not None:
             self.pending_actions.put(pending_dish_action)

@@ -500,3 +500,53 @@ async def test_diversity_window_does_not_grow_unbounded():
         await dispatcher.dispatch(f"session-{i}", _dish_call(i), 5000)
 
     assert len(dispatcher._recent_ids) <= _RECENT_IDS_MAX_SESSIONS
+
+
+@pytest.mark.asyncio
+async def test_dispatch_normalizes_string_arrays_for_plan_v2():
+    captured_args = {}
+
+    async def _mock_fn(**kwargs):
+        captured_args.update(kwargs)
+        return {"status": "READY"}
+
+    registry = ToolRegistry()
+    registry.register(
+        ToolDescriptor(
+            name="build_nutrition_plan",
+            description="test",
+            parameters_schema={
+                "type": "object",
+                "properties": {
+                    "period_start": {"type": "string"},
+                    "period_end": {"type": "string"},
+                    "timezone": {"type": "string"},
+                    "temporary_preferences": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["period_start", "period_end", "timezone"],
+                "additionalProperties": False,
+            },
+            side="server",
+            fn=_mock_fn,
+        )
+    )
+
+    dispatcher = ToolDispatcher(registry)
+    call = ToolCall(
+        id="c-norm",
+        name="build_nutrition_plan",
+        arguments={
+            "period_start": "2026-09-21",
+            "period_end": "2026-09-21",
+            "timezone": "Asia/Ho_Chi_Minh",
+            "temporary_preference": "burger",  # Singular string alias
+        },
+    )
+
+    result = await dispatcher.dispatch("sess-norm", call, 5000)
+    assert result.ok is True
+    assert captured_args.get("temporary_preferences") == ["burger"]
+

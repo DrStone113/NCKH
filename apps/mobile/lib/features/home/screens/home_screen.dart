@@ -17,7 +17,6 @@ import '../../exercise/screens/exercise_screen.dart';
 import '../../chat/screens/chatbot_screen.dart';
 import '../../plans/screens/plan_list_screen.dart';
 import '../../plans/widgets/plan_library_navigation_action.dart';
-import '../../plans/widgets/planned_day_plan_section.dart';
 import '../../plans/plan_snapshot.dart';
 import '../../auth/screens/auth_wrapper.dart';
 import '../../settings/screens/goal_settings_screen.dart';
@@ -511,14 +510,6 @@ class _DashboardTab extends StatelessWidget {
                         context, nutritionProvider, exerciseProvider, user),
 
                 const SizedBox(height: 24),
-
-                PlannedDayPlanSection(
-                  userId: user.id,
-                  date: DateTime.now(),
-                  domain: 'NUTRITION',
-                  snapshots: context.watch<PlanProvider>().plans,
-                  compact: true,
-                ),
 
                 // Quick Actions
                 AnimatedCard(

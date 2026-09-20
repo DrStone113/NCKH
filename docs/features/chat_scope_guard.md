@@ -36,6 +36,11 @@ memory, RAG, tool router và model trả lời chính.
   ngoài phạm vi nhận câu từ chối cố định.
 - Xác nhận ngắn như `có`, `không`, `lưu đi` vẫn đi tiếp để cơ chế pending
   action và lịch sử hội thoại xử lý đúng.
+- Các câu nối tiếp / tỉnh lược ngữ cảnh trong hội thoại đa lượt (multi-turn continuation/ellipsis như `cho ngày mốt luôn`, `thế còn ngày mai`, `đổi sang cá hồi`...):
+  - `ScopeGuard` nhận `recent_history` từ phiên hội thoại hiện tại.
+  - Khi câu rơi vào vùng mơ hồ (`AMBIGUOUS`) nhưng các lượt trước đang thảo luận về sức khỏe/dinh dưỡng/kế hoạch và câu không chứa dấu hiệu vi phạm phạm vi (`OUT_OF_SCOPE`), hệ thống truyền `recent_context` cho JSON Scope Judge để phân loại theo ngữ cảnh tiếp nối, hoặc fail-open chuyển tiếp vào Agent LLM chính (`CONVERSATION_CONTINUATION`).
+  - Khi Scope Guard ngắt sớm do từ chối hoặc cần làm rõ, reasoning trace không phát ra các bước dùng hồ sơ nhằm tránh mâu thuẫn hiển thị trên giao diện người dùng.
+
 
 Phiên bản hiện tại dùng labelled Vietnamese, English và code-switch prototypes
 trên multilingual MiniLM. Backend khởi động prewarm ở background và nhận traffic

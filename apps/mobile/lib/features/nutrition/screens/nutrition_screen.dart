@@ -15,7 +15,6 @@ import '../../plans/screens/plan_list_screen.dart';
 import '../../plans/plan_history.dart';
 import '../../plans/plan_snapshot.dart';
 import '../../../widgets/meal_summary_card.dart';
-import '../../plans/widgets/planned_day_plan_section.dart';
 
 class NutritionScreen extends StatefulWidget {
   const NutritionScreen({super.key, this.planLoader});
@@ -321,13 +320,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 NutritionMacroSummary(
                                     canonical: canonical, summary: summary),
                               ],
-                              if (user != null)
-                                PlannedDayPlanSection(
-                                    userId: user.id,
-                                    date: selected,
-                                    domain: 'NUTRITION',
-                                    loader: widget.planLoader,
-                                    snapshots: sharedPlans?.plans),
                               const HealthSectionTitle('Nhật ký đã ăn',
                                   subtitle:
                                       'Chỉ các bữa đã xác nhận ăn mới được tính vào tổng ngày.'),
@@ -346,9 +338,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                     completed: true),
                               if (provider.pendingMealsCount > 0) ...[
                                 const HealthSectionTitle(
-                                    'Bữa đã thêm · chưa ăn',
+                                    'Thực đơn dự kiến · chưa ăn',
                                     subtitle:
-                                        'Chưa tính vào năng lượng đã ăn.'),
+                                        'Món theo kế hoạch hoặc đã thêm, nhấn "Ghi nhận đã ăn" khi đã dùng.'),
                                 ..._buildMealsByType(context, provider,
                                     completed: false),
                               ],

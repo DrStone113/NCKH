@@ -9,6 +9,7 @@ import '../services/backend_api_service.dart';
 import '../models/app_state_value.dart';
 import '../models/canonical_nutrition.dart';
 import '../services/meal_diary_store.dart';
+import '../features/plans/plan_display.dart';
 
 class NutritionProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
@@ -57,6 +58,16 @@ class NutritionProvider with ChangeNotifier {
         'nutrition_deleted_plan_items_$userId',
         _deletedPlanItemIds.toList(),
       );
+    } catch (_) {}
+  }
+
+  Future<void> _loadDeletedPlanItemIds(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('nutrition_deleted_plan_items_$userId');
+      if (list != null) {
+        _deletedPlanItemIds.addAll(list);
+      }
     } catch (_) {}
   }
 
@@ -289,13 +300,86 @@ class NutritionProvider with ChangeNotifier {
     await addMeal(newMeal, replacePendingSlot: false);
   }
 
-  /// Read Plan V2 status without materialising planned food as MealModel.
-  /// A plan card belongs in the planned section; only an explicit meal log may
-  /// enter the observed diary, calorie totals, or completion state.
   Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
+    await _loadDeletedPlanItemIds(userId);
     try {
-      final read = await BackendApiService().readActivePlanDetail(userId);
+      final read =
+          await BackendApiService().readAuthoritativeActivePlanV2('NUTRITION');
       _activePlanReadStatus = read.status;
+      if (read.status != ActivePlanStatus.activePlanFound || read.plan == null) return;
+
+      final plan = read.plan!;
+      final day = PlanDisplay.dayForDate(plan, date);
+      if (day == null) return;
+
+      final items = PlanDisplay.items(day);
+      final dateKey =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      for (final item in items) {
+        final itemId = PlanDisplay.itemId(item).isNotEmpty
+            ? PlanDisplay.itemId(item)
+            : 'plan_meal_${item['slot'] ?? 'meal'}_$dateKey';
+
+        if (_deletedPlanItemIds.contains(itemId)) continue;
+        if (_allMeals.any((m) => m.id == itemId)) continue;
+
+        final dishName = PlanDisplay.itemTitle(item, nutrition: true);
+        final slot = item['slot']?.toString();
+        final nutritionMap = PlanDisplay.nutrition(item);
+        final cals =
+            (nutritionMap['total_calories'] as num?)?.toDouble() ?? 0.0;
+        final prot = (nutritionMap['total_protein'] as num?)?.toDouble() ?? 0.0;
+        final carbs = (nutritionMap['total_carbs'] as num?)?.toDouble() ?? 0.0;
+        final fat = (nutritionMap['total_fat'] as num?)?.toDouble() ?? 0.0;
+
+        final content = item['content'];
+        List<MealItem> mealItems = [];
+        if (content is Map && content['ingredients'] is List) {
+          final rawIngredients = content['ingredients'] as List;
+          for (int i = 0; i < rawIngredients.length; i++) {
+            final ing = rawIngredients[i];
+            if (ing is Map) {
+              mealItems.add(MealItem(
+                id: '${itemId}_ing_$i',
+                foodId: ing['food_id']?.toString() ?? '',
+                name: ing['name']?.toString() ?? 'Nguyên liệu',
+                weightGrams: (ing['grams'] as num?)?.toDouble() ?? 0.0,
+                calories: (ing['calories'] as num?)?.toDouble() ?? 0.0,
+                protein: (ing['protein'] as num?)?.toDouble() ?? 0.0,
+                carbs: (ing['carbs'] as num?)?.toDouble() ?? 0.0,
+                fat: (ing['fat'] as num?)?.toDouble() ?? 0.0,
+              ));
+            }
+          }
+        }
+        if (mealItems.isEmpty) {
+          mealItems = [
+            MealItem(
+              id: '${itemId}_item',
+              foodId: '',
+              name: dishName,
+              weightGrams: 0.0,
+              calories: cals,
+              protein: prot,
+              carbs: carbs,
+              fat: fat,
+            ),
+          ];
+        }
+
+        final isDone =
+            item['is_completed'] == true || item['completed'] == true;
+        final plannedMeal = MealModel(
+          id: itemId,
+          userId: userId,
+          name: dishName,
+          date: date,
+          mealType: MealTypeUtils.normalize(slot, fallback: 'sang'),
+          items: mealItems,
+          isCompleted: isDone,
+        );
+        _allMeals.add(plannedMeal);
+      }
     } catch (e) {
       _activePlanReadStatus = ActivePlanStatus.readError;
       debugPrint('Plan V2 status read failed: $e');
@@ -1182,13 +1266,17 @@ class NutritionProvider with ChangeNotifier {
         _cacheService.updateMealInCache(meal.userId, meal.date, updated);
         notifyListeners();
 
-        // Update Firestore in background
+        // Update Firestore / store in background
         try {
-          await _firestore
-              .collection(FirestoreCollections.mealDiary)
-              .doc(mealId)
-              .update({'isCompleted': updated.isCompleted});
-        } catch (_) {}
+          await _mealStore.save(updated);
+        } catch (_) {
+          try {
+            await _firestore
+                .collection(FirestoreCollections.mealDiary)
+                .doc(mealId)
+                .set(updated.toMap(), SetOptions(merge: true));
+          } catch (_) {}
+        }
 
         // Update backend plan item if it belongs to plan
         try {

@@ -223,9 +223,27 @@ void main() {
       ..refreshed = completeUser().copyWith(id: 'other');
     final chat = GuardedChatProvider()..setProviders(userProvider: users);
     addTearDown(chat.dispose);
-    addTearDown(users.dispose);
     expect(await chat.sendMessage('Xin chào', completeUser()), isFalse);
     expect(chat.connections, 0);
     expect(chat.messages, isEmpty);
   });
+
+  test('daily safety check preserves confirmed intake status', () {
+    const base = WorkoutProfile(
+      trainingExperience: 'NOVICE',
+      availableEquipment: ['thảm'],
+      intakeConfirmationStatus: 'CONFIRMED',
+      intakeRevision: 2,
+    );
+    final updated = WorkoutProfile.applyChatUpdate(
+      base,
+      {'current_pain_status': 'NO'},
+      mode: 'CAPTURE',
+    );
+    expect(updated.intakeConfirmationStatus, 'CONFIRMED');
+    expect(updated.intakeRevision, 2);
+    expect(updated.currentPainStatus, 'NO');
+    expect(updated.safetyCheckedAt, isNotNull);
+  });
 }
+

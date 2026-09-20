@@ -27,8 +27,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
+import logging
 import jsonschema
 from jsonschema.exceptions import SchemaError, ValidationError
+
+logger = logging.getLogger(__name__)
 
 ToolSide = Literal["server", "client"]
 
@@ -164,14 +167,23 @@ class ToolRegistry:
 
         try:
             jsonschema.validate(instance=args, schema=descriptor.parameters_schema)
-        except ValidationError:
+        except ValidationError as exc:
+            logger.warning(
+                "Tool %s argument validation failed: %s (path=%s, args=%s)",
+                name,
+                exc.message,
+                list(exc.path),
+                args,
+            )
             return False, "INVALID_ARGS"
-        except SchemaError:
+        except SchemaError as exc:
             # Schema itself is malformed. Treat as invalid args from the
             # caller's perspective so the agent loop can recover gracefully.
+            logger.error("Tool %s schema is malformed: %s", name, exc)
             return False, "INVALID_ARGS"
-        except Exception:
+        except Exception as exc:
             # Catch-all defensive guard. ``validate`` MUST never raise.
+            logger.exception("Tool %s unexpected validation error: %s", name, exc)
             return False, "INVALID_ARGS"
 
         return True, None

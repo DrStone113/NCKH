@@ -48,19 +48,22 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - HF_HUB_DISABLE_XET=1
+      - HF_HOME=/root/.cache/huggingface
+      - SENTENCE_TRANSFORMERS_HOME=/root/.cache/huggingface/sentence_transformers
     volumes:
       - ./apps/backend/data:/app/data:ro  # Read-only data
       - backend_logs:/app/logs
+      - hf_cache:/root/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 10s
     networks:
       - ai_net
 
@@ -162,6 +165,8 @@ volumes:
   pg_data:
     driver: local
   backend_logs:
+    driver: local
+  hf_cache:
     driver: local
 
 networks:

@@ -1,9 +1,35 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from services.agent.scope_guard import ScopeCategory, ScopeIntent
 from services.agent.semantic_scope_classifier import SemanticPrototypeScopeClassifier
+from main import _start_scope_classifier_warmup
+
+
+@pytest.mark.asyncio
+async def test_scope_classifier_warmup_starts_without_blocking_caller() -> None:
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    class _BlockedWarmup:
+        async def prewarm(self) -> None:
+            started.set()
+            await release.wait()
+
+    task = _start_scope_classifier_warmup(
+        _BlockedWarmup(),  # type: ignore[arg-type]
+        model_name="test-encoder",
+        timeout_seconds=1.0,
+    )
+
+    await asyncio.wait_for(started.wait(), timeout=0.5)
+    assert task.done() is False
+
+    release.set()
+    await task
 
 
 class _FakeEncoder:

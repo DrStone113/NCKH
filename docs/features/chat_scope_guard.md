@@ -38,8 +38,10 @@ memory, RAG, tool router và model trả lời chính.
   action và lịch sử hội thoại xử lý đúng.
 
 Phiên bản hiện tại dùng labelled Vietnamese, English và code-switch prototypes
-trên multilingual MiniLM. Model được prewarm trước khi backend nhận traffic để
-request đầu không rơi về rule/judge chỉ vì thời gian cold-start. Confidence là
+trên multilingual MiniLM. Backend khởi động prewarm ở background và nhận traffic
+ngay; trong lúc encoder chưa sẵn sàng, timeout mỗi request sẽ chuyển về rule và
+JSON judge cô lập. Docker giữ Hugging Face cache qua các lần tạo lại container
+để các lần warm-up sau không phải tải model lại. Confidence là
 routing score theo ba nhóm cân bằng `ALLOW_HEALTH`/`OUT_OF_SCOPE`/`AMBIGUOUS`,
 kết hợp temperature scaling với độ mạnh cosine tuyệt đối để câu lạ không được
 cho qua chỉ vì nhóm sức khỏe có nhiều intent hơn. Đây chưa phải xác suất

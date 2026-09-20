@@ -43,6 +43,41 @@ install_access_log_redaction()
 logger = logging.getLogger(__name__)
 
 
+def _start_scope_classifier_warmup(
+    classifier: SemanticPrototypeScopeClassifier,
+    *,
+    model_name: str,
+    timeout_seconds: float,
+) -> asyncio.Task[None]:
+    """Warm the local scope encoder without delaying API readiness."""
+
+    async def _warm() -> None:
+        try:
+            await asyncio.wait_for(
+                classifier.prewarm(),
+                timeout=timeout_seconds,
+            )
+            logger.info("Scope intent model ready - model=%s", model_name)
+        except asyncio.CancelledError:
+            raise
+        except asyncio.TimeoutError:
+            # ``prewarm`` delegates model loading to a worker thread. Cancelling
+            # the await does not terminate that worker, so the classifier can
+            # still become ready while deterministic rules and the isolated
+            # JSON judge safely handle early traffic.
+            logger.warning(
+                "Scope intent model is still warming after %.1fs; startup continues",
+                timeout_seconds,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Scope intent model warm-up failed (non-fatal): %s",
+                exc,
+            )
+
+    return asyncio.create_task(_warm(), name="scope-intent-model-warmup")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -148,6 +183,7 @@ async def lifespan(app: FastAPI):
         reasoning_effort=settings.effective_heavy_llm_reasoning_effort,
     )
     app.state.scope_guard = None
+    scope_warmup_task: asyncio.Task[None] | None = None
     if settings.chat_scope_guard_mode == "strict":
         primary_scope_classifier = None
         if settings.scope_router_model:
@@ -159,23 +195,12 @@ async def lifespan(app: FastAPI):
                     settings.scope_router_full_confidence_similarity
                 ),
             )
-            try:
-                await asyncio.wait_for(
-                    primary_scope_classifier.prewarm(),
-                    timeout=settings.scope_router_warmup_timeout_seconds,
-                )
-                logger.info(
-                    "Scope intent model ready - model=%s",
-                    settings.scope_router_model,
-                )
-            except Exception as exc:
-                # The deterministic rules and isolated JSON judge remain
-                # available. The loader thread may still finish after a
-                # timeout, allowing later requests to recover automatically.
-                logger.warning(
-                    "Scope intent model warm-up failed (non-fatal): %s",
-                    exc,
-                )
+            scope_warmup_task = _start_scope_classifier_warmup(
+                primary_scope_classifier,
+                model_name=settings.scope_router_model,
+                timeout_seconds=settings.scope_router_warmup_timeout_seconds,
+            )
+            app.state.scope_warmup_task = scope_warmup_task
         scope_classifier = None
         if settings.scope_classifier_model:
             app.state.scope_classifier_llm = LLMClient(
@@ -272,6 +297,13 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    if scope_warmup_task is not None:
+        if not scope_warmup_task.done():
+            scope_warmup_task.cancel()
+        try:
+            await scope_warmup_task
+        except asyncio.CancelledError:
+            pass
     await app.state.http_client.aclose()
     await engine.dispose()
     logger.info("Shutting down AI Health Chatbot - cleanup complete")

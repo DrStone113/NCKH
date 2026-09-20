@@ -39,6 +39,17 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                         content,
                         flags=re.DOTALL
                     )
+                    # Flutter's generated bootstrap uses an unversioned
+                    # main.dart.js URL. Safari can keep that bundle after a
+                    # rebuild, so give it a version derived from the actual
+                    # artifact without modifying generated build output.
+                    main_js_path = os.path.join(DIRECTORY, "main.dart.js")
+                    if os.path.isfile(main_js_path):
+                        main_js_version = os.stat(main_js_path).st_mtime_ns
+                        modified = modified.replace(
+                            '"mainJsPath":"main.dart.js"',
+                            f'"mainJsPath":"main.dart.js?v={main_js_version}"',
+                        )
                     self.send_response(200)
                     self.send_header("Content-Type", "application/javascript")
                     self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")

@@ -297,6 +297,29 @@ _CONTINUATION_CUES = (
 _CONTINUATION_RE = re.compile(
     r"^(?:cai nao cung\b|cai do cung\b|chon dai\b|chon giup\b|tiep tuc\b).{0,48}$"
 )
+# Short ellipses often omit the health object because it was established in
+# the preceding turn: "gợi ý đi", "đổi cái khác nhé", "thế còn cái này?".
+# Keep this as a token grammar rather than an ever-growing phrase allowlist.
+# It is only authoritative when ``contextualize_continuation`` also finds a
+# recent, already accepted in-scope user turn in the same session.
+_CONTEXTUAL_CONTINUATION_TOKENS = frozenset(
+    {
+        "1", "ai", "an", "anh", "ban", "bai", "bo", "cai", "chi", "cho",
+        "chon", "co", "con", "dai", "dc", "dec", "di", "do", "doi", "duoc", "em",
+        "ghi", "giup", "goi", "hon", "i", "khac", "khong", "kia", "lam", "luon", "lua",
+        "luu", "minh", "mon", "mot", "nao", "nay", "nhe", "nhu", "noi", "nua", "ok",
+        "okay", "oke", "phan", "phuong", "ro", "sao", "so", "them", "the", "thi", "thoi",
+        "thu", "tiep", "tinh", "toi", "tuc", "u", "um", "vang", "vay", "ve", "voi",
+        "xem", "y",
+    }
+)
+_CONTEXTUAL_CONTINUATION_SIGNAL_TOKENS = frozenset(
+    {
+        "bai", "cai", "chon", "con", "di", "do", "doi", "ghi", "giup", "goi",
+        "khac", "kia", "lam", "lua", "luu", "mon", "nao", "nay", "noi", "nua", "phan",
+        "phuong", "sao", "them", "the", "thu", "tiep", "tinh", "vay", "xem",
+    }
+)
 _TECH_TERMS = (
     "python", "javascript", "typescript", "java", "c++", "c#", "flutter", "firebase",
     "sql", "database", "api", "react", "docker", "github", "source code",
@@ -478,6 +501,73 @@ class ScopeGuard:
     def classify_fast(self, text: str) -> ScopeDecision:
         fragments = tuple(self._classify_fragment(part) for part in _split_fragments(text))
         return self._compose(fragments)
+
+    @staticmethod
+    def may_be_contextual_continuation(text: str) -> bool:
+        """Return true only for short, object-light conversational ellipses.
+
+        A positive result is not enough to cross the scope firewall. The
+        caller must also provide a recent accepted health-domain anchor via
+        :meth:`contextualize_continuation`.
+        """
+
+        if not isinstance(text, str):
+            return False
+        normalized = _normalize(text)
+        tokens = normalized.split()
+        if not tokens or len(tokens) > 12 or len(normalized) > 80:
+            return False
+        token_set = frozenset(tokens)
+        return bool(
+            token_set <= _CONTEXTUAL_CONTINUATION_TOKENS
+            and token_set & _CONTEXTUAL_CONTINUATION_SIGNAL_TOKENS
+        )
+
+    def contextualize_continuation(
+        self,
+        text: str,
+        recent_history: Any,
+    ) -> ScopeDecision | None:
+        """Bind an ambiguous ellipse to the nearest accepted health turn.
+
+        Scope-guard rows and tool payloads must be filtered by the caller.
+        Reclassifying the prior user text with deterministic rules prevents a
+        blocked or unrelated turn from becoming an authority for the current
+        message and avoids sending private history to a classifier model.
+        """
+
+        current = self.classify_fast(text)
+        if (
+            current.category
+            not in {ScopeCategory.AMBIGUOUS, ScopeCategory.OUT_OF_SCOPE}
+            or not self.may_be_contextual_continuation(text)
+        ):
+            return None
+
+        for turn in reversed(tuple(recent_history or ())):
+            if getattr(turn, "role", None) != "user":
+                continue
+            anchor_text = str(getattr(turn, "content", "") or "").strip()
+            if not anchor_text or self.may_be_contextual_continuation(anchor_text):
+                continue
+            anchor = self.classify_fast(anchor_text)
+            if not anchor.should_call_main_llm:
+                continue
+            if anchor.category == ScopeCategory.SAFETY_ESCALATION:
+                continue
+            if anchor.reason_code == "CONVERSATION_CONTINUATION":
+                continue
+            fragment = ScopeFragment(
+                text=text,
+                scope=anchor.category,
+                confidence=min(0.96, anchor.confidence),
+                method="SESSION_CONTEXT:RULE",
+                reason_code="CONTEXTUAL_CONTINUATION",
+                intent=anchor.intent,
+                safety=SafetyDisposition.NONE,
+            )
+            return self._compose((fragment,))
+        return None
 
     async def classify(self, text: str) -> ScopeDecision:
         decision = self.classify_fast(text)

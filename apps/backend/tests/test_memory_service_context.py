@@ -446,6 +446,51 @@ async def test_load_context_history_respects_max_history_turns():
 
 
 @pytest.mark.asyncio
+async def test_scope_context_loader_returns_only_visible_non_blocked_turns():
+    base = datetime(2025, 1, 1, 12, 0, 0)
+    db = _FakeAsyncSession(
+        chat_sessions={"s": "u"},
+        chat_messages=[
+            _make_message(
+                session_id="s",
+                role="user",
+                content="Tôi muốn ăn burger phô mai",
+                created_at=base,
+            ),
+            _make_message(
+                session_id="s",
+                role="tool",
+                content='{"private": true}',
+                tool_name="search_dish_catalog",
+                created_at=base + timedelta(seconds=1),
+            ),
+            _make_message(
+                session_id="s",
+                role="assistant",
+                content="Mình có thể gợi ý một phiên bản phù hợp.",
+                created_at=base + timedelta(seconds=2),
+            ),
+            _make_message(
+                session_id="s",
+                role="user",
+                content="gợi ý đi",
+                tool_name="scope_guard",
+                created_at=base + timedelta(seconds=3),
+            ),
+        ],
+    )
+    svc = MemoryService(db)  # type: ignore[arg-type]
+
+    turns = await svc.loadRecentConversationForScope("s", max_turns=12)
+
+    assert [(turn.role, turn.content) for turn in turns] == [
+        ("user", "Tôi muốn ăn burger phô mai"),
+        ("assistant", "Mình có thể gợi ý một phiên bản phù hợp."),
+    ]
+    assert len(db.executed) == 1
+
+
+@pytest.mark.asyncio
 async def test_load_context_excludes_scope_guard_turns_from_model_history():
     base = datetime(2025, 1, 1, 12, 0, 0)
     db = _FakeAsyncSession(

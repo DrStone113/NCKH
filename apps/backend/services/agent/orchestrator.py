@@ -805,6 +805,38 @@ class AgentOrchestrator:
 
             if self.scope_guard is not None:
                 scope_decision = await self.scope_guard.classify(user_text)
+                if (
+                    not scope_decision.should_call_llm
+                    and self.scope_guard.may_be_contextual_continuation(user_text)
+                ):
+                    scope_history_loader = getattr(
+                        self.memory,
+                        "loadRecentConversationForScope",
+                        None,
+                    )
+                    if callable(scope_history_loader):
+                        try:
+                            recent_scope_history = await scope_history_loader(
+                                session_id,
+                                max_turns=12,
+                            )
+                            contextual_decision = (
+                                self.scope_guard.contextualize_continuation(
+                                    user_text,
+                                    recent_scope_history,
+                                )
+                            )
+                            if contextual_decision is not None:
+                                scope_decision = contextual_decision
+                        except Exception as exc:
+                            # Context lookup is an optional fail-closed bridge:
+                            # an unavailable database keeps the original
+                            # clarification instead of widening app scope.
+                            logger.warning(
+                                "Contextual scope resolution skipped for session=%s: %s",
+                                session_id,
+                                exc,
+                            )
                 await self._record_debug(
                     gateway,
                     debug_trace,

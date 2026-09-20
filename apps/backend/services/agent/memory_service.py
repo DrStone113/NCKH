@@ -1015,6 +1015,34 @@ class MemoryService:
             include_relevant_history=include_relevant_history,
         )
 
+    async def loadRecentConversationForScope(
+        self,
+        session_id: str,
+        *,
+        max_turns: int = 12,
+    ) -> list[ChatTurn]:
+        """Load a small, model-free window for contextual scope resolution.
+
+        This intentionally performs no RAG, summary, fact, or classifier read.
+        Extra raw rows are requested because tool-heavy exchanges may contain
+        several tool records between two user-visible messages.
+        """
+
+        if not isinstance(session_id, str) or not session_id:
+            raise ValueError("INVALID_SESSION_ID")
+        visible_limit = max(1, min(int(max_turns), 24))
+        raw_turns = await self._load_recent_turns(
+            session_id,
+            limit=visible_limit * 4,
+        )
+        visible_turns = [
+            turn
+            for turn in raw_turns
+            if turn.role in {"user", "assistant"}
+            and turn.tool_name not in SCOPE_GUARD_HISTORY_MARKERS
+        ]
+        return visible_turns[-visible_limit:]
+
     async def _load_recent_turns(
         self, session_id: str, *, limit: int
     ) -> list[ChatTurn]:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pytest
 
@@ -134,6 +135,71 @@ async def test_smalltalk_gets_a_deterministic_friendly_reply() -> None:
 )
 async def test_short_continuations_reach_pending_action_pipeline(text: str) -> None:
     assert (await ScopeGuard().classify(text)).should_call_main_llm is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "gợi ý đi",
+        "gợi ý cho mình đi",
+        "đổi cái khác nhé",
+        "thêm một lựa chọn nữa",
+        "còn lựa chọn nào khác không",
+        "thế còn cái này?",
+        "làm tiếp đi",
+        "oke vậy chọn đi",
+        "có gợi ý nào khác không?",
+        "gợi ý giúp mình với",
+        "nói rõ hơn đi",
+        "cho mình xem thêm một lựa chọn",
+    ],
+)
+def test_contextual_continuation_grammar_covers_object_light_followups(
+    text: str,
+) -> None:
+    assert ScopeGuard.may_be_contextual_continuation(text) is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "gợi ý phim đi",
+        "chọn cổ phiếu đi",
+        "viết code đi",
+        "dịch câu này đi",
+        "thời tiết thì sao",
+        "lên lịch du lịch đi",
+    ],
+)
+def test_contextual_continuation_grammar_rejects_explicit_off_topic_objects(
+    text: str,
+) -> None:
+    assert ScopeGuard.may_be_contextual_continuation(text) is False
+
+
+def test_contextual_continuation_requires_an_accepted_health_anchor() -> None:
+    guard = ScopeGuard()
+    history = [
+        SimpleNamespace(role="user", content="Tôi muốn ăn burger phô mai"),
+        SimpleNamespace(role="assistant", content="Mình có thể gợi ý một phiên bản."),
+    ]
+
+    decision = guard.contextualize_continuation("gợi ý đi", history)
+
+    assert decision is not None
+    assert decision.category == ScopeCategory.IN_SCOPE_NUTRITION
+    assert decision.intent == ScopeIntent.NUTRITION
+    assert decision.reason_code == "CONTEXTUAL_CONTINUATION"
+    assert decision.method == "SESSION_CONTEXT:RULE"
+    assert decision.allowed_text == "gợi ý đi"
+
+
+def test_contextual_continuation_fails_closed_without_health_anchor() -> None:
+    guard = ScopeGuard()
+    history = [SimpleNamespace(role="user", content="Viết code Python")]
+
+    assert guard.contextualize_continuation("gợi ý đi", history) is None
+    assert guard.contextualize_continuation("gợi ý phim đi", history) is None
 
 
 @dataclass

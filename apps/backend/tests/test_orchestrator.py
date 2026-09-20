@@ -45,6 +45,25 @@ class FailingMemory:
     async def loadContext(self, session_id, user_text):
         raise AssertionError("scope gate should run before memory and RAG")
 
+    async def loadRecentConversationForScope(self, session_id, *, max_turns=12):
+        raise AssertionError("clear out-of-scope turns must not read session history")
+
+
+class ContextualContinuationMemory(FakeMemory):
+    def __init__(self, history=None):
+        self.scope_history_calls = 0
+        self.scope_history = history if history is not None else [
+            ChatTurn(role="user", content="Tôi muốn ăn burger phô mai"),
+            ChatTurn(
+                role="assistant",
+                content="Mình có thể gợi ý một phiên bản phù hợp hơn.",
+            ),
+        ]
+
+    async def loadRecentConversationForScope(self, session_id, *, max_turns=12):
+        self.scope_history_calls += 1
+        return self.scope_history
+
 
 @dataclass
 class FakeStore:
@@ -232,6 +251,57 @@ async def test_scope_guard_forwards_application_question_to_existing_pipeline(te
 
     assert llm.calls == 1
     assert gateway.done[0][0] == "Mình kiểm tra nhé."
+
+
+@pytest.mark.asyncio
+async def test_scope_guard_resolves_ambiguous_ellipse_from_safe_session_context():
+    llm = ScriptedLLM(
+        [LLMResponse(content_stream=_stream(["Bạn có thể chọn burger gà."]))]
+    )
+    memory = ContextualContinuationMemory()
+    gateway = FakeGateway()
+    store = FakeStore()
+    orchestrator = AgentOrchestrator(
+        llm,
+        FakeTools(),
+        memory,
+        store,
+        FakeDispatcher(),
+        gateway,
+        scope_guard=ScopeGuard(),
+    )
+
+    await orchestrator.handleChatMessage("scope-context", "gợi ý đi")
+
+    assert memory.scope_history_calls == 1
+    assert llm.calls == 1
+    assert gateway.done[0][0] == "Bạn có thể chọn burger gà."
+    assert [turn[1] for turn in store.turns] == ["user", "assistant"]
+    assert all(turn[4] is None for turn in store.turns)
+
+
+@pytest.mark.asyncio
+async def test_scope_guard_fails_closed_when_ellipse_has_no_safe_session_anchor():
+    llm = ScriptedLLM([])
+    memory = ContextualContinuationMemory(history=[])
+    gateway = FakeGateway()
+    store = FakeStore()
+    orchestrator = AgentOrchestrator(
+        llm,
+        FakeTools(),
+        memory,
+        store,
+        FakeDispatcher(),
+        gateway,
+        scope_guard=ScopeGuard(),
+    )
+
+    await orchestrator.handleChatMessage("scope-no-context", "gợi ý đi")
+
+    assert memory.scope_history_calls == 1
+    assert llm.calls == 0
+    assert "nói rõ hơn" in gateway.done[0][0]
+    assert [turn[4] for turn in store.turns] == ["scope_guard", "scope_guard"]
 
 
 @pytest.mark.asyncio

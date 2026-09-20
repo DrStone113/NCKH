@@ -91,6 +91,7 @@ def _judge() -> StrictJSONScopeClassifier:
         api_key=settings.openai_api_key,
         request_timeout_s=settings.scope_classifier_timeout_seconds,
         allow_model_fallback=False,
+        reasoning_effort=settings.llm_reasoning_effort,
     )
     return StrictJSONScopeClassifier(
         llm,

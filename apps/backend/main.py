@@ -137,6 +137,7 @@ async def lifespan(app: FastAPI):
         api_key=settings.openai_api_key,
         allow_model_fallback=settings.llm_cross_model_fallback,
         max_attempts_per_model=settings.llm_attempts_per_model,
+        reasoning_effort=settings.llm_reasoning_effort,
     )
     app.state.heavy_llm = LLMClient(
         model=settings.heavy_llm_model,
@@ -144,6 +145,7 @@ async def lifespan(app: FastAPI):
         api_key=settings.openai_api_key,
         allow_model_fallback=settings.llm_cross_model_fallback,
         max_attempts_per_model=settings.llm_attempts_per_model,
+        reasoning_effort=settings.llm_reasoning_effort,
     )
     app.state.scope_guard = None
     if settings.chat_scope_guard_mode == "strict":
@@ -183,6 +185,7 @@ async def lifespan(app: FastAPI):
                 request_timeout_s=settings.scope_classifier_timeout_seconds,
                 allow_model_fallback=False,
                 max_attempts_per_model=settings.llm_attempts_per_model,
+                reasoning_effort=settings.llm_reasoning_effort,
             )
             scope_classifier = StrictJSONScopeClassifier(
                 app.state.scope_classifier_llm,

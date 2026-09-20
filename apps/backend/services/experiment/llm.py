@@ -60,7 +60,13 @@ class FixedOpenAIResearchClient:
         api_key: str,
         openai_client: Any | None = None,
         timeout_seconds: float = 120.0,
+        reasoning_effort: str | None = None,
     ) -> None:
+        self._reasoning_effort = (
+            reasoning_effort.strip().lower() if reasoning_effort else None
+        )
+        if self._reasoning_effort not in {None, "none", "low", "medium", "high"}:
+            raise ValueError("reasoning_effort must be none, low, medium, or high")
         self._client = openai_client or AsyncOpenAI(
             base_url=base_url.rstrip("/"),
             api_key=api_key or "dummy-key",
@@ -75,6 +81,7 @@ class FixedOpenAIResearchClient:
         return cls(
             base_url=settings.openai_base_url,
             api_key=settings.openai_api_key,
+            reasoning_effort=settings.llm_reasoning_effort,
         )
 
     async def complete(
@@ -95,6 +102,8 @@ class FixedOpenAIResearchClient:
         if tools:
             kwargs["tools"] = list(tools)
             kwargs["tool_choice"] = "auto"
+        if self._reasoning_effort:
+            kwargs["reasoning_effort"] = self._reasoning_effort
 
         try:
             # There is intentionally no retry and no alternative model here.

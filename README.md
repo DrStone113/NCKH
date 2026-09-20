@@ -78,9 +78,26 @@ uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 
 ```bat
 # Cài Ollama từ https://ollama.com
-ollama pull llama3:8b-instruct-q4_K_M
+ollama pull qwen3:8b
 ollama serve
 ```
+
+Backend native (`apps/backend/.env`):
+
+```env
+OPENAI_BASE_URL=http://127.0.0.1:11434/v1
+OPENAI_API_KEY=ollama
+LLM_MODEL=qwen3:8b
+HEAVY_LLM_MODEL=qwen3:8b
+SCOPE_CLASSIFIER_MODEL=qwen3:8b
+LLM_REASONING_EFFORT=none
+EMBEDDING_MODEL=BAAI/bge-m3
+```
+
+Khi backend chạy trong Docker, dùng
+`OPENAI_BASE_URL=http://host.docker.internal:11434/v1` trong file `.env` ở
+thư mục gốc. `BAAI/bge-m3` vẫn là embedding model của RAG; Ollama chỉ thay
+model sinh câu trả lời và gọi công cụ.
 
 ### 3. Flutter App
 

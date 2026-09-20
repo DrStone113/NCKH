@@ -567,6 +567,7 @@ class LLMClient:
         client: httpx.AsyncClient | None = None,
         allow_model_fallback: bool = True,
         max_attempts_per_model: int = 2,
+        reasoning_effort: str | None = None,
     ) -> None:
         if max_attempts_per_model not in {1, 2}:
             raise ValueError("max_attempts_per_model must be 1 or 2")
@@ -578,6 +579,11 @@ class LLMClient:
         self._external_client = client
         self.allow_model_fallback = allow_model_fallback
         self.max_attempts_per_model = max_attempts_per_model
+        self.reasoning_effort = (
+            reasoning_effort.strip().lower() if reasoning_effort else None
+        )
+        if self.reasoning_effort not in {None, "none", "low", "medium", "high"}:
+            raise ValueError("reasoning_effort must be none, low, medium, or high")
         self.provider_status = "unknown"
         self.openai = AsyncOpenAI(
             base_url=self.base_url,
@@ -631,6 +637,8 @@ class LLMClient:
                         kwargs["tools"] = tools
                     if max_tokens is not None:
                         kwargs["max_tokens"] = max_tokens
+                    if self.reasoning_effort:
+                        kwargs["reasoning_effort"] = self.reasoning_effort
 
                     if not stream:
                         # Non-streaming fallback

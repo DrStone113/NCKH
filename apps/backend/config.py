@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
     llm_model: str = "chr/charm/qwen3.8-flash"
     heavy_llm_model: str = "op/deepseek/deepseek-v4-pro"
+    # Optional OpenAI-compatible reasoning control. Local Qwen 3 deployments
+    # should use ``none`` so the response budget is not consumed by hidden
+    # thinking before user-visible text or a tool call is emitted.
+    llm_reasoning_effort: str = ""
     # Paid-model cost governor. ``off`` is an operational rollback only.
     llm_cost_optimization_mode: Literal["off", "optimized"] = "optimized"
     llm_cross_model_fallback: bool = False

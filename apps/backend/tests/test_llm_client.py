@@ -440,3 +440,19 @@ async def test_non_first_system_messages_sanitized_to_user() -> None:
     assert api_messages[3]["role"] == "user"
     assert "Secondary instruction" in api_messages[3]["content"]
 
+
+@pytest.mark.asyncio
+async def test_chat_forwards_configured_reasoning_effort() -> None:
+    client = LLMClient(
+        model="qwen3:8b",
+        base_url="http://127.0.0.1:11434/v1",
+        reasoning_effort="none",
+    )
+    stream = MockStream([{"content": "ok"}])
+    client.openai.chat.completions.create = AsyncMock(return_value=stream)
+
+    await client.chat(messages=[{"role": "user", "content": "ping"}])
+
+    call_kwargs = client.openai.chat.completions.create.call_args.kwargs
+    assert call_kwargs["reasoning_effort"] == "none"
+

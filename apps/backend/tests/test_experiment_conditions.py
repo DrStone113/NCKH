@@ -637,6 +637,32 @@ async def test_fixed_llm_sends_all_controls_and_one_requested_model() -> None:
 
 
 @pytest.mark.asyncio
+async def test_fixed_llm_forwards_configured_reasoning_effort() -> None:
+    message = SimpleNamespace(content="answer", tool_calls=[])
+    endpoint = _CompletionsEndpoint(
+        response=SimpleNamespace(
+            model="qwen3:8b",
+            choices=[SimpleNamespace(message=message, finish_reason="stop")],
+            usage=None,
+        )
+    )
+    client = FixedOpenAIResearchClient(
+        base_url="http://127.0.0.1:11434/v1",
+        api_key="ollama",
+        openai_client=_mock_openai(endpoint),
+        reasoning_effort="none",
+    )
+
+    await client.complete(
+        messages=[{"role": "user", "content": "u"}],
+        tools=[],
+        config=ExperimentConfig(condition="A", model="qwen3:8b"),
+    )
+
+    assert endpoint.calls[0]["reasoning_effort"] == "none"
+
+
+@pytest.mark.asyncio
 async def test_fixed_llm_failure_has_no_retry_or_fallback() -> None:
     endpoint = _CompletionsEndpoint(error=RuntimeError("provider down"))
     client = FixedOpenAIResearchClient(

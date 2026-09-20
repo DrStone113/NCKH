@@ -639,6 +639,49 @@ def test_historical_tool_payloads_are_not_replayed_as_orphan_messages():
     assert "private_raw_payload" not in json.dumps(messages)
 
 
+def test_history_limit_counts_only_model_visible_conversation_turns():
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM([]), FakeTools(), FakeMemory(), FakeStore(), FakeDispatcher(), None
+    )
+    context = Context(
+        history=[
+            ChatTurn(role="user", content="Tôi muốn ăn burger"),
+            ChatTurn(role="assistant", content="Mình sẽ tìm burger phù hợp."),
+            ChatTurn(role="tool", content='{"results": [1]}', tool_name="search_dish_catalog"),
+            ChatTurn(role="tool", content='{"results": [2]}', tool_name="search_recipe_web"),
+            ChatTurn(role="assistant", content="Bạn có thể chọn burger gà."),
+        ]
+    )
+
+    messages = orchestrator._build_messages(
+        context,
+        "Cái nào cũng được",
+        history_turn_limit=2,
+    )
+
+    assert messages[-3:] == [
+        {"role": "assistant", "content": "Mình sẽ tìm burger phù hợp."},
+        {"role": "assistant", "content": "Bạn có thể chọn burger gà."},
+        {"role": "user", "content": "Cái nào cũng được"},
+    ]
+
+
+def test_zero_history_limit_replays_no_prior_turns():
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM([]), FakeTools(), FakeMemory(), FakeStore(), FakeDispatcher(), None
+    )
+    context = Context(history=[ChatTurn(role="user", content="Tin nhắn cũ")])
+
+    messages = orchestrator._build_messages(
+        context,
+        "Tin nhắn mới",
+        history_turn_limit=0,
+    )
+
+    assert [message["role"] for message in messages] == ["system", "user"]
+    assert messages[-1]["content"] == "Tin nhắn mới"
+
+
 def test_scope_guard_history_is_not_replayed_to_the_llm():
     orchestrator = AgentOrchestrator(
         ScriptedLLM([]),

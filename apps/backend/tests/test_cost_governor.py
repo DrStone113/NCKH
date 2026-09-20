@@ -28,10 +28,10 @@ def test_optimized_governor_has_hard_call_output_and_history_caps() -> None:
     assert simple.prompt_mode == "compact"
     assert simple.max_llm_calls == 2
     assert simple.max_output_tokens == 512
-    assert simple.history_turn_limit == 6
+    assert simple.history_turn_limit == 12
     assert complex_turn.max_llm_calls == 3
     assert complex_turn.max_output_tokens == 1200
-    assert complex_turn.history_turn_limit == 12
+    assert complex_turn.history_turn_limit == 24
 
 
 def test_compact_prompt_removes_most_static_prompt_tokens() -> None:

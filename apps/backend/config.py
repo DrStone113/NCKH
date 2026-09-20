@@ -78,8 +78,8 @@ class Settings(BaseSettings):
     llm_complex_max_output_tokens: int = Field(default=1200, ge=128, le=4096)
     llm_simple_max_calls: int = Field(default=2, ge=1, le=4)
     llm_complex_max_calls: int = Field(default=3, ge=2, le=6)
-    llm_simple_history_turns: int = Field(default=6, ge=0, le=24)
-    llm_complex_history_turns: int = Field(default=12, ge=0, le=32)
+    llm_simple_history_turns: int = Field(default=12, ge=0, le=24)
+    llm_complex_history_turns: int = Field(default=24, ge=0, le=32)
     llm_memory_summary_max_output_tokens: int = Field(default=512, ge=64, le=2048)
     llm_memory_fact_max_output_tokens: int = Field(default=512, ge=64, le=2048)
     backend_cost_mode: Literal["off", "observe", "enforce"] = "observe"
@@ -111,11 +111,10 @@ class Settings(BaseSettings):
     db_pool_recycle_seconds: int = Field(default=1800, ge=60, le=86400)
     embedding_model: str = "BAAI/bge-m3"
     cloudflare_tunnel_token: Optional[str] = None
-    # NOTE: a "turn" here is one row in ``chat_messages``, which includes tool
-    # calls and tool results — not one user/assistant exchange. At 10 a single
-    # tool-heavy question could consume the entire window, which is why the bot
-    # kept losing the thread mid-conversation. 24 is roughly 6-8 real exchanges.
-    max_history_turns: int = 24
+    # This is the database read window. Tool-heavy exchanges create extra rows,
+    # so load a wider window and let the orchestrator apply the smaller
+    # model-visible user/assistant caps above.
+    max_history_turns: int = 48
     rag_top_k: int = 5
     # Task 4.8 / Requirement 5.6: minimum cosine similarity for RAG hits.
     # Bumped from 0.5 to 0.6 as part of the chatbot-redesign spec.

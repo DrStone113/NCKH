@@ -578,9 +578,10 @@ async def test_load_context_retrieves_contextual_history():
     session_id = "sess-long"
     user_id = "user-1"
 
-    # Create 30 messages, so the first 6 are outside the history window of 24
+    # Create six more messages than the configured sliding window, so those
+    # first six remain available only through contextual-history retrieval.
     chat_messages = []
-    for i in range(30):
+    for i in range(settings.max_history_turns + 6):
         role = "user" if i % 2 == 0 else "assistant"
         content = f"tin-nhan-cũ-{i}" if i < 6 else f"tin-nhan-moi-{i}"
         chat_messages.append(
@@ -602,8 +603,8 @@ async def test_load_context_retrieves_contextual_history():
     # Query for one of the old messages (e.g. "tin-nhan-cũ-0")
     ctx = await svc.loadContext(session_id, "tin-nhan-cũ-0")
 
-    # History contains the last 24 messages
-    assert len(ctx.history) == 24
+    # History contains exactly the configured sliding window.
+    assert len(ctx.history) == settings.max_history_turns
     assert all("tin-nhan-moi" in m.content for m in ctx.history)
 
     # Contextual search (relevant_history) contains the messages outside the sliding window

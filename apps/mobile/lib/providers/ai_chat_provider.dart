@@ -159,6 +159,33 @@ class AIChatProvider extends ChangeNotifier {
     }
   }
 
+  /// Restore the most recent non-empty server session before creating a new
+  /// local session. Empty sessions are skipped because a WebSocket may have
+  /// created one even though the user never sent a message.
+  Future<bool> restoreLatestSession({
+    required Future<List<Map<String, dynamic>>> Function() loadSessions,
+    required Future<List<Map<String, dynamic>>> Function(String sessionId)
+        loadMessages,
+    int maxCandidates = 5,
+  }) async {
+    if (_messages.isNotEmpty) return true;
+
+    final sessions = await loadSessions();
+    for (final session in sessions.take(maxCandidates)) {
+      if (_messages.isNotEmpty) return true;
+      final sessionId = session['id']?.toString().trim() ?? '';
+      if (sessionId.isEmpty) continue;
+
+      final messages = await loadMessages(sessionId);
+      if (messages.isEmpty) continue;
+      if (_messages.isNotEmpty) return true;
+
+      loadExistingSession(sessionId, messages);
+      return true;
+    }
+    return false;
+  }
+
   /// Start a new fresh chat session
   void startNewSession() {
     disconnect();

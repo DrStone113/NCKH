@@ -1,0 +1,6 @@
+FROM qwen3:8b
+
+# The stock model was loading with a 4096-token runtime context. This alias
+# keeps enough recent conversation and tool schemas for multi-turn chat while
+# still fitting the development machine's 8 GB GPU more reliably than 16K.
+PARAMETER num_ctx 8192

@@ -294,6 +294,9 @@ _CONTINUATION_CUES = (
     "duoc", "ghi di", "ghi lai", "luu di", "luu lai", "huy", "thoi", "bo qua",
     "tai sao", "vi sao", "the con", "mon do", "mon nay", "bai do", "bai nay",
 )
+_CONTINUATION_RE = re.compile(
+    r"^(?:cai nao cung\b|cai do cung\b|chon dai\b|chon giup\b|tiep tuc\b).{0,48}$"
+)
 _TECH_TERMS = (
     "python", "javascript", "typescript", "java", "c++", "c#", "flutter", "firebase",
     "sql", "database", "api", "react", "docker", "github", "source code",
@@ -667,7 +670,7 @@ class ScopeGuard:
             )
         if _has(normalized, _WELLNESS_CUES + _HEALTH_CUES):
             return ScopeFragment(text, ScopeCategory.IN_SCOPE_GENERAL_WELLNESS, 0.97, "RULE", "WELLNESS_REQUEST")
-        if normalized in _CONTINUATION_CUES:
+        if normalized in _CONTINUATION_CUES or _CONTINUATION_RE.fullmatch(normalized):
             return ScopeFragment(text, ScopeCategory.IN_SCOPE_PROFILE_APP, 0.90, "RULE", "CONVERSATION_CONTINUATION")
         if classify_turn(text).is_chitchat:
             return ScopeFragment(text, ScopeCategory.OUT_OF_SCOPE, 0.99, "RULE", "SOCIAL_SMALLTALK")

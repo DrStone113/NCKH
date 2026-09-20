@@ -79,6 +79,7 @@ uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 ```bat
 # Cài Ollama từ https://ollama.com
 ollama pull qwen3:8b
+ollama create health-qwen3:8b-8k -f apps\backend\ollama\Modelfile.qwen3-8k
 ollama serve
 ```
 
@@ -87,9 +88,9 @@ Backend native (`apps/backend/.env`):
 ```env
 OPENAI_BASE_URL=http://127.0.0.1:11434/v1
 OPENAI_API_KEY=ollama
-LLM_MODEL=qwen3:8b
-HEAVY_LLM_MODEL=qwen3:8b
-SCOPE_CLASSIFIER_MODEL=qwen3:8b
+LLM_MODEL=health-qwen3:8b-8k
+HEAVY_LLM_MODEL=health-qwen3:8b-8k
+SCOPE_CLASSIFIER_MODEL=health-qwen3:8b-8k
 LLM_REASONING_EFFORT=none
 HEAVY_LLM_REASONING_EFFORT=high
 EMBEDDING_MODEL=BAAI/bge-m3

@@ -58,4 +58,60 @@ void main() {
 
     provider.dispose();
   });
+
+  test('restores the newest non-empty server session', () async {
+    final provider = AIChatProvider();
+    final requestedSessionIds = <String>[];
+
+    final restored = await provider.restoreLatestSession(
+      loadSessions: () async => [
+        {'id': 'empty-session'},
+        {'id': 'latest-real-session'},
+        {'id': 'older-session'},
+      ],
+      loadMessages: (sessionId) async {
+        requestedSessionIds.add(sessionId);
+        if (sessionId == 'empty-session') return [];
+        return [
+          {
+            'id': 'message-1',
+            'role': 'user',
+            'content': 'Tôi muốn ăn burger',
+            'created_at': '2026-09-20T03:00:00Z',
+          },
+          {
+            'id': 'message-2',
+            'role': 'assistant',
+            'content': 'Bạn có thể chọn burger gà.',
+            'created_at': '2026-09-20T03:00:01Z',
+          },
+        ];
+      },
+    );
+
+    expect(restored, isTrue);
+    expect(provider.currentSessionId, 'latest-real-session');
+    expect(requestedSessionIds, ['empty-session', 'latest-real-session']);
+    expect(provider.messages.map((message) => message.text), [
+      'Tôi muốn ăn burger',
+      'Bạn có thể chọn burger gà.',
+    ]);
+
+    provider.dispose();
+  });
+
+  test('does not create a session when server history is empty', () async {
+    final provider = AIChatProvider();
+
+    final restored = await provider.restoreLatestSession(
+      loadSessions: () async => [],
+      loadMessages: (_) async => [],
+    );
+
+    expect(restored, isFalse);
+    expect(provider.currentSessionId, isNull);
+    expect(provider.messages, isEmpty);
+
+    provider.dispose();
+  });
 }

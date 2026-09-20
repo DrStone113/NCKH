@@ -116,7 +116,22 @@ async def test_smalltalk_gets_a_deterministic_friendly_reply() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("text", ["có", "dạ có", "không", "ok", "vâng", "được", "món đó"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "có",
+        "dạ có",
+        "không",
+        "ok",
+        "vâng",
+        "được",
+        "món đó",
+        "cái nào cũng được",
+        "cái nào cũng dec",
+        "chọn đại 1 cái burger đi",
+        "tiếp tục đi",
+    ],
+)
 async def test_short_continuations_reach_pending_action_pipeline(text: str) -> None:
     assert (await ScopeGuard().classify(text)).should_call_main_llm is True
 

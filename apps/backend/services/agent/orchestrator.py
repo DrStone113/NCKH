@@ -3017,16 +3017,20 @@ class AgentOrchestrator:
         # so replaying a stored ``role=tool`` turn would create an orphan tool
         # message rejected by strict OpenAI-compatible providers. The final
         # assistant answer and rolling summary retain the user-facing facts.
-        history = list(context.history)
+        # Cost limits count model-visible conversational turns, not database
+        # rows. Tool results and scope-firewall markers can otherwise consume
+        # the whole window before they are discarded, making short replies
+        # such as "oke" look like a brand-new conversation.
+        history = [
+            turn
+            for turn in context.history
+            if turn.tool_name not in SCOPE_GUARD_HISTORY_MARKERS
+            and turn.role in {"user", "assistant"}
+        ]
         if history_turn_limit is not None:
-            history = history[-max(0, history_turn_limit):]
+            visible_limit = max(0, history_turn_limit)
+            history = history[-visible_limit:] if visible_limit else []
         for turn in history:
-            if turn.tool_name in SCOPE_GUARD_HISTORY_MARKERS:
-                continue
-            if turn.role == "tool":
-                continue
-            if turn.role not in {"user", "assistant"}:
-                continue
             msg: dict[str, Any] = {"role": turn.role, "content": turn.content}
             messages.append(msg)
         messages.append({"role": "user", "content": user_text})

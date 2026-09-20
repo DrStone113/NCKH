@@ -51,12 +51,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Map<String, dynamic>? _activePlan;
   bool _isLoadingPlan = false;
   bool _sending = false;
+  bool _restoringSession = true;
   AIChatProvider? _chatProvider;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final aiChatProvider =
           Provider.of<AIChatProvider>(context, listen: false);
@@ -83,13 +84,34 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         userProvider: userProvider,
       );
 
-      if (aiChatProvider.messages.isEmpty) {
-        aiChatProvider.initialize();
-      }
+      aiChatProvider.addListener(_onMessagesChanged);
+      await _restoreLatestSession(aiChatProvider, userId);
+      if (!mounted) return;
       _loadActivePlan();
       _scrollToBottom();
-      aiChatProvider.addListener(_onMessagesChanged);
     });
+  }
+
+  Future<void> _restoreLatestSession(
+    AIChatProvider aiChatProvider,
+    String? userId,
+  ) async {
+    var restored = aiChatProvider.messages.isNotEmpty;
+    if (!restored && userId != null && userId.isNotEmpty) {
+      try {
+        restored = await aiChatProvider.restoreLatestSession(
+          loadSessions: () => _backendApi.getChatSessions(userId: userId),
+          loadMessages: _backendApi.getSessionMessages,
+        );
+      } catch (error) {
+        debugPrint('Không thể tự khôi phục phiên chat gần nhất: $error');
+      }
+    }
+    if (!mounted) return;
+    if (!restored && aiChatProvider.messages.isEmpty) {
+      aiChatProvider.initialize();
+    }
+    setState(() => _restoringSession = false);
   }
 
   Future<void> _loadActivePlan() async {
@@ -1913,7 +1935,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildInputArea() {
     final aiChatProvider = Provider.of<AIChatProvider>(context);
-    final isStreaming = aiChatProvider.isStreaming ||
+    final isStreaming = _restoringSession ||
+        aiChatProvider.isStreaming ||
         aiChatProvider.isCheckingProfile ||
         _sending;
 
@@ -1950,9 +1973,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     controller: _textController,
                     enabled: !isStreaming,
                     decoration: InputDecoration(
-                      hintText: isStreaming
-                          ? 'AI đang suy nghĩ và phản hồi...'
-                          : 'Nhập câu hỏi hoặc yêu cầu tư vấn...',
+                      hintText: _restoringSession
+                          ? 'Đang khôi phục cuộc trò chuyện...'
+                          : isStreaming
+                              ? 'AI đang suy nghĩ và phản hồi...'
+                              : 'Nhập câu hỏi hoặc yêu cầu tư vấn...',
                       hintStyle: const TextStyle(
                         color: AppColors.textHint,
                         fontSize: 14,
@@ -2018,6 +2043,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final aiChatProvider = Provider.of<AIChatProvider>(context, listen: false);
     if (aiChatProvider.isStreaming ||
         aiChatProvider.isCheckingProfile ||
+        _restoringSession ||
         _sending) {
       return;
     }
@@ -2028,7 +2054,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _sendMessage(String text) async {
-    if (_sending || _chatProvider?.isStreaming == true) return;
+    if (_restoringSession || _sending || _chatProvider?.isStreaming == true) {
+      return;
+    }
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null) return;
     if (_textController.text.isEmpty) _textController.text = text;

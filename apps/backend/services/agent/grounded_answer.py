@@ -145,13 +145,11 @@ def validate_synthesized_fallback(
     if _query_is_vietnamese(query) and not _query_is_vietnamese(answer.answer):
         errors.append("ANSWER_LANGUAGE_MISMATCH")
     if synthesis.answerability == "PARTIALLY_SUPPORTED":
-        if not _is_limitation_statement(answer.answer):
+        if not any(marker in answer.answer.casefold() for marker in (
+            "ch\u01b0a \u0111\u1ee7 \u0111\u1ec3", "kh\u00f4ng \u0111\u1ee7 b\u1eb1ng ch\u1ee9ng", "kh\u00f4ng th\u1ec3 k\u1ebft lu\u1eadn",
+            "insufficient evidence", "not enough evidence", "cannot conclude",
+        )):
             errors.append("PARTIAL_SYNTHESIS_MISSING_LIMITATION")
-        if _requested_relationship(query) and _registry_supports_relationship(query, registry):
-            # A partial result is still permitted for an incomplete answer, but
-            # it must not claim that the requested relation is unavailable when
-            # a selected source directly states it.
-            pass
     if synthesis.answerability == "DIRECTLY_SUPPORTED" and _requested_relationship(query):
         if not _claims_support_requested_relationship(answer, query, registry):
             errors.append("SUPPORTED_RELATIONSHIP_MISSING")
@@ -195,6 +193,31 @@ async def validate_grounded_answer_semantically(
     )
 
 
+async def salvage_supported_claims(
+    candidates: tuple[GroundedAnswer | None, ...], registry: EvidenceRegistry,
+    *, verifier: SemanticVerifier,
+) -> GroundedAnswer | None:
+    """Keep independently entailed claims when whole-answer repair fails."""
+
+    kept: list[ClaimSupport] = []
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        for support in candidate.claim_support:
+            if not support.claim or support.claim in {item.claim for item in kept}:
+                continue
+            single = GroundedAnswer(support.claim, (support,))
+            if not (await validate_grounded_answer_semantically(single, registry, verifier=verifier)).errors:
+                kept.append(support)
+    if not kept:
+        return None
+    return GroundedAnswer(
+        " ".join(item.claim for item in kept)
+        + " Thông tin hiện có chưa đủ để kết luận về các khía cạnh còn lại.",
+        tuple(kept),
+    )
+
+
 def _deterministic_entailment(claim: str, evidence: tuple[str, ...]) -> SemanticVerdict:
     """Reject quantities and strength/causality overclaims before LLM entailment."""
 
@@ -211,8 +234,11 @@ def _deterministic_entailment(claim: str, evidence: tuple[str, ...]) -> Semantic
         return "NOT_SUPPORTED"
     if _is_preserving_translation(claim, evidence):
         return "SUPPORTED"
-    claim_terms = _semantic_terms(claim)
-    if claim_terms and claim_terms <= _semantic_terms(evidence_text):
+    normalized_claim = " ".join(claim_text.split()).strip(" .!?")
+    if any(
+        normalized_claim == " ".join(sentence.split()).strip(" .!?")
+        for item in evidence for sentence in re.split(r"(?<=[.!?])\s+", item.casefold())
+    ):
         return "SUPPORTED"
     return "UNCERTAIN"
 
@@ -250,6 +276,13 @@ def deterministic_question_aware_synthesis(*, query: str, registry: EvidenceRegi
     """
 
     item = registry.best_evidence(query)
+    if item is None and _query_is_vietnamese(query):
+        query_words = set(re.findall(r"[\w\u00c0-\u1ef9]{3,}", query.casefold()))
+        item = next((entry for entry in registry.items if any(
+            " ".join(original.casefold().split()) in " ".join(entry.content.casefold().split())
+            and len(query_words & set(re.findall(r"[\w\u00c0-\u1ef9]{3,}", translated.casefold()))) >= 2
+            for original, translated in _PRESERVING_TRANSLATIONS
+        )), None)
     if item is None:
         return SynthesizedFallback("NOT_SUPPORTED", GroundedAnswer(minimal_insufficient_evidence_response(), ()))
     translations = {
@@ -318,14 +351,6 @@ def _requested_relationship(query: str) -> str | None:
     return next((name for name, phrases in _RELATION_PATTERNS if any(phrase in text for phrase in phrases)), None)
 
 
-def _registry_supports_relationship(query: str, registry: EvidenceRegistry) -> bool:
-    relation = _requested_relationship(query)
-    if relation is None:
-        return True
-    phrases = next(phrases for name, phrases in _RELATION_PATTERNS if name == relation)
-    return any(any(phrase in item.content.casefold() for phrase in phrases) for item in registry.items)
-
-
 def _claims_support_requested_relationship(answer: GroundedAnswer, query: str, registry: EvidenceRegistry) -> bool:
     relation = _requested_relationship(query)
     if relation is None:
@@ -337,15 +362,6 @@ def _claims_support_requested_relationship(answer: GroundedAnswer, query: str, r
     ).casefold()
     claims = " ".join(support.claim for support in answer.claim_support).casefold()
     return any(phrase in selected for phrase in phrases) and any(phrase in claims for phrase in phrases)
-
-
-def _semantic_terms(value: str) -> set[str]:
-    ignored = {"là", "và", "có", "cho", "của", "các", "một", "những", "the", "and", "for", "with"}
-    return {
-        word.casefold()
-        for word in re.findall(r"[\wÀ-ỹ]+", value, flags=re.UNICODE)
-        if len(word) >= 3 and word.casefold() not in ignored
-    }
 
 
 def _answer_segments(answer: str) -> tuple[str, ...]:
@@ -361,11 +377,15 @@ def _answer_segments(answer: str) -> tuple[str, ...]:
 def _is_limitation_statement(value: str) -> bool:
     """Limitations are answer-policy statements, not medical factual claims."""
 
-    normalized = value.casefold()
-    return any(marker in normalized for marker in (
-        "ch\u01b0a \u0111\u1ee7 \u0111\u1ec3", "kh\u00f4ng \u0111\u1ee7 b\u1eb1ng ch\u1ee9ng", "kh\u00f4ng th\u1ec3 k\u1ebft lu\u1eadn",
-        "insufficient evidence", "not enough evidence", "cannot conclude",
-    ))
+    normalized = " ".join(value.casefold().split()).strip(" .!?")
+    return bool(re.fullmatch(
+        r"(?:th\u00f4ng tin hi\u1ec7n c\u00f3|ngu\u1ed3n hi\u1ec7n c\u00f3|hi\u1ec7n|"
+        r"the available evidence|there is|insufficient evidence|not enough evidence|"
+        r"kh\u00f4ng \u0111\u1ee7 b\u1eb1ng ch\u1ee9ng)[^.;!?]{0,100}"
+        r"(?:ch\u01b0a \u0111\u1ee7 \u0111\u1ec3|kh\u00f4ng \u0111\u1ee7 b\u1eb1ng ch\u1ee9ng|"
+        r"kh\u00f4ng th\u1ec3 k\u1ebft lu\u1eadn|insufficient evidence|not enough evidence|cannot conclude)"
+        r"[^.;!?]{0,180}", normalized,
+    )) and not re.search(r"\b(?:nh\u01b0ng|but|however|tuy nhi\u00ean)\b", normalized)
 
 
 def _query_is_vietnamese(value: str) -> bool:
@@ -390,7 +410,7 @@ def repair_prompt(
     unsupported_claims: tuple[str, ...] = (),
 ) -> str:
     return json.dumps({
-        "instruction": "Rewrite only from the evidence registry. Return JSON with answer and claim_support. Every material factual claim must appear verbatim in answer and cite one or more existing E IDs. Do not write sources, URLs, citations, or facts outside the registry. If insufficient, state the limitation.",
+        "instruction": "Surgically remove or scope only unsupported claims; preserve every independently supported claim and its evidence ID. Return JSON with answer and claim_support. Every material factual claim must appear verbatim in answer and cite one or more existing E IDs. Do not write sources, URLs, citations, or facts outside the registry. For an unsupported aspect state a scoped limitation instead of erasing supported aspects.",
         "original_answer": original_answer,
         "validation_errors": list(errors),
         "unsupported_claims": list(unsupported_claims),

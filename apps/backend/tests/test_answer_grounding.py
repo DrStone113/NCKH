@@ -15,6 +15,7 @@ from services.agent.grounded_answer import (
     parse_grounded_answer,
     parse_synthesized_fallback,
     render_grounded_answer,
+    salvage_supported_claims,
     validate_grounded_answer,
     validate_grounded_answer_semantically,
     validate_synthesized_fallback,
@@ -43,6 +44,25 @@ def test_evidence_grounding_accepts_context_chunks_forwarded_to_generation() -> 
     outcome = _validate(ToolResult(ok=True, data={"chunks": [{"content": "Nguồn đã truy xuất"}]}))
 
     assert outcome.passed
+
+
+def test_web_search_material_is_captured_with_application_provenance() -> None:
+    result = ToolResult(ok=True, data={"ket_qua": [{
+        "title": "Exercise guidance", "noi_dung": "Regular exercise may improve sleep quality.",
+        "url": "https://medlineplus.gov/exercise.html", "nguon": "web",
+    }]})
+    call = ToolCall("web", "search_medical_knowledge", {})
+
+    assert validate_answer("Exercise may improve sleep.", validators=("EVIDENCE_GROUNDING",), tool_results=((call, result),)).passed
+    registry = EvidenceRegistry.from_tool_results(((call, result),))
+    assert registry.items[0].content == "Regular exercise may improve sleep quality."
+    assert registry.items[0].provenance == "https://medlineplus.gov/exercise.html"
+
+
+def test_empty_web_search_does_not_count_as_material_evidence() -> None:
+    call = ToolCall("web", "search_medical_knowledge", {})
+    outcome = validate_answer("Claim.", validators=("EVIDENCE_GROUNDING",), tool_results=((call, ToolResult(ok=True, data={"ket_qua": []})),))
+    assert outcome.failure_codes == ("EVIDENCE_MISSING",)
 
 
 def test_evidence_registry_uses_application_owned_ids_and_source_metadata() -> None:
@@ -83,6 +103,13 @@ def test_unsupported_extra_fact_is_rejected_before_repair_or_fallback() -> None:
     )
 
     assert "UNSUPPORTED_UNMAPPED_CLAIM" in validate_grounded_answer(answer, _registry())
+
+
+def test_limitation_cannot_mask_an_unmapped_fact_in_the_same_sentence() -> None:
+    answer = GroundedAnswer("Thông tin hiện có chưa đủ để kết luận, nhưng món này chữa bệnh.", ())
+    assert "UNSUPPORTED_UNMAPPED_CLAIM" in validate_grounded_answer(answer, _registry())
+    synthesis = SynthesizedFallback("NOT_SUPPORTED", answer)
+    assert "NOT_SUPPORTED_SYNTHESIS_MUST_BE_MINIMAL" in validate_synthesized_fallback(synthesis, _registry(), query="Món này chữa bệnh không?")
 
 
 def test_empty_registry_enters_validation_and_fails_closed() -> None:
@@ -218,12 +245,49 @@ def test_semantic_validator_rejects_model_memory_addition_and_uncertainty() -> N
     assert "SEMANTIC_CLAIM_NOT_SUPPORTED" in outcome.errors
 
 
+@pytest.mark.parametrize(("source", "claim"), [
+    ("Food is not safe.", "Food is safe."),
+    ("Exercise may improve sleep.", "Exercise improves sleep."),
+])
+def test_term_overlap_never_substitutes_for_semantic_support(source: str, claim: str) -> None:
+    registry = _english_evidence_registry(source)
+    answer = GroundedAnswer(claim, (ClaimSupport(claim, ("E1",)),))
+    outcome = asyncio.run(validate_grounded_answer_semantically(
+        answer, registry, verifier=lambda c, e: _verdict("NOT_SUPPORTED", c, e),
+    ))
+    assert outcome.unsupported_claims == (claim,)
+
+
 def test_repaired_supported_claim_is_accepted_semantically() -> None:
     answer = GroundedAnswer("Thực phẩm này chứa protein.", (ClaimSupport("Thực phẩm này chứa protein.", ("E1",)),))
     registry = EvidenceRegistry.from_tool_results(((ToolCall("rag", "query_rag", {}), ToolResult(ok=True, data={"chunks": [{"content": "Thực phẩm này chứa protein.", "metadata": {}}]})),))
 
     outcome = asyncio.run(validate_grounded_answer_semantically(answer, registry, verifier=lambda c, e: _verdict("NOT_SUPPORTED", c, e)))
     assert outcome.errors == ()
+
+
+def test_salvage_keeps_supported_claims_and_provenance_after_failed_repair() -> None:
+    registry = _english_evidence_registry("Regular exercise may improve sleep quality. Nuts contain magnesium.")
+    original = GroundedAnswer(
+        "Regular exercise may improve sleep quality. Nuts cure insomnia.", (
+            ClaimSupport("Regular exercise may improve sleep quality.", ("E1",)),
+            ClaimSupport("Nuts cure insomnia.", ("E1",)),
+        ),
+    )
+    repaired = GroundedAnswer("Nuts contain magnesium. Nuts cure insomnia.", (
+        ClaimSupport("Nuts contain magnesium.", ("E1",)),
+        ClaimSupport("Nuts cure insomnia.", ("E1",)),
+    ))
+    salvaged = asyncio.run(salvage_supported_claims(
+        (original, repaired), registry, verifier=lambda c, e: _verdict("NOT_SUPPORTED", c, e),
+    ))
+    assert salvaged is not None
+    assert [item.claim for item in salvaged.claim_support] == [
+        "Regular exercise may improve sleep quality.", "Nuts contain magnesium.",
+    ]
+    assert "Nuts cure insomnia" not in salvaged.answer
+    assert validate_grounded_answer(salvaged, registry) == ()
+    assert render_grounded_answer(salvaged, registry).endswith("Nguồn: Evidence publisher.")
 
 
 def test_fallback_is_concise_query_focused_and_preserves_provenance() -> None:
@@ -298,6 +362,13 @@ def test_deterministic_synthesis_translates_supported_english_evidence_without_e
     assert outcome.errors == ()
 
 
+def test_deterministic_synthesis_rejects_irrelevant_evidence() -> None:
+    registry = _english_evidence_registry("Regular exercise may improve sleep quality.")
+    synthesis = deterministic_question_aware_synthesis(query="What is the price of gasoline?", registry=registry)
+    assert synthesis.answerability == "NOT_SUPPORTED"
+    assert synthesis.grounded_answer.claim_support == ()
+
+
 def test_synthesis_english_evidence_directly_answers_supported_relation() -> None:
     registry = _english_evidence_registry("Regular exercise improves sleep quality.")
     synthesis = SynthesizedFallback(
@@ -320,7 +391,9 @@ def test_synthesis_classifies_component_facts_without_requested_relation_as_part
         ),
     )
 
-    assert validate_synthesized_fallback(synthesis, registry, query="Magie có gây cải thiện giấc ngủ không?") == ()
+    assert "UNSUPPORTED_UNMAPPED_CLAIM" in validate_synthesized_fallback(
+        synthesis, registry, query="Magie có gây cải thiện giấc ngủ không?",
+    )
 
 
 def test_synthesis_classifies_absent_relationship_as_not_supported() -> None:

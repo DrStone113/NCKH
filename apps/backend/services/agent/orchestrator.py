@@ -49,6 +49,7 @@ from services.agent.grounded_answer import (
     parse_grounded_answer,
     repair_prompt,
     render_grounded_answer,
+    salvage_supported_claims,
     validate_grounded_answer,
     validate_grounded_answer_semantically,
     validate_synthesized_fallback,
@@ -1922,10 +1923,12 @@ class AgentOrchestrator:
                             parse_ok = False
                             claim_support_present = False
                             grounded = None
+                            original_grounded = None
                             try:
                                 parsed_value = json.loads(full_response.strip().removeprefix("```json").removesuffix("```").strip())
                                 claim_support_present = isinstance(parsed_value, dict) and "claim_support" in parsed_value
                                 grounded = parse_grounded_answer(full_response)
+                                original_grounded = grounded
                                 parse_ok = True
                                 semantic_validation = await validate_grounded_answer_semantically(
                                     grounded,
@@ -2027,12 +2030,22 @@ class AgentOrchestrator:
                                 except Exception:
                                     grounding_errors = ("GROUNDING_REPAIR_FAILED",)
                             if grounding_errors:
-                                full_response, answerability, synthesis_errors = await self._question_aware_evidence_fallback(
-                                    llm,
-                                    query=user_text,
-                                    registry=registry,
-                                    max_tokens=cost_limits.max_output_tokens,
+                                salvaged = await salvage_supported_claims(
+                                    (original_grounded, grounded), registry,
+                                    verifier=lambda claim, evidence: self._verify_grounding_entailment(
+                                        llm, claim=claim, evidence=evidence,
+                                    ),
                                 )
+                                if salvaged is not None:
+                                    full_response = render_grounded_answer(salvaged, registry)
+                                    answerability, synthesis_errors = "PARTIALLY_SUPPORTED", ()
+                                else:
+                                    full_response, answerability, synthesis_errors = await self._question_aware_evidence_fallback(
+                                        llm,
+                                        query=user_text,
+                                        registry=registry,
+                                        max_tokens=cost_limits.max_output_tokens,
+                                    )
                                 await self._record_debug(
                                     gateway, debug_trace, "validation", "grounded_answer",
                                     "GROUNDING_FALLBACK",

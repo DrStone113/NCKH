@@ -30,13 +30,14 @@ class EvidenceRegistry:
             name = str(getattr(call, "name", ""))
             for chunk in _chunks(result.data):
                 title = str(chunk.get("title") or name or "Dữ liệu đã xác minh")
-                content = str(chunk.get("content") or "").strip()
+                content = str(chunk.get("content") or chunk.get("noi_dung") or "").strip()
                 if not content:
                     continue
                 metadata = dict(chunk.get("metadata") or {})
                 source = dict(metadata.get("source") or {})
                 provenance = str(
-                    source.get("source_name") or metadata.get("publisher") or name
+                    source.get("source_name") or metadata.get("publisher")
+                    or chunk.get("url") or chunk.get("nguon") or name
                 ).strip()
                 items.append(EvidenceItem(
                     evidence_id=f"E{len(items) + 1}", source_type="RAG" if name in {"query_rag", "search_medical_knowledge"} else "TOOL",
@@ -76,7 +77,10 @@ class EvidenceRegistry:
     def best_evidence(self, query: str) -> EvidenceItem | None:
         """Return the most query-relevant turn-local evidence item, if any."""
 
-        return self._best_item(query) if self.items else None
+        if not self.items:
+            return None
+        item = self._best_item(query)
+        return item if _terms(query) & _terms(item.title + " " + item.content) else None
 
     def compact_evidence_sentences(self, item: EvidenceItem, *, query: str, maximum: int = 2) -> tuple[str, ...]:
         """Expose bounded complete sentences for application-owned synthesis."""
@@ -100,7 +104,7 @@ class EvidenceRegistry:
 
 def _chunks(value: Any) -> list[dict[str, Any]]:
     if isinstance(value, dict):
-        value = value.get("chunks", value.get("results", []))
+        value = value.get("chunks", value.get("results", value.get("ket_qua", [])))
     if not isinstance(value, (list, tuple)):
         return []
     output: list[dict[str, Any]] = []

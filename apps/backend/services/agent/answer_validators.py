@@ -111,12 +111,14 @@ def _has_material_evidence(value: Any) -> bool:
     """
 
     if isinstance(value, (list, tuple)):
-        return bool(value)
+        return any(_has_material_evidence(item) for item in value)
     if not isinstance(value, dict):
         return False
+    if str(value.get("content") or value.get("noi_dung") or "").strip():
+        return True
     return any(
         _has_material_evidence(value.get(key))
-        for key in ("chunks", "results", "documents", "items")
+        for key in ("chunks", "results", "documents", "items", "ket_qua")
         if key in value
     )
 

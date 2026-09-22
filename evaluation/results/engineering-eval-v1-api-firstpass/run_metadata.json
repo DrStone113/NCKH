@@ -1,0 +1,35 @@
+{
+  "run_id": "engineering-eval-v1-api-firstpass",
+  "started_at": "2026-09-21T15:12:49.801193+00:00",
+  "FINAL_SCORING_STARTED": "YES",
+  "frozen_hashes": {
+    "evaluation/exclusion_index.json": "a1ee53ddff0fd8a8225a333266ec7d415286617f53998cdd694d19fd8f049398",
+    "evaluation/routing/candidate_pool_v1.jsonl": "3af329ba762173ed1922dd96e35a74ca48d2bd9df78ce0e9911d51428f036e35",
+    "evaluation/routing/holdout_v1.jsonl": "48ab24cf15ab337917b4cfde965ce8ec181e120024c352eb41f8b367c0a60a35",
+    "evaluation/routing/oracle_v1.json": "cb0e601f01521bbccbea79f9b9adb4cec405c09fbb879f6f7925ecda88d6a692",
+    "evaluation/rag/eval_queries_v1.jsonl": "eec9ad4749fb6946ed9ce24c207611e5b95639181e5154988dfa5cde59754aa0",
+    "evaluation/rag/oracle_v1.json": "6397ac0510ee5a00b40819ea239897dca33ace3b5df06655f2c2173ebaeed928",
+    "apps/backend/data/research_corpus_manifest.json": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "evaluation/safety/cases_v1.jsonl": "e4e9cdae1b0be8c8ea74bf057e611da1024e46d5f410ee3383ff53696fccc7fe"
+  },
+  "api": {
+    "base_url": "http://127.0.0.1:8080",
+    "model_identifier": "chatbot",
+    "provider": "Vilao-compatible OpenAI API",
+    "attempts_per_model": 1,
+    "cross_model_fallback": false
+  },
+  "routing_c": {
+    "evaluated": "NO",
+    "reason": "CURRENT_SEMANTIC_PARSER_IS_PINNED_LOCAL_QWEN; no API semantic parser is configured and benchmark forbids changing it."
+  },
+  "resumed_after_terminal_timeout_at": "2026-09-21T15:41:26.352592+00:00",
+  "status": "BLOCKED",
+  "blocker": "Live PostgreSQL had knowledge_chunks=0 and chunk_embeddings=0; remaining RAG generation and health API calls were not run because the requested end-to-end benchmark precondition was absent.",
+  "completed_at": "2026-09-21T15:41:26.376366+00:00",
+  "api_calls": {
+    "rag_generation": 31,
+    "health_safety": 0,
+    "errors": 0
+  }
+}

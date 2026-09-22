@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from config import Settings
+from config import Settings, settings
+from models.schemas import KnowledgeChunk
 from services.agent.debug_trace import (
     DebugTraceBuilder,
     classify_provider_token,
@@ -164,3 +165,39 @@ def test_debug_tool_telemetry_uses_field_names_and_safe_ids_not_profile_records(
     assert result_payload["catalog_dish_id"] == "dish-7"
     for private_value in ("private@example.com", "private condition", "72"):
         assert private_value not in rendered
+
+
+def test_acceptance_trace_retains_structured_list_tool_evidence(monkeypatch) -> None:
+    monkeypatch.setattr(
+        type(settings),
+        "acceptance_evaluation_trace_enabled",
+        property(lambda _settings: True),
+    )
+    call = ToolCall(id="rag-read", name="query_rag", arguments={"query": "protein"})
+    result = ToolResult(
+        ok=True,
+        data=[
+            KnowledgeChunk(
+                id="chunk-1",
+                category="nutrition",
+                title="Protein",
+                content="Evidence content",
+                metadata={"source_name": "Official source"},
+                similarity=0.9,
+            )
+        ],
+    )
+
+    payload = AgentOrchestrator._debug_tool_result_payload(call, result)
+
+    assert payload["result_keys"] == []
+    assert payload["acceptance_evidence"] == [
+        {
+            "id": "chunk-1",
+            "category": "nutrition",
+            "title": "Protein",
+            "content": "Evidence content",
+            "metadata": {"source_name": "Official source"},
+            "similarity": 0.9,
+        }
+    ]

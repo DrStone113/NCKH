@@ -10,10 +10,34 @@ from services.agent.llm_client import ToolCall
 from services.agent.tool_dispatcher import (
     ToolDispatcher,
     ToolResult,
+    _json_safe_tool_result_data,
     _normalise_plan_profile,
 )
 from services.agent.tool_registry import ToolDescriptor, ToolRegistry
 from services.agent.tools.plan_tools import CREATE_LONG_TERM_PLAN_DESCRIPTOR
+from models.schemas import KnowledgeChunk
+
+
+def test_tool_result_audit_serializes_structured_knowledge_chunks() -> None:
+    value = _json_safe_tool_result_data([
+        KnowledgeChunk(
+            id="chunk-1",
+            category="nutrition",
+            title="Protein",
+            content="Evidence content",
+            metadata={"source_name": "Official source"},
+            similarity=0.9,
+        )
+    ])
+
+    assert value == [{
+        "id": "chunk-1",
+        "category": "nutrition",
+        "title": "Protein",
+        "content": "Evidence content",
+        "metadata": {"source_name": "Official source"},
+        "similarity": 0.9,
+    }]
 
 
 def test_normalise_plan_profile_uses_flutter_context_and_requested_goal():

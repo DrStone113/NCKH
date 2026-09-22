@@ -51,6 +51,16 @@ _PROTOTYPES: dict[ScopeIntent, tuple[str, ...]] = {
         "Đổi bữa tối trong kế hoạch dinh dưỡng.",
         "Thực đơn tuần này của tôi thế nào?",
         "Lên meal plan phù hợp với mục tiêu.",
+        # Object-light personal planning is admitted by the deterministic
+        # temporal/owner shape rule as well.  These prototypes keep semantic
+        # coverage for natural Vietnamese-English variations outside that
+        # exact grammar; downstream still clarifies meal/workout/both.
+        "Lên kế hoạch ngày mai cho tôi.",
+        "Hello lên kế hoạch ngày mai cho tôi đi.",
+        "Plan ngày mai cho mình.",
+        "Can you plan tomorrow for me?",
+        "Giúp tôi make a plan cho ngày mai.",
+        "Tạo kế hoạch ăn và tập cho ngày mai.",
     ),
     ScopeIntent.FITNESS: (
         "Gợi ý bài tập tại nhà.",

@@ -1,0 +1,54 @@
+{
+  "broken_records": 0,
+  "chunk_length": {
+    "max": 1785,
+    "min": 76,
+    "p50": 515,
+    "p95": 620
+  },
+  "empty_chunks": 0,
+  "exact_duplicates": 0,
+  "missing_provenance": 0,
+  "missing_source_id": 0,
+  "near_duplicate_title_collisions": 70,
+  "quality_pass": true,
+  "record_count": 4419,
+  "records_by_domain": {
+    "body_metric": 1,
+    "dish": 101,
+    "exercise": 887,
+    "food": 3306,
+    "health": 42,
+    "health_safety": 1,
+    "micronutrient": 28,
+    "nutrition": 44,
+    "physical_activity_guideline": 8,
+    "weight_management": 1
+  },
+  "records_by_language": {
+    "en": 4295,
+    "und": 111,
+    "vi": 13
+  },
+  "records_by_license": {
+    "CC-BY-SA 3": 133,
+    "CC-BY-SA 4": 724,
+    "CC0": 20,
+    "CC0-1.0": 3306,
+    "NLM_PUBLIC_DOMAIN_WITH_ATTRIBUTION": 112,
+    "PROJECT_CURATED": 111,
+    "SUMMARY_ONLY_ATTRIBUTED": 6,
+    "US_GOVERNMENT_PUBLIC_DOMAIN_UNLESS_NOTED": 7
+  },
+  "records_by_source": {
+    "CDC_PHYSICAL_ACTIVITY_GUIDANCE": 4,
+    "DGA_2025_2030": 3,
+    "MEDLINEPLUS_DEFINITIONS": 70,
+    "MEDLINEPLUS_HEALTH_TOPICS": 42,
+    "USDA_FDC_FOUNDATION_2026": 363,
+    "V1_FROZEN_RESEARCH": 111,
+    "V2_FROZEN_RESEARCH": 3826
+  },
+  "schema_version": "research-final-quality-audit-1",
+  "unclassified_license": 0
+}

@@ -1,0 +1,9 @@
+{
+  "negation_write_cases": 20,
+  "pending_action_cases": 20,
+  "FALSE_POSITIVE_WRITE_INTENT": 1,
+  "PENDING_ACTION_TARGET_MUTATION": 0,
+  "PLAN_REGENERATED_ON_SAVE": 0,
+  "pending_resolution_accuracy": 1.0,
+  "HEALTH_SAFETY_CRITICAL_MISS": "NOT_MEASURED_REQUIRES_QUALITATIVE_CLINICAL_REVIEW"
+}

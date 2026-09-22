@@ -1,0 +1,200 @@
+{"case_id": "AVN-001", "ids": [], "latency_ms": 3264.751}
+{"case_id": "AVN-002", "ids": ["f8a8c862-4d2e-5ed9-b807-e1965ce321bf"], "latency_ms": 166.135}
+{"case_id": "AVN-003", "ids": [], "latency_ms": 85.244}
+{"case_id": "AVN-004", "ids": [], "latency_ms": 59.789}
+{"case_id": "AVN-005", "ids": [], "latency_ms": 63.665}
+{"case_id": "AVN-006", "ids": [], "latency_ms": 77.728}
+{"case_id": "AVN-007", "ids": [], "latency_ms": 72.585}
+{"case_id": "AVN-008", "ids": ["0cb15a9d-8667-57b3-b9cc-be2529633fb2", "f724761d-cde3-5194-9a95-cb81353462e3", "d7a454b5-5675-5efd-a36b-0abe402fd706", "03a6161a-a99f-5b9f-bc34-e134daa09022", "23c312d6-2399-507c-bdc7-4c7a82795a20", "2c10b816-5c2a-5e34-b562-2a554e8429ed", "dd94cad9-31a3-5cf9-a500-0d1c9779f934", "cced262c-16a9-5438-b1a4-5e89af8412aa", "df745689-988c-588e-b9c0-289eef1d9828", "295c2d4a-f0ac-5a7d-a6cf-f6db379e7d87"], "latency_ms": 80.049}
+{"case_id": "AVN-009", "ids": [], "latency_ms": 68.293}
+{"case_id": "AVN-010", "ids": [], "latency_ms": 70.382}
+{"case_id": "AVN-011", "ids": [], "latency_ms": 87.839}
+{"case_id": "AVN-012", "ids": [], "latency_ms": 87.544}
+{"case_id": "AVN-013", "ids": [], "latency_ms": 57.927}
+{"case_id": "AVN-014", "ids": [], "latency_ms": 65.977}
+{"case_id": "AVN-015", "ids": [], "latency_ms": 63.842}
+{"case_id": "AVN-016", "ids": [], "latency_ms": 62.797}
+{"case_id": "AVN-017", "ids": [], "latency_ms": 67.186}
+{"case_id": "AVN-018", "ids": [], "latency_ms": 60.538}
+{"case_id": "AVN-019", "ids": [], "latency_ms": 61.709}
+{"case_id": "AVN-020", "ids": [], "latency_ms": 62.139}
+{"case_id": "AVN-021", "ids": [], "latency_ms": 60.759}
+{"case_id": "AVN-022", "ids": [], "latency_ms": 66.719}
+{"case_id": "AVN-023", "ids": [], "latency_ms": 69.115}
+{"case_id": "AVN-024", "ids": [], "latency_ms": 59.423}
+{"case_id": "AVN-025", "ids": [], "latency_ms": 57.474}
+{"case_id": "AVN-026", "ids": [], "latency_ms": 63.969}
+{"case_id": "AVN-027", "ids": [], "latency_ms": 57.926}
+{"case_id": "AVN-028", "ids": [], "latency_ms": 59.688}
+{"case_id": "AVN-029", "ids": [], "latency_ms": 63.843}
+{"case_id": "AVN-030", "ids": [], "latency_ms": 63.425}
+{"case_id": "AVN-031", "ids": [], "latency_ms": 67.675}
+{"case_id": "AVN-032", "ids": [], "latency_ms": 60.003}
+{"case_id": "AVN-033", "ids": [], "latency_ms": 59.609}
+{"case_id": "AVN-034", "ids": [], "latency_ms": 66.469}
+{"case_id": "AVN-035", "ids": [], "latency_ms": 61.1}
+{"case_id": "AVN-036", "ids": [], "latency_ms": 61.975}
+{"case_id": "AVN-037", "ids": [], "latency_ms": 61.778}
+{"case_id": "AVN-038", "ids": [], "latency_ms": 74.016}
+{"case_id": "AVN-039", "ids": [], "latency_ms": 68.417}
+{"case_id": "AVN-040", "ids": [], "latency_ms": 64.745}
+{"case_id": "AVN-041", "ids": [], "latency_ms": 66.852}
+{"case_id": "AVN-042", "ids": [], "latency_ms": 59.628}
+{"case_id": "AVN-043", "ids": [], "latency_ms": 60.471}
+{"case_id": "AVN-044", "ids": [], "latency_ms": 61.044}
+{"case_id": "AVN-045", "ids": [], "latency_ms": 60.999}
+{"case_id": "AVN-046", "ids": ["da0f3b26-f1ce-5e14-b1b4-cc4a2cd696e2"], "latency_ms": 63.682}
+{"case_id": "AVN-047", "ids": ["f2b9849c-9978-5c57-a063-c1c7563c600b", "b0c6762d-bd58-5bbf-b922-1c2b59e84a9b", "aaf0f235-7c3c-5374-b704-ca4ebd5faa81", "b633c23f-61ae-5c6e-a7b1-7e5b1877504b", "f9f7e6a8-742d-5dc4-baea-4615c5697b1f", "5aa4e378-87b0-5669-b4a9-6706589977e7", "39f26a9b-ad29-50ec-9c52-fe75e38e649f", "3ae6fca6-68b1-58a7-8273-20d81efb52ab", "04ba0ee3-d9f5-5068-9d1b-7f543f653bdd", "8705f49b-da71-5d0c-ae9f-8460bdb80961"], "latency_ms": 82.997}
+{"case_id": "AVN-048", "ids": [], "latency_ms": 58.375}
+{"case_id": "AVN-049", "ids": [], "latency_ms": 61.01}
+{"case_id": "AVN-050", "ids": [], "latency_ms": 60.465}
+{"case_id": "AVN-051", "ids": [], "latency_ms": 62.886}
+{"case_id": "AVN-052", "ids": [], "latency_ms": 74.746}
+{"case_id": "AVN-053", "ids": ["a9430765-0b5c-539c-a95f-ea50956e97b3", "4f9127ba-0c90-5b11-83d8-d4113f3d0af1", "4a2d0a40-bdff-5f53-a4a5-4906fd3b6b8c", "aa568d8f-0f30-565e-90c3-1aa32db7a3a7", "98656f0a-eb91-57c3-827c-a8b12f7d294c", "0e15fe0f-6746-5251-8802-09232588d8e2", "2ad31dc3-8abd-5803-9ffe-9dc34f75e1cc", "fca45779-c284-51bb-9919-d25ddaf573e6", "88cbfe13-ff40-5bbd-b880-9c5d482d9a6d", "3a873b3f-1e5f-5350-b24a-0960a5abb241"], "latency_ms": 64.535}
+{"case_id": "AVN-054", "ids": [], "latency_ms": 67.462}
+{"case_id": "AVN-055", "ids": [], "latency_ms": 61.915}
+{"case_id": "AVN-056", "ids": [], "latency_ms": 67.897}
+{"case_id": "AVN-057", "ids": [], "latency_ms": 60.418}
+{"case_id": "AVN-058", "ids": [], "latency_ms": 61.973}
+{"case_id": "AVN-059", "ids": [], "latency_ms": 68.974}
+{"case_id": "AVN-060", "ids": [], "latency_ms": 61.296}
+{"case_id": "AVN-061", "ids": ["3c2c2c54-29cc-52f3-933a-9357ccc9fbf0", "794fa1a1-eadc-5c3b-9f7c-c5d56223ec44", "aa0c3c8c-c8d4-5a29-9479-907ada9fcab9"], "latency_ms": 67.351}
+{"case_id": "AVN-062", "ids": ["ac9969a9-bbcb-5a03-8124-5a3a6a0cb7ba", "1d862752-dfc3-5850-b646-844cc97024c6", "e0c3cd60-76bb-5005-8ad1-a87521e7ac8d", "b7fecad5-4e37-5046-bd8f-89fd6d19ff7b", "2285b0d2-7bab-50a6-8328-8a113d31b492", "b2850e15-cdc8-5d3a-8c4b-c8d12826facd"], "latency_ms": 65.349}
+{"case_id": "AVN-063", "ids": [], "latency_ms": 57.802}
+{"case_id": "AVN-064", "ids": ["42b79189-275c-5e8f-aa19-dd53383bd261"], "latency_ms": 69.359}
+{"case_id": "AVN-065", "ids": ["57afe3a0-622b-5c28-aef7-47e766d417b8"], "latency_ms": 59.619}
+{"case_id": "AVN-066", "ids": [], "latency_ms": 57.682}
+{"case_id": "AVN-067", "ids": ["2285b0d2-7bab-50a6-8328-8a113d31b492", "b7fecad5-4e37-5046-bd8f-89fd6d19ff7b"], "latency_ms": 63.02}
+{"case_id": "AVN-068", "ids": ["0b47f96e-fe2c-54ed-89e7-b30a14f5f419", "1acc5340-42f9-52c0-8698-02ce6a952879", "b7fecad5-4e37-5046-bd8f-89fd6d19ff7b", "e0c3cd60-76bb-5005-8ad1-a87521e7ac8d", "2285b0d2-7bab-50a6-8328-8a113d31b492", "bd6178cb-12af-56cb-a2a8-5df74fa95250"], "latency_ms": 64.331}
+{"case_id": "AVN-069", "ids": ["21046711-10c6-5fa4-a50d-19306cb30140"], "latency_ms": 68.235}
+{"case_id": "AVN-070", "ids": ["bb79055e-d918-56fe-ad5f-2461b0dfef1b"], "latency_ms": 78.384}
+{"case_id": "AVN-071", "ids": ["42e2770c-0bad-5840-9acf-88d38f77c0e1"], "latency_ms": 64.511}
+{"case_id": "AVN-072", "ids": ["6e5c9025-5ca3-5196-9bd7-be7f43bd5580", "90e61809-3fde-51ed-8b24-bf496e17763f", "d33da042-6658-5e94-aefb-539206bdff32"], "latency_ms": 64.515}
+{"case_id": "AVN-073", "ids": ["ac9969a9-bbcb-5a03-8124-5a3a6a0cb7ba", "1d862752-dfc3-5850-b646-844cc97024c6", "2285b0d2-7bab-50a6-8328-8a113d31b492"], "latency_ms": 65.819}
+{"case_id": "AVN-074", "ids": ["3cbc1fe8-509f-599a-b18c-9ce8a8c230b2", "b2850e15-cdc8-5d3a-8c4b-c8d12826facd", "ac9969a9-bbcb-5a03-8124-5a3a6a0cb7ba"], "latency_ms": 59.334}
+{"case_id": "AVN-075", "ids": [], "latency_ms": 60.175}
+{"case_id": "AVN-076", "ids": ["679b4167-e4c6-51ef-9e90-b43e58551d0a"], "latency_ms": 57.871}
+{"case_id": "AVN-077", "ids": ["95bad377-d135-53d8-806f-a1a07cfdb5ac", "7b6a8205-00e3-5e50-9668-fb470e85601a", "97c5ef66-e41a-5f91-b521-e8f15182d432", "2c2fd579-5314-5718-8dd2-481e8cd9382e", "021015d2-332d-5c4e-8fc4-06a4bc80b923"], "latency_ms": 56.274}
+{"case_id": "AVN-078", "ids": ["90e61809-3fde-51ed-8b24-bf496e17763f", "6e5c9025-5ca3-5196-9bd7-be7f43bd5580", "d33da042-6658-5e94-aefb-539206bdff32"], "latency_ms": 57.785}
+{"case_id": "AVN-079", "ids": ["63a7ffc2-aa13-5042-accf-310e2a43280e"], "latency_ms": 65.734}
+{"case_id": "AVN-080", "ids": ["437d6470-342b-57ba-9424-2dc7371df103"], "latency_ms": 57.285}
+{"case_id": "AVN-081", "ids": ["2c7c9f05-a02d-58a3-a93a-a3783fd56843", "112fe383-1494-582f-b99b-eb9dd81ef246"], "latency_ms": 66.782}
+{"case_id": "AVN-082", "ids": [], "latency_ms": 64.384}
+{"case_id": "AVN-083", "ids": ["13c267ac-bc2b-5457-86a4-6326a696f13b", "2c7c9f05-a02d-58a3-a93a-a3783fd56843", "fda134bd-e72d-5efc-833a-d8cecf90e97b", "9d502ec4-29bc-50a4-a60a-22333189a019", "27c2ccfb-d202-5e05-acad-4adfabdc284e"], "latency_ms": 63.312}
+{"case_id": "AVN-084", "ids": [], "latency_ms": 65.902}
+{"case_id": "AVN-085", "ids": ["ddbefa5a-784a-5cb4-83b9-5ede1f41a8ac", "9ad8c3eb-48fb-59a7-87c2-4f426c5d43f3"], "latency_ms": 76.705}
+{"case_id": "AVN-086", "ids": [], "latency_ms": 69.976}
+{"case_id": "AVN-087", "ids": [], "latency_ms": 72.615}
+{"case_id": "AVN-088", "ids": [], "latency_ms": 64.683}
+{"case_id": "AVN-089", "ids": [], "latency_ms": 66.082}
+{"case_id": "AVN-090", "ids": ["2c5c6c76-ac6b-5b32-a248-f7051d31d726"], "latency_ms": 75.084}
+{"case_id": "AVN-091", "ids": ["590f4559-ccff-5d1d-888e-53ce78f7b08c", "c7573766-1aad-5fe8-8bc2-9327a4a6fc98", "6f8af60b-bddb-5111-8ccd-49e7bd0384e8"], "latency_ms": 64.436}
+{"case_id": "AVN-092", "ids": ["9d502ec4-29bc-50a4-a60a-22333189a019"], "latency_ms": 57.123}
+{"case_id": "AVN-093", "ids": [], "latency_ms": 57.89}
+{"case_id": "AVN-094", "ids": ["a4c0d149-9d2c-5206-a977-93840a0fa1ee"], "latency_ms": 62.847}
+{"case_id": "AVN-095", "ids": ["2c7c9f05-a02d-58a3-a93a-a3783fd56843", "a024d49d-9e0b-5e24-ba91-b0010733d042", "fda134bd-e72d-5efc-833a-d8cecf90e97b", "9d502ec4-29bc-50a4-a60a-22333189a019", "112fe383-1494-582f-b99b-eb9dd81ef246", "17c43b8a-cfa8-5ac3-a898-7f84dbfa4ade", "c7573766-1aad-5fe8-8bc2-9327a4a6fc98"], "latency_ms": 68.353}
+{"case_id": "AVN-096", "ids": [], "latency_ms": 65.236}
+{"case_id": "AVN-097", "ids": ["13c267ac-bc2b-5457-86a4-6326a696f13b", "27c2ccfb-d202-5e05-acad-4adfabdc284e"], "latency_ms": 69.347}
+{"case_id": "AVN-098", "ids": [], "latency_ms": 60.13}
+{"case_id": "AVN-099", "ids": [], "latency_ms": 58.721}
+{"case_id": "AVN-100", "ids": [], "latency_ms": 93.575}
+{"case_id": "AVN-101", "ids": [], "latency_ms": 84.581}
+{"case_id": "AVN-102", "ids": ["e4bf6327-8bdd-5391-b450-73096d57dd35", "023e640f-2853-5c34-9298-7ea9cb20f82c"], "latency_ms": 66.008}
+{"case_id": "AVN-103", "ids": [], "latency_ms": 58.44}
+{"case_id": "AVN-104", "ids": [], "latency_ms": 62.795}
+{"case_id": "AVN-105", "ids": [], "latency_ms": 58.301}
+{"case_id": "AVN-106", "ids": [], "latency_ms": 56.031}
+{"case_id": "AVN-107", "ids": [], "latency_ms": 69.325}
+{"case_id": "AVN-108", "ids": ["e4bf6327-8bdd-5391-b450-73096d57dd35"], "latency_ms": 87.816}
+{"case_id": "AVN-109", "ids": [], "latency_ms": 62.008}
+{"case_id": "AVN-110", "ids": [], "latency_ms": 71.831}
+{"case_id": "AVN-111", "ids": ["2c5c6c76-ac6b-5b32-a248-f7051d31d726"], "latency_ms": 72.622}
+{"case_id": "AVN-112", "ids": ["2293075b-be98-502a-b47c-8a39574a4c9a"], "latency_ms": 69.833}
+{"case_id": "AVN-113", "ids": ["fda134bd-e72d-5efc-833a-d8cecf90e97b"], "latency_ms": 66.719}
+{"case_id": "AVN-114", "ids": ["2c5c6c76-ac6b-5b32-a248-f7051d31d726"], "latency_ms": 74.541}
+{"case_id": "AVN-115", "ids": ["2293075b-be98-502a-b47c-8a39574a4c9a"], "latency_ms": 89.881}
+{"case_id": "AVN-116", "ids": ["fda134bd-e72d-5efc-833a-d8cecf90e97b"], "latency_ms": 69.642}
+{"case_id": "AVN-117", "ids": ["2c5c6c76-ac6b-5b32-a248-f7051d31d726"], "latency_ms": 71.77}
+{"case_id": "AVN-118", "ids": ["477bdeeb-73e2-5c17-8881-5e8794e0f630", "9c66fd8e-23ad-5ae3-b863-62e6fde03b6c", "9ad8c3eb-48fb-59a7-87c2-4f426c5d43f3", "0ca1cd43-07c4-5351-8625-1e56b5835e69"], "latency_ms": 67.28}
+{"case_id": "AVN-119", "ids": ["fdac7818-b3a8-5b68-b576-8947ff9fb444", "20461b21-3ba8-5a39-96df-02d604d24107", "ce1f150e-345f-542f-ad1a-0a3ca627b13c", "2d6dc4f5-8428-5197-86d8-8ce70671e717"], "latency_ms": 63.544}
+{"case_id": "AVN-120", "ids": [], "latency_ms": 61.366}
+{"case_id": "AVN-121", "ids": [], "latency_ms": 59.898}
+{"case_id": "AVN-122", "ids": ["64ce3876-0ab6-5634-bfa2-19355246d0a0"], "latency_ms": 76.475}
+{"case_id": "AVN-123", "ids": [], "latency_ms": 63.577}
+{"case_id": "AVN-124", "ids": [], "latency_ms": 62.971}
+{"case_id": "AVN-125", "ids": ["a6951ee8-c45c-5e7f-99f7-1b03d7e177b5", "37326a6a-d2b6-5120-9e17-102530fe0081", "512f1d07-e999-5a44-a01b-dc09d75a2a36", "56b02c08-2408-59db-969b-50f5cd27586e", "667ff5fb-0055-5d2d-b274-2f0e280285cb", "ce36e717-b131-54c7-87d2-095ae8662fab"], "latency_ms": 70.176}
+{"case_id": "AVN-126", "ids": [], "latency_ms": 80.44}
+{"case_id": "AVN-127", "ids": [], "latency_ms": 66.702}
+{"case_id": "AVN-128", "ids": ["a6222c99-4b47-502e-9814-b97546211275"], "latency_ms": 65.718}
+{"case_id": "AVN-129", "ids": [], "latency_ms": 70.867}
+{"case_id": "AVN-130", "ids": [], "latency_ms": 61.406}
+{"case_id": "AVN-131", "ids": ["a2866741-853b-56e7-a091-8b33dc7e8deb"], "latency_ms": 70.951}
+{"case_id": "AVN-132", "ids": [], "latency_ms": 64.051}
+{"case_id": "AVN-133", "ids": ["744affa9-4086-55c4-9c1a-dbe72f781dcb", "d8fcdac2-6b12-5cb2-b780-b7ddad8c5bff", "f68d252e-0f03-5326-ad6b-221812601d24", "0016f35b-18ce-5f2e-8692-0bf58a477316", "fca929d4-f77c-5cac-a044-904f26a4823d", "56634638-75f8-5411-b2e2-86923af7b496", "906013a3-1b26-5e8d-91bf-c51c7f2c020b", "acf1a554-bf16-54da-a695-1aed189db643", "7672d1c8-3c81-5429-a5ba-22944da03938", "18994264-67c6-56a4-bf51-7200df04edc8"], "latency_ms": 69.333}
+{"case_id": "AVN-134", "ids": [], "latency_ms": 68.944}
+{"case_id": "AVN-135", "ids": ["117c9b29-02ec-59ce-a578-a2cbd5951ca7", "3cd69e39-286c-51c2-b825-fdb4ea79a1f2", "4ce86b0b-987f-52ee-b272-d9ccb022d394", "2c7c9f05-a02d-58a3-a93a-a3783fd56843", "906013a3-1b26-5e8d-91bf-c51c7f2c020b", "8613f737-7d7f-5113-95cd-c6117eeab168", "9f219a53-96e8-5865-8e3f-0fb92dfb3db9", "f99d903f-a527-54f7-89c4-8a280889b871"], "latency_ms": 73.31}
+{"case_id": "AVN-136", "ids": ["a4ddc10a-9263-58c8-9dcf-d7b858d23e77", "5a8538b3-bcc8-567e-a9f7-915356bcdfd7", "28a012b7-e9a9-590f-98d1-b968fff97cc7", "96370c4c-37c0-509a-9a02-7c7703cccafd", "fedf4176-4674-55a3-8e83-6ab764bf93ef", "4f906344-e452-5a82-a3dc-525c5e6dfa0c", "7f1be139-d993-5739-aee6-f304f8813fe5", "238cd37d-51fa-5524-826a-3c4fe1034c61", "42d6cb78-b9d0-5373-9f67-ddcb9c86dfa7", "eb798a18-68d3-5641-9e0a-93e449089efe"], "latency_ms": 60.356}
+{"case_id": "AVN-137", "ids": ["fc38853c-6090-59e7-a266-b94790233f43"], "latency_ms": 59.657}
+{"case_id": "AVN-138", "ids": ["60568a24-bd69-5e15-b2b5-48f59d4b82d4", "3e3895d3-fc5b-51b4-9fcf-01e91b1459d9", "4944bfa1-8e5e-54d3-a143-8919561b6649", "a4794645-1a03-5f59-969d-0e22e4e79b5c", "399bf949-e5f3-52c5-94dd-03c8a546c26f", "594b358d-70da-57cc-adef-8ab55c4fef41", "3317bf55-b438-54fe-8278-885663160c49", "6c372246-09af-55f3-9086-73041a57f540", "c016de02-3b39-5442-9aea-38e068b396d6", "134069d2-25b2-59db-b643-95216c112134"], "latency_ms": 62.74}
+{"case_id": "AVN-139", "ids": ["fd171bed-25d5-54aa-a840-c20dad6662d3", "93f07390-3f88-54fa-8605-42767e8cd372", "d944a93d-640b-585c-8041-9aa5bf1d4449", "c5eda6a5-b141-5b10-b453-d1166735764d", "f0c4616f-2b33-5367-b4f4-5abc812bbdf1", "0eb6b6cb-0541-5e84-8205-02527e5bc2a5", "ca2ad971-01fc-5c59-8726-cf2e33a04de0", "1eda60d2-8beb-5570-823a-5902bae38b66", "9bd4d5fa-6e2a-5779-ba1c-9d6a69abe1b5", "fe4cd379-3cbd-5ed9-a5d1-1eb23bc6e6d1"], "latency_ms": 61.933}
+{"case_id": "AVN-140", "ids": ["42ee88e0-08db-52a7-8980-df5c14409678", "1693cf8c-51ae-5549-8b10-5409adfbebe9"], "latency_ms": 57.6}
+{"case_id": "AVN-141", "ids": ["f451a21f-5f86-567d-9516-e72c9baa427e", "5a26c341-3dd5-512c-bdfc-5dcb6813e1c1", "f8f7495d-96bb-5d2f-a7e7-0d9e634e05c5", "bcecdf3b-67b0-57d0-9547-4e565a35286d", "18ff6e7a-c068-52b6-8aba-94be6b50cedc", "29c8c5bb-2f40-556c-a0ac-6b3308e7aacf", "b099bfd5-a458-5c57-be99-8bf24c2ae53a", "d944a93d-640b-585c-8041-9aa5bf1d4449", "b9fe7c58-736b-50ea-807d-d6714e421b5a", "c59fac7b-a354-5850-bf84-190b3b180e2c"], "latency_ms": 62.826}
+{"case_id": "AVN-142", "ids": ["fe53f064-845b-50de-aa06-47e859bee915", "78f02d51-3d79-50d0-b060-8d069b0a14f9"], "latency_ms": 60.751}
+{"case_id": "AVN-143", "ids": [], "latency_ms": 54.766}
+{"case_id": "AVN-144", "ids": ["b6a2f174-1b63-59aa-9c7d-7e84860b8ea7", "11dac5a0-633e-50ab-a504-28bcaef01859", "ff87d708-afcf-53d1-a5ec-c4f428fa435c", "d070d1d5-48e6-5fe1-9dca-dd66650fd1db", "0fa8505d-1897-51f0-a56e-1944363329e4", "76a4dc3f-560e-5587-8fdd-47370be692dd", "df49e46c-fece-57eb-b1ff-b9a7b1d56e0e", "59b82fa6-8b90-5814-8a22-3bde2bd05456", "c8190d60-79fd-5c66-854f-e1f6bd77763a", "fc7f6b93-b44b-59a6-991e-7eff03f2e793"], "latency_ms": 71.683}
+{"case_id": "AVN-145", "ids": ["f14dca49-4af8-5b84-85c1-94865ea6ddea", "7ab0fd41-6028-520a-aeda-3a275cd39b6e", "87e47902-ced5-5b7b-b9e6-1e1600aee88d", "8cff5e01-8566-5e7b-a2e4-23ebabfa96a7", "152ff42b-31cd-540c-b32f-f7f2a18bc902", "a5b3a1b4-08af-5501-980a-72dc939c18bb", "32ed378a-a33d-5b07-ab02-130ebdef7fea", "1170d1ac-2c52-54b8-a9d7-cf56873f62b5", "58300e8b-8fb6-5f8f-bd2c-20d6234f83d2", "bf63a7a2-443c-575f-b7d2-196e27d20487"], "latency_ms": 88.617}
+{"case_id": "AVN-146", "ids": ["c96d60c7-c9e7-583e-b4f0-781f7a4682a7", "a0bb24c4-73cd-51cb-a05c-5cb13d16e2ba", "fedf4176-4674-55a3-8e83-6ab764bf93ef", "0716ca42-03d6-5835-82fb-90fea6a7e937", "eb798a18-68d3-5641-9e0a-93e449089efe", "238cd37d-51fa-5524-826a-3c4fe1034c61", "2af27630-cf92-5b17-8781-202e3501ace5", "9644ffec-c982-5319-a6dc-d67c93c13257", "b243c648-0126-5059-87b1-08f64b5c3d29", "fc3ee8b8-2f4c-529e-9420-4da859f53492"], "latency_ms": 70.394}
+{"case_id": "AVN-147", "ids": ["18ff6e7a-c068-52b6-8aba-94be6b50cedc", "29c8c5bb-2f40-556c-a0ac-6b3308e7aacf", "d944a93d-640b-585c-8041-9aa5bf1d4449", "b099bfd5-a458-5c57-be99-8bf24c2ae53a", "9b2d9ffc-2d93-5474-8e95-0eab650e19c5", "5a26c341-3dd5-512c-bdfc-5dcb6813e1c1", "c59fac7b-a354-5850-bf84-190b3b180e2c", "f8f7495d-96bb-5d2f-a7e7-0d9e634e05c5", "f451a21f-5f86-567d-9516-e72c9baa427e", "0bc773d3-50fa-53ea-8815-3a65dc373c18"], "latency_ms": 64.091}
+{"case_id": "AVN-148", "ids": ["1170d1ac-2c52-54b8-a9d7-cf56873f62b5", "41ae6743-a146-567f-a470-2e8ecd16a219", "7f373eb5-9541-5599-aa65-733acb62f954", "864939e7-f6b0-507d-bd27-fcfd5979f2f9", "eef6c970-d0d7-5d77-8680-c453ac1597e3", "ba508211-b35c-5c1f-96ab-47cafb1fb2a1", "79db84e2-5559-5c1e-80d5-713ea7f2b1a7", "ba7d5425-695e-5190-a944-50f8dedbc3de", "518e97e3-b06c-54ec-974e-9c78ba1141fc", "a8e1ab04-0be0-5e72-85dc-905d84f87cbc"], "latency_ms": 69.565}
+{"case_id": "AVN-149", "ids": [], "latency_ms": 59.174}
+{"case_id": "AVN-150", "ids": ["d92e67d0-e64e-5b69-9f4f-4780699b0899", "298e5d2f-a3f4-5213-b729-9f8628e04de2", "ba7d5425-695e-5190-a944-50f8dedbc3de", "9cb6918a-06a8-5a45-a086-e4d7f336831a", "4ab93e79-cc24-5d27-8981-83698fb83b7c", "9891d60f-b96f-5e6d-8a1a-4ad390ef021e", "f8f7495d-96bb-5d2f-a7e7-0d9e634e05c5", "edf80b60-e294-59d6-ba15-c45c0036c65c", "f8ae9a08-0ff0-57a3-a822-b88b97dc962a", "baac083d-3e02-5ca3-8812-d97be8519039"], "latency_ms": 63.595}
+{"case_id": "AVN-151", "ids": ["c2869fe5-0fb1-51d5-9841-358b9afd8b35", "67f7fa0f-5bbf-5c22-9567-bf6e58ef9d9a", "a95696dc-2f7f-5dee-9846-f5a4862bea64", "aba7f3b0-9321-5628-bc1e-3ff3946e5417", "d35c555b-9df8-51dd-87d9-d1eb8156abfb", "88468e14-2606-5ca1-84ce-bd48460cfc8d", "1e7ebbac-5169-5749-843a-21bf087977f4", "561918a2-0131-5633-963a-acfe366959e4", "5e2c630e-a656-59f5-802b-fbfaa0588f15", "9b5df8fe-7c5c-535e-9f55-21f8c88e92f6"], "latency_ms": 62.829}
+{"case_id": "AVN-152", "ids": ["9bdca312-82bb-51de-b782-412f2a1bcb4b"], "latency_ms": 62.829}
+{"case_id": "AVN-153", "ids": ["1826de1e-a02e-59de-a132-12260061b2ee", "3baebef6-0b0a-5547-b55d-88f0936d2e08", "4944bfa1-8e5e-54d3-a143-8919561b6649", "1e955875-cc08-5faa-be25-65e464e1f6f8", "594b358d-70da-57cc-adef-8ab55c4fef41", "f6202945-c1e1-51dc-8979-3d464893adde", "7f1be139-d993-5739-aee6-f304f8813fe5", "80b214fe-f66f-5b98-b734-f92bb6b5dda9", "16959a5d-c379-551b-9b4e-28b3130d4164"], "latency_ms": 60.99}
+{"case_id": "AVN-154", "ids": ["9a8129d7-0cfd-523b-ad1c-5b38ac1c97d4", "41ae6743-a146-567f-a470-2e8ecd16a219", "4cae6ea4-a680-59f8-8459-8fee0130fa3a", "8da86940-9054-53e7-aea7-fba6f0823b59", "ba98a196-2ba4-5436-8fc0-a509679a3933", "9cb6918a-06a8-5a45-a086-e4d7f336831a", "e0b06a47-cf93-5f50-b564-a68fc7da7a83", "4260e089-fe43-534e-80b2-99f577bdcefb", "22dacae5-4814-5708-9b6c-02ed47ca653d", "bea9bf57-a95b-57a0-9e62-ed6bd0e47f1c"], "latency_ms": 57.284}
+{"case_id": "AVN-155", "ids": ["12169f39-add3-504b-9330-dcd91581cdc6", "17898288-2feb-5806-9400-225b3483b4e9", "1cf87734-772a-5c48-a2e5-bf1563f9f4d6"], "latency_ms": 58.484}
+{"case_id": "AVN-156", "ids": ["c59fac7b-a354-5850-bf84-190b3b180e2c", "e1d0b1cd-51e6-567c-a4b1-53123b58d0b8", "221a47bc-da1c-5199-9a13-a2ff8be7e2ee", "c7f04462-5e06-5f3f-9a52-ff6eee135cc4", "4febf443-f7f0-5d9a-a275-8fe64acb308f", "52476149-276d-54d0-8ab7-e9555dfc7871", "997f0e45-ebc8-5c2f-a5b3-30235fcadcaf", "ba7d5425-695e-5190-a944-50f8dedbc3de", "358b03b2-8b2a-5267-8a5c-0ebef99ddd5e", "298e5d2f-a3f4-5213-b729-9f8628e04de2"], "latency_ms": 58.21}
+{"case_id": "AVN-157", "ids": ["4f8704cd-9b9a-5fec-8a8b-6454c3e701f7", "e343c896-aac7-5005-9885-13333403520f", "a3951864-bfbd-5776-970e-eb6fca704db1", "6b3cddd2-5a91-5e17-a165-0aa6a562e8ff", "3d443462-f167-516d-8475-648b1bdfd641", "363c1256-0734-5f05-89ac-6d89a9e4e67a", "17465397-2d8f-5683-a2ff-a94cd3f56a49", "3f38b88d-fa3a-58b7-a1ab-2406221f53ac", "0f9efae4-b338-54c4-954d-ba2b651fe943", "3a80ab97-5c62-5bf8-91af-dd917f0cf50b"], "latency_ms": 61.756}
+{"case_id": "AVN-158", "ids": ["448d4fce-0515-513a-8e76-e33093fcf60b", "1eda60d2-8beb-5570-823a-5902bae38b66", "c08cbccc-dbb0-59b8-aa85-7ef1dc892d5d", "303ced80-b03f-5470-87ea-1a34d1148261", "b0c66b00-f845-5198-8630-021c70ee8e6e", "4517a8d6-ffea-55c1-81ac-a95895464c34", "2e631467-2a7a-50f6-84ed-fb555e5daad1", "cb5282d7-ef38-5a30-9cdb-4189f364a701"], "latency_ms": 68.641}
+{"case_id": "AVN-159", "ids": ["35a57142-c6e2-5b08-81b6-90f855c81b69", "6724677a-d069-5bc0-800f-b017441ee012", "b65b49a2-b1f3-58de-acd7-1d2cdd8b9db3", "96019618-d9d7-5752-a0f9-6aa49c03c0be", "a95696dc-2f7f-5dee-9846-f5a4862bea64", "cae5b7c3-1710-5203-8073-32f54746cf84", "4e06aa19-422f-55d6-a870-2a8b55dd0057"], "latency_ms": 63.919}
+{"case_id": "AVN-160", "ids": ["59e2cb43-6d52-52c2-a840-24925f356372"], "latency_ms": 70.663}
+{"case_id": "AVN-161", "ids": ["abcf5475-7808-58bd-8f87-6ace34be8f6e", "8aee7ffb-5676-50f2-acc4-6db9b9ba66dd"], "latency_ms": 63.011}
+{"case_id": "AVN-162", "ids": ["eb76ecfe-470a-57b1-944b-e2ce45044dba"], "latency_ms": 68.103}
+{"case_id": "AVN-163", "ids": ["abcf5475-7808-58bd-8f87-6ace34be8f6e", "eb76ecfe-470a-57b1-944b-e2ce45044dba", "025f136b-167a-54b9-bb7f-cfe4d735f313", "8aee7ffb-5676-50f2-acc4-6db9b9ba66dd"], "latency_ms": 61.822}
+{"case_id": "AVN-164", "ids": ["6f5091c8-b34c-5a8e-858a-e56c5c9b9ad3"], "latency_ms": 63.167}
+{"case_id": "AVN-165", "ids": ["0a29b13e-2e7b-56d4-9d1d-0e07487be1f3"], "latency_ms": 70.637}
+{"case_id": "AVN-166", "ids": ["9a858161-437e-5b6f-ace1-e8ed3d1fd310"], "latency_ms": 64.836}
+{"case_id": "AVN-167", "ids": ["c902ee42-e563-5b5a-b8ad-0b52876be347", "20461b21-3ba8-5a39-96df-02d604d24107", "ce1f150e-345f-542f-ad1a-0a3ca627b13c", "fdac7818-b3a8-5b68-b576-8947ff9fb444", "2c248fac-7b13-5ab5-b0bb-86066da56ce2", "9ad8c3eb-48fb-59a7-87c2-4f426c5d43f3"], "latency_ms": 57.629}
+{"case_id": "AVN-168", "ids": ["eab9e282-3f35-5640-b67e-ecb3385ceff7"], "latency_ms": 63.706}
+{"case_id": "AVN-169", "ids": ["590f4559-ccff-5d1d-888e-53ce78f7b08c", "c7573766-1aad-5fe8-8bc2-9327a4a6fc98"], "latency_ms": 54.88}
+{"case_id": "AVN-170", "ids": ["b650d075-9e66-58a5-aeaf-3236ef0fd336", "c7573766-1aad-5fe8-8bc2-9327a4a6fc98", "17c43b8a-cfa8-5ac3-a898-7f84dbfa4ade"], "latency_ms": 62.421}
+{"case_id": "AVN-171", "ids": ["87124812-007e-5710-8eba-6a6bf249b0c4"], "latency_ms": 65.303}
+{"case_id": "AVN-172", "ids": ["a1daa63f-e487-5f79-b9b8-d30c6528efcf"], "latency_ms": 57.629}
+{"case_id": "AVN-173", "ids": ["ada87ec2-787e-5e91-8bd9-835f3eed294f", "c4dd76da-4f31-5f06-b6ad-631252063652"], "latency_ms": 59.359}
+{"case_id": "AVN-174", "ids": ["b650d075-9e66-58a5-aeaf-3236ef0fd336", "a4c0d149-9d2c-5206-a977-93840a0fa1ee", "ddbefa5a-784a-5cb4-83b9-5ede1f41a8ac", "ce1f150e-345f-542f-ad1a-0a3ca627b13c", "17c43b8a-cfa8-5ac3-a898-7f84dbfa4ade"], "latency_ms": 63.829}
+{"case_id": "AVN-175", "ids": ["6f8af60b-bddb-5111-8ccd-49e7bd0384e8"], "latency_ms": 54.591}
+{"case_id": "AVN-176", "ids": [], "latency_ms": 82.915}
+{"case_id": "AVN-177", "ids": [], "latency_ms": 57.373}
+{"case_id": "AVN-178", "ids": [], "latency_ms": 60.849}
+{"case_id": "AVN-179", "ids": [], "latency_ms": 53.887}
+{"case_id": "AVN-180", "ids": [], "latency_ms": 54.85}
+{"case_id": "AVN-181", "ids": [], "latency_ms": 56.685}
+{"case_id": "AVN-182", "ids": [], "latency_ms": 56.509}
+{"case_id": "AVN-183", "ids": [], "latency_ms": 56.466}
+{"case_id": "AVN-184", "ids": [], "latency_ms": 54.577}
+{"case_id": "AVN-185", "ids": [], "latency_ms": 63.066}
+{"case_id": "AVN-186", "ids": [], "latency_ms": 54.533}
+{"case_id": "AVN-187", "ids": [], "latency_ms": 59.96}
+{"case_id": "AVN-188", "ids": [], "latency_ms": 52.122}
+{"case_id": "AVN-189", "ids": [], "latency_ms": 54.576}
+{"case_id": "AVN-190", "ids": [], "latency_ms": 53.982}
+{"case_id": "AVN-191", "ids": [], "latency_ms": 61.213}
+{"case_id": "AVN-192", "ids": [], "latency_ms": 57.761}
+{"case_id": "AVN-193", "ids": [], "latency_ms": 60.834}
+{"case_id": "AVN-194", "ids": [], "latency_ms": 54.375}
+{"case_id": "AVN-195", "ids": [], "latency_ms": 63.81}
+{"case_id": "AVN-196", "ids": [], "latency_ms": 56.387}
+{"case_id": "AVN-197", "ids": [], "latency_ms": 60.934}
+{"case_id": "AVN-198", "ids": [], "latency_ms": 56.571}
+{"case_id": "AVN-199", "ids": [], "latency_ms": 56.86}
+{"case_id": "AVN-200", "ids": [], "latency_ms": 54.275}

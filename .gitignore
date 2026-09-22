@@ -74,6 +74,8 @@ ui-debug.log
 # DATA — output tạm sinh ra từ script
 # =============================================================
 data/generated/
+# Local model artifacts are verified at runtime and must never enter Git.
+.models/
 
 # =============================================================
 # EDITOR & OS

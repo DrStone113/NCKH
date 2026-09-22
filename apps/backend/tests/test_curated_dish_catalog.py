@@ -9,6 +9,7 @@ from modules.nutrition.catalog import (
     BASE_DISHES_FILE,
     CURATED_DISHES_FILE,
     REFERENCE_DISHES_FILE,
+    dish_source_image_url,
     load_dish_catalog,
 )
 from modules.nutrition.router import (
@@ -93,6 +94,13 @@ def test_reference_catalog_is_sourced_normalized_and_recalculated():
         assert _calculated_calories(dish, foods_by_name) == pytest.approx(
             float(dish["estimated_calories"]), rel=0.02
         )
+
+
+def test_catalog_image_resolver_only_returns_provenanced_https_urls():
+    assert dish_source_image_url(108) == (
+        "https://monngonmoingay.com/wp-content/uploads/2015/04/banh-it-tran.jpg"
+    )
+    assert dish_source_image_url("not-a-dish") is None
 
 
 def test_every_curated_ingredient_is_an_exact_food_table_match():

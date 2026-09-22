@@ -1,0 +1,52 @@
+schema_version: e2e-v2-draft-1
+status: DEFINED_NOT_EXECUTED
+requires: [flutter_web, firebase_auth, backend, postgresql, no_mocks]
+scenarios:
+  - id: V2E-001
+    name: health_rag_evidence
+    status: NOT_EXECUTED
+  - id: V2E-002
+    name: nutrition_query
+    status: NOT_EXECUTED
+  - id: V2E-003
+    name: food_lookup
+    status: NOT_EXECUTED
+  - id: V2E-004
+    name: exercise_query
+    status: NOT_EXECUTED
+  - id: V2E-005
+    name: meal_recommendation
+    status: NOT_EXECUTED
+  - id: V2E-006
+    name: workout_generation
+    status: NOT_EXECUTED
+  - id: V2E-007
+    name: plan_preview
+    status: NOT_EXECUTED
+  - id: V2E-008
+    name: save_exact_preview
+    status: NOT_EXECUTED
+  - id: V2E-009
+    name: readback_exact_revision
+    status: NOT_EXECUTED
+  - id: V2E-010
+    name: negated_save
+    status: NOT_EXECUTED
+  - id: V2E-011
+    name: pending_action_confirmation
+    status: NOT_EXECUTED
+  - id: V2E-012
+    name: urgent_health
+    status: NOT_EXECUTED
+  - id: V2E-013
+    name: no_evidence
+    status: NOT_EXECUTED
+  - id: V2E-014
+    name: cross_user_denial
+    status: NOT_EXECUTED
+  - id: V2E-015
+    name: reload_persistence
+    status: NOT_EXECUTED
+  - id: V2E-016
+    name: actual_vs_planned
+    status: NOT_EXECUTED

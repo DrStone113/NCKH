@@ -160,7 +160,7 @@ class DbSessionStore:
         msg_id = str(uuid4())
         if self.db_session is None:
             return msg_id
-        from db.db_status import is_db_offline, mark_db_offline
+        from db.db_status import is_connectivity_failure, mark_db_offline
         try:
             await self.db_session.execute(
                 text(
@@ -195,7 +195,8 @@ class DbSessionStore:
                 },
             )
         except Exception as e:
-            mark_db_offline(60.0)
+            if is_connectivity_failure(e):
+                mark_db_offline(60.0)
             import logging
 
             logging.getLogger(__name__).warning(

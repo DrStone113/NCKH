@@ -1,0 +1,2803 @@
+{
+  "case_count": 200,
+  "case_file": "evaluation/acceptance_vn/cases.jsonl",
+  "case_file_sha256": "f5a539aa055196650b1c948fd797d6839db1620f1e5a4c7625b059d6f591512b",
+  "projection": [
+    {
+      "case_id": "AVN-001",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-002",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-003",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-004",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-005",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-006",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-007",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-008",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-009",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-010",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-011",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-012",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-013",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-014",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-015",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-016",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-017",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-018",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-019",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-020",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-021",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-022",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-023",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-024",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-025",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-026",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-027",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-028",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-029",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-030",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-031",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-032",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-033",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-034",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-035",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-036",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-037",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-038",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-039",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-040",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-041",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-042",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-043",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-044",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-045",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-046",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-047",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-048",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-049",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-050",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-051",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-052",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-053",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-054",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-055",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-056",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-057",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-058",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-059",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-060",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-061",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-062",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-063",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-064",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-065",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-066",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-067",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-068",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-069",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-070",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-071",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-072",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-073",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-074",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-075",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-076",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-077",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-078",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-079",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-080",
+      "derivation_source": [
+        "context-source-matrix-v1:MEAL_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:DISH_DATABASE required; RAG forbidden",
+        "services/agent/system_prompt.py:explicit dish names query search_dish_catalog first"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "DISH_TOOL",
+      "expected_tool_names": [
+        "search_dish_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-081",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-082",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-083",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-084",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-085",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-086",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-087",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-088",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-089",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-090",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-091",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-092",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-093",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-094",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-095",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-096",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-097",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-098",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-099",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-100",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-101",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-102",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-103",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-104",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-105",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-106",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-107",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-108",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-109",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-110",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-111",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-112",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-113",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-114",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-115",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-116",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-117",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; evidence grounding"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-118",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required for general guidance"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-119",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required for general guidance"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-120",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required for non-personal knowledge"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-121",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-122",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-123",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-124",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-125",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-126",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-127",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-128",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-129",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-130",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-131",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-132",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-133",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-134",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-135",
+      "derivation_source": [
+        "context-source-matrix-v1:FOOD_NUTRITION_LOOKUP",
+        "services/agent/context_planner/matrix.py:FOOD_DATABASE required; RAG forbidden"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "FOOD_TOOL",
+      "expected_tool_names": [
+        "search_food_nutrition"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-136",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-137",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-138",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-139",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-140",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-141",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-142",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-143",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-144",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-145",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-146",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-147",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-148",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-149",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-150",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-151",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-152",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-153",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-154",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-155",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-156",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-157",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-158",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-159",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-160",
+      "derivation_source": [
+        "context-source-matrix-v1:WORKOUT_RECOMMENDATION",
+        "services/agent/context_planner/matrix.py:exercise recommendation forbids RAG",
+        "services/agent/tools/workout.py:search_exercise_catalog"
+      ],
+      "evidence_requirement": "STRUCTURED_TOOL_DATA",
+      "expected_channel": "EXERCISE_TOOL",
+      "expected_tool_names": [
+        "search_exercise_catalog"
+      ],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-161",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-162",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-163",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-164",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-165",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-166",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-167",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-168",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-169",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-170",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-171",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-172",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-173",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-174",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-175",
+      "derivation_source": [
+        "context-source-matrix-v1:GENERAL_NUTRITION_KNOWLEDGE",
+        "services/agent/context_planner/matrix.py:RAG required; medical-evidence tool reserved for explicit evidence requests"
+      ],
+      "evidence_requirement": "GROUNDED_EVIDENCE",
+      "expected_channel": "RAG_KNOWLEDGE",
+      "expected_tool_names": [
+        "query_rag"
+      ],
+      "rag_forbidden": false,
+      "rag_required": true
+    },
+    {
+      "case_id": "AVN-176",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-177",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-178",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-179",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-180",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-181",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-182",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-183",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-184",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-185",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-186",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-187",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-188",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-189",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-190",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-191",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-192",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-193",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-194",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-195",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-196",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-197",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-198",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-199",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    },
+    {
+      "case_id": "AVN-200",
+      "derivation_source": [
+        "services/agent/scope_guard.py:out-of-scope and unsafe requests are deterministically bounded",
+        "services/agent/context_planner/matrix.py:SMALLTALK_OR_OTHER forbids RAG and MEDICAL_EVIDENCE"
+      ],
+      "evidence_requirement": "SAFETY_LIMITATION",
+      "expected_channel": "NO_EVIDENCE",
+      "expected_tool_names": [],
+      "rag_forbidden": true,
+      "rag_required": false
+    }
+  ],
+  "schema_version": "acceptance-expected-channels-v1"
+}

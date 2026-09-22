@@ -1,0 +1,54 @@
+{
+  "AMBIGUOUS_ORACLE": 0,
+  "BROKEN_ORACLE": 0,
+  "CASES_REQUIRING_ANSWER_JUDGE": 200,
+  "CASES_SUITABLE_FOR_DETERMINISTIC_GRADING": 145,
+  "CAVEATS": [
+    "Frozen means immutable, not validated as a final-answer gold standard.",
+    "The audit classifies architecture-path strictness separately from semantic answer correctness.",
+    "No LLM judge or case/oracle modification was used.",
+    "Duplicate/template flags are based on observable query families and are not a claim of semantic equivalence of the referenced records."
+  ],
+  "DOMAIN_COUNTS": {
+    "EXERCISE_CATALOG": 25,
+    "FOREIGN_FOOD": 15,
+    "GLOBAL_HEALTH": 15,
+    "NO_EVIDENCE": 25,
+    "VN_BODY_METRIC": 1,
+    "VN_DISH": 20,
+    "VN_FOOD": 60,
+    "VN_MICRONUTRIENT": 7,
+    "VN_NORMATIVE": 30,
+    "VN_PHYSICAL_ACTIVITY": 2
+  },
+  "DUPLICATE_OR_NEAR_DUPLICATE": 120,
+  "LANGUAGE_VARIANT_COUNTS": {
+    "ENGLISH_OR_MIXED": 37,
+    "VI_DIACRITIC": 158,
+    "VI_NO_DIACRITIC": 5
+  },
+  "MULTI_TURN_CASES": 0,
+  "NEGATION_CASES": 4,
+  "NO_DIACRITIC_CASES": 5,
+  "NO_EVIDENCE_CASES": 25,
+  "PATH_ORACLE_MAY_BE_TOO_STRICT_COUNT": 55,
+  "PRIMARY_CATEGORY_NOTE": "CASE_QUALITY is exclusive and prioritizes duplication/template defects over otherwise justified strict paths; STRICT_PATH_JUSTIFIED_COUNT is the cross-cut architecture assessment.",
+  "STRICT_PATH_JUSTIFIED_COUNT": 145,
+  "STRICT_PATH_UNJUSTIFIED_COUNT": 55,
+  "STRICT_PATH_VALID_BUT_TEMPLATE_OR_DUPLICATE": 145,
+  "TEMPLATE_LIKE_CASES": 182,
+  "TOTAL_CASES": 200,
+  "TYPO_NOISY_CASES": 1,
+  "UNDER_SPECIFIED": 0,
+  "UNREALISTIC_TEMPLATE": 62,
+  "URGENT_HEALTH_CASES": 0,
+  "VALID_OUTCOME_BUT_PATH_TOO_STRICT": 18,
+  "VALID_STRICT_PATH": 0,
+  "audit_mode": "READ_ONLY_EXISTING_CASES_AND_PROJECTION",
+  "method": "deterministic per-case structural audit; does not assert final-answer quality",
+  "schema_version": 1,
+  "source_hashes": {
+    "cases.jsonl": "f5a539aa055196650b1c948fd797d6839db1620f1e5a4c7625b059d6f591512b",
+    "expected_channels.json": "d28e3e308b3b5c98c489a5e00a536ba63ff447bbb01db6188fde6844dd00638e"
+  }
+}

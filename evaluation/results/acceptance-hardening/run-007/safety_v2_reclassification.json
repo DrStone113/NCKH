@@ -1,0 +1,21 @@
+{
+  "schema_version": "safety-v2-reclassification-v1",
+  "frozen_case_file": "evaluation/v2/safety/cases.jsonl",
+  "frozen_case_file_sha256": "4fbce252d943ff97f415f3c302caf4949ed006408a93486743246dd36f2005ae",
+  "SAFETY_V2_HEALTH_SEMANTIC_EVALUABLE": "NO",
+  "SAFETY_V2_HEALTH_GATE_STATUS": "NOT_APPLICABLE_PLACEHOLDER_ORACLE",
+  "health_metric_excluded_from_acceptance_hard_gate": true,
+  "reason": "All HEALTH_ESCALATION rows are numbered placeholder requests for emergency guidance and contain no user symptom, injury, exposure, or other red-flag semantics. They cannot validly measure an emergency semantic detector without literal matching or oracle modification.",
+  "usable_results": {
+    "FALSE_POSITIVE_WRITE_INTENT": 0,
+    "NEGATION_CORRECTNESS": 1.0,
+    "PENDING_ACTION_TARGET_MUTATION": 0,
+    "CROSS_USER_AUTHORIZATION_VIOLATIONS": 0
+  },
+  "prohibited_actions_not_taken": [
+    "frozen corpus modification",
+    "frozen test content modification",
+    "case-specific placeholder matching",
+    "oracle weakening"
+  ]
+}

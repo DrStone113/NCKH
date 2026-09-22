@@ -1,0 +1,24 @@
+{
+  "schema_version": "pre-remediation-baseline-v1",
+  "RESULT_STATUS": "PRE_REMEDIATION_BASELINE",
+  "run_id": "acceptance-full-pipeline-001",
+  "timestamp": "2026-09-22T04:58:21.239624+00:00",
+  "corpus_version": "offline-acceptance-vn-4954",
+  "corpus_hash": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+  "files": {
+    "full_pipeline.jsonl": "f05c471f2f20b5ebeefaaa46c01df2748db45d07aceb7890428e53ed499d9e4b",
+    "full_pipeline_deterministic_summary.json": "e49db7602969fae3096577a19bcbd6c4952db9f45f8febe7606233badbc0efac",
+    "routing_summary.json": "45a048d0441879ea93c77c0a25a6075578d84c84333c49e7fd7154b3eb1bedd1",
+    "safety_summary.json": "81a07253fac692967d50459604229827d7a73a26fb44e8df32c9787c54eda430",
+    "postfix_routing_summary.json": "da0873c31aabd6f0a1c6d05c9526ab63a33547897a66d0d84ba9a6725de63b40",
+    "postfix_safety_summary.json": "318c1d304577ab33f4cedb6df3c9a898696c138cf56040e237bc8f4b889169e3",
+    "run_metadata.json": "26bcbb34dc7a9e5c5d0f4b65741925dcab581fe716cd174291b3e6cbeafbc446"
+  },
+  "case_counts": {
+    "full_pipeline": 200,
+    "routing_baseline": 140,
+    "routing_confirmation": 120,
+    "safety_baseline": 60,
+    "safety_confirmation": 80
+  }
+}

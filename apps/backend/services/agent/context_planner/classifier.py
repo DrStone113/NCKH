@@ -100,7 +100,26 @@ def classify_intent(query: str) -> IntentClassification:
     if _has(text, "sau tap", "post workout", "phuc hoi sau tap") and meal_words:
         add(Intent.MEAL_RECOMMENDATION, 8, "POST_WORKOUT_MEAL")
 
-    if _has(text, "dinh duong cua", "nutrition of", "bao nhieu calo trong", "protein trong", "tra cuu thuc pham", "nutrients in"):
+    food_metric_lookup = (
+        _has(
+            text,
+            "dinh duong cua", "nutrition of", "bao nhieu calo trong",
+            "protein trong", "tra cuu thuc pham", "nutrients in",
+            "nutrition facts", "nutrient profile", "food nutrients",
+        )
+        or (
+            _has(text, "co bao nhieu", "bao nhieu")
+            and _has(text, "dam", "protein", "nang luong", "calo", "calorie", "kcal")
+        )
+        # A compact ``dinh dưỡng <food name>`` form is a lookup request in
+        # Vietnamese. Exclude guideline/reference language so public-health
+        # questions continue to take the grounded evidence route below.
+        or (
+            text.startswith("dinh duong ")
+            and not _has(text, "huong dan", "khuyen nghi", "rni", "nhu cau")
+        )
+    )
+    if food_metric_lookup and not daily_words:
         add(Intent.FOOD_NUTRITION_LOOKUP, 10, "FOOD_DATABASE_LOOKUP")
     if _has(text, "can nang", "weight") and _has(text, "xu huong", "trend", "7 ngay", "bay ngay", "tuan qua", "progress", "thay doi"):
         add(Intent.WEIGHT_PROGRESS, 11, "WEIGHT_TREND")
@@ -114,9 +133,39 @@ def classify_intent(query: str) -> IntentClassification:
     if evidence and health:
         add(Intent.EVIDENCE_HEALTH_QUESTION, 13, "MEDICAL_EVIDENCE_REQUEST")
 
-    general_question = _has(text, "la gi", "what is", "tai sao", "why", "loi ich", "benefit", "benefits", "nen an bao nhieu", "how much")
-    nutrition_topic = _has(text, "chat xo", "fibre", "fiber", "vitamin", "dinh duong", "protein", "carbohydrate", "chat beo")
-    if general_question and nutrition_topic and not daily_words and not evidence:
+    general_question = _has(
+        text,
+        "la gi", "what is", "tai sao", "why", "loi ich", "benefit", "benefits",
+        "nen an bao nhieu", "how much", "can luu y", "nhu the nao", "the nao", "dieu gi",
+        "lien quan",
+    )
+    nutrition_topic = _has(
+        text,
+        "chat xo", "fibre", "fiber", "vitamin", "dinh duong", "protein",
+        "carbohydrate", "chat beo", "vi chat", "duong tu do", "epa", "dha",
+        "an can doi", "an toan thuc pham", "thuc pham bat loi", "uong du nuoc",
+        "ne nep bua an", "nhu cau nang luong", "hoat dong the luc", "van dong",
+    )
+    guideline_reference = _has(
+        text,
+        "khuyen nghi", "huong dan", "loi khuyen dinh duong", "rni",
+        "nhu cau dinh duong",
+    )
+    reference_form = guideline_reference or _has(
+        text, "luu y", "nguoi viet", "thuc pham giau",
+    )
+    health_reference = (
+        _has(text, "thong tin suc khoe", "health information")
+        or text.startswith("health ")
+    )
+    # Questions seeking a stable nutrition/health reference need grounded
+    # retrieval even when they do not use the narrow "X la gi" phrasing.
+    # This remains separate from the explicit clinical-evidence route above.
+    if (
+        (general_question and nutrition_topic)
+        or (reference_form and (nutrition_topic or "viet nam" in text or "rni" in text))
+        or health_reference
+    ) and not daily_words and not evidence:
         add(Intent.GENERAL_NUTRITION_KNOWLEDGE, 7, "GENERAL_NUTRITION_EXPLANATION")
 
     workout_words = _has(text, "bai tap", "tap luyen", "workout", "exercise")

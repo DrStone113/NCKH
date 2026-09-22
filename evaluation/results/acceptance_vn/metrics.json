@@ -1,0 +1,102 @@
+{
+  "by_report_domain": {
+    "EXERCISE_CATALOG": {
+      "count": 25,
+      "hit_at_1": 0.92,
+      "hit_at_3": 0.92,
+      "hit_at_5": 0.92,
+      "mrr": 0.92,
+      "no_evidence_correctness": null
+    },
+    "FOREIGN_FOOD": {
+      "count": 15,
+      "hit_at_1": 0.2667,
+      "hit_at_3": 0.2667,
+      "hit_at_5": 0.2667,
+      "mrr": 0.2667,
+      "no_evidence_correctness": null
+    },
+    "GLOBAL_HEALTH": {
+      "count": 15,
+      "hit_at_1": 0.6667,
+      "hit_at_3": 0.9333,
+      "hit_at_5": 0.9333,
+      "mrr": 0.7889,
+      "no_evidence_correctness": null
+    },
+    "NO_EVIDENCE": {
+      "count": 25,
+      "hit_at_1": null,
+      "hit_at_3": null,
+      "hit_at_5": null,
+      "mrr": null,
+      "no_evidence_correctness": 1.0
+    },
+    "VN_BODY_METRIC": {
+      "count": 1,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "mrr": 0.0,
+      "no_evidence_correctness": null
+    },
+    "VN_DISH": {
+      "count": 20,
+      "hit_at_1": 0.8,
+      "hit_at_3": 0.85,
+      "hit_at_5": 0.85,
+      "mrr": 0.825,
+      "no_evidence_correctness": null
+    },
+    "VN_FOOD": {
+      "count": 60,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.0,
+      "hit_at_5": 0.0,
+      "mrr": 0.0,
+      "no_evidence_correctness": null
+    },
+    "VN_MICRONUTRIENT": {
+      "count": 7,
+      "hit_at_1": 1.0,
+      "hit_at_3": 1.0,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "no_evidence_correctness": null
+    },
+    "VN_NORMATIVE": {
+      "count": 30,
+      "hit_at_1": 0.3,
+      "hit_at_3": 0.3,
+      "hit_at_5": 0.3,
+      "mrr": 0.3,
+      "no_evidence_correctness": null
+    },
+    "VN_PHYSICAL_ACTIVITY": {
+      "count": 2,
+      "hit_at_1": 0.0,
+      "hit_at_3": 0.5,
+      "hit_at_5": 0.5,
+      "mrr": 0.25,
+      "no_evidence_correctness": null
+    }
+  },
+  "completed_at": "2026-09-21T17:22:02.580282+00:00",
+  "corpus_hash": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+  "corpus_version": "offline-acceptance-vn-4954",
+  "latency_ms": {
+    "p50": 63.167,
+    "p95": 82.997
+  },
+  "overall": {
+    "count": 200,
+    "hit_at_1": 0.3943,
+    "hit_at_3": 0.4286,
+    "hit_at_5": 0.4286,
+    "mrr": 0.4105,
+    "no_evidence_correctness": 1.0
+  },
+  "precedence_applied_before_freeze": true,
+  "threshold": 0.6,
+  "top_k": 10
+}

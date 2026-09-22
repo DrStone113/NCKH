@@ -1,0 +1,45 @@
+{
+  "completed_at": "2026-09-21T16:24:13.338639+00:00",
+  "config": {
+    "condition": "C",
+    "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+    "corpus_version": "offline-v1-636",
+    "frozen_time": "2026-08-15T09:00:00Z",
+    "max_agent_steps": 4,
+    "max_tokens": 1200,
+    "model": "rk/llms/qwen-3.7-plus",
+    "prompt_version": "research-v1",
+    "rag_threshold": 0.6,
+    "rag_top_k": 5,
+    "seed": 20260815,
+    "temperature": 0.0
+  },
+  "frozen_inputs": {
+    "apps/backend/data/research_corpus_manifest.json": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+    "evaluation/rag/eval_queries_v1.jsonl": "eec9ad4749fb6946ed9ce24c207611e5b95639181e5154988dfa5cde59754aa0"
+  },
+  "llm_called": false,
+  "mode": "RETRIEVAL_ONLY",
+  "production_rag_provider_used": false,
+  "provider": "PostgresFrozenRagProvider",
+  "run_id": "v1-frozen-provider-retrieval-20260921-r2",
+  "scientific_identity": {
+    "frozen_manifest_hash": "5ed75adc4885b3b3b4f01554a4789605299dca965794819a76c81fc3e892afb1",
+    "identity_version": "research-corpus-identity-v1",
+    "operational_manifest_hash": "7edee3b164fec73eb31398e501042da5b26c4d89c4d837823103fcad84ff3cff",
+    "operational_provenance_differences": [
+      "created_at",
+      "ingestion_git_commit",
+      "ingestion_worktree_clean",
+      "manifest_hash"
+    ],
+    "operational_provenance_status": "OPERATIONAL_PROVENANCE_DIFFERENCE",
+    "operational_scientific_identity_hash": "e549043d7f56431ab76cf6ce3015044d8f33aca1b743780212d97c12dcc0451a",
+    "scientific_identity_differences": [],
+    "scientific_identity_hash": "e549043d7f56431ab76cf6ce3015044d8f33aca1b743780212d97c12dcc0451a",
+    "scientific_identity_status": "SCIENTIFIC_IDENTITY_MATCH",
+    "valid_for_frozen_experiment": true
+  },
+  "started_at": "2026-09-21T16:23:26.603599+00:00",
+  "status": "COMPLETED"
+}

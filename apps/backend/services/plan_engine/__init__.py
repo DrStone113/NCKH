@@ -7,6 +7,7 @@ shadow evaluation cannot alter historical plan records or observation data.
 from .contracts import (
     ContextState,
     PlanDomain,
+    PlanArtifactKind,
     PlanItem,
     PlanLifecycleStatus,
     PlanPatch,
@@ -18,6 +19,7 @@ from .engine import GLOBAL_PLAN_REPOSITORY, MemoryPlanRepository, PlanContextRes
 from .comparator import ComparatorVerdict, PlanV2Comparator
 from .nutrition_horizon import NutritionPlanningHorizonState
 from .persistence import PlanSqlRepository
+from .application_service import PlanApplicationService
 from .weekly_scheduler import PlanningHorizonState, WeeklyWorkoutScheduler
 
 __all__ = [
@@ -26,6 +28,7 @@ __all__ = [
     "MemoryPlanRepository",
     "PlanContextResolver",
     "PlanDomain",
+    "PlanArtifactKind",
     "PlanEngine",
     "PlanItem",
     "PlanLifecycleStatus",
@@ -36,6 +39,7 @@ __all__ = [
     "PlanV2Comparator",
     "PlanRevision",
     "PlanValidator",
+    "PlanApplicationService",
     "PlanningHorizonState",
     "NutritionPlanningHorizonState",
     "ComparatorVerdict",

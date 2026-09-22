@@ -1,0 +1,14 @@
+{
+  "status": "PREFLIGHT_VALID_CHECKPOINTED_JUDGING",
+  "judge_a": "cnb/grok-4.5",
+  "judge_b": "vc/qwen3.8-max",
+  "adjudicator": "zc/glm-5.3-flash",
+  "historical_reference_only": "MiniMax-M2.7",
+  "temperature": 0,
+  "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+  "case_count": 55,
+  "decision_rule": "Accept Grok/Qwen consensus per dimension; send only disputed dimensions to GLM without either judge's vote; accept GLM's blind adjudication for those dimensions.",
+  "generation_rerun": false,
+  "frozen_inputs_modified": false,
+  "final_metrics_published": false
+}

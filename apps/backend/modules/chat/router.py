@@ -173,6 +173,7 @@ async def chat_stream(websocket: WebSocket):
         dispatcher=dispatcher,
         gateway=None,
         scope_guard=getattr(app.state, "scope_guard", None),
+        semantic_router=getattr(app.state, "server_semantic_router", None),
         metrics=getattr(app.state, "backend_cost_metrics", None),
         memory_semaphore=getattr(app.state, "background_memory_semaphore", None),
     )

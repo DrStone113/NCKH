@@ -1,0 +1,327 @@
+{
+  "primary_judge": "MiniMax-M2.7",
+  "secondary_judge": "vc/qwen3.8-max",
+  "secondary_judge_provider": "vc via api.vilao.ai",
+  "adjudicator": "cnb/grok-4.5",
+  "temperature": 0,
+  "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+  "case_count": 6,
+  "metric_comparison": {
+    "relevance": {
+      "agreement_count": 4,
+      "disagreement_count": 2,
+      "denominator": 6,
+      "agreement_rate": 0.6666666666666666
+    },
+    "faithfulness": {
+      "agreement_count": 1,
+      "disagreement_count": 5,
+      "denominator": 6,
+      "agreement_rate": 0.16666666666666666
+    },
+    "unsupported_claims": {
+      "agreement_count": 4,
+      "disagreement_count": 2,
+      "denominator": 6,
+      "agreement_rate": 0.6666666666666666
+    },
+    "provenance": {
+      "agreement_count": 1,
+      "disagreement_count": 5,
+      "denominator": 6,
+      "agreement_rate": 0.16666666666666666
+    },
+    "no_evidence_handling": {
+      "agreement_count": 3,
+      "disagreement_count": 3,
+      "denominator": 6,
+      "agreement_rate": 0.5
+    }
+  },
+  "overall_judge_agreement": {
+    "agreement_count": 13,
+    "denominator": 30,
+    "rate": 0.43333333333333335
+  },
+  "provenance_applicability_rule": "Union: compare all cases where either judge marks provenance applicable; NOT_APPLICABLE mismatches count as disagreements. All 6 enter this denominator.",
+  "cases": [
+    {
+      "case_id": "AVN-087",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-question-aware-affected16-canonical-avN175-recovery1/judgments_canonical.jsonl",
+        "sha256": "5b6978f33fc276e312ee8be6428d983b7a106a6a994f6096541226d928d54786"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9",
+      "secondary_input_sha256": "c25756022b552f65097d6586e432c300d538ae148cdb94bab53f3904937acf47",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 1,
+        "provenance": "FAIL",
+        "no_evidence_handling": "NOT_APPLICABLE"
+      },
+      "secondary": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "FAIL",
+        "short_reason": "The supplied evidence chunk 'VN_MOH_2030: Nề nếp bữa ăn' directly contains the answer regarding family meals and avoiding skipping meals, so claiming insufficient information is incorrect."
+      },
+      "adjudicator": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 1,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer claims insufficient evidence even though the retrieved chunk directly states Vietnam's meal-habit recommendation (organize family meals, age-appropriate main meals, avoid skipping meals and overeating), so it fails to answer the query."
+      },
+      "disagreements": {
+        "faithfulness": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "unsupported_claims": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "provenance": {
+          "primary": "FAIL",
+          "secondary": "NOT_APPLICABLE"
+        },
+        "no_evidence_handling": {
+          "primary": "NOT_APPLICABLE",
+          "secondary": "FAIL"
+        }
+      }
+    },
+    {
+      "case_id": "AVN-099",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-question-aware-affected16-canonical-avN175-recovery1/judgments_canonical.jsonl",
+        "sha256": "5b6978f33fc276e312ee8be6428d983b7a106a6a994f6096541226d928d54786"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9",
+      "secondary_input_sha256": "534fbdb4009bfafc2050e8cbc7ab7ee15191421899faa062a7013c51780fb804",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 0,
+        "provenance": "FAIL",
+        "no_evidence_handling": "FAIL"
+      },
+      "secondary": {
+        "relevance": "PASS",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "PASS",
+        "short_reason": "The answer correctly declines to provide specific recommendations because the retrieved evidence only lists general principles for adults without detailing the full national guidelines requested."
+      },
+      "adjudicator": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer declined to respond even though the retrieved 'Tháp dinh dưỡng Việt Nam 2025: người trưởng thành' chunk directly addresses the adult recommendation query, so it fails relevance while making no unsupported health claims."
+      },
+      "disagreements": {
+        "relevance": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "faithfulness": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "provenance": {
+          "primary": "FAIL",
+          "secondary": "NOT_APPLICABLE"
+        },
+        "no_evidence_handling": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        }
+      }
+    },
+    {
+      "case_id": "AVN-100",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-question-aware-affected16-canonical-avN175-recovery1/judgments_canonical.jsonl",
+        "sha256": "5b6978f33fc276e312ee8be6428d983b7a106a6a994f6096541226d928d54786"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9",
+      "secondary_input_sha256": "14bf5e2127b7f37454a6ca14e373d60b101fe9b76301715ec10cb32cb97aa03b",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 0,
+        "provenance": "FAIL",
+        "no_evidence_handling": "FAIL"
+      },
+      "secondary": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "PASS",
+        "short_reason": "The answer correctly declines to provide specific food safety details because the retrieved evidence only contains a general principle without actionable notes, avoiding unsupported claims."
+      },
+      "adjudicator": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 1,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "FAIL",
+        "short_reason": "The answer refused to answer even though the retrieved evidence directly addresses the query with the food-safety recommendation to select, process, and store food per food-safety principles."
+      },
+      "disagreements": {
+        "faithfulness": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "provenance": {
+          "primary": "FAIL",
+          "secondary": "NOT_APPLICABLE"
+        },
+        "no_evidence_handling": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        }
+      }
+    },
+    {
+      "case_id": "AVN-168",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-final-hardening-3case-run3/judgments_canonical.jsonl",
+        "sha256": "34cda7fb84e6c79f5551c22366e523cf17b677bb88b8da42434aa88214262138"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-final-hardening-3case-run3/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "92db6be944fc5fc077999d5f18c5093c80ffd540d424aae90606e8c2f7229842",
+      "secondary_input_sha256": "7d32c540d7e0c49c594dbfdaf0467d1834a89e2698e0fecec36b8dceff1c4bf2",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "FAIL",
+        "no_evidence_handling": "PASS"
+      },
+      "secondary": {
+        "relevance": "PASS",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "PASS",
+        "no_evidence_handling": "PASS",
+        "short_reason": "The answer correctly states insufficient evidence for nutrition/exercise links to nausea/vomiting as the supplied chunks list causes but lack specific dietary or activity guidance."
+      },
+      "adjudicator": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "PASS",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer dismissed the query as lacking information even though relevant MedlinePlus evidence on nausea/vomiting causes (e.g., morning sickness, food poisoning, motion sickness) was supplied, so it did not directly answer the request."
+      },
+      "disagreements": {
+        "relevance": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "provenance": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        }
+      }
+    },
+    {
+      "case_id": "AVN-171",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-question-aware-affected16-canonical-avN175-recovery1/judgments_canonical.jsonl",
+        "sha256": "5b6978f33fc276e312ee8be6428d983b7a106a6a994f6096541226d928d54786"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9",
+      "secondary_input_sha256": "7577e8d6394a76af012d6867b4025075926eee1404c861d3308a11a7f6da7377",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 1,
+        "provenance": "FAIL",
+        "no_evidence_handling": "FAIL"
+      },
+      "secondary": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "FAIL",
+        "short_reason": "The supplied MedlinePlus evidence explicitly lists fiber-rich foods and water intake as constipation prevention measures, so the claim of insufficient evidence is incorrect."
+      },
+      "adjudicator": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 1,
+        "provenance": "NOT_APPLICABLE",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer refuses to answer even though the retrieved MedlinePlus constipation chunk directly supports nutrition advice (fiber-rich foods, water), making the claim of insufficient evidence unsupported."
+      },
+      "disagreements": {
+        "faithfulness": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        },
+        "unsupported_claims": {
+          "primary": 1,
+          "secondary": 0
+        },
+        "provenance": {
+          "primary": "FAIL",
+          "secondary": "NOT_APPLICABLE"
+        }
+      }
+    },
+    {
+      "case_id": "AVN-174",
+      "primary_source": {
+        "path": "evaluation/results/acceptance-v2/outcome-judge-final-hardening-3case-run3/judgments_canonical.jsonl",
+        "sha256": "34cda7fb84e6c79f5551c22366e523cf17b677bb88b8da42434aa88214262138"
+      },
+      "canonical_artifact": "evaluation/results/acceptance-v2/outcome-final-hardening-3case-run3/full_pipeline.jsonl",
+      "canonical_artifact_sha256": "92db6be944fc5fc077999d5f18c5093c80ffd540d424aae90606e8c2f7229842",
+      "secondary_input_sha256": "777c93f6d552222ec7abe3aefb5b841076e07c9e3b8309b739d58476e6d040a9",
+      "primary": {
+        "relevance": "FAIL",
+        "faithfulness": "FAIL",
+        "unsupported_claims": 0,
+        "provenance": "PASS",
+        "no_evidence_handling": "NOT_APPLICABLE"
+      },
+      "secondary": {
+        "relevance": "FAIL",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "PASS",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer defines nutrition but fails to address the user's specific question about factors related to nutrition and physical activity for older adults."
+      },
+      "adjudicator": {
+        "relevance": "PASS",
+        "faithfulness": "PASS",
+        "unsupported_claims": 0,
+        "provenance": "PASS",
+        "no_evidence_handling": "NOT_APPLICABLE",
+        "short_reason": "The answer directly addresses the nutrition portion of the query and its claims about balanced diet and importance of good nutrition at any age are verbatim supported by the supplied MedlinePlus Nutrition for Older Adults chunk, with attribution correctly matching the U.S. National Library of Medicine source."
+      },
+      "disagreements": {
+        "faithfulness": {
+          "primary": "FAIL",
+          "secondary": "PASS"
+        }
+      }
+    }
+  ]
+}

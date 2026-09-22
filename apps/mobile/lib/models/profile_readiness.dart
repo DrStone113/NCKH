@@ -131,4 +131,64 @@ class ProfileReadiness {
     if (workout) return ProfileContextScope.workout;
     return ProfileContextScope.general;
   }
+
+  /// Resolve a short conversational reply against the active/recent domain.
+  ///
+  /// A reply such as "oke" has no workout keyword of its own, but it must keep
+  /// the workout profile attached when it answers a workout safety question.
+  /// Longer unrelated messages deliberately return to the general scope.
+  static ProfileContextScope scopeForConversation(
+    String message, {
+    ProfileContextScope activeScope = ProfileContextScope.general,
+    Iterable<String> recentMessages = const <String>[],
+  }) {
+    final direct = scopeForMessage(message);
+    if (direct != ProfileContextScope.general) return direct;
+    if (!_isConversationalFollowUp(message)) {
+      return ProfileContextScope.general;
+    }
+    if (activeScope != ProfileContextScope.general) return activeScope;
+    for (final recent in recentMessages.take(6)) {
+      final recentScope = scopeForMessage(recent);
+      if (recentScope != ProfileContextScope.general) return recentScope;
+    }
+    return ProfileContextScope.general;
+  }
+
+  static bool _isConversationalFollowUp(String message) {
+    final normalized = message.trim().toLowerCase().replaceAll(
+          RegExp(r'\s+'),
+          ' ',
+        );
+    if (normalized.isEmpty || normalized.split(' ').length > 8) return false;
+    const exactReplies = {
+      'ok',
+      'oke',
+      'okay',
+      'ừ',
+      'uh',
+      'được',
+      'đúng',
+      'không',
+      'ko',
+      'có',
+      'bình thường',
+      'ổn',
+      'không sao',
+      'sẵn sàng',
+      'tiếp tục',
+      'yes',
+      'no',
+    };
+    if (exactReplies.contains(normalized)) return true;
+    return const [
+      'không ',
+      'ko ',
+      'mình ',
+      'tôi ',
+      'vậy ',
+      'thế ',
+      'còn ',
+    ].any(normalized.startsWith);
+  }
 }

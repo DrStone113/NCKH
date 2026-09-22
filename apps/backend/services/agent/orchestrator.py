@@ -25,19 +25,34 @@ import logging
 import re
 import time
 import unicodedata
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from config import settings
-from services.agent.llm_client import GarbledOutputError, LLMUnavailableError, ToolCall
+from services.agent.llm_client import GarbledOutputError, LLMResponse, LLMUnavailableError, ToolCall
 from services.agent.system_prompt import buildSystemPrompt
 from services.agent.tool_dispatcher import ToolResult
 from services.agent.turn_router import COMPLEX, TurnPlan, classify_turn
+from services.agent.turn_intent import TurnIntent, TurnIntentDecision, classify_turn_intent
+from services.agent.semantic_router_service import SemanticRouterMode, SemanticRouterService
 from services.agent.context_trace import ContextTraceRecorder
 from services.agent.context_planner import ContextPlanner
 from services.agent.context_planner.validation.collector import get_natural_collector
 from services.agent.context_planner.validation.token_measurement import TokenCounter, measure_turn_tokens
 from services.agent.cost_governor import limits_for_turn
 from services.agent.answer_validators import validate_answer
+from services.agent.evidence_registry import EvidenceRegistry
+from services.agent.grounded_answer import (
+    deterministic_question_aware_synthesis,
+    evidence_grounding_required as policy_requires_evidence_grounding,
+    minimal_insufficient_evidence_response,
+    parse_grounded_answer,
+    repair_prompt,
+    render_grounded_answer,
+    validate_grounded_answer,
+    validate_grounded_answer_semantically,
+    validate_synthesized_fallback,
+)
 from services.agent.inference_policy_v2 import (
     DiagonalLinUCBShadow,
     InferenceRoute,
@@ -54,7 +69,15 @@ from services.agent.debug_trace import (
     classify_provider_token,
     elapsed_ms,
 )
-from services.agent.pending_user_action import PendingActionResolution, PendingUserAction, PendingUserActionStore, pending_user_actions
+from services.agent.pending_user_action import (
+    PendingActionResolution,
+    PendingUserAction,
+    PendingUserActionStore,
+    is_explicit_confirmation,
+    is_explicit_rejection,
+    pending_user_actions,
+)
+from services.plan_engine.application_service import PlanApplicationService
 from services.agent.scope_guard import (
     SCOPE_GUARD_HISTORY_MARKER,
     SCOPE_GUARD_HISTORY_MARKERS,
@@ -410,6 +433,63 @@ def _extract_explicit_dish_query(user_text: str) -> str | None:
     return None
 
 
+_DIRECT_CATALOG_LOOKUP_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "search_food_nutrition",
+        re.compile(r"^gia tri dinh duong cua (?P<query>.+?)(?: la gi)?$"),
+    ),
+    (
+        "search_food_nutrition",
+        re.compile(
+            r"^(?P<query>.+?) co bao nhieu (?:dam|chat dam|protein) "
+            r"va (?:nang luong|calo|kcal)$"
+        ),
+    ),
+    (
+        "search_food_nutrition",
+        re.compile(r"^(?:dinh duong|food nutrients|nutrition facts for) (?P<query>.+)$"),
+    ),
+    (
+        "search_food_nutrition",
+        re.compile(r"^(?P<query>.+?) nutrient profile$"),
+    ),
+    (
+        "search_exercise_catalog",
+        re.compile(r"^(?:cach tap|exercise) (?P<query>.+)$"),
+    ),
+    (
+        "search_exercise_catalog",
+        re.compile(r"^(?P<query>.+?) tac dong co nao$"),
+    ),
+    (
+        "search_dish_catalog",
+        re.compile(
+            r"^(?:mon )+(?P<query>.+?)(?: co thong tin dinh duong gi)?$"
+        ),
+    ),
+)
+
+
+def _extract_direct_catalog_lookup(user_text: str) -> tuple[str, str] | None:
+    """Recognize explicit entity lookups without memorizing catalog entries.
+
+    The patterns describe stable user intents (food nutrients, named dishes,
+    and named exercises).  Entity text remains open-ended and is resolved by
+    the live catalog tool, so this guard cannot manufacture a catalog match.
+    """
+
+    normalized = _normalise_intent_text(user_text)
+    for tool_name, pattern in _DIRECT_CATALOG_LOOKUP_PATTERNS:
+        match = pattern.fullmatch(normalized)
+        if match is None:
+            continue
+        query = " ".join(match.group("query").split()).strip()
+        if len(query) < 2 or query in _GENERIC_DISH_REQUESTS:
+            return None
+        return tool_name, query
+    return None
+
+
 _POSITIVE_DISH_QUERY_CUES: tuple[str, ...] = (
     "an",
     "muon an",
@@ -578,8 +658,38 @@ def _tool_schema_name(schema: Any) -> str | None:
     return name if isinstance(name, str) and name else None
 
 
+_RAG_TOOL_NAMES: frozenset[str] = frozenset({"query_rag", "search_medical_knowledge"})
+
+
+def _rag_tools_forbidden_by_context_plan(context_plan: Any | None) -> bool:
+    return (
+        getattr(getattr(context_plan, "rag_policy", None), "value", None)
+        == "RAG_FORBIDDEN"
+    )
+
+
+def _enforce_context_plan_tool_policy(
+    schemas: list[dict[str, Any]], context_plan: Any | None
+) -> list[dict[str, Any]]:
+    """Apply context-plan prohibitions to the actual exposed tool catalog.
+
+    The planner is normally observed for cost/quality research.  A forbidden
+    RAG policy is different: it is a safety and provenance boundary, so it
+    must constrain both the model-facing schemas and the dispatcher.
+    """
+    if context_plan is None:
+        return schemas
+    forbidden = set(getattr(context_plan, "forbidden_tools", ()) or ())
+    if _rag_tools_forbidden_by_context_plan(context_plan):
+        forbidden.update(_RAG_TOOL_NAMES)
+    if not forbidden:
+        return schemas
+    return [schema for schema in schemas if _tool_schema_name(schema) not in forbidden]
+
+
 def _select_relevant_tool_schemas(
-    schemas: list[dict[str, Any]], user_text: str
+    schemas: list[dict[str, Any]], user_text: str, *,
+    typed_decision: TurnIntentDecision | None = None,
 ) -> list[dict[str, Any]]:
     """Return the smallest high-confidence tool set for the current request.
 
@@ -589,6 +699,7 @@ def _select_relevant_tool_schemas(
     """
 
     normalized = _normalise_intent_text(user_text)
+    typed_decision = typed_decision or classify_turn_intent(user_text)
 
     def has_any(cues: tuple[str, ...]) -> bool:
         return any(_contains_intent_cue(normalized, cue) for cue in cues)
@@ -604,6 +715,14 @@ def _select_relevant_tool_schemas(
         for domain, cues in _DOMAIN_CUES.items()
         if has_any(cues)
     }
+    # Typed semantic intent is authoritative for Plan/menu/workout routing;
+    # legacy cues below remain only as compatibility hints for unrelated tools.
+    if typed_decision.primary_intent in {TurnIntent.MEAL_SUGGESTION, TurnIntent.MENU_SCHEDULE}:
+        domains.add("nutrition")
+    if typed_decision.primary_intent == TurnIntent.WORKOUT_SCHEDULE:
+        domains.add("fitness")
+    if typed_decision.primary_intent == TurnIntent.COMBINED_PLAN:
+        domains.update({"nutrition", "fitness"})
     weight_report = bool(re.search(r"\b\d+(?:[.,]\d+)?\s*kg\b", normalized))
     if weight_report:
         domains.add("fitness")
@@ -641,19 +760,30 @@ def _select_relevant_tool_schemas(
         )
         recognized = True
 
-    plan_intent = has_any(_PLAN_CUES)
+    plan_intent = has_any(_PLAN_CUES) or bool(
+        set(typed_decision.intents)
+        & {TurnIntent.MENU_SCHEDULE, TurnIntent.WORKOUT_SCHEDULE, TurnIntent.COMBINED_PLAN,
+           TurnIntent.PLAN_EDIT, TurnIntent.PLAN_LIFECYCLE}
+    )
     if plan_intent:
         plan_tools = set(_PROFILE_TOOL_NAMES)
-        create_plan = has_any(("lap", "tao", "xay dung", "len"))
+        create_plan = has_any(("lap", "tao", "xay dung", "len")) or typed_decision.primary_intent in {
+            TurnIntent.MENU_SCHEDULE, TurnIntent.WORKOUT_SCHEDULE, TurnIntent.COMBINED_PLAN,
+        }
         revise_plan = has_any(("doi", "sua", "dieu chinh", "them", "bo", "thay"))
         change_status = has_any(("luu", "kich hoat", "tam dung", "tiep tuc", "huy"))
         if create_plan:
-            if "nutrition" in domains:
-                plan_tools.add("build_nutrition_plan")
-            if "fitness" in domains:
-                plan_tools.add("build_workout_schedule")
-            if not domains:
-                plan_tools.update({"build_nutrition_plan", "build_workout_schedule"})
+            if typed_decision.primary_intent == TurnIntent.COMBINED_PLAN:
+                # Expose one atomic composite tool. Giving the LLM two
+                # independent draft tools allowed it to return meals only.
+                plan_tools.add("build_combined_plan")
+            else:
+                if "nutrition" in domains and TurnIntent.OBSERVATION_LOG not in typed_decision.intents:
+                    plan_tools.add("build_nutrition_plan")
+                if "fitness" in domains and TurnIntent.OBSERVATION_LOG not in typed_decision.intents:
+                    plan_tools.add("build_workout_schedule")
+                if not domains:
+                    plan_tools.update({"build_nutrition_plan", "build_workout_schedule"})
         elif revise_plan:
             plan_tools.update({"get_plan", "revise_plan"})
         elif change_status:
@@ -710,6 +840,9 @@ def _select_relevant_tool_schemas(
             )
         )
     )
+    if "WRITE" in typed_decision.negated_actions or "CREATE_PLAN" in typed_decision.negated_actions:
+        explicit_log = False
+        names.difference_update({"log_meal", "log_weight", "log_exercise", "log_lifestyle", "save_plan", "set_plan_status"})
     readback_only = history_intent and has_any(
         ("da an gi", "da tap gi", "con bao nhieu")
     )
@@ -772,6 +905,7 @@ class AgentOrchestrator:
         heavy_llm: Any | None = None,
         pending_actions: PendingUserActionStore | None = None,
         scope_guard: ScopeGuard | None = None,
+        semantic_router: SemanticRouterService | None = None,
         metrics: Any | None = None,
         memory_semaphore: asyncio.Semaphore | None = None,
     ) -> None:
@@ -786,10 +920,64 @@ class AgentOrchestrator:
         self.tool_timeout_ms = tool_timeout_ms or settings.tool_timeout_ms
         self.pending_actions = pending_actions or pending_user_actions
         self.scope_guard = scope_guard
+        self.semantic_router = semantic_router
         self.metrics = metrics
         self.memory_semaphore = memory_semaphore
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._memory_updates_in_flight: set[str] = set()
+
+    def _schedule_semantic_shadow_parse(
+        self,
+        user_text: str,
+        gateway: Any | None,
+        debug_trace: DebugTraceBuilder,
+    ) -> None:
+        """Collect a server semantic comparison without delaying chat output."""
+
+        if self.semantic_router is None:
+            return
+
+        async def _run() -> None:
+            try:
+                result = await self.semantic_router.parse(user_text)
+                await self._record_semantic_result(
+                    result, gateway, debug_trace, "SHADOW"
+                )
+            except Exception as exc:
+                logger.warning("Server semantic shadow router skipped: %s", exc)
+                if self.metrics is not None:
+                    self.metrics.increment("semantic_router.error")
+
+        task = asyncio.create_task(_run())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    async def _record_semantic_result(
+        self,
+        semantic_result: Any,
+        gateway: Any | None,
+        debug_trace: DebugTraceBuilder,
+        mode: str,
+    ) -> None:
+        """Record bounded semantic metadata; never log raw text or entities."""
+
+        if self.metrics is not None:
+            self.metrics.increment("semantic_router.turn")
+            if semantic_result.slm_invoked:
+                self.metrics.increment("semantic_router.slm_invoked")
+            self.metrics.increment(
+                "semantic_router.verifier."
+                + semantic_result.verifier_status.casefold()
+            )
+        await self._record_debug(
+            gateway,
+            debug_trace,
+            "routing",
+            "server_semantic_router",
+            "SEMANTIC_PARSE",
+            payload=semantic_result.to_debug_dict(),
+            result=mode,
+        )
 
     # ------------------------------------------------------------------ main
     async def handleChatMessage(
@@ -826,6 +1014,18 @@ class AgentOrchestrator:
                 self._owner_user_id(gateway, user_context),
                 user_text,
             )
+            if pending_resolution.status == "NO_MATCH" and (
+                is_explicit_confirmation(user_text) or is_explicit_rejection(user_text)
+            ):
+                await self._restore_durable_pending_action(
+                    session_id,
+                    self._owner_user_id(gateway, user_context),
+                )
+                pending_resolution = self.pending_actions.claim_confirmation(
+                    session_id,
+                    self._owner_user_id(gateway, user_context),
+                    user_text,
+                )
             if pending_resolution.status != "NO_MATCH":
                 await self._append_turn(session_id, "user", original_user_text)
                 if (
@@ -853,22 +1053,42 @@ class AgentOrchestrator:
                 return
 
             if self.scope_guard is not None:
-                scope_decision = await self.scope_guard.classify(user_text)
+                recent_scope_history = None
+                scope_history_loader = getattr(
+                    self.memory,
+                    "loadRecentConversationForScope",
+                    None,
+                )
+                if (
+                    self.scope_guard.uses_contextual_slm
+                    and callable(scope_history_loader)
+                ):
+                    try:
+                        recent_scope_history = await scope_history_loader(
+                            session_id,
+                            max_turns=8,
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            "Context window for scope SLM unavailable for session=%s: %s",
+                            session_id,
+                            exc,
+                        )
+                scope_decision = await self.scope_guard.classify(
+                    user_text,
+                    recent_scope_history,
+                )
                 if (
                     not scope_decision.should_call_llm
                     and self.scope_guard.may_be_contextual_continuation(user_text)
                 ):
-                    scope_history_loader = getattr(
-                        self.memory,
-                        "loadRecentConversationForScope",
-                        None,
-                    )
                     if callable(scope_history_loader):
                         try:
-                            recent_scope_history = await scope_history_loader(
-                                session_id,
-                                max_turns=12,
-                            )
+                            if recent_scope_history is None:
+                                recent_scope_history = await scope_history_loader(
+                                    session_id,
+                                    max_turns=12,
+                                )
                             contextual_decision = (
                                 self.scope_guard.contextualize_continuation(
                                     user_text,
@@ -951,6 +1171,28 @@ class AgentOrchestrator:
                     scope_reply_suffix = scope_decision.reply_suffix
                     user_history_marker = SCOPE_GUARD_MIXED_HISTORY_MARKER
 
+            semantic_result = None
+            if self.semantic_router is not None:
+                # Shadow is deliberately detached. In particular, a local CPU
+                # SLM can take seconds, and waiting for it would itself change
+                # chat behaviour despite not changing any selected tool.
+                if self.semantic_router.mode is SemanticRouterMode.SHADOW:
+                    self._schedule_semantic_shadow_parse(
+                        user_text, gateway, debug_trace
+                    )
+                else:
+                    try:
+                        semantic_result = await self.semantic_router.parse(user_text)
+                        await self._record_semantic_result(
+                            semantic_result, gateway, debug_trace, "ENFORCED"
+                        )
+                    except Exception as exc:
+                        # Semantic parsing is an optimisation layer. A failure
+                        # must preserve the established deterministic route.
+                        logger.warning("Server semantic router skipped: %s", exc)
+                        if self.metrics is not None:
+                            self.metrics.increment("semantic_router.error")
+
             if gateway is not None and hasattr(gateway, "send_status"):
                 await gateway.send_status("Đang xem thông tin liên quan…")
             context_plan_for_cost = None
@@ -1005,7 +1247,18 @@ class AgentOrchestrator:
             tool_schemas = None
             if plan.offer_tools:
                 tool_schemas = _select_relevant_tool_schemas(
-                    self.tools.schemas(), user_text
+                    self.tools.schemas(),
+                    user_text,
+                    typed_decision=(
+                        semantic_result.decision
+                        if semantic_result is not None
+                        and self.semantic_router is not None
+                        and self.semantic_router.mode is SemanticRouterMode.ENFORCED
+                        else None
+                    ),
+                )
+                tool_schemas = _enforce_context_plan_tool_policy(
+                    tool_schemas, context_plan_for_cost
                 )
             trace.capture_tools_offered(tool_schemas)
 
@@ -1072,15 +1325,12 @@ class AgentOrchestrator:
                     workout_prof = dict(user_profile.get("workout_profile") or {})
                     workout_prof["current_pain_status"] = safety_pain_res
                     workout_prof["safety_checked_at"] = datetime.now(timezone.utc).isoformat()
-                    if workout_prof.get("intake_confirmation_status") == "CONFIRMED":
-                        workout_prof["intake_confirmation_status"] = "CONFIRMED"
                     user_profile["workout_profile"] = workout_prof
                 elif user_profile is None:
                     user_profile = {
                         "workout_profile": {
                             "current_pain_status": safety_pain_res,
                             "safety_checked_at": datetime.now(timezone.utc).isoformat(),
-                            "intake_confirmation_status": "CONFIRMED",
                         }
                     }
                 if gateway is not None and hasattr(gateway, "user_context"):
@@ -1091,44 +1341,6 @@ class AgentOrchestrator:
                     else:
                         gateway.user_context = user_profile
 
-            if isinstance(user_profile, dict) and context.pinned_facts:
-                workout_prof = dict(user_profile.get("workout_profile") or {})
-                if not workout_prof.get("available_equipment") or not workout_prof.get("training_experience"):
-                    for pf in context.pinned_facts:
-                        fact_text = str(getattr(pf, "fact", "")).lower()
-                        if not workout_prof.get("available_equipment"):
-                            if "thảm" in fact_text or "mat" in fact_text:
-                                workout_prof["available_equipment"] = ["gym mat"]
-                            elif "tạ" in fact_text or "dumbbell" in fact_text:
-                                workout_prof["available_equipment"] = ["dumbbell"]
-                        if not workout_prof.get("training_experience"):
-                            if "mới bắt đầu" in fact_text or "novice" in fact_text:
-                                workout_prof["training_experience"] = "NOVICE"
-                            elif "năm" in fact_text or "lâu" in fact_text or "experienced" in fact_text:
-                                workout_prof["training_experience"] = "EXPERIENCED"
-                        if not workout_prof.get("preferred_training_days") and "thứ" in fact_text:
-                            days = re.findall(r"thứ \d|chủ nhật", fact_text, re.IGNORECASE)
-                            if days:
-                                workout_prof["preferred_training_days"] = [d.capitalize() for d in days]
-                                workout_prof["available_days_per_week"] = len(days)
-                    if workout_prof.get("available_equipment") and not workout_prof.get("training_location"):
-                        workout_prof["training_location"] = "home"
-                    if workout_prof.get("available_equipment") and not workout_prof.get("default_session_duration_minutes"):
-                        workout_prof["default_session_duration_minutes"] = 60
-                    if workout_prof.get("available_equipment") and not workout_prof.get("exercise_safety_profile"):
-                        workout_prof["exercise_safety_profile"] = {
-                            "health_state": "HEALTHY_GENERAL",
-                            "pregnancy_status": "NOT_APPLICABLE",
-                            "warning_symptoms": [],
-                            "acute_injury": False,
-                            "recent_surgery": False,
-                            "technique_screen_confirmed": False,
-                        }
-                    if workout_prof.get("available_equipment") and not workout_prof.get("intake_confirmation_status"):
-                        workout_prof["intake_confirmation_status"] = "CONFIRMED"
-                    user_profile["workout_profile"] = workout_prof
-                    if gateway is not None and hasattr(gateway, "user_context") and isinstance(gateway.user_context, dict):
-                        gateway.user_context["workout_profile"] = workout_prof
             messages = self._build_messages(
                 context,
                 user_text,
@@ -1140,6 +1352,9 @@ class AgentOrchestrator:
             )
             explicit_dish_query = (
                 _extract_explicit_dish_query(user_text) if plan.offer_tools else None
+            )
+            direct_catalog_lookup = (
+                _extract_direct_catalog_lookup(user_text) if plan.offer_tools else None
             )
             catalog_lookup_attempted = False
             current_context_size = len(json.dumps(messages, ensure_ascii=False, default=str))
@@ -1225,12 +1440,27 @@ class AgentOrchestrator:
             pending_plan_action: PendingUserAction | None = None
             all_tool_results: list[tuple[ToolCall, ToolResult]] = []
             if getattr(context, "rag_chunks", None):
-                all_tool_results.append(
-                    (
-                        ToolCall("context-rag", "query_rag", {}),
-                        ToolResult(ok=True, data={"chunks": context.rag_chunks}),
-                    )
+                context_rag_call = ToolCall("context-rag", "query_rag", {})
+                context_rag_result = ToolResult(
+                    ok=True, data={"chunks": context.rag_chunks}
                 )
+                all_tool_results.append((context_rag_call, context_rag_result))
+                # The initial RAG context is part of the system prompt seen by
+                # the answer model. The isolated acceptance harness retains
+                # that same structured evidence for outcome grading; ordinary
+                # developer telemetry remains content-free.
+                if settings.acceptance_evaluation_trace_enabled:
+                    await self._record_debug(
+                        gateway,
+                        debug_trace,
+                        "context",
+                        "orchestrator",
+                        "CONTEXT_RAG_EVIDENCE",
+                        payload=self._debug_tool_result_payload(
+                            context_rag_call, context_rag_result
+                        ),
+                        result="AVAILABLE_TO_GENERATION",
+                    )
             if isinstance(user_context, dict):
                 if any(
                     key in user_context
@@ -1266,11 +1496,35 @@ class AgentOrchestrator:
                             }),
                         )
                     )
+            # Grounding is an answer-quality boundary, not a routing policy.
+            # It must still protect a factual health/nutrition answer when the
+            # cost-policy experiment is only observing.  Other experimental
+            # validators retain their existing enforce-only rollout gate.
+            evidence_grounding_required = bool(
+                inference_decision is not None
+                and policy_requires_evidence_grounding(inference_decision.validators)
+            )
+            # This is deliberately independent of the experimental routing
+            # confidence.  `EVIDENCE_GROUNDING` is the application policy
+            # decision; lowering confidence may change route enforcement, but
+            # must never turn off the answer-quality safety boundary.
+            await self._record_debug(
+                gateway,
+                debug_trace,
+                "validation",
+                "grounded_answer",
+                "GROUNDING_ACTIVATION",
+                payload={"grounding_required": evidence_grounding_required},
+                result="REQUIRED" if evidence_grounding_required else "NOT_REQUIRED",
+            )
             validate_before_output = bool(
-                settings.backend_cost_mode == "enforce"
-                and inference_decision is not None
-                and qualified_v2
-                and inference_decision.validators
+                evidence_grounding_required
+                or (
+                    settings.backend_cost_mode == "enforce"
+                    and inference_decision is not None
+                    and qualified_v2
+                    and inference_decision.validators
+                )
             )
 
             # Qualified, high-confidence reads can be fetched before the
@@ -1312,38 +1566,110 @@ class AgentOrchestrator:
                         await gateway.send_status("Đang kiểm tra thêm thông tin…")
                     else:
                         await gateway.send_status("Đang chuẩn bị câu trả lời…")
-                llm_started_at = time.perf_counter()
-                llm_calls += 1
-                if self.metrics is not None:
-                    route_key = (
-                        inference_decision.route.value
-                        if inference_decision
-                        else plan.tier
-                    ).casefold()
-                    self.metrics.increment(
-                        f"llm.calls.{route_key}"
+                route_key = (
+                    inference_decision.route.value
+                    if inference_decision
+                    else plan.tier
+                ).casefold()
+                # The registry is regenerated from typed results on every
+                # iteration.  It is turn-local and app-owned: an answer model
+                # can select an ID but can never mint an ID or a source label.
+                if evidence_grounding_required:
+                    registry = EvidenceRegistry.from_tool_results(all_tool_results)
+                    await self._record_debug(
+                        gateway,
+                        debug_trace,
+                        "validation",
+                        "grounded_answer",
+                        "GROUNDING_EVIDENCE_CAPTURE",
+                        payload={
+                            "evidence_registry_created": True,
+                            "evidence_registry_size": len(registry.items),
+                            # Capture success means this turn-local registry
+                            # was reconstructed from all completed tool/context
+                            # envelopes.  It is distinct from having evidence.
+                            "evidence_capture_ok": True,
+                            "evidence_available": bool(registry.items),
+                        },
+                        result="CAPTURED",
                     )
-                    self.metrics.increment(
-                        f"llm.input_tokens_estimated.{route_key}",
-                        cost_limits.estimated_input_tokens(messages, tool_schemas),
+                    messages[0]["content"] = messages[0]["content"].split(
+                        "\n=== EVIDENCE REGISTRY (internal) ===\n", 1
+                    )[0] + (
+                        "\n=== EVIDENCE REGISTRY (internal) ===\n"
+                        + registry.prompt_block()
+                        + "\nFor each health/nutrition fact, use only this registry. "
+                        "Do not write source names, URLs, or factual details not present here. "
+                        "When you give a final answer without tool calls, return JSON only: "
+                        '{"answer":"...","claim_support":[{"claim":"verbatim claim","evidence_ids":["E1"]}]}.'
                     )
-                response = await llm.chat(
-                    messages,
-                    tools=tool_schemas,
-                    stream=not validate_before_output,
-                    prefill=None,
-                    max_tokens=cost_limits.max_output_tokens,
-                )
-                await self._record_debug(
-                    gateway,
-                    debug_trace,
-                    "provider",
-                    "llm_adapter",
-                    "RESPONSE_RECEIVED",
-                    payload={"tool_call_count": len(response.tool_calls or [])},
-                    latency_ms=elapsed_ms(llm_started_at),
-                    result="OK",
-                )
+                if step == 0 and direct_catalog_lookup is not None:
+                    required_tool, lookup_query = direct_catalog_lookup
+                    response = LLMResponse(
+                        tool_calls=[
+                            ToolCall(
+                                id="direct-catalog-prefetch",
+                                name=required_tool,
+                                arguments={
+                                    "query": lookup_query,
+                                    **(
+                                        {
+                                            "page": 1,
+                                            "page_size": 5,
+                                            "include_details": True,
+                                        }
+                                        if required_tool == "search_dish_catalog"
+                                        else {}
+                                    ),
+                                },
+                            )
+                        ]
+                    )
+                    await self._record_debug(
+                        gateway,
+                        debug_trace,
+                        "routing",
+                        "direct_catalog_guard",
+                        "DETERMINISTIC_TOOL_ROUTE",
+                        payload={"tool": required_tool, "query": lookup_query},
+                        result="ENFORCED",
+                    )
+                else:
+                    llm_started_at = time.perf_counter()
+                    llm_calls += 1
+                    if self.metrics is not None:
+                        self.metrics.increment(f"llm.calls.{route_key}")
+                        self.metrics.increment(
+                            f"llm.input_tokens_estimated.{route_key}",
+                            cost_limits.estimated_input_tokens(messages, tool_schemas),
+                        )
+                    response = await llm.chat(
+                        messages,
+                        tools=tool_schemas,
+                        stream=not validate_before_output,
+                        prefill=None,
+                        max_tokens=cost_limits.max_output_tokens,
+                    )
+                    await self._record_debug(
+                        gateway,
+                        debug_trace,
+                        "provider",
+                        "llm_adapter",
+                        "RESPONSE_RECEIVED",
+                        payload={"tool_call_count": len(response.tool_calls or [])},
+                        latency_ms=elapsed_ms(llm_started_at),
+                        result="OK",
+                    )
+                    if evidence_grounding_required:
+                        await self._record_debug(
+                            gateway,
+                            debug_trace,
+                            "validation",
+                            "grounded_answer",
+                            "GROUNDING_STRUCTURED_GENERATION",
+                            payload={"structured_generation_requested": True},
+                            result="REQUESTED",
+                        )
 
                 query_guard_changes = _ground_suggest_dish_queries(
                     list(response.tool_calls or []),
@@ -1360,6 +1686,47 @@ class AgentOrchestrator:
                         payload={"adjustments": query_guard_changes},
                         result="ENFORCED",
                     )
+
+                direct_catalog_policy_adjusted = False
+                if direct_catalog_lookup is not None:
+                    required_tool, lookup_query = direct_catalog_lookup
+                    get_tool = getattr(self.tools, "get", None)
+                    tool_available = bool(
+                        callable(get_tool) and get_tool(required_tool) is not None
+                    )
+                    calls = list(response.tool_calls or [])
+                    if tool_available and not any(
+                        call.name == required_tool for call in calls
+                    ):
+                        response.tool_calls = [
+                            *calls,
+                            ToolCall(
+                                id=f"direct-catalog-required-{step}",
+                                name=required_tool,
+                                arguments={
+                                    "query": lookup_query,
+                                    **(
+                                        {
+                                            "page": 1,
+                                            "page_size": 5,
+                                            "include_details": True,
+                                        }
+                                        if required_tool == "search_dish_catalog"
+                                        else {}
+                                    ),
+                                },
+                            ),
+                        ]
+                        direct_catalog_policy_adjusted = True
+                        await self._record_debug(
+                            gateway,
+                            debug_trace,
+                            "policy",
+                            "direct_catalog_guard",
+                            "CATALOG_LOOKUP_REQUIRED",
+                            payload={"tool": required_tool, "query": lookup_query},
+                            result="ENFORCED",
+                        )
 
                 # An external recipe lookup is never independent from the
                 # canonical catalog check. If the model emits web lookup in
@@ -1490,18 +1857,47 @@ class AgentOrchestrator:
                 # Text accompanying a tool call is only an internal bridge to
                 # the next model step. Streaming it creates a duplicate chat
                 # bubble ("để mình kiểm tra...") before the actual answer.
-                full_response = await self._stream_final(
-                    gateway,
-                    response,
-                    debug_trace,
-                    emit_to_gateway=not bool(response.tool_calls),
-                )
+                try:
+                    full_response = await self._stream_final(
+                        gateway,
+                        response,
+                        debug_trace,
+                        # A raw structured answer is an internal validation
+                        # candidate.  Never stream it before grounding accepts
+                        # it or replaces it with a deterministic fallback.
+                        emit_to_gateway=(
+                            not bool(response.tool_calls)
+                            and not evidence_grounding_required
+                        ),
+                    )
+                except LLMUnavailableError as exc:
+                    if exc.reason_code != "EMPTY_RESPONSE":
+                        raise
+                    # Some OpenAI-compatible providers return HTTP 200 after
+                    # streaming only private reasoning/metadata. Do one
+                    # tool-free, non-streaming recovery before exposing a
+                    # normal app fallback; never turn this into a WebSocket
+                    # disconnect for the user.
+                    full_response = await self._recover_empty_answer(
+                        llm,
+                        messages,
+                        gateway,
+                        debug_trace,
+                        max_tokens=cost_limits.max_output_tokens,
+                    )
+                    if not full_response:
+                        full_response = (
+                            "Mình chưa thể tạo câu trả lời hoàn chỉnh lúc này. "
+                            "Bạn thử lại giúp mình nhé."
+                        )
+                        if gateway is not None and hasattr(gateway, "send_token"):
+                            await gateway.send_token(full_response)
                 if self.metrics is not None and full_response:
                     self.metrics.increment(
                         f"llm.output_tokens_estimated.{route_key}",
                         max(1, (len(full_response) + 3) // 4),
                     )
-                if catalog_policy_adjusted:
+                if catalog_policy_adjusted or direct_catalog_policy_adjusted:
                     # Do not replay or persist the unsupported answer that the
                     # guard replaced with an evidence-gathering tool call.
                     full_response = ""
@@ -1515,6 +1911,142 @@ class AgentOrchestrator:
                         elif nutrition_structured is not None:
                             full_response = str(nutrition_structured.get("text") or "")
                     if validate_before_output and inference_decision is not None:
+                        if evidence_grounding_required:
+                            # Every required turn enters this parser/validator
+                            # path, including zero evidence.  The model's
+                            # initial structured candidate is validated first;
+                            # one bounded repair is available only when there
+                            # is evidence to map, then failure closes to a
+                            # deterministic application-owned answer.
+                            registry = EvidenceRegistry.from_tool_results(all_tool_results)
+                            parse_ok = False
+                            claim_support_present = False
+                            grounded = None
+                            try:
+                                parsed_value = json.loads(full_response.strip().removeprefix("```json").removesuffix("```").strip())
+                                claim_support_present = isinstance(parsed_value, dict) and "claim_support" in parsed_value
+                                grounded = parse_grounded_answer(full_response)
+                                parse_ok = True
+                                semantic_validation = await validate_grounded_answer_semantically(
+                                    grounded,
+                                    registry,
+                                    verifier=lambda claim, evidence: self._verify_grounding_entailment(
+                                        llm, claim=claim, evidence=evidence,
+                                    ),
+                                )
+                                grounding_errors = semantic_validation.errors
+                                unsupported_claims = semantic_validation.unsupported_claims
+                            except ValueError as exc:
+                                grounding_errors = (str(exc) if str(exc) else "INVALID_CLAIM_SUPPORT",)
+                                unsupported_claims = ()
+                            except Exception:
+                                grounding_errors = ("INVALID_CLAIM_SUPPORT",)
+                                unsupported_claims = ()
+                            await self._record_debug(
+                                gateway, debug_trace, "validation", "grounded_answer",
+                                "GROUNDING_SEMANTIC_VALIDATION",
+                                payload={
+                                    "semantic_validator_called": parse_ok,
+                                    "unsupported_claim_count": len(unsupported_claims),
+                                    "semantic_validation_pass": not grounding_errors,
+                                },
+                                result="PASS" if not grounding_errors else "FAIL",
+                            )
+                            await self._record_debug(
+                                gateway, debug_trace, "validation", "grounded_answer",
+                                "GROUNDING_VALIDATION",
+                                payload={
+                                    "claim_support_present": claim_support_present,
+                                    "claim_support_parse_ok": parse_ok,
+                                    "validator_called": True,
+                                    "validation_pass": not grounding_errors,
+                                    "validation_errors": list(grounding_errors),
+                                },
+                                result="PASS" if not grounding_errors else "FAIL",
+                            )
+                            if self.metrics is not None:
+                                self.metrics.increment("grounding.required_turns")
+                                self.metrics.increment("grounding.validator_called_turns")
+                            if not grounding_errors and grounded is not None:
+                                full_response = render_grounded_answer(grounded, registry)
+                                await self._record_debug(
+                                    gateway, debug_trace, "validation", "grounded_answer",
+                                    "VALIDATED_DIRECT",
+                                    payload={"provenance_renderer_called": True}, result="ACCEPTED",
+                                )
+                                if self.metrics is not None:
+                                    self.metrics.increment("grounding.validated_direct")
+                            elif registry.items:
+                                try:
+                                    await self._record_debug(
+                                        gateway, debug_trace, "validation", "grounded_answer",
+                                        "GROUNDING_REPAIR",
+                                        payload={"repair_called": True, "validation_errors": list(grounding_errors)},
+                                        result="REQUESTED",
+                                    )
+                                    repaired = await llm.chat(
+                                        [*messages, {"role": "user", "content": repair_prompt(
+                                            original_answer=full_response,
+                                            registry=registry,
+                                            errors=grounding_errors,
+                                            unsupported_claims=unsupported_claims,
+                                        )}],
+                                        tools=None,
+                                        stream=False,
+                                        max_tokens=cost_limits.max_output_tokens,
+                                    )
+                                    grounded = parse_grounded_answer(repaired.full_text or "")
+                                    semantic_validation = await validate_grounded_answer_semantically(
+                                        grounded,
+                                        registry,
+                                        verifier=lambda claim, evidence: self._verify_grounding_entailment(
+                                            llm, claim=claim, evidence=evidence,
+                                        ),
+                                    )
+                                    grounding_errors = semantic_validation.errors
+                                    unsupported_claims = semantic_validation.unsupported_claims
+                                    if not grounding_errors:
+                                        full_response = render_grounded_answer(grounded, registry)
+                                        await self._record_debug(
+                                            gateway, debug_trace, "validation", "grounded_answer",
+                                            "VALIDATED_AFTER_REPAIR",
+                                            payload={
+                                                "repair_validation_pass": True,
+                                                "provenance_renderer_called": True,
+                                            }, result="ACCEPTED",
+                                        )
+                                        if self.metrics is not None:
+                                            self.metrics.increment("grounding.validated_after_repair")
+                                    else:
+                                        await self._record_debug(
+                                            gateway, debug_trace, "validation", "grounded_answer",
+                                            "GROUNDING_REPAIR_VALIDATION",
+                                            payload={"repair_validation_pass": False, "validation_errors": list(grounding_errors)},
+                                            result="FAIL",
+                                        )
+                                except Exception:
+                                    grounding_errors = ("GROUNDING_REPAIR_FAILED",)
+                            if grounding_errors:
+                                full_response, answerability, synthesis_errors = await self._question_aware_evidence_fallback(
+                                    llm,
+                                    query=user_text,
+                                    registry=registry,
+                                    max_tokens=cost_limits.max_output_tokens,
+                                )
+                                await self._record_debug(
+                                    gateway, debug_trace, "validation", "grounded_answer",
+                                    "GROUNDING_FALLBACK",
+                                    payload={
+                                        "failure_codes": list(grounding_errors),
+                                        "fallback_called": True,
+                                        "provenance_renderer_called": bool(registry.items),
+                                        "answerability": answerability,
+                                        "synthesis_validation_errors": list(synthesis_errors),
+                                    },
+                                    result="EVIDENCE_ONLY",
+                                )
+                                if self.metrics is not None:
+                                    self.metrics.increment("grounding.fallback")
                         validation = validate_answer(
                             full_response,
                             validators=inference_decision.validators,
@@ -1647,7 +2179,14 @@ class AgentOrchestrator:
 
                 dispatch_started_at = time.perf_counter()
                 tool_results = await self._dispatch_all(
-                    session_id, response.tool_calls, failure_counts
+                    session_id,
+                    response.tool_calls,
+                    failure_counts,
+                    forbidden_tool_names=(
+                        _RAG_TOOL_NAMES
+                        if _rag_tools_forbidden_by_context_plan(context_plan_for_cost)
+                        else None
+                    ),
                 )
                 all_tool_results.extend(tool_results)
                 for call in response.tool_calls:
@@ -1748,6 +2287,7 @@ class AgentOrchestrator:
                             workout_structured = presentation
                             trace.capture_workout_integration(result.data, presentation_path="DETERMINISTIC_CARD")
                     if call.name in {
+                        "build_combined_plan",
                         "build_nutrition_plan",
                         "build_workout_schedule",
                         "get_plan",
@@ -1813,7 +2353,7 @@ class AgentOrchestrator:
                             suggestion_arguments=call.arguments,
                         )
                     if (
-                        call.name in {"build_nutrition_plan", "build_workout_schedule", "revise_plan"}
+                        call.name in {"build_combined_plan", "build_nutrition_plan", "build_workout_schedule", "revise_plan"}
                         and result.ok
                         and isinstance(result.data, dict)
                         and result.data.get("status") == "READY"
@@ -1823,11 +2363,42 @@ class AgentOrchestrator:
                             owner_user_id=self._owner_user_id(gateway, user_context),
                             plan_payload=result.data,
                         )
+                        if pending_plan_action is not None:
+                            self._schedule_durable_pending_action(pending_plan_action)
 
                 await self._publish_public_trace(gateway, public_trace)
 
+                exact_direct_catalog_reply = self._exact_food_or_dish_catalog_reply(
+                    response.tool_calls, tool_results
+                )
+                if exact_direct_catalog_reply is not None and not evidence_grounding_required:
+                    if self.metrics is not None:
+                        self.metrics.increment("inference.deterministic_early_exit")
+                    exact_direct_catalog_reply = self._append_scope_reply(
+                        exact_direct_catalog_reply, scope_reply_suffix
+                    )
+                    public_trace.mark_completed()
+                    await self._append_turn(
+                        session_id,
+                        "assistant",
+                        exact_direct_catalog_reply,
+                        public_trace=self._public_trace_payload(public_trace),
+                    )
+                    if gateway is not None and hasattr(gateway, "send_token"):
+                        await gateway.send_token(exact_direct_catalog_reply)
+                    if gateway is not None:
+                        await self._send_done(
+                            gateway,
+                            exact_direct_catalog_reply,
+                            structured_data=None,
+                            public_trace=public_trace,
+                        )
+                    trace.finish(outcome="COMPLETED_EXACT_CATALOG_LOOKUP")
+                    self._schedule_memory_update(session_id)
+                    return
+
                 exact_recipe_reply = self._exact_recipe_web_reply(tool_results)
-                if exact_recipe_reply is not None:
+                if exact_recipe_reply is not None and not evidence_grounding_required:
                     if self.metrics is not None:
                         self.metrics.increment("inference.deterministic_early_exit")
                     exact_recipe_reply = self._append_scope_reply(
@@ -1856,7 +2427,7 @@ class AgentOrchestrator:
                 exact_catalog_reply = self._exact_exercise_catalog_reply(
                     response.tool_calls, tool_results
                 )
-                if exact_catalog_reply is not None:
+                if exact_catalog_reply is not None and not evidence_grounding_required:
                     if self.metrics is not None:
                         self.metrics.increment("inference.deterministic_early_exit")
                     exact_catalog_reply = self._append_scope_reply(
@@ -1923,6 +2494,7 @@ class AgentOrchestrator:
                     and not has_clarification_need
                     and not has_conversational_question
                     and has_valid_items
+                    and not evidence_grounding_required
                 ):
                     if self.metrics is not None:
                         self.metrics.increment("inference.deterministic_early_exit")
@@ -1971,6 +2543,65 @@ class AgentOrchestrator:
                         ),
                     })
 
+            # Loop exhaustion cannot bypass a required grounding boundary.
+            if evidence_grounding_required:
+                registry = EvidenceRegistry.from_tool_results(all_tool_results)
+                exhaustion_errors = ("GROUNDING_LOOP_EXHAUSTED",)
+                await self._record_debug(
+                    gateway, debug_trace, "validation", "grounded_answer",
+                    "GROUNDING_EVIDENCE_CAPTURE",
+                    payload={"evidence_registry_created": True, "evidence_registry_size": len(registry.items), "evidence_capture_ok": True, "evidence_available": bool(registry.items)},
+                    result="CAPTURED",
+                )
+                await self._record_debug(
+                    gateway, debug_trace, "validation", "grounded_answer",
+                    "GROUNDING_VALIDATION",
+                    payload={"claim_support_present": False, "claim_support_parse_ok": False, "validator_called": True, "validation_pass": False, "validation_errors": list(exhaustion_errors)},
+                    result="FAIL",
+                )
+                await self._record_debug(
+                    gateway, debug_trace, "validation", "grounded_answer",
+                    "GROUNDING_FALLBACK",
+                    payload={"failure_codes": list(exhaustion_errors), "fallback_called": True, "provenance_renderer_called": bool(registry.items)},
+                    result="EVIDENCE_ONLY",
+                )
+                if self.metrics is not None:
+                    self.metrics.increment("grounding.required_turns")
+                    self.metrics.increment("grounding.validator_called_turns")
+                    self.metrics.increment("grounding.fallback")
+                full_response, answerability, synthesis_errors = await self._question_aware_evidence_fallback(
+                    llm,
+                    query=user_text,
+                    registry=registry,
+                    max_tokens=cost_limits.max_output_tokens,
+                )
+                await self._record_debug(
+                    gateway, debug_trace, "validation", "grounded_answer",
+                    "GROUNDING_SYNTHESIS",
+                    payload={
+                        "answerability": answerability,
+                        "synthesis_validation_errors": list(synthesis_errors),
+                        "provenance_renderer_called": bool(registry.items and not synthesis_errors),
+                    },
+                    result="PASS" if not synthesis_errors else "MINIMAL_INSUFFICIENT_EVIDENCE",
+                )
+                public_trace.mark_completed()
+                await self._append_turn(
+                    session_id, "assistant", full_response,
+                    structured_data=nutrition_structured or plan_structured or workout_structured,
+                    public_trace=self._public_trace_payload(public_trace),
+                )
+                if gateway is not None and hasattr(gateway, "send_token"):
+                    await gateway.send_token(full_response)
+                if gateway is not None:
+                    await self._send_done(
+                        gateway, full_response,
+                        structured_data=nutrition_structured or plan_structured or workout_structured,
+                        public_trace=public_trace,
+                    )
+                trace.finish(outcome="COMPLETED_GROUNDING_FALLBACK")
+                self._schedule_memory_update(session_id)
+                return
             # Loop exhausted — make one last tool-free pass so the user still
             # gets a real answer.
             await self._final_answer_fallback(
@@ -1994,7 +2625,17 @@ class AgentOrchestrator:
 
         except LLMUnavailableError as exc:
             quota_exhausted = exc.reason_code == "QUOTA_EXHAUSTED"
-            error_code = "LLM_QUOTA_EXHAUSTED" if quota_exhausted else "LLM_UNAVAILABLE"
+            stream_timeout = exc.reason_code == "STREAM_TIMEOUT"
+            empty_response = exc.reason_code == "EMPTY_RESPONSE"
+            error_code = (
+                "LLM_QUOTA_EXHAUSTED"
+                if quota_exhausted
+                else "LLM_TIMEOUT"
+                if stream_timeout
+                else "EMPTY_RESPONSE"
+                if empty_response
+                else "LLM_UNAVAILABLE"
+            )
             trace.finish(outcome=error_code)
             logger.warning("LLM unavailable for session=%s", session_id, exc_info=True)
             if gateway is not None:
@@ -2022,6 +2663,87 @@ class AgentOrchestrator:
             trace.emit()
 
     # ------------------------------------------------------------- internals
+    async def _question_aware_evidence_fallback(
+        self,
+        llm: Any,
+        *,
+        query: str,
+        registry: EvidenceRegistry,
+        max_tokens: int,
+    ) -> tuple[str, str, tuple[str, ...]]:
+        """Synthesize, then revalidate, a bounded answer from turn-local evidence.
+
+        This is the only non-extractive fallback.  It is intentionally fail
+        closed: parse, answerability, relationship, language, and semantic
+        validation must all pass before an answer is rendered with provenance.
+        """
+
+        try:
+            synthesis = deterministic_question_aware_synthesis(query=query, registry=registry)
+            structural_errors = validate_synthesized_fallback(
+                synthesis, registry, query=query,
+            )
+            if structural_errors:
+                return minimal_insufficient_evidence_response(), synthesis.answerability, structural_errors
+            if synthesis.answerability == "NOT_SUPPORTED":
+                # The statement was contract-checked above and intentionally
+                # has no claims or source rendering to invent provenance.
+                return synthesis.grounded_answer.answer, synthesis.answerability, ()
+            semantic = await validate_grounded_answer_semantically(
+                synthesis.grounded_answer,
+                registry,
+                verifier=lambda claim, evidence: self._verify_grounding_entailment(
+                    llm, claim=claim, evidence=evidence,
+                ),
+            )
+            if semantic.errors:
+                return minimal_insufficient_evidence_response(), synthesis.answerability, semantic.errors
+            return (
+                render_grounded_answer(synthesis.grounded_answer, registry),
+                synthesis.answerability,
+                (),
+            )
+        except Exception:
+            return minimal_insufficient_evidence_response(), "NOT_SUPPORTED", ("GROUNDING_SYNTHESIS_FAILED",)
+
+    @staticmethod
+    async def _verify_grounding_entailment(
+        llm: Any,
+        *,
+        claim: str,
+        evidence: tuple[str, ...],
+    ) -> str:
+        """Return a fail-closed compact entailment verdict for one claim.
+
+        This product validator receives neither acceptance labels nor expected
+        answers.  It cannot add a fact because only its three-token verdict is
+        consumed by the application.
+        """
+
+        prompt = json.dumps(
+            {
+                "claim": claim,
+                "evidence": list(evidence),
+                "instruction": (
+                    "Return exactly one token: SUPPORTED when the evidence directly "
+                    "supports the claim; NOT_SUPPORTED when it contradicts or omits a "
+                    "material element; UNCERTAIN when entailment is not clear."
+                ),
+            },
+            ensure_ascii=False,
+        )
+        try:
+            response = await llm.chat(
+                [{"role": "user", "content": prompt}],
+                tools=None,
+                stream=False,
+                max_tokens=8,
+            )
+        except Exception:
+            return "UNCERTAIN"
+        verdict = str(getattr(response, "full_text", "") or "").strip().upper()
+        return verdict if verdict in {"SUPPORTED", "NOT_SUPPORTED", "UNCERTAIN"} else "UNCERTAIN"
+
     def _select_llm(self, plan: TurnPlan) -> Any:
         """Return the heavy model for complex turns when one is wired in."""
         if plan.use_heavy_model and self.heavy_llm is not None:
@@ -2033,6 +2755,8 @@ class AgentOrchestrator:
         session_id: str,
         calls: list[ToolCall],
         failure_counts: dict[str, int],
+        *,
+        forbidden_tool_names: frozenset[str] | None = None,
     ) -> list[tuple[ToolCall, ToolResult]]:
         """Parallelize safe reads while preserving write ordering.
 
@@ -2045,6 +2769,9 @@ class AgentOrchestrator:
         retry_locks: dict[str, asyncio.Lock] = {}
 
         async def _run(call: ToolCall) -> tuple[ToolCall, ToolResult]:
+            if forbidden_tool_names is not None and call.name in forbidden_tool_names:
+                logger.warning("Blocked tool call forbidden by context policy: %s", call.name)
+                return call, ToolResult(ok=False, error="TOOL_NOT_PERMITTED")
             result = await self.dispatcher.dispatch(session_id, call, self.tool_timeout_ms)
             if not result.ok and result.error in _RETRYABLE_ERRORS:
                 retry_lock = retry_locks.setdefault(call.name, asyncio.Lock())
@@ -2233,6 +2960,164 @@ class AgentOrchestrator:
                 arguments=arguments,
             )
         return None
+
+    def _schedule_durable_pending_action(self, action: PendingUserAction) -> None:
+        """Persist Plan confirmation target without blocking the response."""
+        owner = action.owner_user_id
+        if not owner or owner == "anonymous":
+            return
+        task = asyncio.create_task(
+            PlanApplicationService().create_pending_action(
+                owner_user_id=owner,
+                session_id=action.session_id,
+                action_type=action.action_type,
+                tool_name=action.tool_name,
+                plan_id=action.target_identity.get("plan_id", ""),
+                revision_id=action.target_identity.get("revision_id", action.target_id),
+                content_hash=action.target_identity.get("revision_content_hash", ""),
+                payload={
+                    "tool_arguments": action.tool_arguments,
+                    "target_id": action.target_id,
+                    "display_name": action.display_name,
+                    "target_identity": action.target_identity,
+                },
+                action_id=action.action_id,
+            )
+        )
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    def _schedule_durable_pending_terminal(self, action: PendingUserAction, status: str) -> None:
+        owner = action.owner_user_id
+        if not owner or owner == "anonymous":
+            return
+        task = asyncio.create_task(
+            PlanApplicationService().complete_pending_action(
+                owner_user_id=owner, action_id=action.action_id, status=status
+            )
+        )
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    def _schedule_durable_pending_release(self, action: PendingUserAction) -> None:
+        owner = action.owner_user_id
+        if not owner or owner == "anonymous":
+            return
+        task = asyncio.create_task(
+            PlanApplicationService().release_pending_action(
+                owner_user_id=owner, action_id=action.action_id
+            )
+        )
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    async def _restore_durable_pending_action(
+        self, session_id: str, owner_user_id: str
+    ) -> None:
+        if not owner_user_id or owner_user_id == "anonymous":
+            return
+        try:
+            row = await PlanApplicationService().find_pending_for_confirmation(
+                owner_user_id=owner_user_id, session_id=session_id
+            )
+            if row is None:
+                return
+            payload = row.get("payload")
+            if isinstance(payload, str):
+                payload = json.loads(payload)
+            payload = payload if isinstance(payload, dict) else {}
+            identity = payload.get("target_identity")
+            identity = identity if isinstance(identity, dict) else {
+                "plan_id": row.get("plan_id", ""),
+                "revision_id": row.get("revision_id", ""),
+                "revision_content_hash": row.get("target_content_hash", ""),
+            }
+            now = datetime.now(timezone.utc)
+            restored = PendingUserAction(
+                action_id=str(row["action_id"]), session_id=session_id,
+                owner_user_id=owner_user_id, action_type=str(row.get("action_type") or "SAVE_PLAN_REVISION"),
+                tool_name=str(row.get("tool_name") or "save_plan"),
+                tool_arguments=dict(payload.get("tool_arguments") or {}),
+                target_id=str(payload.get("target_id") or row.get("revision_id") or ""),
+                display_name=str(payload.get("display_name") or "plan revision"),
+                created_at=now, expires_at=now + timedelta(minutes=20),
+                target_identity={str(k): str(v) for k, v in identity.items()},
+            )
+            self.pending_actions.put(restored)
+            await PlanApplicationService().claim_pending_confirmation(
+                owner_user_id=owner_user_id, action_id=restored.action_id
+            )
+        except Exception:
+            logger.info("Durable pending action restore unavailable", exc_info=True)
+
+    @staticmethod
+    def _exact_food_or_dish_catalog_reply(
+        calls: list[ToolCall],
+        results: list[tuple[ToolCall, ToolResult]],
+    ) -> str | None:
+        """Render direct food/dish lookups only from canonical tool payloads."""
+
+        lookup_names = {call.name for call in calls}
+        target_names = lookup_names & {
+            "search_food_nutrition",
+            "search_dish_catalog",
+        }
+        if len(target_names) != 1 or lookup_names - target_names - {"get_user_profile"}:
+            return None
+        target = next(iter(target_names))
+        lookup = next(
+            (result for call, result in results if call.name == target),
+            None,
+        )
+        if lookup is None or not lookup.ok:
+            return None
+
+        def number(value: Any) -> str:
+            try:
+                return f"{float(value):g}"
+            except (TypeError, ValueError):
+                return "chưa có"
+
+        if target == "search_food_nutrition":
+            rows = lookup.data if isinstance(lookup.data, list) else []
+            foods = [row for row in rows if isinstance(row, dict) and row.get("source") == "foods"]
+            if not foods:
+                return "Mình không tìm thấy thực phẩm này trong dữ liệu dinh dưỡng của ứng dụng."
+            row = foods[0]
+            name = str(row.get("name") or row.get("name_en") or "Thực phẩm")
+            return (
+                f"Theo dữ liệu dinh dưỡng trong ứng dụng, 100 g **{name}** cung cấp "
+                f"{number(row.get('energy_kcal'))} kcal, {number(row.get('protein'))} g đạm, "
+                f"{number(row.get('carbohydrates'))} g carbohydrate và {number(row.get('fat'))} g chất béo."
+            )
+
+        data = lookup.data if isinstance(lookup.data, dict) else {}
+        rows = data.get("results")
+        rows = rows if isinstance(rows, list) else []
+        if data.get("matched_count") == 0 or not rows:
+            # The existing approved-source fallback may already be present in
+            # ``results``; let ``_exact_recipe_web_reply`` render it as
+            # REFERENCE_ONLY instead of prematurely ending at the local miss.
+            return None
+        row = next((item for item in rows if isinstance(item, dict)), None)
+        if row is None:
+            return None
+        name = str(row.get("name") or "Món ăn")
+        nutrition = row.get("nutrition") if isinstance(row.get("nutrition"), dict) else {}
+        serving = row.get("serving") if isinstance(row.get("serving"), dict) else {}
+        weight = serving.get("serving_weight_g")
+        portion = f" cho khẩu phần {number(weight)} g" if weight is not None else " cho một khẩu phần"
+        ingredients = row.get("ingredient_names")
+        ingredient_text = ""
+        if isinstance(ingredients, list) and ingredients:
+            ingredient_text = " Thành phần chính: " + ", ".join(str(item) for item in ingredients) + "."
+        return (
+            f"Theo dữ liệu món ăn trong ứng dụng, **{name}**{portion} cung cấp "
+            f"{number(nutrition.get('energy_kcal'))} kcal, {number(nutrition.get('protein_g'))} g đạm, "
+            f"{number(nutrition.get('carbohydrate_g'))} g carbohydrate và "
+            f"{number(nutrition.get('fat_g'))} g chất béo."
+            f"{ingredient_text}"
+        )
 
     @staticmethod
     def _exact_exercise_catalog_reply(
@@ -2554,6 +3439,62 @@ class AgentOrchestrator:
             )
         return None
 
+    async def _recover_empty_answer(
+        self,
+        llm: Any,
+        messages: list[dict[str, Any]],
+        gateway: Any | None,
+        debug_trace: DebugTraceBuilder,
+        *,
+        max_tokens: int | None,
+    ) -> str:
+        """Recover a completed provider stream that contained no public text."""
+
+        retry_messages = [
+            *messages,
+            {
+                "role": "user",
+                "content": (
+                    "[HỆ THỐNG: Lần trước không có nội dung hiển thị. Trả lời người dùng "
+                    "ngay bằng văn bản ngắn, rõ ràng; không gọi tool và không để trống.]"
+                ),
+            },
+        ]
+        try:
+            started_at = time.perf_counter()
+            response = await llm.chat(
+                retry_messages,
+                tools=None,
+                stream=False,
+                max_tokens=max_tokens,
+            )
+            text = (response.full_text or "").strip()
+            await self._record_debug(
+                gateway,
+                debug_trace,
+                "provider",
+                "llm_adapter",
+                "EMPTY_STREAM_RECOVERY",
+                payload={"recovered": bool(text)},
+                latency_ms=elapsed_ms(started_at),
+                result="RECOVERED" if text else "EMPTY",
+            )
+        except Exception as exc:
+            logger.warning("Empty LLM stream recovery failed: %s", exc)
+            await self._record_debug(
+                gateway,
+                debug_trace,
+                "provider",
+                "llm_adapter",
+                "EMPTY_STREAM_RECOVERY",
+                payload={"recovered": False},
+                result="FAILED",
+            )
+            return ""
+        if text and gateway is not None and hasattr(gateway, "send_token"):
+            await gateway.send_token(text)
+        return text
+
     async def _final_answer_fallback(
         self,
         session_id: str,
@@ -2763,6 +3704,7 @@ class AgentOrchestrator:
             action,
             persisted_reference_id=str(identity["persisted_reference_id"]),
         ):
+            self._schedule_durable_pending_terminal(action, "EXECUTED")
             await self._record_debug(
                 gateway,
                 debug_trace,
@@ -2803,6 +3745,7 @@ class AgentOrchestrator:
             # deliberately not presented as saved. Release the claim so the
             # user can retry after the client reports a real persistence error.
             self.pending_actions.release(action)
+            self._schedule_durable_pending_release(action)
             public_trace.mark_clarification_required()
             if result.ok:
                 text = (
@@ -3100,7 +4043,7 @@ class AgentOrchestrator:
             }
             verified = (
                 result.ok
-                and data.get("write_status") in {"SHADOW_SAVED", "PERSISTED"}
+                and data.get("write_status") == "PERSISTED"
                 and expected == persisted
                 and expected == read_back
             )
@@ -3272,7 +4215,13 @@ class AgentOrchestrator:
                     and hasattr(gateway, "send_token")
                 ):
                     await gateway.send_token(str(token))
-        return "".join(chunks) or response.full_text or ""
+        full_response = "".join(chunks) or response.full_text or ""
+        if not full_response.strip():
+            raise LLMUnavailableError(
+                "LLM stream completed without visible answer content",
+                reason_code="EMPTY_RESPONSE",
+            )
+        return full_response
 
     @staticmethod
     def _append_scope_reply(text: str, suffix: str | None) -> str:
@@ -3423,7 +4372,8 @@ class AgentOrchestrator:
     def _debug_tool_result_payload(call: ToolCall, result: ToolResult) -> dict[str, Any]:
         """Expose only result state and safe reference identifiers in debug."""
 
-        data = result.data if isinstance(result.data, dict) else {}
+        raw_data = result.data
+        data = raw_data if isinstance(raw_data, dict) else {}
         payload: dict[str, Any] = {
             "name": call.name,
             "ok": result.ok,
@@ -3439,7 +4389,36 @@ class AgentOrchestrator:
             value = data.get(key)
             if isinstance(value, (str, bool, int, float)):
                 payload[key] = value
+        if settings.acceptance_evaluation_trace_enabled:
+            # The isolated acceptance harness needs actual evidence to assess
+            # grounding.  Keep this opt-in unavailable to normal traces and
+            # fail visibly (rather than stringifying an arbitrary object) if a
+            # result cannot be represented structurally.
+            try:
+                payload["acceptance_evidence"] = AgentOrchestrator._json_safe_evaluation_value(raw_data)
+            except TypeError as exc:
+                payload["acceptance_evidence_serialization_error"] = type(exc).__name__
         return payload
+
+    @staticmethod
+    def _json_safe_evaluation_value(value: Any) -> Any:
+        """Convert known structured values, including Pydantic chunks, for an isolated evaluator."""
+
+        if value is None or isinstance(value, (str, bool, int, float)):
+            return value
+        if isinstance(value, dict):
+            return {str(key): AgentOrchestrator._json_safe_evaluation_value(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [AgentOrchestrator._json_safe_evaluation_value(item) for item in value]
+        model_dump = getattr(value, "model_dump", None)
+        if callable(model_dump):
+            dumped = model_dump(mode="json")
+            return AgentOrchestrator._json_safe_evaluation_value(dumped)
+        to_dict = getattr(value, "to_dict", None)
+        if callable(to_dict):
+            dumped = to_dict()
+            return AgentOrchestrator._json_safe_evaluation_value(dumped)
+        raise TypeError(f"UNSUPPORTED_EVALUATION_TRACE_TYPE:{type(value).__name__}")
 
     @staticmethod
     async def _send_done(
@@ -3480,6 +4459,7 @@ class AgentOrchestrator:
     @staticmethod
     def _serialize_result(call: ToolCall, result: ToolResult) -> str:
         """Serialise a tool result, attaching recovery guidance on failure."""
+        safe_data = AgentOrchestrator._json_safe_evaluation_value(result.data)
         if result.ok:
             specific = _SUCCESS_RESULT_GUIDANCE.get(call.name)
             guidance = (
@@ -3490,7 +4470,7 @@ class AgentOrchestrator:
             return json.dumps(
                 {
                     "ok": True,
-                    "data": result.data,
+                    "data": safe_data,
                     "huong_dan_tra_loi": guidance,
                 },
                 ensure_ascii=False,
@@ -3501,7 +4481,7 @@ class AgentOrchestrator:
                 "ok": False,
                 "error": code,
                 "tool": call.name,
-                "data": result.data,
+                "data": safe_data,
                 "huong_dan": (
                     _ERROR_RESPONSE_CONTRACT
                     + _ERROR_GUIDANCE.get(code, _ERROR_GUIDANCE["TOOL_INTERNAL_ERROR"])

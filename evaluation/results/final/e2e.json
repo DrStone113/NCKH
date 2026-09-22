@@ -1,0 +1,8 @@
+{
+  "fail": 0,
+  "mocks_used": false,
+  "not_executed": 12,
+  "pass": 0,
+  "reason": "No authenticated Flutter-Web-to-backend-to-DB flow was executed; generation is also blocked by missing LLM credentials.",
+  "status": "BLOCKED"
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "acceptance-hardening-blocker-analysis-v1",
+  "iteration": 2,
+  "status": "BLOCKED_BY_FROZEN_TEMPLATE_ORACLE",
+  "evidence": {
+    "routing_v1": {
+      "case_count": 140,
+      "health_safety_critical_miss": 0,
+      "false_positive_write_intent": 0,
+      "primary_intent_accuracy": 0.6071
+    },
+    "safety_v1": {
+      "case_count": 60,
+      "health_safety_critical_miss": 0,
+      "false_positive_write_intent": 0,
+      "pending_action_target_mutation": 0
+    },
+    "safety_v2": {
+      "case_count": 80,
+      "health_safety_critical_miss": 20,
+      "false_positive_write_intent": 0,
+      "pending_action_target_mutation": 0,
+      "oracle_provenance": "DRAFT_TEMPLATE_DERIVED"
+    }
+  },
+  "root_cause": {
+    "class": "FROZEN_TEST_ORACLE_SEMANTICALLY_UNDER_SPECIFIED",
+    "detail": "All 20 HEALTH_ESCALATION rows are numbered variants of one placeholder sentence requesting emergency guidance; none supplies a user symptom, injury, exposure, or other red-flag fact. Their urgent expectation therefore cannot be derived from a generic emergency-symptom safety policy.",
+    "not_a_valid_fix": [
+      "match scenario numbers or placeholder wording",
+      "classify every request for emergency guidance as a user emergency",
+      "alter expected urgent_escalation values",
+      "remove or replace frozen rows"
+    ]
+  },
+  "consequence": "The required V2 health hard gate cannot be honestly reported as passing. Per the iterative-hardening stop condition, continuing to force it to zero would require changing or weakening the frozen test oracle.",
+  "full_pipeline_rerun": "NOT_STARTED: execution order requires safety hard gates first.",
+  "immutability": {
+    "frozen_case_file_sha256": "4fbce252d943ff97f415f3c302caf4949ed006408a93486743246dd36f2005ae",
+    "frozen_case_file_modified": false,
+    "corpus_modified": false,
+    "commit_created": false,
+    "push_created": false
+  }
+}

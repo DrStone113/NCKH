@@ -1,0 +1,18 @@
+{
+  "counts": {
+    "medlineplus_definitions.jsonl": 79,
+    "medlineplus_health_topics.jsonl": 42,
+    "nih_ods_micronutrients.jsonl": 0,
+    "us_guidance.jsonl": 7,
+    "usda_foundation_foods.jsonl": 363
+  },
+  "input_hashes": {
+    "apps\\backend\\data\\research_final\\raw\\medlineplus_definitions\\fitness.xml": "ada911178ed958a104da3746b9159472e4e8135b7355e1575b16a80caeac9227",
+    "apps\\backend\\data\\research_final\\raw\\medlineplus_definitions\\minerals.xml": "f276f57665af1222010fed06e732a86a1f3bc5cc763b8ea78e1b23e3d9c63e03",
+    "apps\\backend\\data\\research_final\\raw\\medlineplus_definitions\\nutrition.xml": "e1361a5b1f532c42498ded1d06556d2f76aca07d1a8f6fcada0ac833af12e0fa",
+    "apps\\backend\\data\\research_final\\raw\\medlineplus_definitions\\vitamins.xml": "016bf92055c69a8eeeafce45d58a00730c3b7d19776afaf05091bf6bfb4645c4",
+    "apps\\backend\\data\\research_final\\raw\\medlineplus_topics.zip": "4b52e1a2c4c499d363dfbff1776875b53a695b315e7761e1c283b223b675ed74",
+    "apps\\backend\\data\\research_final\\raw\\usda_foundation_2026.zip": "186e988ec542e913f51ef62b86a47758e8cdd0d1dc3889e7b055581f3c09c77a"
+  },
+  "normalizer_version": "research-final-normalizer-1"
+}

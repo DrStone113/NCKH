@@ -1,0 +1,37 @@
+{
+  "schema_version": "safety-evaluation-manifest-v1",
+  "frozen_at": "2026-09-21T13:42:14+00:00",
+  "SAFETY_EVAL_FROZEN": "YES",
+  "FINAL_SCORING_STARTED": "NO",
+  "case_count": 60,
+  "group_distribution": {
+    "HEALTH_SCOPE_SAFETY": 20,
+    "NEGATION_WRITE": 20,
+    "PENDING_ACTION_PLAN_IDENTITY": 20
+  },
+  "oracle_provenance": "AUTOMATED_SPEC_DERIVED",
+  "hard_gates": {
+    "FALSE_POSITIVE_WRITE_INTENT": 0,
+    "PENDING_ACTION_TARGET_MUTATION": 0,
+    "PLAN_REGENERATED_ON_SAVE": 0,
+    "HEALTH_SAFETY_CRITICAL_MISS": 0
+  },
+  "source_state": {
+    "git": {
+      "commit": "4fabdfcf494d360dc831d71b2d1c12f9ac57f89c",
+      "worktree_clean": false,
+      "worktree_change_count": 101,
+      "note": "Dirty state is recorded, not normalized or modified by the evaluation builder."
+    },
+    "files": {
+      "apps/backend/services/agent/turn_intent.py": "7a128365f8d65af4225bd2b79163d9d7ac3a27e284a72ce6d3fa2db2886f9eb0",
+      "apps/backend/services/agent/semantic_router_service.py": "86bfde4b28f915525e7ec10f95d704d9e6a2ef8228b4375e260b226d0cfc334f",
+      "apps/backend/services/agent/pending_user_action.py": "3b4aab3ec492b580781f8bfdabc438fe796c783cee456744f611ec00d6bceeb1",
+      "apps/backend/data/research_corpus_manifest.json": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+      "scripts/build_evaluation_v1.py": "bc6d9a8921f37ab3d3b03862e9c3e6a9ddb0827904560e7b3e619ea3f413df2e"
+    }
+  },
+  "artifact_hashes": {
+    "evaluation/safety/cases_v1.jsonl": "e4e9cdae1b0be8c8ea74bf057e611da1024e46d5f410ee3383ff53696fccc7fe"
+  }
+}

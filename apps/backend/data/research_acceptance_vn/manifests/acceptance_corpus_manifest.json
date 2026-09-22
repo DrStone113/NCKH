@@ -1,0 +1,104 @@
+{
+  "build_duration_seconds": 87.493,
+  "candidate_audit": {
+    "domain_counts": {
+      "EXERCISE_CATALOG": 887,
+      "FOREIGN_FOOD": 3306,
+      "GLOBAL_HEALTH": 33,
+      "GLOBAL_MICRONUTRIENT": 28,
+      "INTERNATIONAL_SUPPLEMENTAL": 54,
+      "VN_BODY_METRIC": 1,
+      "VN_DISH": 101,
+      "VN_FOOD": 520,
+      "VN_MICRONUTRIENT": 3,
+      "VN_NUTRIENT_REQUIREMENT": 6,
+      "VN_NUTRITION_GUIDELINE": 14,
+      "VN_PHYSICAL_ACTIVITY": 1
+    },
+    "empty_chunks": 0,
+    "exact_duplicates": 0,
+    "excluded": {
+      "exact_duplicate": 5,
+      "low_chatbot_utility": 10,
+      "missing_provenance": 1
+    },
+    "excluded_low_chatbot_utility": 10,
+    "missing_provenance": 0,
+    "pass": true,
+    "record_count": 4954,
+    "records_by_chatbot_intent": {
+      "BODY_METRIC_SUPPORT": 1,
+      "DIETARY_CONSTRAINT": 1,
+      "DIETARY_RECOMMENDATION": 4033,
+      "EXERCISE_RECOMMENDATION": 887,
+      "FOOD_NUTRITION_LOOKUP": 3927,
+      "HEALTH_NUTRITION_CONTEXT": 33,
+      "MICRONUTRIENT_SUPPORT": 37,
+      "PERSONAL_HEALTH_PLAN_SUPPORT": 171,
+      "PHYSICAL_ACTIVITY_GUIDANCE": 887,
+      "SAFETY_ESCALATION": 3
+    },
+    "required_domains_present": true,
+    "source_counts": {
+      "MEDLINEPLUS": 103,
+      "PROJECT_CURATED_VN": 111,
+      "USDA_FDC_FOUNDATION_2026": 3326,
+      "US_GUIDANCE": 12,
+      "VIETNAM_FCT_2007": 520,
+      "VN_MOH_2030": 10,
+      "VN_NIN_PYRAMID_2025": 7,
+      "VN_NIN_RNI_2026": 8,
+      "WGER": 857
+    },
+    "utility_exclusions_sha256": "8fc629e44d79884b20b66464e7a0e88d069288f0715379bc459980c4580b825b",
+    "vn_relevant_record_count": 646,
+    "vn_relevant_record_percent": 13.04,
+    "vn_source_record_count": 656,
+    "vn_source_record_percent": 13.24
+  },
+  "candidate_sha256": "1e5062e052a5c014195906c7fa3f20bb7fda23655d5c0b35cd9697ae029dcc88",
+  "corpus_hash": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+  "corpus_version": "offline-acceptance-vn-4954",
+  "created_at": "2026-09-21T17:19:33.801340+00:00",
+  "domain_counts": {
+    "EXERCISE_CATALOG": 887,
+    "FOREIGN_FOOD": 3306,
+    "GLOBAL_HEALTH": 33,
+    "GLOBAL_MICRONUTRIENT": 28,
+    "INTERNATIONAL_SUPPLEMENTAL": 54,
+    "VN_BODY_METRIC": 1,
+    "VN_DISH": 101,
+    "VN_FOOD": 520,
+    "VN_MICRONUTRIENT": 3,
+    "VN_NUTRIENT_REQUIREMENT": 6,
+    "VN_NUTRITION_GUIDELINE": 14,
+    "VN_PHYSICAL_ACTIVITY": 1
+  },
+  "embedding_dimension": 1024,
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_model_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "frozen": true,
+  "hardware": {
+    "batch_size": 128,
+    "cuda": true,
+    "device": "cuda:0"
+  },
+  "jurisdiction_counts": {
+    "OTHER": 857,
+    "US": 3441,
+    "VN": 656
+  },
+  "manifest_hash": "ec5eda25d49120fe86b4ae26f9ab66c352ef9f1db3351b8db1f78262df517d26",
+  "normalization_behavior": "L2 normalized via normalize_embeddings=True",
+  "previous_final_preserved": true,
+  "record_count": 4954,
+  "schema_version": "acceptance-vn-manifest-1",
+  "sentence_transformers_version": "5.6.1",
+  "source_precedence": [
+    "VN official normative guidance",
+    "global public-health",
+    "foreign government",
+    "other verified reference"
+  ],
+  "source_registry_hash": "a1818144d6243b9de357c1c79fab98deaafecf702975d8ecf12bb1dd4ce38426"
+}

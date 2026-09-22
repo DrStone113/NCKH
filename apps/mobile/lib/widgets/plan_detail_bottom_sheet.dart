@@ -365,6 +365,14 @@ class _PlanDetailSheetState extends State<_PlanDetailSheet> {
 
   Future<void> _toggleItemCompleted(
       int itemIndex, String itemId, bool current) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Plan là nội dung dự kiến; hãy ghi nhận actual trong nhật ký.')),
+    );
+    return;
+    // Kept below only as historical UI code until this legacy sheet is
+    // removed; no planned state mutation is reachable.
+    // ignore: dead_code
     final newCompleted = !current;
     final items = List<Map<String, dynamic>>.from(_detail?['items'] ?? []);
     if (itemIndex < items.length) {

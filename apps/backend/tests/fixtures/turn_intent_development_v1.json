@@ -1,0 +1,17 @@
+[
+  {"text": "Gợi ý bữa tối giàu protein", "primary": "MEAL_SUGGESTION"},
+  {"text": "goi y bua toi giau protein", "primary": "MEAL_SUGGESTION"},
+  {"text": "Lập thực đơn giảm cân 3 ngày", "primary": "MENU_SCHEDULE"},
+  {"text": "len thuc don 3 ngay", "primary": "MENU_SCHEDULE"},
+  {"text": "Lập lịch tập 4 ngày tại nhà", "primary": "WORKOUT_SCHEDULE"},
+  {"text": "len lich tap 4 ngay tai nha", "primary": "WORKOUT_SCHEDULE"},
+  {"text": "Lập kế hoạch ăn và tập cho tôi", "primary": "COMBINED_PLAN"},
+  {"text": "Lên kế hoạch ngày mai cho tôi", "primary": "COMBINED_PLAN", "clarification": false},
+  {"text": "Đừng lưu thực đơn này", "negated": "WRITE"},
+  {"text": "Chưa ăn bữa trưa, đừng ghi nhật ký", "negated": "WRITE"},
+  {"text": "Tôi đau dạ dày, tối nay nên ăn gì?", "primary": "MEAL_SUGGESTION", "health": true},
+  {"text": "Tôi chóng mặt sau tập", "primary": "WORKOUT_SCHEDULE", "health": true},
+  {"text": "Tôi đã ăn phở, ghi lại giúp", "primary": "OBSERVATION_LOG"},
+  {"text": "Cập nhật cân nặng vào hồ sơ", "primary": "PROFILE_UPDATE"},
+  {"text": "sửa bữa tối trong kế hoạch", "primary": "PLAN_EDIT"}
+]

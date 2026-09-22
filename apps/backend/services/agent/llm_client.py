@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 import json
 import logging
 import re
@@ -44,6 +45,8 @@ GARBLED_CHECK_TOKENS = 8
 GARBLED_INVALID_RATIO = 0.30
 DEFAULT_REQUEST_TIMEOUT_S = 180.0
 DEFAULT_HEALTH_TIMEOUT_S = 5.0
+DEFAULT_STREAM_IDLE_TIMEOUT_S = 30.0
+DEFAULT_STREAM_TOTAL_TIMEOUT_S = 120.0
 
 # Authentication and account-balance failures apply to the provider account,
 # not to a particular request or model. Retrying the same model and then the
@@ -83,6 +86,82 @@ class LLMUnavailableError(LLMError):
         super().__init__(message)
         self.status_code = status_code
         self.reason_code = reason_code
+
+
+def _chunk_has_meaningful_delta(chunk: Any) -> bool:
+    """Return true only when an SSE chunk advances the model response.
+
+    Providers may keep a successful HTTP stream open with comments, usage-only
+    events, or empty deltas. Those events must not keep a chat turn alive
+    forever when the user has not received any answer content.
+    """
+
+    choices = getattr(chunk, "choices", None) if chunk else None
+    if not choices:
+        return False
+    delta = getattr(choices[0], "delta", None)
+    if delta is None:
+        return False
+    return bool(
+        getattr(delta, "content", None)
+        or getattr(delta, "reasoning_content", None)
+        or getattr(delta, "reasoning", None)
+        or getattr(delta, "tool_calls", None)
+    )
+
+
+class _StreamWatchdog(AsyncIterator[Any]):
+    """Apply meaningful-event idle and whole-stream deadlines to SSE input."""
+
+    def __init__(
+        self,
+        response_stream: AsyncIterator[Any],
+        *,
+        idle_timeout_s: float,
+        total_timeout_s: float,
+    ) -> None:
+        self._response_stream = response_stream
+        self._idle_timeout_s = idle_timeout_s
+        self._loop = asyncio.get_running_loop()
+        self._total_deadline = self._loop.time() + total_timeout_s
+
+    def __aiter__(self) -> _StreamWatchdog:
+        return self
+
+    async def _close(self) -> None:
+        closer = getattr(self._response_stream, "aclose", None)
+        if closer is None:
+            closer = getattr(self._response_stream, "close", None)
+        if closer is None:
+            return
+        with contextlib.suppress(Exception):
+            result = closer()
+            if inspect.isawaitable(result):
+                await result
+
+    async def __anext__(self) -> Any:
+        idle_deadline = self._loop.time() + self._idle_timeout_s
+        while True:
+            remaining = min(idle_deadline, self._total_deadline) - self._loop.time()
+            if remaining <= 0:
+                await self._close()
+                raise LLMUnavailableError(
+                    "LLM stream produced no meaningful event before its deadline",
+                    reason_code="STREAM_TIMEOUT",
+                )
+            try:
+                chunk = await asyncio.wait_for(
+                    self._response_stream.__anext__(),
+                    timeout=remaining,
+                )
+            except asyncio.TimeoutError as exc:
+                await self._close()
+                raise LLMUnavailableError(
+                    "LLM stream produced no meaningful event before its deadline",
+                    reason_code="STREAM_TIMEOUT",
+                ) from exc
+            if _chunk_has_meaningful_delta(chunk):
+                return chunk
 
 # ---------------------------------------------------------------------------- #
 # Data classes
@@ -566,6 +645,8 @@ class LLMClient:
         *,
         request_timeout_s: float = DEFAULT_REQUEST_TIMEOUT_S,
         health_timeout_s: float = DEFAULT_HEALTH_TIMEOUT_S,
+        stream_idle_timeout_s: float = DEFAULT_STREAM_IDLE_TIMEOUT_S,
+        stream_total_timeout_s: float = DEFAULT_STREAM_TOTAL_TIMEOUT_S,
         client: httpx.AsyncClient | None = None,
         allow_model_fallback: bool = True,
         max_attempts_per_model: int = 2,
@@ -573,11 +654,19 @@ class LLMClient:
     ) -> None:
         if max_attempts_per_model not in {1, 2}:
             raise ValueError("max_attempts_per_model must be 1 or 2")
+        if stream_idle_timeout_s <= 0:
+            raise ValueError("stream_idle_timeout_s must be positive")
+        if stream_total_timeout_s < stream_idle_timeout_s:
+            raise ValueError(
+                "stream_total_timeout_s must be greater than or equal to stream_idle_timeout_s"
+            )
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key if api_key else "dummy-key"
         self.request_timeout_s = request_timeout_s
         self.health_timeout_s = health_timeout_s
+        self.stream_idle_timeout_s = stream_idle_timeout_s
+        self.stream_total_timeout_s = stream_total_timeout_s
         self._external_client = client
         self.allow_model_fallback = allow_model_fallback
         self.max_attempts_per_model = max_attempts_per_model
@@ -687,7 +776,11 @@ class LLMClient:
                     # Streaming mode (stream=True)
                     raw_stream = await self.openai.chat.completions.create(**kwargs)
                     self.provider_status = "ready"
-                    response_stream = raw_stream.__aiter__()
+                    response_stream = _StreamWatchdog(
+                        raw_stream.__aiter__(),
+                        idle_timeout_s=self.stream_idle_timeout_s,
+                        total_timeout_s=self.stream_total_timeout_s,
+                    )
                     
                     # Read first few chunks to determine if it is a tool call
                     buffered_chunks = []
@@ -841,6 +934,9 @@ class LLMClient:
                         break
                     await asyncio.sleep(0.5 * (attempt + 1))
 
+        if isinstance(last_exc, LLMUnavailableError):
+            self.provider_status = "unavailable"
+            raise last_exc
         if isinstance(last_exc, (APIConnectionError, APITimeoutError)):
             self.provider_status = "unavailable"
             logger.warning("LLM API unavailable: %s", last_exc)
@@ -877,6 +973,8 @@ class LLMClient:
 __all__ = [
     "DEFAULT_HEALTH_TIMEOUT_S",
     "DEFAULT_REQUEST_TIMEOUT_S",
+    "DEFAULT_STREAM_IDLE_TIMEOUT_S",
+    "DEFAULT_STREAM_TOTAL_TIMEOUT_S",
     "GARBLED_CHECK_TOKENS",
     "GARBLED_INVALID_RATIO",
     "GarbledOutputError",

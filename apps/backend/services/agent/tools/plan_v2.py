@@ -13,6 +13,7 @@ from datetime import date
 from typing import Any, Iterable, Mapping
 
 from config import settings
+from modules.nutrition.catalog import dish_source_image_url
 from services.agent.tool_registry import ToolDescriptor
 from services.plan_engine.contracts import (
     PlanDomain,
@@ -40,6 +41,7 @@ PLAN_V2_TOOL_NAMES = frozenset(
     {
         "build_nutrition_plan",
         "build_workout_schedule",
+        "build_combined_plan",
         "get_plan",
         "get_active_plan_v2",
         "revise_plan",
@@ -172,27 +174,30 @@ def _present(revision: PlanRevision) -> dict[str, Any]:
     daily_summary = summary.get("daily") if isinstance(summary, dict) else {}
     days: dict[str, list[dict[str, Any]]] = {}
     for item in revision.items:
-        days.setdefault(item.scheduled_date.isoformat(), []).append(
-            {
-                "plan_item_id": item.plan_item_id,
-                "slot": item.schedule_slot,
-                "item_type": item.item_type.value,
-                "status": item.status.value,
-                "dish_name": item.content.get("dish_name"),
-                "canonical_refs": item.canonical_refs,
-                # Exact canonical components are presentation data, not an
-                # observation. Keeping them here lets every app surface show
-                # the same dish detail instead of reconstructing it from text.
-                "ingredients": item.content.get("components", []),
-                "serving_grams": item.content.get("serving_grams"),
-                "planned_duration_minutes": item.content.get("planned_duration_minutes"),
-                "nutrition": {
-                    key: item.content.get(key)
-                    for key in ("total_calories", "total_protein", "total_carbs", "total_fat")
-                    if item.content.get(key) is not None
-                },
-            }
-        )
+        presentation_item = {
+            "plan_item_id": item.plan_item_id,
+            "slot": item.schedule_slot,
+            "item_type": item.item_type.value,
+            "status": item.status.value,
+            "dish_name": item.content.get("dish_name"),
+            "canonical_refs": item.canonical_refs,
+            # Exact canonical components are presentation data, not an
+            # observation. Keeping them here lets every app surface show
+            # the same dish detail instead of reconstructing it from text.
+            "ingredients": item.content.get("components", []),
+            "serving_grams": item.content.get("serving_grams"),
+            "planned_duration_minutes": item.content.get("planned_duration_minutes"),
+            "nutrition": {
+                key: item.content.get(key)
+                for key in ("total_calories", "total_protein", "total_carbs", "total_fat")
+                if item.content.get(key) is not None
+            },
+        }
+        if item.item_type.value == "MEAL":
+            image_url = dish_source_image_url(item.canonical_refs.get("dish_id"))
+            if image_url:
+                presentation_item["image_url"] = image_url
+        days.setdefault(item.scheduled_date.isoformat(), []).append(presentation_item)
     text = (
         f"Bản kế hoạch {revision.domain.value.lower()} gồm {len(revision.items)} mục, "
         f"từ {revision.request.period_start.isoformat()} đến {revision.request.period_end.isoformat()}. "
@@ -424,6 +429,91 @@ async def build_workout_schedule(
     return payload
 
 
+async def build_combined_plan(
+    *,
+    period_start: str,
+    period_end: str,
+    timezone: str,
+    goal_override: str | None = None,
+    schedule_constraints: Iterable[str] = (),
+    temporary_preferences: Iterable[str] = (),
+    temporary_exclusions: Iterable[str] = (),
+    duration_minutes: int | None = None,
+    training_location: str | None = None,
+    equipment: Iterable[str] | None = None,
+    requested_body_area: str | None = None,
+    number_of_sessions: int | None = None,
+    available_days: Iterable[str] = (),
+    unavailable_days: Iterable[str] = (),
+    preferred_days: Iterable[str] = (),
+    duration_by_day: Mapping[str, int] | None = None,
+    _runtime_context: PlanRuntimeContext | None = None,
+) -> dict[str, Any]:
+    """Build one immutable daily plan containing both meals and workouts."""
+
+    runtime = _runtime(_runtime_context)
+    request = _request(
+        domain=PlanDomain.COMBINED_HEALTH,
+        period_start=period_start,
+        period_end=period_end,
+        timezone=timezone,
+        goal_override=goal_override,
+        schedule_constraints=schedule_constraints,
+        temporary_preferences=temporary_preferences,
+        temporary_exclusions=temporary_exclusions,
+    )
+    nutrition = await build_nutrition_plan(
+        period_start=period_start,
+        period_end=period_end,
+        timezone=timezone,
+        goal_override=goal_override,
+        schedule_constraints=schedule_constraints,
+        temporary_preferences=temporary_preferences,
+        temporary_exclusions=temporary_exclusions,
+        _runtime_context=runtime,
+    )
+    workout = await build_workout_schedule(
+        period_start=period_start,
+        period_end=period_end,
+        timezone=timezone,
+        goal_override=goal_override,
+        temporary_preferences=temporary_preferences,
+        temporary_exclusions=temporary_exclusions,
+        duration_minutes=duration_minutes,
+        training_location=training_location,
+        equipment=equipment,
+        requested_body_area=requested_body_area,
+        number_of_sessions=number_of_sessions,
+        available_days=available_days,
+        unavailable_days=unavailable_days,
+        preferred_days=preferred_days,
+        duration_by_day=duration_by_day,
+        _runtime_context=runtime,
+    )
+    if nutrition.get("status") != "READY" or workout.get("status") != "READY":
+        unavailable = (
+            "COMBINED_NUTRITION_UNAVAILABLE"
+            if nutrition.get("status") != "READY"
+            else "COMBINED_WORKOUT_UNAVAILABLE"
+        )
+        revision = PlanEngine()._clarification_revision(_context(runtime), request, unavailable)  # noqa: SLF001
+        return _revision_payload(revision)
+
+    revision = PlanEngine().build_combined_container(
+        _context(runtime),
+        request,
+        (
+            PlanRevision.from_dict(nutrition["plan"]),
+            PlanRevision.from_dict(workout["plan"]),
+        ),
+    )
+    payload = _revision_payload(revision)
+    payload["preview_persistence_status"] = await _persist_authenticated_preview(
+        revision, runtime
+    )
+    return payload
+
+
 def _workout_schedule_dates(raw: Mapping[str, Any], request: PlanRequest) -> tuple[date, ...]:
     """Resolve schedule availability, never fill missing availability with 7 days."""
 
@@ -539,10 +629,7 @@ async def save_plan(
     _runtime_context: PlanRuntimeContext | None = None,
 ) -> dict[str, Any]:
     runtime = _runtime(_runtime_context)
-    if settings.plan_tool_mode == "enforced":
-        blocked = _enforced_allowed(runtime)
-        if blocked:
-            return {"status": blocked, "write_status": "NOT_PERSISTED"}
+    if _principal(runtime).valid and runtime.db_session is not None:
         context = _context(runtime)
         repository = PlanSqlRepository()
         preview = PlanEngine().repository.get(context.owner_user_id, plan_id, revision_id)
@@ -556,6 +643,7 @@ async def save_plan(
             revision = await repository.save_exact_revision(
                 owner_user_id=_principal(runtime).user_id, revision=preview,
                 expected_content_hash=revision_content_hash, action_id=request_id, activate=activate,
+                actor_type="USER", source_surface="CHAT", reason="EXPLICIT_CHAT_SAVE",
             )
         except PlanPersistenceError as exc:
             return {"status": str(exc), "write_status": "NOT_PERSISTED"}
@@ -574,13 +662,12 @@ async def save_plan(
         )
     except ValueError as exc:
         return {"status": str(exc), "write_status": "NOT_PERSISTED"}
-    # Shadow storage is intentional: it proves exact revision identity while
-    # leaving legacy production plans and observations untouched.
+    # In-memory storage is reserved for unauthenticated/unit callers only.
     payload = _revision_payload(revision)
     payload.update(
         {
             "status": "READY",
-            "write_status": "SHADOW_SAVED" if settings.plan_tool_mode == "shadow" else "PERSISTED",
+            "write_status": "UNIT_TEST_ONLY" if settings.plan_tool_mode == "shadow" else "PERSISTED",
             "read_back_plan_id": revision.plan_id,
             "read_back_revision_id": revision.revision_id,
             "read_back_revision_content_hash": revision.revision_content_hash,
@@ -609,14 +696,12 @@ async def set_plan_status(
         return {"status": normalized.clarification_needs[0], "write_status": "NOT_PERSISTED"}
     plan_id = normalized.target_plan_id or plan_id
     revision_id = normalized.target_revision_id or revision_id
-    if settings.plan_tool_mode == "enforced":
-        blocked = _enforced_allowed(runtime)
-        if blocked:
-            return {"status": blocked, "write_status": "NOT_PERSISTED"}
+    if _principal(runtime).valid and runtime.db_session is not None:
         try:
             revision = await PlanSqlRepository().set_status(
                 owner_user_id=_principal(runtime).user_id, plan_id=plan_id, revision_id=revision_id,
                 expected_revision_number=expected_revision_number, status=PlanLifecycleStatus(status), action_id=request_id,
+                actor_type="USER", source_surface="CHAT", reason="EXPLICIT_CHAT_LIFECYCLE",
             )
         except (ValueError, PlanPersistenceError) as exc:
             return {"status": str(exc), "write_status": "NOT_PERSISTED"}
@@ -676,6 +761,29 @@ BUILD_WORKOUT_SCHEDULE_DESCRIPTOR = ToolDescriptor(
     side="server", fn=build_workout_schedule, idempotent=True,
 )
 
+BUILD_COMBINED_PLAN_DESCRIPTOR = ToolDescriptor(
+    name="build_combined_plan",
+    description="Tạo một bản nháp kế hoạch sức khỏe duy nhất gồm cả thực đơn và lịch tập. Dùng cho yêu cầu chung như 'lên kế hoạch ngày mai' hoặc khi người dùng nói cả ăn lẫn tập. Không tự lưu và không coi các mục dự kiến là đã thực hiện.",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            **_PLAN_REQUEST_PROPERTIES,
+            "duration_minutes": {"type": "integer", "minimum": 10, "maximum": 180},
+            "training_location": {"type": "string", "minLength": 1, "maxLength": 160},
+            "equipment": _ARRAY_OF_STRINGS,
+            "requested_body_area": {"type": "string", "minLength": 1, "maxLength": 100},
+            "number_of_sessions": {"type": "integer", "minimum": 1, "maximum": 7},
+            "available_days": _ARRAY_OF_STRINGS,
+            "unavailable_days": _ARRAY_OF_STRINGS,
+            "preferred_days": _ARRAY_OF_STRINGS,
+            "duration_by_day": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 10, "maximum": 180}},
+        },
+        "required": ["period_start", "period_end", "timezone"],
+        "additionalProperties": False,
+    },
+    side="server", fn=build_combined_plan, idempotent=True,
+)
+
 GET_PLAN_DESCRIPTOR = ToolDescriptor(
     name="get_plan",
     description="Đọc đúng một plan/revision đã biết khi người dùng hỏi nội dung hoặc muốn sửa. Không tạo lại plan và không nhận user_id từ model.",
@@ -727,8 +835,8 @@ SET_PLAN_STATUS_DESCRIPTOR = ToolDescriptor(
 
 
 __all__ = [
-    "BUILD_NUTRITION_PLAN_DESCRIPTOR", "BUILD_WORKOUT_SCHEDULE_DESCRIPTOR", "GET_ACTIVE_PLAN_V2_DESCRIPTOR",
+    "BUILD_COMBINED_PLAN_DESCRIPTOR", "BUILD_NUTRITION_PLAN_DESCRIPTOR", "BUILD_WORKOUT_SCHEDULE_DESCRIPTOR", "GET_ACTIVE_PLAN_V2_DESCRIPTOR",
     "AuthenticatedPrincipal", "GET_PLAN_DESCRIPTOR", "PLAN_V2_TOOL_NAMES", "PlanRuntimeContext", "REVISE_PLAN_DESCRIPTOR",
-    "SAVE_PLAN_DESCRIPTOR", "SET_PLAN_STATUS_DESCRIPTOR", "build_nutrition_plan", "build_workout_schedule",
+    "SAVE_PLAN_DESCRIPTOR", "SET_PLAN_STATUS_DESCRIPTOR", "build_combined_plan", "build_nutrition_plan", "build_workout_schedule",
     "get_active_plan_v2", "get_plan", "revise_plan", "save_plan", "set_plan_status",
 ]

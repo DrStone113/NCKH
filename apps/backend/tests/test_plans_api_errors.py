@@ -19,7 +19,7 @@ async def _unused_db():
     yield None
 
 
-def test_create_plan_returns_structured_profile_error_with_cors_headers(monkeypatch):
+def test_legacy_plan_mutation_is_read_only_with_cors_headers(monkeypatch):
     monkeypatch.setattr(
         plans_router,
         "_legacy_rest_planner",
@@ -55,7 +55,10 @@ def test_create_plan_returns_structured_profile_error_with_cors_headers(monkeypa
             },
         )
 
-    assert response.status_code == 422
+    assert response.status_code == 410
+    assert response.json()["detail"] == "LEGACY_PLAN_MUTATION_DISABLED"
+    assert response.headers["access-control-allow-origin"] == "*"
+    return
     assert response.json()["detail"] == {
         "code": "INPUT_UNAVAILABLE",
         "message": "Cần bổ sung thông tin ước tính năng lượng trước khi tạo kế hoạch.",

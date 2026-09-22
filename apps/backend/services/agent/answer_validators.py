@@ -56,7 +56,9 @@ def validate_answer(
 
     if "EVIDENCE_GROUNDING" in required:
         evidence_ok = any(
-            result.ok and getattr(call, "name", None) in _EVIDENCE_TOOLS
+            result.ok
+            and getattr(call, "name", None) in _EVIDENCE_TOOLS
+            and _has_material_evidence(result.data)
             for call, result in results
         )
         if not evidence_ok:
@@ -97,6 +99,26 @@ def validate_answer(
     if not unique:
         return ValidationOutcome(True)
     return ValidationOutcome(False, unique, _safe_correction(unique))
+
+
+def _has_material_evidence(value: Any) -> bool:
+    """Distinguish retrieved content from a successful-but-empty tool call.
+
+    A response such as ``[]`` or ``{"chunks": []}`` only says the lookup ran;
+    it must not authorise factual health claims.  This stays deliberately
+    structural: it neither interprets medical content nor tries to match an
+    answer to individual passages.
+    """
+
+    if isinstance(value, (list, tuple)):
+        return bool(value)
+    if not isinstance(value, dict):
+        return False
+    return any(
+        _has_material_evidence(value.get(key))
+        for key in ("chunks", "results", "documents", "items")
+        if key in value
+    )
 
 
 def _claims_persistence(answer: str) -> bool:

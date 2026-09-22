@@ -141,6 +141,57 @@ def test_authenticated_plan_v2_api_is_owner_scoped_and_readback_authoritative():
             json={"expected_revision_number": 1, "action_id": f"cancelled-resume-{uuid4()}"},
         ).status_code == 409
 
+        # A Plan-owned edit creates an exact preview from the persisted base
+        # and leaves an audit record; it does not mutate an actual diary item.
+        edit_preview_response = client.post(
+            "/api/plan-v2/previews",
+            headers=owner_headers,
+            json={
+                "domain": "NUTRITION",
+                "period_start": "2026-11-13", "period_end": "2026-11-13",
+                "timezone": "Asia/Ho_Chi_Minh",
+                "profile": {
+                    "age": 30, "equation_sex": "female", "height_cm": 163,
+                    "weight_kg": 58, "activity_level": "light", "health_goal": "maintain",
+                },
+            },
+        )
+        assert edit_preview_response.status_code == 200, edit_preview_response.text
+        edit_preview = edit_preview_response.json()
+        assert client.post(
+            "/api/plan-v2/plans/save", headers=owner_headers,
+            json={
+                "plan_id": edit_preview["plan_id"], "revision_id": edit_preview["revision_id"],
+                "revision_content_hash": edit_preview["revision_content_hash"], "action_id": f"edit-save-{uuid4()}",
+            },
+        ).status_code == 200
+        target_item_id = edit_preview["plan"]["items"][0]["plan_item_id"]
+        patch_body = {
+            "base_revision_id": edit_preview["revision_id"], "expected_revision_number": 1,
+            "operation": "CHANGE_TIME", "target_item_id": target_item_id,
+            "requested_change": {"schedule_slot": "late_dinner"}, "action_id": f"patch-{uuid4()}",
+        }
+        patched = client.post(
+            f"/api/plan-v2/{edit_preview['plan_id']}/revisions", headers=owner_headers,
+            json=patch_body,
+        )
+        assert patched.status_code == 200, patched.text
+        revised = patched.json()["plan"]
+        assert revised["parent_revision_id"] == edit_preview["revision_id"]
+        assert revised["revision_number"] == 2
+        assert revised["days"][0]["items"][0]["slot"] == "late_dinner"
+        repeated_patch = client.post(
+            f"/api/plan-v2/{edit_preview['plan_id']}/revisions", headers=owner_headers,
+            json=patch_body,
+        )
+        assert repeated_patch.status_code == 200, repeated_patch.text
+        assert repeated_patch.json()["plan"]["revision_id"] == revised["revision_id"]
+        events = client.get(
+            f"/api/plan-v2/plans/{edit_preview['plan_id']}/change-events", headers=owner_headers
+        )
+        assert events.status_code == 200, events.text
+        assert any(event["operation"] == "PATCH_CHANGE_TIME" for event in events.json()["events"])
+
 
 def test_plan_v2_api_rejects_anonymous_calls_before_any_repository_read():
     with TestClient(_app()) as client:

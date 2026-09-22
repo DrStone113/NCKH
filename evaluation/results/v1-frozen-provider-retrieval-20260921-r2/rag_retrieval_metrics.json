@@ -1,0 +1,20 @@
+{
+  "case_count": 80,
+  "evidence_present_count": 60,
+  "false_evidence_retrieval_rate": 0.0,
+  "hit_at_1": 1.0,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "latency_ms": {
+    "max": 219.692,
+    "p50": 129.526,
+    "p95": 158.625
+  },
+  "mrr": 1.0,
+  "no_evidence_correctness": 1.0,
+  "no_evidence_count": 20,
+  "recall_at_1": 1.0,
+  "recall_at_3": 1.0,
+  "recall_at_5": 1.0,
+  "retrieval_error_count": 0
+}

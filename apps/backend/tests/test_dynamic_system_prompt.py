@@ -267,6 +267,45 @@ def test_full_prompt_covers_non_judgmental_cross_domain_behavior():
     assert "không biến kế hoạch thành nhật ký" in prompt
 
 
+def test_plan_prompt_clarifies_an_object_light_personal_daily_plan() -> None:
+    tool_catalog = [
+        {
+            "type": "function",
+            "function": {
+                "name": "build_nutrition_plan",
+                "description": "Tạo bản nháp kế hoạch ăn.",
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "build_workout_schedule",
+                "description": "Tạo bản nháp lịch tập.",
+            },
+        },
+    ]
+
+    compact_prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        tool_catalog=tool_catalog,
+        mode="compact",
+    )
+    full_prompt = buildSystemPrompt(
+        rolling_summary="",
+        pinned_facts=[],
+        rag_chunks=[],
+        tool_catalog=tool_catalog,
+        mode="full",
+    )
+
+    for prompt in (compact_prompt, full_prompt):
+        assert "lên kế hoạch ngày mai cho tôi" in prompt
+        assert "kế hoạch ăn, tập hay cả hai" in prompt
+        assert "không từ chối chung" in prompt.casefold()
+
+
 @pytest.mark.asyncio
 async def test_orchestrator_injects_user_context_into_prompt_first_turn():
     llm = CapturingLLM([LLMResponse(content_stream=_stream(["Xin chào"]), full_text="Xin chào")])

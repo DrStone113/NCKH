@@ -1,0 +1,1029 @@
+{
+  "schema_version": "rag-oracle-v1",
+  "provenance": "AUTOMATED",
+  "method": "FROZEN_CORPUS_RECORD_TRACE_AND_ABSENCE_CHECK",
+  "human_review_claimed": false,
+  "corpus_version": "offline-v1-636",
+  "corpus_hash": "b9bc6e3a1546740ef48f39a08688c2d1ce92f4e126dc0487d8603453b843d081",
+  "cases": {
+    "RAG-001": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:1001"
+      ],
+      "expected_chunk_ids": [
+        "05a839c3-391b-5c57-a2dd-fd2f4fa478a9"
+      ],
+      "gold_facts": {
+        "energy_kcal": 344.0,
+        "protein": 8.6
+      }
+    },
+    "RAG-002": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:1008"
+      ],
+      "expected_chunk_ids": [
+        "a35df37a-48f1-51a0-b8a5-22c13da1ff0d"
+      ],
+      "gold_facts": {
+        "fiber": 2.0,
+        "fat": 4.7
+      }
+    },
+    "RAG-003": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:1016"
+      ],
+      "expected_chunk_ids": [
+        "f4a91bf2-4787-52d4-b4a6-e7f94e2ce5cb"
+      ],
+      "gold_facts": {
+        "calcium": 12.0,
+        "iron": 0.8
+      }
+    },
+    "RAG-004": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:2002"
+      ],
+      "expected_chunk_ids": [
+        "d0581b0f-e7a1-50a2-86b9-7647c5dbb1a4"
+      ],
+      "gold_facts": {
+        "energy_kcal": 127.0,
+        "protein": 3.1
+      }
+    },
+    "RAG-005": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:2011"
+      ],
+      "expected_chunk_ids": [
+        "5c4c3841-ba19-5abe-ae94-0618966a712c"
+      ],
+      "gold_facts": {
+        "fiber": 2.0,
+        "fat": 0.1
+      }
+    },
+    "RAG-006": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:2023"
+      ],
+      "expected_chunk_ids": [
+        "ed928ac5-d7be-5f78-b725-ffc2cafff04f"
+      ],
+      "gold_facts": {
+        "calcium": 37.0,
+        "iron": 4.3
+      }
+    },
+    "RAG-007": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:3010"
+      ],
+      "expected_chunk_ids": [
+        "52c64076-7c57-5151-a990-5f61491d615f"
+      ],
+      "gold_facts": {
+        "energy_kcal": 328.0,
+        "protein": 23.4
+      }
+    },
+    "RAG-008": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:3024"
+      ],
+      "expected_chunk_ids": [
+        "91432b44-3c57-560c-80e8-fb2943969fff"
+      ],
+      "gold_facts": {
+        "fiber": 2.1,
+        "fat": 45.0
+      }
+    },
+    "RAG-009": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4008"
+      ],
+      "expected_chunk_ids": [
+        "373e4d40-1d82-581f-97d5-e2b0abc8676f"
+      ],
+      "gold_facts": {
+        "calcium": 323.0,
+        "iron": 5.9
+      }
+    },
+    "RAG-010": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4024"
+      ],
+      "expected_chunk_ids": [
+        "5bb9e230-a8e7-51c3-82c2-5c154d133c92"
+      ],
+      "gold_facts": {
+        "energy_kcal": 30.0,
+        "protein": 2.0
+      }
+    },
+    "RAG-011": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4041"
+      ],
+      "expected_chunk_ids": [
+        "28acee77-4189-509c-8b28-e460ae2d105b"
+      ],
+      "gold_facts": {
+        "fiber": 2.2,
+        "fat": 2.4
+      }
+    },
+    "RAG-012": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4060"
+      ],
+      "expected_chunk_ids": [
+        "73242692-edd1-52f9-883b-8e8fa4c9e378"
+      ],
+      "gold_facts": {
+        "calcium": 140.0,
+        "iron": 1.2
+      }
+    },
+    "RAG-013": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4079"
+      ],
+      "expected_chunk_ids": [
+        "19ce9762-0d0c-59c3-a476-45db1c2afe2a"
+      ],
+      "gold_facts": {
+        "energy_kcal": 20.0,
+        "protein": 3.2
+      }
+    },
+    "RAG-014": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4100"
+      ],
+      "expected_chunk_ids": [
+        "7d63dab7-78d7-5caa-88e4-5b8141f2dc9f"
+      ],
+      "gold_facts": {
+        "fiber": 3.2,
+        "fat": 0.3
+      }
+    },
+    "RAG-015": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:4121"
+      ],
+      "expected_chunk_ids": [
+        "d22381d2-f2f9-5d27-83fb-d91232084fa3"
+      ],
+      "gold_facts": {
+        "calcium": 357.0,
+        "iron": 56.1
+      }
+    },
+    "RAG-016": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:5017"
+      ],
+      "expected_chunk_ids": [
+        "1b539aef-ff42-50d5-a99d-97b2c8f1fcc7"
+      ],
+      "gold_facts": {
+        "energy_kcal": 36.0,
+        "protein": 1.0
+      }
+    },
+    "RAG-017": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:5040"
+      ],
+      "expected_chunk_ids": [
+        "13cb7b84-3d28-51ff-b890-41feca46ed6e"
+      ],
+      "gold_facts": {
+        "fiber": 6.0,
+        "fat": 1.0
+      }
+    },
+    "RAG-018": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:6007"
+      ],
+      "expected_chunk_ids": [
+        "26d416c1-8a5a-58a9-aabf-63c344ac4698"
+      ],
+      "gold_facts": {
+        "calcium": null,
+        "iron": 0.07
+      }
+    },
+    "RAG-019": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:7017"
+      ],
+      "expected_chunk_ids": [
+        "697eb759-ea4f-54b0-af1c-afcb2880cf5d"
+      ],
+      "gold_facts": {
+        "energy_kcal": 139.0,
+        "protein": 19.0
+      }
+    },
+    "RAG-020": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:7042"
+      ],
+      "expected_chunk_ids": [
+        "6fddaae6-9b5d-533c-9b8d-9a1672774e57"
+      ],
+      "gold_facts": {
+        "fiber": 0.0,
+        "fat": 4.7
+      }
+    },
+    "RAG-021": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:7068"
+      ],
+      "expected_chunk_ids": [
+        "0f21bb6c-aea8-57b6-ad1f-6f1922b47d67"
+      ],
+      "gold_facts": {
+        "calcium": 18.0,
+        "iron": 3.2
+      }
+    },
+    "RAG-022": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:8013"
+      ],
+      "expected_chunk_ids": [
+        "875da5dc-4c19-5b3a-a9e7-af4646a00085"
+      ],
+      "gold_facts": {
+        "energy_kcal": 71.0,
+        "protein": 16.7
+      }
+    },
+    "RAG-023": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:8040"
+      ],
+      "expected_chunk_ids": [
+        "d2368644-5b2b-5080-b5ed-263d098ce5e5"
+      ],
+      "gold_facts": {
+        "fiber": 0.0,
+        "fat": 0.9
+      }
+    },
+    "RAG-024": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:9008"
+      ],
+      "expected_chunk_ids": [
+        "0f0a2e57-160b-5912-abc4-732602f4d409"
+      ],
+      "gold_facts": {
+        "calcium": 28.0,
+        "iron": 1.1
+      }
+    },
+    "RAG-025": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:11014"
+      ],
+      "expected_chunk_ids": [
+        "c89620c0-8dfe-57f3-924c-da1fee6eb3bc"
+      ],
+      "gold_facts": {
+        "energy_kcal": 60.0,
+        "protein": 0.4
+      }
+    },
+    "RAG-026": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:12018"
+      ],
+      "expected_chunk_ids": [
+        "db51916a-a015-5b50-8bad-7f6409dc24cb"
+      ],
+      "gold_facts": {
+        "fiber": 2.5,
+        "fat": 12.2
+      }
+    },
+    "RAG-027": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:13008"
+      ],
+      "expected_chunk_ids": [
+        "02ecb69b-cc3b-51cf-992f-9ff304438aa9"
+      ],
+      "gold_facts": {
+        "calcium": 85.0,
+        "iron": 17.0
+      }
+    },
+    "RAG-028": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:13021"
+      ],
+      "expected_chunk_ids": [
+        "a181783b-3e4d-518d-9c26-7ae50d3ff5cf"
+      ],
+      "gold_facts": {
+        "energy_kcal": 37.0,
+        "protein": 0.5
+      }
+    },
+    "RAG-029": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:14008"
+      ],
+      "expected_chunk_ids": [
+        "650145dc-ffb9-5709-989e-e12404c5d8ac"
+      ],
+      "gold_facts": {
+        "fiber": 0.0,
+        "fat": 0.0
+      }
+    },
+    "RAG-030": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_foods.json#ma_so:14016"
+      ],
+      "expected_chunk_ids": [
+        "a9779770-0f27-5578-b14a-58371287219e"
+      ],
+      "gold_facts": {
+        "calcium": 2.0,
+        "iron": null
+      }
+    },
+    "RAG-031": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:4"
+      ],
+      "expected_chunk_ids": [
+        "73978dc9-e9bb-58f3-a41a-6a0f67a0a2b4"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 700
+      }
+    },
+    "RAG-032": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:9"
+      ],
+      "expected_chunk_ids": [
+        "8cae8d1c-f696-50f2-a949-f105180774aa"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 250
+      }
+    },
+    "RAG-033": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:15"
+      ],
+      "expected_chunk_ids": [
+        "cb8ff5a5-fdb2-582d-bd70-293559acb099"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 250
+      }
+    },
+    "RAG-034": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:21"
+      ],
+      "expected_chunk_ids": [
+        "0901f343-921d-5589-8d8b-067aabe5b856"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 650
+      }
+    },
+    "RAG-035": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:27"
+      ],
+      "expected_chunk_ids": [
+        "34d2bcd0-04a9-5203-a563-eac200f0954d"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 550
+      }
+    },
+    "RAG-036": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:33"
+      ],
+      "expected_chunk_ids": [
+        "f56bf2ed-2569-55b4-9416-a97087c02c3e"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "breakfast",
+          "dinner"
+        ],
+        "estimated_calories": 250
+      }
+    },
+    "RAG-037": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:39"
+      ],
+      "expected_chunk_ids": [
+        "b6c1fbaf-8f48-54cd-ad43-2c088c949bcb"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 650
+      }
+    },
+    "RAG-038": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:45"
+      ],
+      "expected_chunk_ids": [
+        "ac97cf93-6b80-58c1-9821-d6c1c03f52f9"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 640
+      }
+    },
+    "RAG-039": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:51"
+      ],
+      "expected_chunk_ids": [
+        "38feb6ba-aa4c-50a7-9d50-77cc8aab3948"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "snack"
+        ],
+        "estimated_calories": 135
+      }
+    },
+    "RAG-040": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:57"
+      ],
+      "expected_chunk_ids": [
+        "be156253-0a71-5c94-bca7-50d865297b66"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "snack"
+        ],
+        "estimated_calories": 150
+      }
+    },
+    "RAG-041": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:63"
+      ],
+      "expected_chunk_ids": [
+        "fc7b485b-cf96-5455-bc02-3f5e1643457c"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "snack"
+        ],
+        "estimated_calories": 90
+      }
+    },
+    "RAG-042": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:69"
+      ],
+      "expected_chunk_ids": [
+        "397bcf3f-b2e3-5f7c-a84e-ad6422fc2f42"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 680
+      }
+    },
+    "RAG-043": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:75"
+      ],
+      "expected_chunk_ids": [
+        "a12b4e75-eff2-50e0-9676-2c08e2f57109"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 640
+      }
+    },
+    "RAG-044": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:81"
+      ],
+      "expected_chunk_ids": [
+        "fb60b3cd-81c8-5039-9440-b765271ad9e7"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "breakfast",
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 620
+      }
+    },
+    "RAG-045": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "vietnamese_dishes.json#id:87"
+      ],
+      "expected_chunk_ids": [
+        "9dbf41ab-0d6e-57e0-ac63-b0a1f697e7a0"
+      ],
+      "gold_facts": {
+        "meal_types": [
+          "lunch",
+          "dinner"
+        ],
+        "estimated_calories": 580
+      }
+    },
+    "RAG-046": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "nutrition.json#id:nut_004"
+      ],
+      "expected_chunk_ids": [
+        "dea9748c-0666-51c3-b3da-7a80615dc90f"
+      ],
+      "gold_facts": {
+        "serving_size": "1 ổ (200g)",
+        "protein": 18,
+        "carbs": 45
+      }
+    },
+    "RAG-047": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "nutrition.json#id:nut_006"
+      ],
+      "expected_chunk_ids": [
+        "d6471c0a-d251-52f6-8271-7a383551d10a"
+      ],
+      "gold_facts": {
+        "serving_size": "1 đĩa (450g)",
+        "protein": 32,
+        "carbs": 65
+      }
+    },
+    "RAG-048": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "nutrition.json#id:nut_007"
+      ],
+      "expected_chunk_ids": [
+        "98ffeb53-20a1-5542-a9f6-a4180a97158e"
+      ],
+      "gold_facts": {
+        "serving_size": "2 quả (120g)",
+        "protein": 13,
+        "carbs": 1
+      }
+    },
+    "RAG-049": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "nutrition.json#id:nut_009"
+      ],
+      "expected_chunk_ids": [
+        "f2d8ed1a-c2dd-545d-8016-ef7f92613eec"
+      ],
+      "gold_facts": {
+        "serving_size": "1 ly (400ml)",
+        "protein": 25,
+        "carbs": 45
+      }
+    },
+    "RAG-050": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "nutrition.json#id:nut_010"
+      ],
+      "expected_chunk_ids": [
+        "8fd39e1f-304e-51c0-b209-2c19bdb2e11e"
+      ],
+      "gold_facts": {
+        "serving_size": "3 cuốn (200g)",
+        "protein": 16,
+        "carbs": 28
+      }
+    },
+    "RAG-051": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_001"
+      ],
+      "expected_chunk_ids": [
+        "2742a301-2047-538a-9c4f-859efcd8c24a"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Ngực",
+          "Tay sau",
+          "Vai"
+        ],
+        "equipment": "Không có",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-052": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_002"
+      ],
+      "expected_chunk_ids": [
+        "f4b0a852-a61e-54bc-ac8c-5ae1427c07cb"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Đùi trước",
+          "Mông",
+          "Đùi sau"
+        ],
+        "equipment": "Không có",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-053": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_003"
+      ],
+      "expected_chunk_ids": [
+        "1ae6a7eb-5282-5c05-974d-792d8483fb73"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Core",
+          "Bụng",
+          "Lưng dưới"
+        ],
+        "equipment": "Không có",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-054": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_004"
+      ],
+      "expected_chunk_ids": [
+        "5bec3f0d-d80c-5e2e-89a6-dd5258a9f2f3"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Lưng rộng",
+          "Tay trước",
+          "Vai sau"
+        ],
+        "equipment": "Xà đơn",
+        "difficulty": "Trung bình"
+      }
+    },
+    "RAG-055": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_005"
+      ],
+      "expected_chunk_ids": [
+        "a8a8e691-056f-599b-b1b8-f56384333f60"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Ngực",
+          "Tay sau",
+          "Vai trước"
+        ],
+        "equipment": "Tạ đôi, Ghế tập",
+        "difficulty": "Trung bình"
+      }
+    },
+    "RAG-056": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_006"
+      ],
+      "expected_chunk_ids": [
+        "72cb3e6d-6dfd-58e1-9ebc-df5f5aa2b8bf"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Lưng dưới",
+          "Đùi sau",
+          "Mông",
+          "Bẫy"
+        ],
+        "equipment": "Tạ đòn",
+        "difficulty": "Nâng cao"
+      }
+    },
+    "RAG-057": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_007"
+      ],
+      "expected_chunk_ids": [
+        "028eeaf7-e28e-5486-819b-136b2cf80a8c"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Đùi trước",
+          "Mông",
+          "Đùi sau"
+        ],
+        "equipment": "Không có",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-058": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_008"
+      ],
+      "expected_chunk_ids": [
+        "888b5b40-715f-516a-b797-c1b426623c88"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Vai",
+          "Tay sau",
+          "Bẫy trên"
+        ],
+        "equipment": "Tạ đôi",
+        "difficulty": "Trung bình"
+      }
+    },
+    "RAG-059": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_009"
+      ],
+      "expected_chunk_ids": [
+        "bb36f1b4-0dd9-5087-85a0-70337a502df8"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Bụng trên",
+          "Bụng dưới",
+          "Bụng chéo"
+        ],
+        "equipment": "Không có",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-060": {
+      "evidence_expected": true,
+      "expected_doc_ids": [
+        "exercises.json#id:ex_010"
+      ],
+      "expected_chunk_ids": [
+        "97cc05aa-63e9-5c0b-8627-b29d20a38a20"
+      ],
+      "gold_facts": {
+        "target_muscle": [
+          "Lưng rộng",
+          "Tay trước",
+          "Vai sau"
+        ],
+        "equipment": "Máy kéo cáp",
+        "difficulty": "Cơ bản"
+      }
+    },
+    "RAG-061": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "metformin"
+    },
+    "RAG-062": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "warfarin"
+    },
+    "RAG-063": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "troponin"
+    },
+    "RAG-064": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "vaccine cúm"
+    },
+    "RAG-065": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "insulin nền"
+    },
+    "RAG-066": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "levothyroxine"
+    },
+    "RAG-067": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "mri"
+    },
+    "RAG-068": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "lithium"
+    },
+    "RAG-069": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "chống đông"
+    },
+    "RAG-070": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "thuốc sinh học"
+    },
+    "RAG-071": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "salbutamol"
+    },
+    "RAG-072": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "trẻ sơ sinh"
+    },
+    "RAG-073": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "tsh"
+    },
+    "RAG-074": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "hóa trị"
+    },
+    "RAG-075": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "máy tạo nhịp"
+    },
+    "RAG-076": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "pcr"
+    },
+    "RAG-077": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "benzodiazepine"
+    },
+    "RAG-078": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "xuất huyết não"
+    },
+    "RAG-079": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "wilson"
+    },
+    "RAG-080": {
+      "evidence_expected": false,
+      "expected_doc_ids": [],
+      "expected_chunk_ids": [],
+      "expected_behavior": "NO_EVIDENCE",
+      "verified_absent_term": "chống nôn"
+    }
+  }
+}

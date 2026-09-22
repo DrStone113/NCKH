@@ -5,6 +5,7 @@ Validates Requirements 1.5, 1.6, 7.7 by mocking AsyncOpenAI.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -68,6 +69,38 @@ class MockStream:
         for c in self.chunks:
             yield MockChunk([MockChoice(MockDelta(**c))])
 
+
+class EmptyHeartbeatStream:
+    """A provider stream that stays open but never advances the answer."""
+
+    def __init__(self):
+        self.closed = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        await asyncio.sleep(0.001)
+        return MockChunk([])
+
+    async def aclose(self):
+        self.closed = True
+
+
+class PrefixThenStallStream:
+    def __init__(self, chunks):
+        self.chunks = list(chunks)
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.chunks:
+            content = self.chunks.pop(0)
+            return MockChunk([MockChoice(MockDelta(content=content))])
+        await asyncio.sleep(3600)
+        raise StopAsyncIteration
+
 def _make_llm_client() -> LLMClient:
     # These tests drive the client with mocked streams and never reach the
     # network, so a placeholder key is enough — a real one would just leak
@@ -127,6 +160,64 @@ async def test_chat_streams_plain_text_chunks() -> None:
     streamed = [token async for token in response.content_stream]
     assert streamed == chunks
     assert response.full_text == "Xin chào bạn!"
+
+
+@pytest.mark.asyncio
+async def test_chat_preserves_first_character_across_prebuffer_boundary() -> None:
+    client = _make_llm_client()
+    chunks = ["H", "om nay", " ban", " tap chan."]
+    client.openai.chat.completions.create = AsyncMock(
+        return_value=MockStream([{"content": chunk} for chunk in chunks])
+    )
+
+    response = await client.chat(messages=[{"role": "user", "content": "ping"}])
+    streamed = [token async for token in response.content_stream]
+
+    assert streamed == chunks
+    assert response.full_text == "".join(chunks)
+
+
+@pytest.mark.asyncio
+async def test_chat_times_out_when_http_200_stream_only_sends_empty_heartbeats() -> None:
+    client = LLMClient(
+        model="test-model",
+        base_url="https://example.invalid/v1",
+        api_key="test-key",
+        allow_model_fallback=False,
+        max_attempts_per_model=1,
+        stream_idle_timeout_s=0.02,
+        stream_total_timeout_s=0.05,
+    )
+    heartbeat_stream = EmptyHeartbeatStream()
+    client.openai.chat.completions.create = AsyncMock(return_value=heartbeat_stream)
+
+    with pytest.raises(LLMUnavailableError) as caught:
+        await client.chat(messages=[{"role": "user", "content": "ping"}])
+
+    assert caught.value.reason_code == "STREAM_TIMEOUT"
+    assert heartbeat_stream.closed is True
+
+
+@pytest.mark.asyncio
+async def test_chat_times_out_when_stream_stalls_after_visible_prefix() -> None:
+    client = LLMClient(
+        model="test-model",
+        base_url="https://example.invalid/v1",
+        api_key="test-key",
+        allow_model_fallback=False,
+        max_attempts_per_model=1,
+        stream_idle_timeout_s=0.02,
+        stream_total_timeout_s=0.05,
+    )
+    client.openai.chat.completions.create = AsyncMock(
+        return_value=PrefixThenStallStream(["Xin", " chao"])
+    )
+
+    response = await client.chat(messages=[{"role": "user", "content": "ping"}])
+    with pytest.raises(LLMUnavailableError) as caught:
+        _ = [token async for token in response.content_stream]
+
+    assert caught.value.reason_code == "STREAM_TIMEOUT"
 
 
 @pytest.mark.asyncio

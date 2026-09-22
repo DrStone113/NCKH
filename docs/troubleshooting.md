@@ -694,11 +694,11 @@
   3. **Point-in-Time Daily Safety Check Demotion:** In `apps/mobile/lib/models/user_model.dart` `WorkoutProfile.applyChatUpdate`, any patch update automatically set `intakeConfirmationStatus = 'PENDING_CONFIRMATION'`, which would block subsequent workout generation until a full recap was confirmed.
   4. **Unregistered Daily Safety Clearance:** Answering *"oke"* to a pain question was treated as a regular turn without registering a same-day `safety_checked_at` timestamp. Because E4 requires same-day pain clearance for chat-captured profiles, `current_pain_status` remained `STALE`.
 - **Resolution:**
-  1. Updated `_scopeForMessage` in `ai_chat_provider.dart` to preserve the active domain scope (`_activeProfileScope`) or inherit the domain from recent chat turns when the direct regex yields `general`.
-  2. Updated `chat_gateway.py` so that incoming `general` scope turns preserve existing domain profiles (`workout_profile`, `training_state`, `nutrition_profile`) rather than erasing them.
+  1. Updated `ai_chat_provider.dart` to resolve the conversation-aware domain once before profile validation, then use that same scope for readiness and the outgoing typed snapshot. Short replies such as *"oke"* inherit the active/recent workout domain; unrelated longer messages return to `general`.
+  2. Updated `chat_gateway.py` so legacy clients preserve existing domain profiles only for a recognized short follow-up. A fresh scoped snapshot still replaces stale fields, and unrelated general messages do not retain sensitive workout/nutrition context.
   3. Updated `applyChatUpdate` in `user_model.dart` to maintain `CONFIRMED` status when the patch only contains point-in-time daily safety check fields (`current_pain_status`, `safety_checked_at`).
   4. Added `_detect_safety_pain_response` in `orchestrator.py` to identify affirmative pain clearances (*"oke"*, *"không"*, *"bình thường"*, *"ổn"*) following safety prompts and register `current_pain_status = "NO"` with today's `safety_checked_at` timestamp in `workout_profile`.
-  5. Added fallback in `WorkoutRepository` and `WorkoutIntegrationService.build` to recover confirmed fitness profile data from PostgreSQL `user_facts` if `workout_profile` is missing from the client snapshot.
+  5. Kept Firestore's typed `workout_profile` as the authority. Missing client snapshots remain `NOT_LOADED`; PostgreSQL `user_facts` and pinned prose are never promoted into training experience, equipment, or negative safety answers.
 - **Regression check:**
   - Backend: `pytest apps/backend/tests/test_orchestrator.py apps/backend/tests/test_workout_integration_e4_1.py apps/backend/tests/test_chat_gateway.py -q`
   - Mobile: `flutter test test/profile_readiness_test.dart` from `apps/mobile`.

@@ -1,0 +1,540 @@
+{
+  "A": {
+    "case_count": 140,
+    "primary_intent_accuracy": 0.6429,
+    "explicit_write_action_accuracy": 0.9429,
+    "clarification_required_accuracy": 0.9643,
+    "secondary_micro_precision": 0.0,
+    "secondary_micro_recall": 0.0,
+    "secondary_micro_f1": 0.0,
+    "negation_exact_accuracy": 0.9143,
+    "health_context_recall": 0.8519,
+    "health_urgent_critical_misses": 3,
+    "false_positive_write_intent": 1,
+    "pending_action_metrics": "NOT_REPRESENTED_IN_ROUTING_HOLDOUT",
+    "confusion_by_group": {
+      "workout": {
+        "MEAL_SUGGESTION -> COMBINED_PLAN": 1,
+        "WORKOUT_SCHEDULE -> WORKOUT_SCHEDULE": 11,
+        "WORKOUT_SCHEDULE -> MEAL_SUGGESTION": 1,
+        "WORKOUT_SCHEDULE -> GENERAL_WELLNESS": 3,
+        "COMBINED_PLAN -> GENERAL_WELLNESS": 4,
+        "COMBINED_PLAN -> COMBINED_PLAN": 6,
+        "COMBINED_PLAN -> WORKOUT_SCHEDULE": 4,
+        "PLAN_EDIT -> PLAN_EDIT": 1,
+        "OBSERVATION_LOG -> MEAL_SUGGESTION": 1
+      },
+      "other": {
+        "MEAL_SUGGESTION -> PROFILE_UPDATE": 1,
+        "MEAL_SUGGESTION -> HEALTH_QUERY": 1,
+        "MEAL_SUGGESTION -> MEAL_SUGGESTION": 16,
+        "MEAL_SUGGESTION -> WORKOUT_SCHEDULE": 1,
+        "PLAN_EDIT -> PLAN_EDIT": 8,
+        "PLAN_EDIT -> WORKOUT_SCHEDULE": 2,
+        "PLAN_EDIT -> GENERAL_WELLNESS": 1,
+        "PLAN_LIFECYCLE -> GENERAL_WELLNESS": 5,
+        "PLAN_LIFECYCLE -> COMBINED_PLAN": 2,
+        "PLAN_LIFECYCLE -> PLAN_LIFECYCLE": 5,
+        "OBSERVATION_LOG -> GENERAL_WELLNESS": 3,
+        "OBSERVATION_LOG -> WORKOUT_SCHEDULE": 2,
+        "OBSERVATION_LOG -> MEAL_SUGGESTION": 3,
+        "OBSERVATION_LOG -> OBSERVATION_LOG": 3,
+        "HEALTH_QUERY -> WORKOUT_SCHEDULE": 4,
+        "HEALTH_QUERY -> HEALTH_QUERY": 14,
+        "HEALTH_QUERY -> GENERAL_WELLNESS": 2,
+        "PROFILE_UPDATE -> PROFILE_UPDATE": 4,
+        "PROFILE_UPDATE -> GENERAL_WELLNESS": 4,
+        "PROFILE_UPDATE -> WORKOUT_SCHEDULE": 1,
+        "GENERAL_WELLNESS -> GENERAL_WELLNESS": 8,
+        "GENERAL_WELLNESS -> COMBINED_PLAN": 1
+      },
+      "menu": {
+        "MENU_SCHEDULE -> GENERAL_WELLNESS": 1,
+        "MENU_SCHEDULE -> MENU_SCHEDULE": 13,
+        "MENU_SCHEDULE -> COMBINED_PLAN": 1
+      },
+      "combined": {
+        "COMBINED_PLAN -> COMBINED_PLAN": 1,
+        "PROFILE_UPDATE -> COMBINED_PLAN": 1
+      }
+    },
+    "per_tag": {
+      "meal": {
+        "count": 36,
+        "primary_correct": 23,
+        "primary_accuracy": 0.6389
+      },
+      "workout": {
+        "count": 32,
+        "primary_correct": 18,
+        "primary_accuracy": 0.5625
+      },
+      "multi_intent": {
+        "count": 10,
+        "primary_correct": 3,
+        "primary_accuracy": 0.3
+      },
+      "clean_vietnamese": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "profile": {
+        "count": 11,
+        "primary_correct": 4,
+        "primary_accuracy": 0.3636
+      },
+      "no_diacritic": {
+        "count": 17,
+        "primary_correct": 9,
+        "primary_accuracy": 0.5294
+      },
+      "health_overlay": {
+        "count": 7,
+        "primary_correct": 6,
+        "primary_accuracy": 0.8571
+      },
+      "slang": {
+        "count": 18,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7778
+      },
+      "spoken": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "disfluent": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "mixed_language": {
+        "count": 20,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7
+      },
+      "long_form": {
+        "count": 16,
+        "primary_correct": 6,
+        "primary_accuracy": 0.375
+      },
+      "negation": {
+        "count": 13,
+        "primary_correct": 2,
+        "primary_accuracy": 0.1538
+      },
+      "typo": {
+        "count": 17,
+        "primary_correct": 13,
+        "primary_accuracy": 0.7647
+      },
+      "teencode": {
+        "count": 16,
+        "primary_correct": 10,
+        "primary_accuracy": 0.625
+      },
+      "prompt_injection": {
+        "count": 5,
+        "primary_correct": 3,
+        "primary_accuracy": 0.6
+      },
+      "menu": {
+        "count": 15,
+        "primary_correct": 13,
+        "primary_accuracy": 0.8667
+      },
+      "safety": {
+        "count": 5,
+        "primary_correct": 3,
+        "primary_accuracy": 0.6
+      },
+      "plan": {
+        "count": 39,
+        "primary_correct": 27,
+        "primary_accuracy": 0.6923
+      },
+      "combined": {
+        "count": 2,
+        "primary_correct": 1,
+        "primary_accuracy": 0.5
+      },
+      "combined_plan": {
+        "count": 14,
+        "primary_correct": 6,
+        "primary_accuracy": 0.4286
+      },
+      "plan_edit": {
+        "count": 11,
+        "primary_correct": 8,
+        "primary_accuracy": 0.7273
+      },
+      "meal_substitution": {
+        "count": 2,
+        "primary_correct": 2,
+        "primary_accuracy": 1.0
+      },
+      "reference": {
+        "count": 11,
+        "primary_correct": 8,
+        "primary_accuracy": 0.7273
+      },
+      "schedule_move": {
+        "count": 2,
+        "primary_correct": 1,
+        "primary_accuracy": 0.5
+      },
+      "allergy_removal": {
+        "count": 2,
+        "primary_correct": 2,
+        "primary_accuracy": 1.0
+      },
+      "intensity_change": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      },
+      "meal_addition": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "exercise_substitution": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "time_change": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "partial_delete": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      },
+      "plan_lifecycle": {
+        "count": 12,
+        "primary_correct": 5,
+        "primary_accuracy": 0.4167
+      },
+      "write_intent": {
+        "count": 13,
+        "primary_correct": 7,
+        "primary_accuracy": 0.5385
+      },
+      "logging": {
+        "count": 12,
+        "primary_correct": 3,
+        "primary_accuracy": 0.25
+      },
+      "health": {
+        "count": 20,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7
+      },
+      "urgent": {
+        "count": 8,
+        "primary_correct": 5,
+        "primary_accuracy": 0.625
+      },
+      "non_urgent": {
+        "count": 12,
+        "primary_correct": 9,
+        "primary_accuracy": 0.75
+      },
+      "profile_update": {
+        "count": 9,
+        "primary_correct": 4,
+        "primary_accuracy": 0.4444
+      },
+      "general": {
+        "count": 7,
+        "primary_correct": 7,
+        "primary_accuracy": 1.0
+      },
+      "true_ambiguity": {
+        "count": 5,
+        "primary_correct": 5,
+        "primary_accuracy": 1.0
+      },
+      "comparison": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      }
+    }
+  },
+  "B": {
+    "case_count": 140,
+    "primary_intent_accuracy": 0.6429,
+    "explicit_write_action_accuracy": 0.9429,
+    "clarification_required_accuracy": 0.9643,
+    "secondary_micro_precision": 0.0,
+    "secondary_micro_recall": 0.0,
+    "secondary_micro_f1": 0.0,
+    "negation_exact_accuracy": 0.9143,
+    "health_context_recall": 0.8519,
+    "health_urgent_critical_misses": 3,
+    "false_positive_write_intent": 1,
+    "pending_action_metrics": "NOT_REPRESENTED_IN_ROUTING_HOLDOUT",
+    "confusion_by_group": {
+      "workout": {
+        "MEAL_SUGGESTION -> COMBINED_PLAN": 1,
+        "WORKOUT_SCHEDULE -> WORKOUT_SCHEDULE": 11,
+        "WORKOUT_SCHEDULE -> MEAL_SUGGESTION": 1,
+        "WORKOUT_SCHEDULE -> GENERAL_WELLNESS": 3,
+        "COMBINED_PLAN -> GENERAL_WELLNESS": 4,
+        "COMBINED_PLAN -> COMBINED_PLAN": 6,
+        "COMBINED_PLAN -> WORKOUT_SCHEDULE": 4,
+        "PLAN_EDIT -> PLAN_EDIT": 1,
+        "OBSERVATION_LOG -> MEAL_SUGGESTION": 1
+      },
+      "other": {
+        "MEAL_SUGGESTION -> PROFILE_UPDATE": 1,
+        "MEAL_SUGGESTION -> HEALTH_QUERY": 1,
+        "MEAL_SUGGESTION -> MEAL_SUGGESTION": 16,
+        "MEAL_SUGGESTION -> WORKOUT_SCHEDULE": 1,
+        "PLAN_EDIT -> PLAN_EDIT": 8,
+        "PLAN_EDIT -> WORKOUT_SCHEDULE": 2,
+        "PLAN_EDIT -> GENERAL_WELLNESS": 1,
+        "PLAN_LIFECYCLE -> GENERAL_WELLNESS": 5,
+        "PLAN_LIFECYCLE -> COMBINED_PLAN": 2,
+        "PLAN_LIFECYCLE -> PLAN_LIFECYCLE": 5,
+        "OBSERVATION_LOG -> GENERAL_WELLNESS": 3,
+        "OBSERVATION_LOG -> WORKOUT_SCHEDULE": 2,
+        "OBSERVATION_LOG -> MEAL_SUGGESTION": 3,
+        "OBSERVATION_LOG -> OBSERVATION_LOG": 3,
+        "HEALTH_QUERY -> WORKOUT_SCHEDULE": 4,
+        "HEALTH_QUERY -> HEALTH_QUERY": 14,
+        "HEALTH_QUERY -> GENERAL_WELLNESS": 2,
+        "PROFILE_UPDATE -> PROFILE_UPDATE": 4,
+        "PROFILE_UPDATE -> GENERAL_WELLNESS": 4,
+        "PROFILE_UPDATE -> WORKOUT_SCHEDULE": 1,
+        "GENERAL_WELLNESS -> GENERAL_WELLNESS": 8,
+        "GENERAL_WELLNESS -> COMBINED_PLAN": 1
+      },
+      "menu": {
+        "MENU_SCHEDULE -> GENERAL_WELLNESS": 1,
+        "MENU_SCHEDULE -> MENU_SCHEDULE": 13,
+        "MENU_SCHEDULE -> COMBINED_PLAN": 1
+      },
+      "combined": {
+        "COMBINED_PLAN -> COMBINED_PLAN": 1,
+        "PROFILE_UPDATE -> COMBINED_PLAN": 1
+      }
+    },
+    "per_tag": {
+      "meal": {
+        "count": 36,
+        "primary_correct": 23,
+        "primary_accuracy": 0.6389
+      },
+      "workout": {
+        "count": 32,
+        "primary_correct": 18,
+        "primary_accuracy": 0.5625
+      },
+      "multi_intent": {
+        "count": 10,
+        "primary_correct": 3,
+        "primary_accuracy": 0.3
+      },
+      "clean_vietnamese": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "profile": {
+        "count": 11,
+        "primary_correct": 4,
+        "primary_accuracy": 0.3636
+      },
+      "no_diacritic": {
+        "count": 17,
+        "primary_correct": 9,
+        "primary_accuracy": 0.5294
+      },
+      "health_overlay": {
+        "count": 7,
+        "primary_correct": 6,
+        "primary_accuracy": 0.8571
+      },
+      "slang": {
+        "count": 18,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7778
+      },
+      "spoken": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "disfluent": {
+        "count": 18,
+        "primary_correct": 12,
+        "primary_accuracy": 0.6667
+      },
+      "mixed_language": {
+        "count": 20,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7
+      },
+      "long_form": {
+        "count": 16,
+        "primary_correct": 6,
+        "primary_accuracy": 0.375
+      },
+      "negation": {
+        "count": 13,
+        "primary_correct": 2,
+        "primary_accuracy": 0.1538
+      },
+      "typo": {
+        "count": 17,
+        "primary_correct": 13,
+        "primary_accuracy": 0.7647
+      },
+      "teencode": {
+        "count": 16,
+        "primary_correct": 10,
+        "primary_accuracy": 0.625
+      },
+      "prompt_injection": {
+        "count": 5,
+        "primary_correct": 3,
+        "primary_accuracy": 0.6
+      },
+      "menu": {
+        "count": 15,
+        "primary_correct": 13,
+        "primary_accuracy": 0.8667
+      },
+      "safety": {
+        "count": 5,
+        "primary_correct": 3,
+        "primary_accuracy": 0.6
+      },
+      "plan": {
+        "count": 39,
+        "primary_correct": 27,
+        "primary_accuracy": 0.6923
+      },
+      "combined": {
+        "count": 2,
+        "primary_correct": 1,
+        "primary_accuracy": 0.5
+      },
+      "combined_plan": {
+        "count": 14,
+        "primary_correct": 6,
+        "primary_accuracy": 0.4286
+      },
+      "plan_edit": {
+        "count": 11,
+        "primary_correct": 8,
+        "primary_accuracy": 0.7273
+      },
+      "meal_substitution": {
+        "count": 2,
+        "primary_correct": 2,
+        "primary_accuracy": 1.0
+      },
+      "reference": {
+        "count": 11,
+        "primary_correct": 8,
+        "primary_accuracy": 0.7273
+      },
+      "schedule_move": {
+        "count": 2,
+        "primary_correct": 1,
+        "primary_accuracy": 0.5
+      },
+      "allergy_removal": {
+        "count": 2,
+        "primary_correct": 2,
+        "primary_accuracy": 1.0
+      },
+      "intensity_change": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      },
+      "meal_addition": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "exercise_substitution": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "time_change": {
+        "count": 1,
+        "primary_correct": 1,
+        "primary_accuracy": 1.0
+      },
+      "partial_delete": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      },
+      "plan_lifecycle": {
+        "count": 12,
+        "primary_correct": 5,
+        "primary_accuracy": 0.4167
+      },
+      "write_intent": {
+        "count": 13,
+        "primary_correct": 7,
+        "primary_accuracy": 0.5385
+      },
+      "logging": {
+        "count": 12,
+        "primary_correct": 3,
+        "primary_accuracy": 0.25
+      },
+      "health": {
+        "count": 20,
+        "primary_correct": 14,
+        "primary_accuracy": 0.7
+      },
+      "urgent": {
+        "count": 8,
+        "primary_correct": 5,
+        "primary_accuracy": 0.625
+      },
+      "non_urgent": {
+        "count": 12,
+        "primary_correct": 9,
+        "primary_accuracy": 0.75
+      },
+      "profile_update": {
+        "count": 9,
+        "primary_correct": 4,
+        "primary_accuracy": 0.4444
+      },
+      "general": {
+        "count": 7,
+        "primary_correct": 7,
+        "primary_accuracy": 1.0
+      },
+      "true_ambiguity": {
+        "count": 5,
+        "primary_correct": 5,
+        "primary_accuracy": 1.0
+      },
+      "comparison": {
+        "count": 1,
+        "primary_correct": 0,
+        "primary_accuracy": 0.0
+      }
+    }
+  },
+  "C": {
+    "evaluated": "NO",
+    "reason": "CURRENT_SEMANTIC_PARSER_IS_PINNED_LOCAL_QWEN; no API semantic parser is configured and benchmark forbids changing it."
+  }
+}

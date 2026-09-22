@@ -6,7 +6,7 @@ from dataclasses import replace
 import pytest
 
 from services.agent.pending_user_action import PendingUserActionStore
-from services.agent.tools.plan_v2 import PlanRuntimeContext, build_nutrition_plan, save_plan
+from services.agent.tools.plan_v2 import PlanRuntimeContext, _revision_payload, build_nutrition_plan, save_plan
 from services.agent.tools import register_server_tools
 from services.agent.tool_dispatcher import ToolDispatcher
 from services.agent.tool_registry import ToolRegistry
@@ -69,6 +69,26 @@ def test_plan_revision_preview_round_trips_with_same_identity_hash():
 
     assert restored == revision
     assert restored.revision_content_hash == revision.revision_content_hash
+
+
+def test_presentation_exposes_only_provenanced_catalog_images_without_mutating_revision():
+    revision = PlanEngine(MemoryPlanRepository()).build_nutrition_plan(
+        _context(), _request()
+    )
+    original_hash = revision.revision_content_hash
+
+    payload = _revision_payload(revision)
+    presented_items = [
+        item
+        for day in payload["presentation"]["days"]
+        for item in day["items"]
+    ]
+
+    assert revision.revision_content_hash == original_hash
+    assert all(
+        "image_url" not in item or item["image_url"].startswith("https://")
+        for item in presented_items
+    )
 
 
 def test_missing_context_remains_missing_and_is_not_defaulted_to_zero():
@@ -134,6 +154,48 @@ def test_stale_revision_cannot_branch_silently():
         engine.revise(_context(), patch)
 
 
+def test_typed_patch_supports_add_replace_goal_and_constraints_without_prose():
+    engine = PlanEngine(MemoryPlanRepository())
+    original = engine.build_nutrition_plan(_context(), _request())
+    added = {
+        "plan_item_id": "canonical-added-item",
+        "scheduled_date": "2026-09-01",
+        "schedule_slot": "snack",
+        "item_type": "MEAL",
+        "canonical_refs": {"dish_id": 1},
+        "content": {"dish_name": "Canonical snack"},
+    }
+    add = PlanPatch(
+        original.plan_id, original.revision_id, PlanPatchOperation.ADD_ITEM, None,
+        {"item": added}, "TEST", "add canonical item", original.revision_number,
+    )
+    revised = engine.revise(_context(), add)
+    assert revised.items[-1].plan_item_id == "canonical-added-item"
+
+    replacement = {**added, "schedule_slot": "late_snack", "canonical_refs": {"dish_id": 2}}
+    replace = PlanPatch(
+        revised.plan_id, revised.revision_id, PlanPatchOperation.REPLACE_ITEM,
+        "canonical-added-item", {"item": replacement}, "TEST", "replace", revised.revision_number,
+    )
+    revised = engine.revise(_context(), replace)
+    assert revised.items[-1].plan_item_id == "canonical-added-item"
+    assert revised.items[-1].canonical_refs == {"dish_id": 2}
+
+    goal = PlanPatch(
+        revised.plan_id, revised.revision_id, PlanPatchOperation.CHANGE_GOAL, None,
+        {"goal_override": "maintain"}, "TEST", "goal", revised.revision_number,
+    )
+    revised = engine.revise(_context(), goal)
+    assert revised.request.goal_override == "maintain"
+
+    constraints = PlanPatch(
+        revised.plan_id, revised.revision_id, PlanPatchOperation.CHANGE_CONSTRAINT, None,
+        {"temporary_exclusions": ["no_peanut"]}, "TEST", "constraint", revised.revision_number,
+    )
+    revised = engine.revise(_context(), constraints)
+    assert revised.request.temporary_exclusions == ("no_peanut",)
+
+
 def test_cross_user_read_is_rejected():
     engine = PlanEngine(MemoryPlanRepository())
     revision = engine.build_nutrition_plan(_context("owner"), _request())
@@ -141,7 +203,7 @@ def test_cross_user_read_is_rejected():
     assert engine.repository.get("other", revision.plan_id, revision.revision_id) is None
 
 
-def test_combined_plan_is_a_reference_container_not_mixed_energy_math():
+def test_combined_plan_owns_canonical_items_without_mixed_energy_math():
     engine = PlanEngine(MemoryPlanRepository())
     nutrition = engine.build_nutrition_plan(_context(), _request())
     container_request = PlanRequest(
@@ -149,7 +211,10 @@ def test_combined_plan_is_a_reference_container_not_mixed_energy_math():
     )
     container = engine.build_combined_container(_context(), container_request, (nutrition,))
 
-    assert container.items == ()
+    assert len(container.items) == len(nutrition.items)
+    assert container.provenance["generator"] == "P2_COMBINED_PLAN_ORCHESTRATOR"
+    assert container.provenance["canonical_item_owner"] == "COMBINED_REVISION"
+    assert container.summary["meal_item_count"] == len(nutrition.items)
     assert container.provenance["no_cross_domain_energy_compensation"] is True
     assert container.provenance["child_revisions"][0]["revision_id"] == nutrition.revision_id
 

@@ -21,8 +21,9 @@ class PlanHistoryRepository {
           (plan) => PlanSnapshot(
             plan: plan,
             sessionId: 'plan-v2-authoritative',
-            createdAt: DateTime.tryParse(plan['created_at']?.toString() ?? '') ??
-                DateTime.fromMillisecondsSinceEpoch(0),
+            createdAt:
+                DateTime.tryParse(plan['created_at']?.toString() ?? '') ??
+                    DateTime.fromMillisecondsSinceEpoch(0),
           ),
         )
         .toList(growable: false);
@@ -47,7 +48,10 @@ class PlanHistoryResolver {
   }) {
     final dayKey = _dateKey(date);
     final candidates = snapshots
-        .where((snapshot) => snapshot.plan['domain']?.toString() == domain)
+        .where((snapshot) {
+          final planDomain = snapshot.plan['domain']?.toString();
+          return planDomain == domain || planDomain == 'COMBINED_HEALTH';
+        })
         .where((snapshot) => _isOpen(snapshot.lifecycle))
         .where((snapshot) => _containsDate(snapshot.plan, dayKey))
         .toList()
@@ -56,6 +60,17 @@ class PlanHistoryResolver {
     for (final snapshot in candidates) {
       for (final day in PlanDisplay.days(snapshot.plan)) {
         if (day['date']?.toString() == dayKey) {
+          if (snapshot.plan['domain']?.toString() == 'COMBINED_HEALTH') {
+            final itemType = domain == 'NUTRITION' ? 'MEAL' : 'WORKOUT_SESSION';
+            final items = PlanDisplay.items(day)
+                .where((item) => item['item_type']?.toString() == itemType)
+                .toList(growable: false);
+            if (items.isEmpty) continue;
+            return PlannedPlanDay(
+              snapshot: snapshot,
+              day: Map<String, dynamic>.from(day)..['items'] = items,
+            );
+          }
           return PlannedPlanDay(snapshot: snapshot, day: day);
         }
       }

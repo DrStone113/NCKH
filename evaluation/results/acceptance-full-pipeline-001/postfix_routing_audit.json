@@ -1,0 +1,11 @@
+{
+  "holdout": "apps/backend/tests/fixtures/server_semantic_routing_holdout_v1.json",
+  "sha256": "a2ccfa54b9c4872afff6ef9713bbd7422ee9872b65e665185f5ad8eca4da2810",
+  "case_count": 120,
+  "development_source": "apps/backend/validation/semantic_router_s1/semantic_router_s1_development.jsonl",
+  "development_case_count": 50,
+  "exact_duplicate_case_ids": [],
+  "normalized_duplicate_case_ids": [],
+  "obvious_template_duplicate_case_ids": [],
+  "independent_for_single_confirmation": true
+}

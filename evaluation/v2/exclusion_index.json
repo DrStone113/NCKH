@@ -1,0 +1,16 @@
+{
+  "EXACT_OVERLAP": 0,
+  "FINAL_CONTAMINATION_STATUS": "PARTIAL_EXACT_SCAN_PASS_SEMANTIC_REVIEW_PENDING",
+  "NEAR_DUPLICATE_REVIEWED": 0,
+  "candidate_count": 260,
+  "exact_overlap_case_ids": [],
+  "final_count": 160,
+  "limitation": "This initial index checks frozen V1 artifacts exactly; repository-wide semantic contamination review is required before final V2 scoring.",
+  "scanned_artifacts": [
+    "evaluation/rag/eval_queries_v1.jsonl",
+    "evaluation/routing/holdout_v1.jsonl",
+    "evaluation/safety/cases_v1.jsonl"
+  ],
+  "schema_version": "v2-exclusion-index-1",
+  "semantic_detector": "NOT_EXECUTED_FULL_REPOSITORY"
+}

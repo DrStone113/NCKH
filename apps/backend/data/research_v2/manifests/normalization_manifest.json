@@ -1,0 +1,12 @@
+{
+  "normalizer_version": "research-v2-normalizer-1",
+  "counts": {
+    "usda_sr_legacy_foods.jsonl": 3000,
+    "wger_exercises.jsonl": 885,
+    "hhs_physical_activity_guidance.jsonl": 6
+  },
+  "inputs": {
+    "usda_zip_sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+    "wger_snapshot_sha256": "542cc7a7f7d87938f6c245c3ff23c2a32483c5734039ee953d1dbed9d9e3d226"
+  }
+}

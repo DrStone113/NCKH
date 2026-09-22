@@ -34,4 +34,20 @@ void main() {
     expect(protocols.last,
         'auth.${e2eToken.isEmpty ? 'firebase-token' : e2eToken}');
   });
+
+  test('chat response watchdog has bounded first, idle, and total deadlines',
+      () {
+    expect(
+      AIChatbotConfig.firstResponseTimeout,
+      lessThan(AIChatbotConfig.streamIdleTimeout),
+    );
+    expect(
+      AIChatbotConfig.streamIdleTimeout,
+      lessThan(AIChatbotConfig.streamTimeout),
+    );
+    expect(
+      AIChatbotConfig.streamTimeout,
+      lessThan(const Duration(minutes: 3)),
+    );
+  });
 }

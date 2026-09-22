@@ -1,0 +1,104 @@
+{"case_id": "AVN-081", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-082", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-083", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-084", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-085", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-086", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-087", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-088", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-089", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-090", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-091", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-092", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-093", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-094", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-095", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 8, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-096", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-097", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-098", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-099", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-100", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-101", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-102", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-103", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-104", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-105", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-106", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-107", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-108", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-109", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-110", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 2, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-111", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "PASS"}}
+{"case_id": "AVN-112", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-113", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-114", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-115", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 2, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-116", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 2, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-117", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-118", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-119", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-120", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-161", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-162", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 9, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-163", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 10, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-164", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 12, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-165", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-166", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-167", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-168", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 8, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-169", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 6, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-170", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 12, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-171", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-172", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-173", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 8, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-174", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 12, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-175", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 7, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-083", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-084", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-090", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-099", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 6, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-101", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-103", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-108", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-117", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "PASS"}}
+{"case_id": "AVN-161", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 8, "provenance": "FAIL", "no_evidence_handling": "FAIL"}}
+{"case_id": "AVN-167", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-171", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-084", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-085", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-090", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-099", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-108", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-110", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-111", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-114", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-116", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-117", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-120", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-163", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-167", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-171", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-172", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-085", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-084", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-084", "judge_error": "JSONDecodeError"}
+{"case_id": "AVN-084", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "The answer makes specific claims about Tháp dinh dưỡng Việt Nam 2025 but provides no evidence to support these assertions."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-085", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "Một số khuyến nghị được hỗ trợ bởi nguồn Việt Nam (tháp dinh dưỡng, protein 0,93 g/kg/ngày, EPA/DHA 250 mg/ngày, ăn đa dạng), nhưng mức 150 phút/tuần không có trong bằng chứng cung cấp."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-090", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "The answer makes specific claims about the Vietnam Nutrition Pyramid 2025 guidelines without any supporting evidence in the provided empty evidence array."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-099", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 4, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL", "short_reason": "No evidence was supplied, yet the answer presents specific Vietnamese nutritional recommendations (Tháp dinh dưỡng, Khuyến nghị dinh dưỡng Việt Nam 2030, 150 phút/tuần) as established facts."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-108", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "All specific protein recommendations (0.93 g/kg/day, 2 g/kg upper limit, RNI Vietnam 2026 reference) are unsupported as no evidence was provided during this turn."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-110", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "Bằng chứng xác nhận khung ba mức hoạt động nhưng không chứa chi tiết tình huống 10 cụ thể, và câu trả lời đã thừa nhận rõ giới hạn này."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-111", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 3, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "Evidence from Bộ Y tế and Viện Dinh dưỡng confirms general micronutrient guidance for pregnancy/lactation and specific EPA/DHA at 250 mg/day, but lacks direct support for the specific priority micronutrients claimed."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-114", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "Tài liệu hiện có chỉ cung cấp hướng dẫn chung về vi chất cho thai kỳ và cho con bú, không chứa nội dung cụ thể cho tình huống 4."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-116", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "The assistant correctly identifies the absence of 'tình huống 6' content and provides only the supported Vietnam 2030 general recommendation without fabricating specific information."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-117", "grade": {"relevance": "FAIL", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "PASS", "short_reason": "The answer appropriately acknowledges that the specific content of Tình huống 7 is unavailable in the evidence rather than fabricating information."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-120", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 6, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "PASS", "short_reason": "Answer addresses RNI limitations but all claims lack supporting evidence from supplied sources."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-120", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "Answer makes specific claims about RNI characteristics and limitations without any supporting evidence from Vietnam's official RNI guidelines or authoritative sources."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-163", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 7, "provenance": "FAIL", "no_evidence_handling": "NOT_APPLICABLE", "short_reason": "The answer correctly describes anemia pathophysiology from MedlinePlus evidence but adds unsupported claims about specific causes (pregnancy, heavy menstruation, genetic disorders), diagnostic methods (clinical exam and blood tests), and treatment approaches that are not present in the supplied evidence and lacks source attribution."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-167", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "The answer provides specific exercise duration recommendations (150–300 minutes weekly) and health benefit claims without any supporting evidence from the supplied sources."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-163", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "PASS", "short_reason": "The answer accurately describes anemia as a condition where blood doesn't carry enough oxygen, identifies iron deficiency as the most common cause, and lists the three main causes (blood loss, lack of red blood cell production, and high rates of destruction), all of which are supported by the MedlinePlus evidence provided."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-171", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL", "short_reason": "No evidence was provided, yet the answer makes specific health claims about fiber, water, and exercise effectiveness for constipation without any supporting citations."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-167", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 1, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "No evidence was supplied to support the specific quantitative exercise recommendations (150-300 minutes moderate or 75-150 minutes vigorous weekly) or the health benefit claims presented."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-172", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 5, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "PASS", "short_reason": "The answer addresses nutritional support but makes material factual claims about definitions, indications, and methods without any supporting evidence from the supplied evidence set."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-171", "grade": {"relevance": "PASS", "faithfulness": "FAIL", "unsupported_claims": 3, "provenance": "FAIL", "no_evidence_handling": "FAIL", "short_reason": "No evidence was supplied, yet the answer provided three material health/nutrition claims (fiber increases stool bulk, water is essential for fiber, exercise stimulates motility) without any attribution to provided sources."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}
+{"case_id": "AVN-172", "grade": {"relevance": "FAIL", "faithfulness": "FAIL", "unsupported_claims": 6, "provenance": "NOT_APPLICABLE", "no_evidence_handling": "FAIL", "short_reason": "No evidence was provided to support the medical claims about nutritional support indications and methods, and the answer makes unsupported factual assertions about clinical practices without citing any source."}, "judge_model": "MiniMax-M2.7", "judge_config_id": "supplemental-minimax-m2-7-v1"}

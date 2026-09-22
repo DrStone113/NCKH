@@ -15,6 +15,7 @@ from services.agent.tools.personalized_workout import (
     SAVE_WORKOUT_PLAN_DESCRIPTOR,
 )
 from services.agent.tools.plan_v2 import (
+    BUILD_COMBINED_PLAN_DESCRIPTOR,
     BUILD_NUTRITION_PLAN_DESCRIPTOR,
     BUILD_WORKOUT_SCHEDULE_DESCRIPTOR,
     GET_ACTIVE_PLAN_V2_DESCRIPTOR,
@@ -71,6 +72,7 @@ def register_server_tools(
     from config import settings
 
     if settings.plan_tool_mode != "off":
+        registry.register(BUILD_COMBINED_PLAN_DESCRIPTOR)
         registry.register(BUILD_NUTRITION_PLAN_DESCRIPTOR)
         registry.register(BUILD_WORKOUT_SCHEDULE_DESCRIPTOR)
         registry.register(GET_PLAN_DESCRIPTOR)
@@ -304,7 +306,7 @@ DOMAIN_MODULE_MAP = {
     ],
     "general": [
         "get_user_profile", "get_plan", "get_active_plan_v2",
-        "build_nutrition_plan", "build_workout_schedule", "revise_plan", "save_plan",
+        "build_combined_plan", "build_nutrition_plan", "build_workout_schedule", "revise_plan", "save_plan",
         "set_plan_status", "query_rag", "search_medical_knowledge", "navigate_to_screen",
     ]
 }

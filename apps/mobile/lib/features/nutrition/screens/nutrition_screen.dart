@@ -14,6 +14,7 @@ import '../widgets/meal_plan_card.dart';
 import '../../plans/screens/plan_list_screen.dart';
 import '../../plans/plan_history.dart';
 import '../../plans/plan_snapshot.dart';
+import '../../plans/widgets/planned_day_plan_section.dart';
 import '../../../widgets/meal_summary_card.dart';
 
 class NutritionScreen extends StatefulWidget {
@@ -267,6 +268,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 }
               },
               child: SingleChildScrollView(
+                key: const ValueKey('nutrition-screen-scroll'),
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
                 child: Center(
@@ -344,6 +346,15 @@ class _NutritionScreenState extends State<NutritionScreen> {
                                 ..._buildMealsByType(context, provider,
                                     completed: false),
                               ],
+                              const SizedBox(height: 20),
+                              if (user != null)
+                                PlannedDayPlanSection(
+                                  userId: user.id,
+                                  date: selected,
+                                  domain: 'NUTRITION',
+                                  loader: widget.planLoader,
+                                  snapshots: sharedPlans?.plans,
+                                ),
                               const SizedBox(height: 16),
                               FilledButton.icon(
                                   onPressed: () =>

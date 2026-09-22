@@ -30,6 +30,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
   final BackendApiService _api = BackendApiService();
   late Map<String, dynamic> _plan;
   bool _mutating = false;
+  List<Map<String, dynamic>> _history = const [];
 
   @override
   void initState() {
@@ -43,6 +44,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       _selectedDayIndex = match < 0 ? 0 : match;
     }
     _refreshExactRevision();
+    _loadHistory();
   }
 
   Future<void> _refreshExactRevision() async {
@@ -64,6 +66,17 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     }
   }
 
+  Future<void> _loadHistory() async {
+    final planId = _plan['plan_id']?.toString() ?? '';
+    if (planId.isEmpty) return;
+    try {
+      final history = await _api.listAuthoritativePlanHistory(planId);
+      if (mounted) setState(() => _history = history);
+    } catch (_) {
+      // History is supplemental; the exact revision remains the authority.
+    }
+  }
+
   List<String> _availableActions(String lifecycle) {
     final targets = _plan['valid_lifecycle_targets'];
     if (targets is List) {
@@ -78,7 +91,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     };
   }
 
-  Future<void> _runAction(String action) async {
+  Future<void> _runAction(String action, {bool replaceConflicts = false}) async {
     final planId = _plan['plan_id']?.toString() ?? '';
     final revisionId = _plan['revision_id']?.toString() ?? '';
     final revisionNumber =
@@ -106,6 +119,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                 _ => throw StateError('INVALID_PLAN_UI_ACTION'),
               },
               actionId: 'plan-ui-${action.toLowerCase()}-$revisionId',
+              replaceConflicts: replaceConflicts,
             );
       final readBack = result['plan'];
       if (readBack is! Map) throw StateError('PLAN_READBACK_MISSING');
@@ -113,8 +127,42 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       final updated = Map<String, dynamic>.from(readBack);
       setState(() => _plan = updated);
       _updateSharedPlan(updated, refreshAll: true);
+      unawaited(_loadHistory());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đã cập nhật kế hoạch từ máy chủ.')),
+      );
+    } on PlanV2ApiException catch (error) {
+      if (!mounted) return;
+      if (error.code == 'ACTIVE_SCHEDULE_CONFLICT' && !replaceConflicts) {
+        final resolution = await showDialog<String>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Lịch đang bị trùng'),
+            content: const Text(
+              'Có kế hoạch đang hoạt động trong cùng thời gian. Bạn có thể tải lại hoặc thay thế kế hoạch cũ một cách rõ ràng.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'refresh'),
+                child: const Text('Tải lại'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, 'replace'),
+                child: const Text('Thay thế'),
+              ),
+            ],
+          ),
+        );
+        if (resolution == 'refresh') {
+          await _refreshExactRevision();
+          await _loadHistory();
+        } else if (resolution == 'replace') {
+          await _runAction(action, replaceConflicts: true);
+        }
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể cập nhật kế hoạch: ${error.code}')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -164,6 +212,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          key: const ValueKey('plan-detail-scroll'),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           child: Center(
             child: ConstrainedBox(
@@ -199,6 +248,8 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                     const SizedBox(height: 12),
                     const _ConfirmationNotice(),
                   ],
+                  const SizedBox(height: 16),
+                  _PlanHistory(history: _history),
                 ],
               ),
             ),
@@ -263,7 +314,9 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       MealSlotSection(
           items: PlanDisplay.items(day),
           onView: (item) => showPlannedMealDetail(context, item)),
-      if (days.length > 1) ...[
+      // Keep the plan overview available even for a one-day menu so the
+      // planned schedule has a stable, read-only summary surface.
+      ...[
         const HealthSectionTitle('Tổng quan các ngày',
             subtitle: 'Chạm một ngày để xem thực đơn dự kiến.'),
         HealthSurface(
@@ -374,24 +427,51 @@ class _ExactRevisionReference extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final planId = plan['plan_id']?.toString() ?? '';
-    final revisionId = plan['revision_id']?.toString() ?? '';
     return Semantics(
-      label: 'Plan V2 exact revision $planId $revisionId',
+      label: 'Bản kế hoạch chính thức',
       child: Container(
-        key: const ValueKey('plan-v2-exact-reference'),
+        key: const ValueKey('plan-v2-authoritative-reference'),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        child: SelectableText(
-          'Mã tham chiếu: $planId / $revisionId',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                fontFamily: 'monospace',
+        child: const Text('Nội dung này được đồng bộ từ kế hoạch chính thức.'),
+      ),
+    );
+  }
+}
+
+class _PlanHistory extends StatelessWidget {
+  final List<Map<String, dynamic>> history;
+
+  const _PlanHistory({required this.history});
+
+  @override
+  Widget build(BuildContext context) {
+    if (history.isEmpty) return const SizedBox.shrink();
+    return HealthSurface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Lịch sử chỉnh sửa',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  )),
+          const SizedBox(height: 8),
+          for (final revision in history) ...[
+            Text(
+              'Bản ${revision['revision_number'] ?? ''} · ${revision['lifecycle_status'] ?? ''}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            if ((revision['created_at']?.toString() ?? '').isNotEmpty)
+              Text(
+                revision['created_at'].toString().replaceFirst('T', ' ').split('.').first,
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
-        ),
+            const SizedBox(height: 8),
+          ],
+        ],
       ),
     );
   }

@@ -471,7 +471,9 @@ void main() {
         nutrition: diary));
     await capture(tester, 'nutrition-today');
     await tester.scrollUntilVisible(find.text('Cơm gà áp chảo'), 350,
-        scrollable: find.byType(Scrollable).first);
+        scrollable: find.descendant(
+            of: find.byKey(const ValueKey('nutrition-screen-scroll')),
+            matching: find.byType(Scrollable)).first);
     expect(find.text('Dự kiến · chưa ghi nhận'), findsWidgets);
     expect(diary.mutations, 0);
     await capture(tester, 'today-plan');
@@ -479,8 +481,8 @@ void main() {
         users: users, nutrition: diary));
     await capture(tester, 'daily-plan');
     expect(find.text('Kế hoạch ăn theo ngày'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Tổng quan các ngày'), 350,
-        scrollable: find.byType(Scrollable).first);
+    expect(find.text('Tổng quan các ngày'), findsOneWidget);
+    await tester.ensureVisible(find.text('Tổng quan các ngày'));
     await capture(tester, 'weekly-plan');
     expect(diary.mutations, 0);
     await tester.pumpWidget(app(

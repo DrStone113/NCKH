@@ -1,0 +1,37 @@
+{
+  "status": "VALID",
+  "judgment": {
+    "case_id": "AVN-087",
+    "model": "zc/glm-5.3-flash",
+    "temperature": 0,
+    "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+    "dimensions": [
+      "relevance",
+      "faithfulness",
+      "unsupported_claims",
+      "provenance",
+      "no_evidence_handling"
+    ],
+    "grade": {
+      "relevance": "FAIL",
+      "faithfulness": "PASS",
+      "unsupported_claims": 0,
+      "provenance": "NOT_APPLICABLE",
+      "no_evidence_handling": "FAIL",
+      "short_reason": "The retrieved evidence directly contained the Vietnamese meal-routine recommendation (organize family meals, age-appropriate main meals, avoid skipping and overeating), so the answer's claim of insufficient information was incorrect and it failed to answer the query."
+    },
+    "input_sha256": "9e04a9542a6325fdea9beaf870d897fe0060b16bcc119b71edbe48942ca7e31b",
+    "finish_reason": "stop",
+    "usage": {
+      "completion_tokens": 579,
+      "prompt_tokens": 4130,
+      "total_tokens": 4709,
+      "completion_tokens_details": {
+        "reasoning_tokens": 464
+      },
+      "prompt_tokens_details": {}
+    },
+    "quota_headers": {},
+    "recorded_at_utc": "2026-09-22T19:22:58.922268+00:00"
+  }
+}

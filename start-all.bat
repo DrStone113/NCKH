@@ -96,12 +96,12 @@ if errorlevel 1 (
 )
 popd
 
-echo [*] Doi Backend san sang...
-for /l %%I in (1,1,90) do (
+echo [*] Doi Backend va local SLM san sang...
+for /l %%I in (1,1,180) do (
     curl.exe -fsS http://localhost:8080/health >nul 2>&1 && goto backend_ready
     ping 127.0.0.1 -n 2 >nul
 )
-echo [!] Backend khong san sang tren port 8080 sau 90 giay.
+echo [!] Backend/local SLM khong san sang tren port 8080 sau 180 giay.
 "%DOCKER_EXE%" compose -f docker-compose.yml -f docker-compose.dev.yml logs --tail 80 fastapi_backend
 pause
 exit /b 1

@@ -145,3 +145,75 @@ async def test_live_sql_revision_lifecycle_idempotency_and_cross_owner_denial():
             )
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_live_sql_attach_transfer_preserves_logical_items_and_is_idempotent():
+    """A standalone menu becomes direct combined content in one SQL transaction."""
+
+    assert _LIVE_URL
+    engine = create_async_engine(_LIVE_URL)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    repository = PlanSqlRepository(session_factory)
+    owner = f"p2-live-attach-{uuid4()}"
+    context = PlanContextResolver.resolve(
+        owner,
+        {
+            "user_id": owner, "age": 31, "equation_sex": "male", "height_cm": 172,
+            "weight_kg": 70, "activity_level": "moderate", "health_goal": "maintain",
+        },
+    )
+    request = PlanRequest(PlanDomain.NUTRITION, date(2026, 11, 3), date(2026, 11, 3), "Asia/Ho_Chi_Minh")
+    source_request = PlanRequest(PlanDomain.NUTRITION, date(2026, 11, 4), date(2026, 11, 4), "Asia/Ho_Chi_Minh")
+    planner = PlanEngine(MemoryPlanRepository())
+    try:
+        standalone = planner.build_nutrition_plan(context, source_request)
+        standalone_saved = await repository.save_exact_revision(
+            owner_user_id=owner, revision=standalone,
+            expected_content_hash=standalone.revision_content_hash,
+            action_id=f"save-source-{standalone.revision_id}", activate=False,
+        )
+        combined_component = planner.build_nutrition_plan(context, request)
+        combined = planner.build_combined_container(
+            context,
+            PlanRequest(PlanDomain.COMBINED_HEALTH, date(2026, 11, 3), date(2026, 11, 4), "Asia/Ho_Chi_Minh"),
+            (combined_component,),
+        )
+        combined_saved = await repository.save_exact_revision(
+            owner_user_id=owner, revision=combined,
+            expected_content_hash=combined.revision_content_hash,
+            action_id=f"save-combined-{combined.revision_id}", activate=False,
+        )
+        action_id = f"attach-{uuid4()}"
+        attached = await repository.attach_standalone_to_combined(
+            owner_user_id=owner,
+            combined_plan_id=combined_saved.plan_id,
+            base_revision_id=combined_saved.revision_id,
+            expected_combined_content_hash=combined_saved.revision_content_hash,
+            source_plan_id=standalone_saved.plan_id,
+            source_revision_id=standalone_saved.revision_id,
+            expected_source_content_hash=standalone_saved.revision_content_hash,
+            action_id=action_id,
+            source_surface="MENU_UI",
+        )
+        retried = await repository.attach_standalone_to_combined(
+            owner_user_id=owner,
+            combined_plan_id=combined_saved.plan_id,
+            base_revision_id=combined_saved.revision_id,
+            expected_combined_content_hash=combined_saved.revision_content_hash,
+            source_plan_id=standalone_saved.plan_id,
+            source_revision_id=standalone_saved.revision_id,
+            expected_source_content_hash=standalone_saved.revision_content_hash,
+            action_id=action_id,
+            source_surface="MENU_UI",
+        )
+        assert attached.revision_number == 2
+        assert retried.revision_id == attached.revision_id
+        assert {item.plan_item_id for item in standalone_saved.items}.issubset(
+            {item.plan_item_id for item in attached.items}
+        )
+        source_after = await repository.get(owner, standalone_saved.plan_id, standalone_saved.revision_id)
+        assert source_after is not None
+        assert source_after.lifecycle_status is PlanLifecycleStatus.SUPERSEDED
+    finally:
+        await engine.dispose()

@@ -123,6 +123,31 @@ void main() {
         ProfileContextScope.workout);
   });
 
+  test('short follow-up keeps workout scope without leaking it to new topics',
+      () {
+    expect(
+      ProfileReadiness.scopeForConversation(
+        'oke',
+        activeScope: ProfileContextScope.workout,
+      ),
+      ProfileContextScope.workout,
+    );
+    expect(
+      ProfileReadiness.scopeForConversation(
+        'oke',
+        recentMessages: const ['Create a workout for today'],
+      ),
+      ProfileContextScope.workout,
+    );
+    expect(
+      ProfileReadiness.scopeForConversation(
+        'Please explain a completely different topic in several sentences',
+        activeScope: ProfileContextScope.workout,
+      ),
+      ProfileContextScope.general,
+    );
+  });
+
   test('male nutrition profile does not request maternal safety answers', () {
     final readiness = ProfileReadiness.assess(
       completeUserWithGender('male'),
@@ -245,5 +270,22 @@ void main() {
     expect(updated.currentPainStatus, 'NO');
     expect(updated.safetyCheckedAt, isNotNull);
   });
-}
 
+  test('profile readiness uses the resolved follow-up scope', () async {
+    final users = RefreshingUserProvider(completeUser());
+    final chat = GuardedChatProvider()..setProviders(userProvider: users);
+    addTearDown(chat.dispose);
+    addTearDown(users.dispose);
+
+    final checked = await chat.checkProfileBeforeSend(
+      'oke',
+      completeUser(),
+      scope: ProfileContextScope.workout,
+    );
+
+    expect(checked, isNotNull);
+    expect(chat.profileReadiness!.scope, ProfileContextScope.workout);
+    expect(chat.profileReadiness!.personalizationFields,
+        contains('workout_profile'));
+  });
+}

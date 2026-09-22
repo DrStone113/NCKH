@@ -35,15 +35,24 @@ services:
     environment:
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
       - DATABASE_URL=${DATABASE_URL}
-      - LLM_MODEL=${LLM_MODEL}
-      - HEAVY_LLM_MODEL=${HEAVY_LLM_MODEL}
+      - LLM_MODEL=${LLM_MODEL:-chatbot}
+      - HEAVY_LLM_MODEL=${HEAVY_LLM_MODEL:-chatbot}
       - LLM_REASONING_EFFORT=${LLM_REASONING_EFFORT:-}
       - HEAVY_LLM_REASONING_EFFORT=${HEAVY_LLM_REASONING_EFFORT:-}
       - LLM_CROSS_MODEL_FALLBACK=${LLM_CROSS_MODEL_FALLBACK:-false}
       - LLM_ATTEMPTS_PER_MODEL=${LLM_ATTEMPTS_PER_MODEL:-1}
       - LLM_SIMPLE_HISTORY_TURNS=${LLM_SIMPLE_HISTORY_TURNS:-12}
       - LLM_COMPLEX_HISTORY_TURNS=${LLM_COMPLEX_HISTORY_TURNS:-24}
-      - SCOPE_CLASSIFIER_MODEL=${SCOPE_CLASSIFIER_MODEL:-wen/qwen3.8-flash}
+      - SCOPE_CLASSIFIER_MODEL=${SCOPE_CLASSIFIER_MODEL:-}
+      # Scope classification runs on the pinned local Qwen checkpoint. The
+      # host's Windows path cannot be used from Linux, so expose a stable
+      # container path instead.
+      - SERVER_SEMANTIC_ROUTER_MODE=${SERVER_SEMANTIC_ROUTER_MODE:-shadow}
+      - SERVER_SEMANTIC_ROUTER_MODEL=${SERVER_SEMANTIC_ROUTER_MODEL:-Qwen/Qwen3-0.6B}
+      - SERVER_SEMANTIC_ROUTER_LOCAL_MODEL_PATH=/opt/nckh-models/Qwen3-0.6B-c1899de289a04d12100db370d81485cdf75e47ca
+      - SERVER_SEMANTIC_ROUTER_LOCAL_MODEL_SHA256=${SERVER_SEMANTIC_ROUTER_LOCAL_MODEL_SHA256:-f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b}
+      - SERVER_SEMANTIC_ROUTER_TIMEOUT_SECONDS=${SERVER_SEMANTIC_ROUTER_TIMEOUT_SECONDS:-45}
+      - SERVER_SEMANTIC_ROUTER_CONFIDENCE=${SERVER_SEMANTIC_ROUTER_CONFIDENCE:-0.85}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - MAX_HISTORY_TURNS=${MAX_HISTORY_TURNS}
       - RAG_TOP_K=${RAG_TOP_K}
@@ -56,6 +65,7 @@ services:
       - SENTENCE_TRANSFORMERS_HOME=/root/.cache/huggingface/sentence_transformers
     volumes:
       - ./apps/backend/data:/app/data:ro  # Read-only data
+      - ./.models:/opt/nckh-models:ro
       - backend_logs:/app/logs
       - hf_cache:/root/.cache/huggingface
     depends_on:

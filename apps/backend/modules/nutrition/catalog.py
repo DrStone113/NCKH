@@ -13,6 +13,7 @@ from copy import deepcopy
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from modules.nutrition.canonical_foods import (
     CanonicalFoodError,
@@ -123,11 +124,40 @@ def clear_dish_catalog_cache() -> None:
     clear_canonical_food_cache()
 
 
+def dish_source_image_url(dish_id: object) -> str | None:
+    """Return a safe, catalog-provenanced image URL for UI presentation.
+
+    This is derived at read time, so it does not alter an immutable Plan V2
+    revision, its hash, or the distinction between a planned and eaten meal.
+    """
+
+    try:
+        normalized_id = int(str(dish_id))
+    except (TypeError, ValueError):
+        return None
+    for dish in _load_dish_catalog_cached():
+        if int(dish.get("id", -1)) != normalized_id:
+            continue
+        provenance = dish.get("provenance")
+        raw_url = (
+            provenance.get("source_image_url")
+            if isinstance(provenance, dict)
+            else None
+        )
+        if not isinstance(raw_url, str):
+            return None
+        image_url = raw_url.strip()
+        parsed = urlparse(image_url)
+        return image_url if parsed.scheme == "https" and parsed.netloc else None
+    return None
+
+
 __all__ = [
     "BASE_DISHES_FILE",
     "CURATED_DISHES_FILE",
     "REFERENCE_DISHES_FILE",
     "DishCatalogError",
     "clear_dish_catalog_cache",
+    "dish_source_image_url",
     "load_dish_catalog",
 ]

@@ -1,0 +1,26 @@
+{
+  "SEMANTIC_MODEL": "Qwen/Qwen3-0.6B@c1899de289a04d12100db370d81485cdf75e47ca",
+  "SEMANTIC_MODEL_HASH": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+  "SEMANTIC_ADAPTER": "LocalQwenSemanticAdapter",
+  "MODEL_INFERENCE_EXECUTED": 51,
+  "MODE": "shadow",
+  "metrics": {
+    "case_count": 140,
+    "primary_intent_accuracy": 0.6,
+    "secondary_precision": 0.0,
+    "secondary_recall": 0.0,
+    "secondary_f1": 0.0,
+    "multi_intent_exact_match": 0.9,
+    "negation_correctness": 0.9,
+    "write_intent_accuracy": 0.9214,
+    "FALSE_POSITIVE_WRITE_INTENT": 1,
+    "urgent_health_recall": 0.625,
+    "HEALTH_SAFETY_CRITICAL_MISS": 3,
+    "ambiguity_recall": 0.0,
+    "false_ambiguity_rate": 0.0,
+    "PENDING_ACTION_TARGET_MUTATION": "NOT_REPRESENTED_IN_ROUTING_HOLDOUT",
+    "latency_ms": {
+      "mean": 1092.129
+    }
+  }
+}

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Callable
 from uuid import NAMESPACE_URL, uuid5
 
@@ -31,6 +31,7 @@ from .contracts import (
     PlanValidationResult,
     PlanValidationStatus,
     canonical_json,
+    new_revision_id,
 )
 from .lifecycle import transition_allowed
 
@@ -100,29 +101,122 @@ class PlanSqlRepository:
             raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
         async with self._session_factory() as session:
             async with session.begin():
+                await self._put_preview_in_session(session, revision)
+
+    async def put_patch_preview(
+        self, *, owner_user_id: str, before: PlanRevision, after: PlanRevision,
+        action_id: str, actor_type: str, source_surface: str, operation: str,
+        reason: str | None = None,
+    ) -> PlanRevision:
+        """Persist one typed patch preview and its audit event atomically."""
+        if not action_id:
+            raise PlanPersistenceError("PLAN_ACTION_ID_REQUIRED")
+        async with self._session_factory() as session:
+            async with session.begin():
+                existing = (
+                    await session.execute(
+                        text(
+                            """
+                            SELECT plan_id::text, base_revision_id::text, preview_revision_id::text
+                            FROM plan_v2_preview_actions
+                            WHERE owner_user_id = :owner AND action_id = :action_id
+                            FOR UPDATE
+                            """
+                        ),
+                        {"owner": owner_user_id, "action_id": action_id},
+                    )
+                ).mappings().first()
+                if existing is not None:
+                    if str(existing["plan_id"]) != before.plan_id or str(existing["base_revision_id"]) != before.revision_id:
+                        raise PlanPersistenceError("IDEMPOTENCY_KEY_REUSED_FOR_DIFFERENT_REVISION")
+                    row = (
+                        await session.execute(
+                            text(
+                                """
+                                SELECT revision_payload FROM plan_v2_previews
+                                WHERE owner_user_id = :owner AND plan_id = CAST(:plan_id AS uuid)
+                                  AND revision_id = CAST(:revision_id AS uuid) AND expires_at > NOW()
+                                """
+                            ),
+                            {"owner": owner_user_id, "plan_id": before.plan_id, "revision_id": str(existing["preview_revision_id"])},
+                        )
+                    ).mappings().first()
+                    if row is None:
+                        raise PlanPersistenceError("PLAN_PREVIEW_NOT_FOUND")
+                    return PlanRevision.from_dict(_as_dict(row["revision_payload"]))
+                await self._put_preview_in_session(session, after)
+                await self._insert_change_event(
+                    session, owner_user_id=owner_user_id, plan_id=after.plan_id,
+                    from_revision_id=before.revision_id, to_revision_id=None,
+                    actor_type=actor_type, source_surface=source_surface,
+                    operation=operation, before_payload=before.to_dict(),
+                    after_payload=after.to_dict(), reason=reason,
+                    correlation_id=action_id,
+                )
                 await session.execute(
                     text(
                         """
-                        INSERT INTO plan_v2_previews (
-                            owner_user_id, plan_id, revision_id, content_hash, revision_payload
+                        INSERT INTO plan_v2_preview_actions (
+                            owner_user_id, action_id, plan_id, base_revision_id,
+                            preview_revision_id, preview_content_hash
                         ) VALUES (
-                            :owner, CAST(:plan_id AS uuid), CAST(:revision_id AS uuid),
-                            :content_hash, CAST(:payload AS jsonb)
+                            :owner, :action_id, CAST(:plan_id AS uuid), CAST(:base_revision_id AS uuid),
+                            CAST(:preview_revision_id AS uuid), :content_hash
                         )
-                        ON CONFLICT (owner_user_id, plan_id, revision_id)
-                        DO UPDATE SET content_hash = EXCLUDED.content_hash,
-                                      revision_payload = EXCLUDED.revision_payload,
-                                      created_at = NOW(),
-                                      expires_at = NOW() + INTERVAL '30 days'
                         """
                     ),
                     {
-                        "owner": revision.owner_user_id,
-                        "plan_id": revision.plan_id,
-                        "revision_id": revision.revision_id,
-                        "content_hash": revision.revision_content_hash,
-                        "payload": canonical_json(revision.to_dict()),
+                        "owner": owner_user_id, "action_id": action_id, "plan_id": after.plan_id,
+                        "base_revision_id": before.revision_id, "preview_revision_id": after.revision_id,
+                        "content_hash": after.revision_content_hash,
                     },
+                )
+        return after
+
+    async def _put_preview_in_session(self, session: AsyncSession, revision: PlanRevision) -> None:
+        await session.execute(
+            text(
+                """
+                INSERT INTO plan_v2_previews (
+                    owner_user_id, plan_id, revision_id, content_hash, revision_payload
+                ) VALUES (
+                    :owner, CAST(:plan_id AS uuid), CAST(:revision_id AS uuid),
+                    :content_hash, CAST(:payload AS jsonb)
+                )
+                ON CONFLICT (owner_user_id, plan_id, revision_id)
+                DO UPDATE SET content_hash = EXCLUDED.content_hash,
+                              revision_payload = EXCLUDED.revision_payload,
+                              created_at = NOW(),
+                              expires_at = NOW() + INTERVAL '30 days'
+                """
+            ),
+            {
+                "owner": revision.owner_user_id, "plan_id": revision.plan_id,
+                "revision_id": revision.revision_id, "content_hash": revision.revision_content_hash,
+                "payload": canonical_json(revision.to_dict()),
+            },
+        )
+
+    async def record_preview_change_event(
+        self, *, owner_user_id: str, before: PlanRevision, after: PlanRevision,
+        actor_type: str = "USER", source_surface: str = "PLAN_UI",
+        operation: str = "PATCH_PREVIEW", reason: str | None = None,
+        correlation_id: str | None = None,
+    ) -> None:
+        """Record a preview mutation without promoting it to authoritative state."""
+        async with self._session_factory() as session:
+            async with session.begin():
+                await self._insert_change_event(
+                    session, owner_user_id=owner_user_id, plan_id=after.plan_id,
+                    # Preview IDs only exist in plan_v2_previews until an
+                    # explicit exact save promotes them.  The FK-backed audit
+                    # event therefore links to its authoritative base and
+                    # carries the prospective revision in after_payload.
+                    from_revision_id=before.revision_id, to_revision_id=None,
+                    actor_type=actor_type, source_surface=source_surface,
+                    operation=operation, before_payload=before.to_dict(),
+                    after_payload=after.to_dict(), reason=reason,
+                    correlation_id=correlation_id,
                 )
 
     async def get_preview(
@@ -172,24 +266,33 @@ class PlanSqlRepository:
             if local_date is not None:
                 where_date = " AND period_start <= :local_date AND period_end >= :local_date"
                 parameters["local_date"] = local_date
-            row = (
-                await session.execute(
-                    text(
-                        """
-                        SELECT id::text AS revision_id, plan_id::text AS plan_id
-                        FROM plan_v2_revisions
-                        WHERE owner_user_id = :owner AND domain = :domain
-                          AND lifecycle_status = 'ACTIVE'
-                        """ + where_date + " ORDER BY revision_number DESC LIMIT 1"
-                    ),
-                    parameters,
-                )
-            ).mappings().first()
+            if domain is PlanDomain.COMBINED_HEALTH:
+                query = """
+                    SELECT id::text AS revision_id, plan_id::text AS plan_id
+                    FROM plan_v2_revisions
+                    WHERE owner_user_id = :owner AND domain = :domain
+                      AND lifecycle_status = 'ACTIVE'
+                """ + where_date + " ORDER BY revision_number DESC LIMIT 1"
+            else:
+                parameters["content_domain"] = domain.value
+                query = """
+                    SELECT c.revision_id::text AS revision_id, c.plan_id::text AS plan_id
+                    FROM plan_v2_active_claims c
+                    JOIN plan_v2_revisions r ON r.id = c.revision_id
+                    WHERE c.owner_user_id = :owner AND c.content_domain = :content_domain
+                      AND r.lifecycle_status = 'ACTIVE'
+                """ + (
+                    " AND c.effective_period @> :local_date"
+                    if local_date is not None else ""
+                ) + " ORDER BY r.revision_number DESC LIMIT 1"
+            row = (await session.execute(text(query), parameters)).mappings().first()
             if row is None:
                 return None
             return await self._get_in_session(session, owner_user_id, str(row["plan_id"]), str(row["revision_id"]))
 
-    async def list_owned(self, owner_user_id: str) -> tuple[PlanRevision, ...]:
+    async def list_owned(
+        self, owner_user_id: str, *, artifact_kind: PlanArtifactKind | None = None
+    ) -> tuple[PlanRevision, ...]:
         """Return the newest immutable revision of every plan owned by a principal.
 
         This is intentionally repository-backed rather than chat-history-backed:
@@ -200,17 +303,23 @@ class PlanSqlRepository:
         if not owner_user_id or owner_user_id == "anonymous":
             raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
         async with self._session_factory() as session:
+            query = """
+                SELECT DISTINCT ON (r.plan_id) r.plan_id::text AS plan_id, r.id::text AS revision_id
+                FROM plan_v2_revisions r
+                JOIN plan_v2_plans p ON p.id = r.plan_id
+                WHERE r.owner_user_id = :owner
+            """
+            parameters: dict[str, Any] = {"owner": owner_user_id}
+            if artifact_kind is not None:
+                # Do not bind an untyped NULL into ``:kind IS NULL`` with
+                # asyncpg: PostgreSQL cannot infer that parameter's type.
+                query += " AND p.artifact_kind = :artifact_kind"
+                parameters["artifact_kind"] = artifact_kind.value
+            query += " ORDER BY r.plan_id, r.revision_number DESC"
             rows = (
                 await session.execute(
-                    text(
-                        """
-                        SELECT DISTINCT ON (plan_id) plan_id::text AS plan_id, id::text AS revision_id
-                        FROM plan_v2_revisions
-                        WHERE owner_user_id = :owner
-                        ORDER BY plan_id, revision_number DESC
-                        """
-                    ),
-                    {"owner": owner_user_id},
+                    text(query),
+                    parameters,
                 )
             ).mappings().all()
             revisions = [
@@ -225,6 +334,29 @@ class PlanSqlRepository:
             )
         )
 
+    async def list_history(self, owner_user_id: str, plan_id: str) -> tuple[PlanRevision, ...]:
+        if not owner_user_id or owner_user_id == "anonymous":
+            raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
+        async with self._session_factory() as session:
+            rows = (
+                await session.execute(
+                    text(
+                        """
+                        SELECT id::text AS revision_id
+                        FROM plan_v2_revisions
+                        WHERE owner_user_id = :owner AND plan_id = CAST(:plan_id AS uuid)
+                        ORDER BY revision_number DESC
+                        """
+                    ),
+                    {"owner": owner_user_id, "plan_id": plan_id},
+                )
+            ).mappings().all()
+            revisions = [
+                await self._get_in_session(session, owner_user_id, plan_id, str(row["revision_id"]))
+                for row in rows
+            ]
+        return tuple(revision for revision in revisions if revision is not None)
+
     async def save_exact_revision(
         self,
         *,
@@ -233,6 +365,10 @@ class PlanSqlRepository:
         expected_content_hash: str,
         action_id: str,
         activate: bool,
+        replace_conflicts: bool = False,
+        actor_type: str = "SYSTEM",
+        source_surface: str = "CHAT",
+        reason: str | None = None,
     ) -> PlanRevision:
         """Persist exactly the preview revision, atomically, then read it back."""
 
@@ -260,9 +396,18 @@ class PlanSqlRepository:
                     await self._assert_parent_is_current(session, stored)
                     await self._insert_plan(session, stored)
                     if activate:
-                        await self._supersede_active_overlaps(session, stored)
+                        await self._prepare_activation(session, stored, replace_conflicts=replace_conflicts)
                     await self._insert_revision(session, stored)
                     await self._insert_items(session, stored)
+                    if activate:
+                        await self._insert_active_claims(session, stored)
+                    await self._insert_change_event(
+                        session, owner_user_id=owner_user_id, plan_id=stored.plan_id,
+                        to_revision_id=stored.revision_id, actor_type=actor_type,
+                        source_surface=source_surface, operation="SAVE",
+                        after_payload=stored.to_dict(), reason=reason,
+                        correlation_id=action_id,
+                    )
                     await session.execute(
                         text(
                             """
@@ -293,6 +438,200 @@ class PlanSqlRepository:
         self._assert_readback(stored, read_back)
         return read_back  # type: ignore[return-value]
 
+    async def attach_standalone_to_combined(
+        self,
+        *,
+        owner_user_id: str,
+        combined_plan_id: str,
+        base_revision_id: str,
+        expected_combined_content_hash: str,
+        source_plan_id: str,
+        source_revision_id: str,
+        expected_source_content_hash: str,
+        action_id: str,
+        actor_type: str = "USER",
+        source_surface: str = "PLAN_UI",
+        reason: str | None = None,
+    ) -> PlanRevision:
+        """Transfer a standalone artifact into a combined revision atomically.
+
+        The source item's logical IDs are deliberately retained.  A retry uses
+        the durable action ledger, while a stale source/base identity is
+        rejected before any status or active claim is changed.
+        """
+        if not owner_user_id or owner_user_id == "anonymous":
+            raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
+        if not action_id:
+            raise PlanPersistenceError("PLAN_ACTION_ID_REQUIRED")
+        async with self._session_factory() as session:
+            try:
+                async with session.begin():
+                    duplicate = (
+                        await session.execute(
+                            text(
+                                """
+                                SELECT combined_plan_id::text, base_revision_id::text,
+                                       source_plan_id::text, source_revision_id::text,
+                                       target_revision_id::text, combined_content_hash,
+                                       source_content_hash
+                                FROM plan_v2_attach_actions
+                                WHERE owner_user_id = :owner AND action_id = :action_id
+                                FOR UPDATE
+                                """
+                            ),
+                            {"owner": owner_user_id, "action_id": action_id},
+                        )
+                    ).mappings().first()
+                    if duplicate is not None:
+                        if (
+                            str(duplicate["combined_plan_id"]) != combined_plan_id
+                            or str(duplicate["base_revision_id"]) != base_revision_id
+                            or str(duplicate["source_plan_id"]) != source_plan_id
+                            or str(duplicate["source_revision_id"]) != source_revision_id
+                            or str(duplicate["combined_content_hash"]) != expected_combined_content_hash
+                            or str(duplicate["source_content_hash"]) != expected_source_content_hash
+                        ):
+                            raise PlanPersistenceError("IDEMPOTENCY_KEY_REUSED_FOR_DIFFERENT_REVISION")
+                        result = await self._get_in_session(
+                            session, owner_user_id, combined_plan_id, str(duplicate["target_revision_id"])
+                        )
+                        if result is None:
+                            raise PlanPersistenceError("PLAN_READBACK_FAILED")
+                        return result
+
+                    combined = await self._get_in_session(
+                        session, owner_user_id, combined_plan_id, base_revision_id, for_update=True
+                    )
+                    source = await self._get_in_session(
+                        session, owner_user_id, source_plan_id, source_revision_id, for_update=True
+                    )
+                    if combined is None or source is None:
+                        raise PlanAuthorizationError("PLAN_NOT_FOUND")
+                    if combined.domain is not PlanDomain.COMBINED_HEALTH:
+                        raise PlanPersistenceError("ATTACH_TARGET_MUST_BE_COMBINED_PLAN")
+                    if source.domain not in {PlanDomain.NUTRITION, PlanDomain.WORKOUT}:
+                        raise PlanPersistenceError("ATTACH_SOURCE_MUST_BE_STANDALONE")
+                    if combined.revision_content_hash != expected_combined_content_hash:
+                        raise PlanPersistenceError("PLAN_CONTENT_HASH_MISMATCH")
+                    if source.revision_content_hash != expected_source_content_hash:
+                        raise PlanPersistenceError("PLAN_CONTENT_HASH_MISMATCH")
+                    if combined.lifecycle_status in {
+                        PlanLifecycleStatus.CANCELLED,
+                        PlanLifecycleStatus.COMPLETED,
+                        PlanLifecycleStatus.SUPERSEDED,
+                    } or source.lifecycle_status in {
+                        PlanLifecycleStatus.CANCELLED,
+                        PlanLifecycleStatus.COMPLETED,
+                        PlanLifecycleStatus.SUPERSEDED,
+                    }:
+                        raise PlanPersistenceError("ATTACH_TERMINAL_PLAN_FORBIDDEN")
+                    current_source = await self._get_in_session(
+                        session, owner_user_id, source_plan_id, None, for_update=True
+                    )
+                    if current_source is None or current_source.revision_id != source_revision_id:
+                        raise PlanPersistenceError("PLAN_REVISION_CONFLICT")
+                    current_combined = await self._get_in_session(
+                        session, owner_user_id, combined_plan_id, None, for_update=True
+                    )
+                    if current_combined is None or current_combined.revision_id != base_revision_id:
+                        raise PlanPersistenceError("PLAN_REVISION_CONFLICT")
+                    existing_ids = {item.plan_item_id for item in combined.items}
+                    source_ids = {item.plan_item_id for item in source.items}
+                    if existing_ids.intersection(source_ids):
+                        raise PlanPersistenceError("PLAN_ITEM_ALREADY_OWNED")
+
+                    merged_summary = dict(combined.summary)
+                    merged_summary["attached_source_count"] = int(
+                        merged_summary.get("attached_source_count", 0)
+                    ) + 1
+                    merged_provenance = dict(combined.provenance)
+                    merged_provenance["last_ownership_transfer"] = {
+                        "source_plan_id": source.plan_id,
+                        "source_revision_id": source.revision_id,
+                        "source_domain": source.domain.value,
+                        "action_id": action_id,
+                    }
+                    transferred = replace(
+                        combined,
+                        revision_id=new_revision_id(),
+                        revision_number=combined.revision_number + 1,
+                        parent_revision_id=combined.revision_id,
+                        items=(*combined.items, *source.items),
+                        summary=merged_summary,
+                        provenance=merged_provenance,
+                        created_at=datetime.now(timezone.utc),
+                    )
+                    await self._assert_parent_is_current(session, transferred)
+
+                    # Supersede both prior owners only in this transaction;
+                    # the new combined revision inherits the combined status.
+                    await session.execute(
+                        text("UPDATE plan_v2_revisions SET lifecycle_status = 'SUPERSEDED' WHERE id = CAST(:id AS uuid)"),
+                        {"id": combined.revision_id},
+                    )
+                    await session.execute(
+                        text("UPDATE plan_v2_revisions SET lifecycle_status = 'SUPERSEDED' WHERE id = CAST(:id AS uuid)"),
+                        {"id": source.revision_id},
+                    )
+                    await self._clear_active_claims(session, combined)
+                    await self._clear_active_claims(session, source)
+                    await self._insert_revision(session, transferred)
+                    await self._insert_items(session, transferred)
+                    if transferred.lifecycle_status is PlanLifecycleStatus.ACTIVE:
+                        await self._prepare_activation(session, transferred, replace_conflicts=False)
+                        await self._insert_active_claims(session, transferred)
+                    await self._insert_change_event(
+                        session, owner_user_id=owner_user_id, plan_id=combined.plan_id,
+                        from_revision_id=combined.revision_id, to_revision_id=transferred.revision_id,
+                        actor_type=actor_type, source_surface=source_surface,
+                        operation="ATTACH_TRANSFER_IN", affected_item_ids=sorted(source_ids),
+                        before_payload=combined.to_dict(), after_payload=transferred.to_dict(),
+                        reason=reason or "EXPLICIT_OWNERSHIP_TRANSFER", correlation_id=action_id,
+                    )
+                    superseded_source = replace(source, lifecycle_status=PlanLifecycleStatus.SUPERSEDED)
+                    await self._insert_change_event(
+                        session, owner_user_id=owner_user_id, plan_id=source.plan_id,
+                        from_revision_id=source.revision_id, to_revision_id=None,
+                        actor_type=actor_type, source_surface=source_surface,
+                        operation="ATTACH_TRANSFER_OUT", affected_item_ids=sorted(source_ids),
+                        before_payload=source.to_dict(), after_payload=superseded_source.to_dict(),
+                        reason=reason or "EXPLICIT_OWNERSHIP_TRANSFER", correlation_id=action_id,
+                    )
+                    await session.execute(
+                        text(
+                            """
+                            INSERT INTO plan_v2_attach_actions (
+                                owner_user_id, action_id, combined_plan_id, base_revision_id,
+                                source_plan_id, source_revision_id, target_revision_id,
+                                combined_content_hash, source_content_hash
+                            ) VALUES (
+                                :owner, :action_id, CAST(:combined_plan_id AS uuid), CAST(:base_revision_id AS uuid),
+                                CAST(:source_plan_id AS uuid), CAST(:source_revision_id AS uuid), CAST(:target_revision_id AS uuid),
+                                :combined_content_hash, :source_content_hash
+                            )
+                            """
+                        ),
+                        {
+                            "owner": owner_user_id, "action_id": action_id,
+                            "combined_plan_id": combined_plan_id, "base_revision_id": base_revision_id,
+                            "source_plan_id": source_plan_id, "source_revision_id": source_revision_id,
+                            "target_revision_id": transferred.revision_id,
+                            "combined_content_hash": expected_combined_content_hash,
+                            "source_content_hash": expected_source_content_hash,
+                        },
+                    )
+                    verified = await self._get_in_session(
+                        session, owner_user_id, transferred.plan_id, transferred.revision_id
+                    )
+                    self._assert_readback(transferred, verified)
+            except (PlanPersistenceError, PlanAuthorizationError):
+                raise
+            except Exception as exc:
+                raise PlanPersistenceError("PLAN_PERSISTENCE_TRANSACTION_FAILED") from exc
+        read_back = await self.get(owner_user_id, transferred.plan_id, transferred.revision_id)
+        self._assert_readback(transferred, read_back)
+        return read_back  # type: ignore[return-value]
+
     async def set_status(
         self,
         *,
@@ -302,6 +641,10 @@ class PlanSqlRepository:
         expected_revision_number: int,
         status: PlanLifecycleStatus,
         action_id: str,
+        replace_conflicts: bool = False,
+        actor_type: str = "SYSTEM",
+        source_surface: str = "CHAT",
+        reason: str | None = None,
     ) -> PlanRevision:
         if not owner_user_id or owner_user_id == "anonymous":
             raise PlanAuthorizationError("AUTHENTICATED_PRINCIPAL_REQUIRED")
@@ -324,7 +667,7 @@ class PlanSqlRepository:
                         raise PlanPersistenceError("PLAN_NOT_READY")
                     changed = replace(current, lifecycle_status=status)
                     if status is PlanLifecycleStatus.ACTIVE:
-                        await self._supersede_active_overlaps(session, changed)
+                        await self._prepare_activation(session, changed, replace_conflicts=replace_conflicts)
                     await session.execute(
                         text(
                             """
@@ -354,6 +697,23 @@ class PlanSqlRepository:
                             "revision_id": revision_id, "content_hash": changed.revision_content_hash,
                             "status": status.value,
                         },
+                    )
+                    if status is PlanLifecycleStatus.ACTIVE:
+                        await self._insert_active_claims(session, changed)
+                    elif status in {
+                        PlanLifecycleStatus.PAUSED,
+                        PlanLifecycleStatus.CANCELLED,
+                        PlanLifecycleStatus.COMPLETED,
+                        PlanLifecycleStatus.SUPERSEDED,
+                    }:
+                        await self._clear_active_claims(session, changed)
+                    await self._insert_change_event(
+                        session, owner_user_id=owner_user_id, plan_id=changed.plan_id,
+                        from_revision_id=current.revision_id, to_revision_id=changed.revision_id,
+                        actor_type=actor_type, source_surface=source_surface,
+                        operation="SET_STATUS", before_payload=current.to_dict(),
+                        after_payload=changed.to_dict(), reason=reason,
+                        correlation_id=action_id,
                     )
                     verified = await self._get_in_session(session, owner_user_id, plan_id, revision_id)
                     self._assert_readback(changed, verified)
@@ -443,14 +803,15 @@ class PlanSqlRepository:
         await session.execute(
             text(
                 """
-                INSERT INTO plan_v2_plans (id, owner_user_id, domain, plan_schema_version)
-                VALUES (CAST(:plan_id AS uuid), :owner, :domain, :schema)
+                INSERT INTO plan_v2_plans (id, owner_user_id, domain, artifact_kind, plan_schema_version)
+                VALUES (CAST(:plan_id AS uuid), :owner, :domain, :artifact_kind, :schema)
                 ON CONFLICT (id) DO NOTHING
                 """
             ),
             {
                 "plan_id": revision.plan_id, "owner": revision.owner_user_id,
-                "domain": revision.domain.value, "schema": revision.plan_schema_version,
+                "domain": revision.domain.value, "artifact_kind": revision.artifact_kind.value,
+                "schema": revision.plan_schema_version,
             },
         )
         row = (
@@ -527,24 +888,153 @@ class PlanSqlRepository:
                 },
             )
 
-    async def _supersede_active_overlaps(self, session: AsyncSession, revision: PlanRevision) -> None:
-        if revision.domain is PlanDomain.COMBINED_HEALTH:
+    async def _prepare_activation(
+        self, session: AsyncSession, revision: PlanRevision, *, replace_conflicts: bool
+    ) -> None:
+        """Reject active overlap by default; replacement must be explicit."""
+        if not replace_conflicts:
+            domains = (
+                ("NUTRITION", "WORKOUT")
+                if revision.domain is PlanDomain.COMBINED_HEALTH
+                else (revision.domain.value,)
+            )
+            row = (
+                await session.execute(
+                    text(
+                        """
+                        SELECT content_domain
+                        FROM plan_v2_active_claims
+                        WHERE owner_user_id = :owner
+                          AND content_domain = ANY(:domains)
+                          AND effective_period && daterange(:period_start, :period_end, '[]')
+                          AND NOT (plan_id = CAST(:plan_id AS uuid) AND revision_id = CAST(:revision_id AS uuid))
+                        LIMIT 1
+                        """
+                    ),
+                    {
+                        "owner": revision.owner_user_id, "domains": list(domains),
+                        "period_start": revision.request.period_start,
+                        "period_end": revision.request.period_end,
+                        "plan_id": revision.plan_id, "revision_id": revision.revision_id,
+                    },
+                )
+            ).first()
+            if row is not None:
+                raise PlanPersistenceError("ACTIVE_SCHEDULE_CONFLICT")
             return
+        await self._supersede_active_overlaps(session, revision)
+
+    async def _supersede_active_overlaps(self, session: AsyncSession, revision: PlanRevision) -> None:
+        domains = (
+            ("NUTRITION", "WORKOUT")
+            if revision.domain is PlanDomain.COMBINED_HEALTH
+            else (revision.domain.value,)
+        )
         await session.execute(
             text(
                 """
                 UPDATE plan_v2_revisions
                 SET lifecycle_status = 'SUPERSEDED'
-                WHERE owner_user_id = :owner AND domain = :domain
+                WHERE owner_user_id = :owner AND domain = ANY(:domains)
                   AND lifecycle_status = 'ACTIVE'
                   AND id <> CAST(:revision_id AS uuid)
                   AND period_start <= :period_end AND period_end >= :period_start
                 """
             ),
             {
-                "owner": revision.owner_user_id, "domain": revision.domain.value,
+                "owner": revision.owner_user_id, "domains": list(domains),
                 "revision_id": revision.revision_id, "period_start": revision.request.period_start,
                 "period_end": revision.request.period_end,
+            },
+        )
+        await session.execute(
+            text(
+                """
+                DELETE FROM plan_v2_active_claims
+                WHERE owner_user_id = :owner AND content_domain = ANY(:domains)
+                  AND effective_period && daterange(:period_start, :period_end, '[]')
+                """
+            ),
+            {
+                "owner": revision.owner_user_id, "domains": list(domains),
+                "period_start": revision.request.period_start,
+                "period_end": revision.request.period_end,
+            },
+        )
+
+    async def _insert_active_claims(self, session: AsyncSession, revision: PlanRevision) -> None:
+        domains = (
+            ("NUTRITION", "WORKOUT")
+            if revision.domain is PlanDomain.COMBINED_HEALTH
+            else (revision.domain.value,)
+        )
+        for domain in domains:
+            await session.execute(
+                text(
+                    """
+                    INSERT INTO plan_v2_active_claims (
+                        owner_user_id, content_domain, plan_id, revision_id, effective_period
+                    ) VALUES (
+                        :owner, :domain, CAST(:plan_id AS uuid), CAST(:revision_id AS uuid),
+                        daterange(:period_start, :period_end, '[]')
+                    ) ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "owner": revision.owner_user_id, "domain": domain,
+                    "plan_id": revision.plan_id, "revision_id": revision.revision_id,
+                    "period_start": revision.request.period_start,
+                    "period_end": revision.request.period_end,
+                },
+            )
+
+    async def _clear_active_claims(self, session: AsyncSession, revision: PlanRevision) -> None:
+        await session.execute(
+            text(
+                """
+                DELETE FROM plan_v2_active_claims
+                WHERE owner_user_id = :owner AND plan_id = CAST(:plan_id AS uuid)
+                  AND revision_id = CAST(:revision_id AS uuid)
+                """
+            ),
+            {"owner": revision.owner_user_id, "plan_id": revision.plan_id, "revision_id": revision.revision_id},
+        )
+
+    async def _insert_change_event(
+        self, session: AsyncSession, *, owner_user_id: str, plan_id: str,
+        from_revision_id: str | None = None, to_revision_id: str | None = None,
+        actor_type: str, source_surface: str, operation: str,
+        before_payload: dict[str, Any] | None = None,
+        after_payload: dict[str, Any] | None = None,
+        affected_item_ids: list[str] | None = None,
+        reason: str | None = None, correlation_id: str | None = None,
+    ) -> None:
+        from uuid import uuid4
+        await session.execute(
+            text(
+                """
+                INSERT INTO plan_v2_change_events (
+                    event_id, owner_user_id, plan_id, from_revision_id, to_revision_id,
+                    actor_type, source_surface, operation, affected_item_ids,
+                    before_payload, after_payload, reason, correlation_id
+                ) VALUES (
+                    CAST(:event_id AS uuid), :owner, CAST(:plan_id AS uuid),
+                    CAST(:from_revision_id AS uuid), CAST(:to_revision_id AS uuid),
+                    :actor_type, :source_surface, :operation, CAST(:affected_item_ids AS jsonb),
+                    CAST(:before_payload AS jsonb), CAST(:after_payload AS jsonb),
+                    :reason, :correlation_id
+                )
+                """
+            ),
+            {
+                "event_id": str(uuid4()), "owner": owner_user_id, "plan_id": plan_id,
+                "from_revision_id": from_revision_id, "to_revision_id": to_revision_id,
+                "actor_type": actor_type, "source_surface": source_surface,
+                "operation": operation,
+                "affected_item_ids": _json(affected_item_ids or []),
+                "before_payload": _json(before_payload) if before_payload is not None else None,
+                "after_payload": _json(after_payload) if after_payload is not None else None,
+                "reason": reason, "correlation_id": correlation_id,
             },
         )
 

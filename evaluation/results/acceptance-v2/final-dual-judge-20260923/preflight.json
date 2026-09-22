@@ -1,0 +1,201 @@
+{
+  "routes": {
+    "judge_a": [
+      {
+        "id": "grok-4.5",
+        "object": "model",
+        "owned_by": "764da250-d14b-4924-8965-c1c50046429a",
+        "active": true,
+        "cache_creation_price": 0,
+        "cached_input_price": 0,
+        "min_price_per_request": 0,
+        "model_id": "grok-4.5",
+        "model_options": {
+          "supports_tools": true
+        },
+        "model_type": "text",
+        "price_per_input_token": 0,
+        "price_per_output_token": 0,
+        "price_per_request": 7,
+        "pricing_mode": "request",
+        "provider_prefix": "cnb",
+        "subscribed_at": "2026-09-20T05:42:42.093Z",
+        "subscription_id": "5bee583c-48d4-4484-a509-20109979aec6",
+        "subscription_type": ""
+      }
+    ],
+    "judge_b": [
+      {
+        "id": "qwen3.8-max",
+        "object": "model",
+        "owned_by": "feac85fa-2da8-49cf-a8c4-5e1a4ebb34dd",
+        "active": true,
+        "cache_creation_price": 0,
+        "cached_input_price": 0,
+        "min_price_per_request": 0,
+        "model_id": "qwen3.8-max",
+        "model_options": {
+          "supports_tools": true,
+          "supports_vision": true
+        },
+        "model_type": "text",
+        "price_per_input_token": 0,
+        "price_per_output_token": 0,
+        "price_per_request": 10,
+        "pricing_mode": "request",
+        "provider_prefix": "vc",
+        "subscribed_at": "2026-09-20T16:34:07.694Z",
+        "subscription_id": "9df90c93-84e6-4587-8e97-e468e12b05ab",
+        "subscription_type": ""
+      }
+    ],
+    "adjudicator": [
+      {
+        "id": "glm-5.3-flash",
+        "object": "model",
+        "owned_by": "585c6038-ae47-40db-8f97-7ce4ed85da78",
+        "active": true,
+        "cache_creation_price": 0,
+        "cached_input_price": 0,
+        "min_price_per_request": 0,
+        "model_id": "glm-5.3-flash",
+        "model_options": {
+          "supports_tools": true
+        },
+        "model_type": "text",
+        "price_per_input_token": 0,
+        "price_per_output_token": 0,
+        "price_per_request": 5,
+        "pricing_mode": "request",
+        "provider_prefix": "zc",
+        "subscribed_at": "2026-09-20T05:41:56.435Z",
+        "subscription_id": "7495a227-02ee-465e-b33a-181706bb61dd",
+        "subscription_type": ""
+      }
+    ]
+  },
+  "probe_case_id": "AVN-087",
+  "probes": [
+    {
+      "role": "judge_a",
+      "model": "cnb/grok-4.5",
+      "status": "VALID",
+      "judgment": {
+        "case_id": "AVN-087",
+        "model": "cnb/grok-4.5",
+        "temperature": 0,
+        "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+        "dimensions": [
+          "relevance",
+          "faithfulness",
+          "unsupported_claims",
+          "provenance",
+          "no_evidence_handling"
+        ],
+        "grade": {
+          "relevance": "FAIL",
+          "faithfulness": "FAIL",
+          "unsupported_claims": 1,
+          "provenance": "NOT_APPLICABLE",
+          "no_evidence_handling": "FAIL",
+          "short_reason": "The answer claimed insufficient evidence even though the retrieved chunk directly states Vietnam's meal-habit recommendation (organize family meals, age-appropriate main meals, avoid skipping meals and overeating), so it failed to answer and falsely asserted a lack of evidence."
+        },
+        "input_sha256": "9e04a9542a6325fdea9beaf870d897fe0060b16bcc119b71edbe48942ca7e31b",
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 1873,
+          "prompt_tokens": 4118,
+          "total_tokens": 5991,
+          "completion_tokens_details": {
+            "reasoning_tokens": 967
+          },
+          "prompt_tokens_details": {}
+        },
+        "quota_headers": {},
+        "recorded_at_utc": "2026-09-22T19:16:00.113444+00:00"
+      }
+    },
+    {
+      "role": "judge_b",
+      "model": "vc/qwen3.8-max",
+      "status": "VALID",
+      "judgment": {
+        "case_id": "AVN-087",
+        "model": "vc/qwen3.8-max",
+        "temperature": 0,
+        "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+        "dimensions": [
+          "relevance",
+          "faithfulness",
+          "unsupported_claims",
+          "provenance",
+          "no_evidence_handling"
+        ],
+        "grade": {
+          "relevance": "FAIL",
+          "faithfulness": "PASS",
+          "unsupported_claims": 0,
+          "provenance": "NOT_APPLICABLE",
+          "no_evidence_handling": "FAIL",
+          "short_reason": "The answer incorrectly claims insufficient evidence despite retrieved chunk a024d49d explicitly defining the Vietnamese meal routine recommendation."
+        },
+        "input_sha256": "9e04a9542a6325fdea9beaf870d897fe0060b16bcc119b71edbe48942ca7e31b",
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 70,
+          "prompt_tokens": 3607,
+          "total_tokens": 3677
+        },
+        "quota_headers": {},
+        "recorded_at_utc": "2026-09-22T19:16:20.274497+00:00"
+      }
+    },
+    {
+      "role": "adjudicator",
+      "model": "zc/glm-5.3-flash",
+      "status": "VALID",
+      "judgment": {
+        "case_id": "AVN-087",
+        "model": "zc/glm-5.3-flash",
+        "temperature": 0,
+        "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+        "dimensions": [
+          "relevance",
+          "faithfulness",
+          "unsupported_claims",
+          "provenance",
+          "no_evidence_handling"
+        ],
+        "grade": {
+          "relevance": "FAIL",
+          "faithfulness": "PASS",
+          "unsupported_claims": 0,
+          "provenance": "NOT_APPLICABLE",
+          "no_evidence_handling": "FAIL",
+          "short_reason": "The retrieved evidence directly contained the Vietnamese meal-routine recommendation (organize family meals, age-appropriate main meals, avoid skipping and overeating), so the answer's claim of insufficient information was incorrect and it failed to answer the query."
+        },
+        "input_sha256": "9e04a9542a6325fdea9beaf870d897fe0060b16bcc119b71edbe48942ca7e31b",
+        "finish_reason": "stop",
+        "usage": {
+          "completion_tokens": 579,
+          "prompt_tokens": 4130,
+          "total_tokens": 4709,
+          "completion_tokens_details": {
+            "reasoning_tokens": 464
+          },
+          "prompt_tokens_details": {}
+        },
+        "quota_headers": {},
+        "recorded_at_utc": "2026-09-22T19:22:58.922268+00:00"
+      },
+      "probe_artifact": "glm_cooldown_probe2.json"
+    }
+  ],
+  "all_routes_valid": true,
+  "prior_invalid_adjudicator_probe": {
+    "role": "adjudicator",
+    "model": "zc/glm-5.3-flash",
+    "status": "INVALID",
+    "error_type": "RateLimitError"
+  }
+}

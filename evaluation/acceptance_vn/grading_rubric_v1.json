@@ -1,0 +1,22 @@
+{
+  "deterministic_checks": [
+    "channel and tool correctness",
+    "tool-backed numeric/identity values",
+    "RAG source IDs",
+    "NO_EVIDENCE handling",
+    "write/readback identity"
+  ],
+  "judge_mode": "SEMANTIC_JUDGE_ONLY_FOR_NONDETERMINISTIC_DIMENSIONS",
+  "judge_model": "UNSET_BEFORE_RUN",
+  "judge_model_independent": "UNSET_BEFORE_RUN",
+  "judge_provider": "UNSET_BEFORE_RUN",
+  "prompt": "You are a strict evaluation judge for a Vietnamese health/nutrition chatbot.\nScore only the supplied answer against the supplied expected channel, structured tool result,\nand retrieved evidence. Do not supply medical advice or improve the answer. Return one JSON\nobject with relevance (0 or 1), faithfulness (0 or 1), unsupported_claim (true or false),\nprovenance_correct (0 or 1), and a short reason. A tool-owned answer is faithful when every\nmaterial factual value is present in the structured tool result. A RAG-owned answer is\nfaithful when every material claim is supported by a supplied chunk/source. NO_EVIDENCE is\ncorrect only when it does not invent an unavailable fact, diagnosis, or dose.",
+  "prompt_sha256": "d8454df83c17b7e4c1d89879366df28915eed4670816ca731a26620affb2b338",
+  "schema_version": "acceptance-answer-rubric-v1",
+  "semantic_dimensions": [
+    "answer_relevance",
+    "faithfulness",
+    "unsupported_claim",
+    "provenance_correctness"
+  ]
+}

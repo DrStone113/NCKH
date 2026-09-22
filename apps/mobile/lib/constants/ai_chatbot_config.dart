@@ -52,5 +52,9 @@ class AIChatbotConfig {
   static String get wsUrl => wsUrlFor(sessionId: 'configuration-preview');
 
   static const Duration connectTimeout = Duration(seconds: 15);
-  static const Duration streamTimeout = Duration(seconds: 180);
+  // Public trace/status events are not an answer. Only actual response
+  // progress satisfies the first deadline; the total deadline always wins.
+  static const Duration firstResponseTimeout = Duration(seconds: 45);
+  static const Duration streamIdleTimeout = Duration(seconds: 60);
+  static const Duration streamTimeout = Duration(seconds: 150);
 }

@@ -1,0 +1,15 @@
+{
+  "case_count": 80,
+  "evidence_present_count": 60,
+  "no_evidence_count": 20,
+  "recall_at_5": 0.0,
+  "mrr_at_5": 0.0,
+  "provenance_doc_match_at_5": 0.0,
+  "no_evidence_nonempty_retrieval_rate": 0.0,
+  "retrieval_error_count": 0,
+  "latency_ms": {
+    "p50": 0.41,
+    "p95": 0.82,
+    "max": 93.81
+  }
+}

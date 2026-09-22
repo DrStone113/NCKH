@@ -32,8 +32,9 @@ def test_tool_catalog_registers_all_tools():
         "save_workout_plan",
         "log_workout_result",
         "calculate_tdee",
-        "search_food_nutrition",
-        "build_nutrition_plan",
+            "search_food_nutrition",
+            "build_combined_plan",
+            "build_nutrition_plan",
         "build_workout_schedule",
         "get_plan",
         "get_active_plan_v2",
@@ -45,7 +46,7 @@ def test_tool_catalog_registers_all_tools():
     }
 
     assert set(registry.names()) == expected
-    assert len(registry.schemas()) == 34
+    assert len(registry.schemas()) == 35
     assert not {"create_long_term_plan", "create_plan", "append_plan_items", "get_active_plan", "mark_plan_item_complete"}.intersection(registry.names())
 
 

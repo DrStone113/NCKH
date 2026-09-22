@@ -1,0 +1,161 @@
+{
+  "schema_version": "routing-evaluation-manifest-v1",
+  "frozen_at": "2026-09-21T13:42:14+00:00",
+  "ROUTING_HOLDOUT_FROZEN": "YES",
+  "FINAL_SCORING_STARTED": "NO",
+  "oracle_provenance": "AUTOMATED",
+  "candidate_count": 251,
+  "holdout_count": 140,
+  "intent_distribution": {
+    "COMBINED_PLAN": 15,
+    "GENERAL_WELLNESS": 9,
+    "HEALTH_QUERY": 20,
+    "MEAL_SUGGESTION": 20,
+    "MENU_SCHEDULE": 15,
+    "OBSERVATION_LOG": 12,
+    "PLAN_EDIT": 12,
+    "PLAN_LIFECYCLE": 12,
+    "PROFILE_UPDATE": 10,
+    "WORKOUT_SCHEDULE": 15
+  },
+  "tag_distribution": {
+    "allergy_removal": 2,
+    "clean_vietnamese": 18,
+    "combined": 2,
+    "combined_plan": 14,
+    "comparison": 1,
+    "disfluent": 18,
+    "exercise_substitution": 1,
+    "general": 7,
+    "health": 20,
+    "health_overlay": 7,
+    "intensity_change": 1,
+    "logging": 12,
+    "long_form": 16,
+    "meal": 36,
+    "meal_addition": 1,
+    "meal_substitution": 2,
+    "menu": 15,
+    "mixed_language": 20,
+    "multi_intent": 10,
+    "negation": 13,
+    "no_diacritic": 17,
+    "non_urgent": 12,
+    "partial_delete": 1,
+    "plan": 39,
+    "plan_edit": 11,
+    "plan_lifecycle": 12,
+    "profile": 11,
+    "profile_update": 9,
+    "prompt_injection": 5,
+    "reference": 11,
+    "safety": 5,
+    "schedule_move": 2,
+    "slang": 18,
+    "spoken": 18,
+    "teencode": 16,
+    "time_change": 1,
+    "true_ambiguity": 5,
+    "typo": 17,
+    "urgent": 8,
+    "workout": 32,
+    "write_intent": 13
+  },
+  "contamination": {
+    "exact_overlap_candidates": 0,
+    "normalized_overlap_candidates": 1,
+    "template_near_duplicate_candidates": 0,
+    "semantic_near_duplicate_candidates": 0,
+    "internal_duplicate_candidates": 0,
+    "rejected": [
+      {
+        "candidate_id": "RC-0235",
+        "decision": "REJECT",
+        "reason": "NORMALIZED_EXISTING",
+        "similarity": null,
+        "matched_source_file": "apps/backend/tests/test_scope_guard.py",
+        "matched_source_type": "UNIT_OR_INTEGRATION_TEST"
+      }
+    ],
+    "semantic_check": {
+      "requested": true,
+      "executed": true,
+      "model": "BAAI/bge-m3 (local cached)",
+      "exclusion_scope_count": 2500,
+      "threshold": 0.985,
+      "reason": null
+    },
+    "final_exact_overlap": 0,
+    "final_normalized_overlap": 0,
+    "final_near_duplicate_overlap": 0
+  },
+  "public_seed_sources": [
+    {
+      "family": "MASSIVE_vi-VN",
+      "url": "https://github.com/alexa/massive",
+      "license_or_terms": "CC-BY-4.0 dataset",
+      "use": "Vietnamese NLU phrasing and action/query structures only",
+      "records_copied": 0
+    },
+    {
+      "family": "PhoATIS_Disfluency",
+      "url": "https://github.com/VinAIResearch/PhoATIS_Disfluency",
+      "license_or_terms": "research/education only; no redistribution of original or modified records",
+      "use": "disfluency categories only; no dataset record downloaded or copied",
+      "records_copied": 0
+    },
+    {
+      "family": "Vietnamese_Medical_QA",
+      "url": "https://huggingface.co/datasets/hungnm/vietnamese-medical-qa",
+      "license_or_terms": "Apache-2.0 per dataset card",
+      "use": "health-question structure only; no answer treated as gold",
+      "records_copied": 0
+    },
+    {
+      "family": "MedSafetyBench",
+      "url": "https://github.com/AI4LIFE-GROUP/med-safety-bench",
+      "license_or_terms": "MIT repository; research-use warning for benchmark content",
+      "use": "medical-risk category design only",
+      "records_copied": 0
+    },
+    {
+      "family": "HealthBench",
+      "url": "https://openai.com/index/healthbench/",
+      "license_or_terms": "methodology reference; source asks not to publish examples",
+      "use": "rubric structure only; no examples copied",
+      "records_copied": 0
+    },
+    {
+      "family": "MIRAGE_Medical_RAG",
+      "url": "https://github.com/gzxiong/MIRAGE",
+      "license_or_terms": "methodology reference; component datasets retain their own terms",
+      "use": "retrieval/generation metric design only",
+      "records_copied": 0
+    }
+  ],
+  "source_state": {
+    "git": {
+      "commit": "4fabdfcf494d360dc831d71b2d1c12f9ac57f89c",
+      "worktree_clean": false,
+      "worktree_change_count": 101,
+      "note": "Dirty state is recorded, not normalized or modified by the evaluation builder."
+    },
+    "files": {
+      "apps/backend/services/agent/turn_intent.py": "7a128365f8d65af4225bd2b79163d9d7ac3a27e284a72ce6d3fa2db2886f9eb0",
+      "apps/backend/services/agent/semantic_router_service.py": "86bfde4b28f915525e7ec10f95d704d9e6a2ef8228b4375e260b226d0cfc334f",
+      "apps/backend/services/agent/pending_user_action.py": "3b4aab3ec492b580781f8bfdabc438fe796c783cee456744f611ec00d6bceeb1",
+      "apps/backend/data/research_corpus_manifest.json": "703005bc1574162cf418cc4f5eff00029e7ab3b8c66eabdb5b4bb844a28cb633",
+      "scripts/build_evaluation_v1.py": "bc6d9a8921f37ab3d3b03862e9c3e6a9ddb0827904560e7b3e619ea3f413df2e"
+    }
+  },
+  "toolchain": {
+    "python": "3.10.21",
+    "platform": "Windows-10-10.0.26100-SP0"
+  },
+  "artifact_hashes": {
+    "evaluation/exclusion_index.json": "a1ee53ddff0fd8a8225a333266ec7d415286617f53998cdd694d19fd8f049398",
+    "evaluation/routing/candidate_pool_v1.jsonl": "3af329ba762173ed1922dd96e35a74ca48d2bd9df78ce0e9911d51428f036e35",
+    "evaluation/routing/holdout_v1.jsonl": "48ab24cf15ab337917b4cfde965ce8ec181e120024c352eb41f8b367c0a60a35",
+    "evaluation/routing/oracle_v1.json": "cb0e601f01521bbccbea79f9b9adb4cec405c09fbb879f6f7925ecda88d6a692"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "V2_FINAL_SCORING_STARTED": "NO",
+  "V2_RAG_EVAL_FROZEN": "YES",
+  "artifact_hashes": {
+    "evaluation/v2/exclusion_index.json": "d79c2cfa6c3c232c824561b87608f1ee3c79032fa761cedddbc7a82b4fcdc19a",
+    "evaluation/v2/rag/candidate_pool.jsonl": "9e74f306e0c261bafec7bfbf599ee5a91447d58ad122fabe63579d843cae24a0",
+    "evaluation/v2/rag/eval_queries.jsonl": "c857405095228f4430076264fda659b91fed8f38d59ee3ef8a4c92b95f399c6f",
+    "evaluation/v2/rag/oracle.json": "a31a32e47be1f9515cd9123c6761c745c7bfcf2c6f8f6f0d1d38e904f7af375c"
+  },
+  "case_count": 160,
+  "corpus": {
+    "hash": "5c6abe875f1f1c5ea5bbafe2334db1f21849e123b688ac8100bcf6af0f4ad200",
+    "version": "offline-v2-3891"
+  },
+  "created_at": "2026-09-21T16:32:50.211137+00:00",
+  "evidence_present_count": 136,
+  "no_evidence_count": 24,
+  "schema_version": "rag-evaluation-manifest-v2"
+}

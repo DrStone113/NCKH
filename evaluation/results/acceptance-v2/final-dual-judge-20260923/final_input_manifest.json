@@ -1,0 +1,305 @@
+{
+  "case_count": 55,
+  "case_ids": [
+    "AVN-081",
+    "AVN-082",
+    "AVN-083",
+    "AVN-084",
+    "AVN-085",
+    "AVN-086",
+    "AVN-087",
+    "AVN-088",
+    "AVN-089",
+    "AVN-090",
+    "AVN-091",
+    "AVN-092",
+    "AVN-093",
+    "AVN-094",
+    "AVN-095",
+    "AVN-096",
+    "AVN-097",
+    "AVN-098",
+    "AVN-099",
+    "AVN-100",
+    "AVN-101",
+    "AVN-102",
+    "AVN-103",
+    "AVN-104",
+    "AVN-105",
+    "AVN-106",
+    "AVN-107",
+    "AVN-108",
+    "AVN-109",
+    "AVN-110",
+    "AVN-111",
+    "AVN-112",
+    "AVN-113",
+    "AVN-114",
+    "AVN-115",
+    "AVN-116",
+    "AVN-117",
+    "AVN-118",
+    "AVN-119",
+    "AVN-120",
+    "AVN-161",
+    "AVN-162",
+    "AVN-163",
+    "AVN-164",
+    "AVN-165",
+    "AVN-166",
+    "AVN-167",
+    "AVN-168",
+    "AVN-169",
+    "AVN-170",
+    "AVN-171",
+    "AVN-172",
+    "AVN-173",
+    "AVN-174",
+    "AVN-175"
+  ],
+  "source_precedence": [
+    "outcome-answer-quality-c12-rerun2",
+    "outcome-answer-quality-c12-timeout-recovery1",
+    "outcome-answer-quality-c12-timeout-recovery2",
+    "outcome-question-aware-affected16-canonical-avN175-recovery1",
+    "outcome-final-hardening-3case-run3"
+  ],
+  "sources": {
+    "AVN-081": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-082": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-083": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-084": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-085": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-086": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-087": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-088": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-089": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-090": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-091": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-092": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-093": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-094": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-095": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-096": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-097": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-098": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-099": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-100": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-101": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-102": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-103": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-104": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-105": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-106": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-107": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-108": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-109": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-110": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-111": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-timeout-recovery1/full_pipeline.jsonl",
+      "sha256": "f16e80d420b86d2e35506281f1b3dac59b128ed5985e9c32a4f05dcd3d60f8a9"
+    },
+    "AVN-112": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-timeout-recovery1/full_pipeline.jsonl",
+      "sha256": "f16e80d420b86d2e35506281f1b3dac59b128ed5985e9c32a4f05dcd3d60f8a9"
+    },
+    "AVN-113": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-114": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-timeout-recovery1/full_pipeline.jsonl",
+      "sha256": "f16e80d420b86d2e35506281f1b3dac59b128ed5985e9c32a4f05dcd3d60f8a9"
+    },
+    "AVN-115": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-timeout-recovery1/full_pipeline.jsonl",
+      "sha256": "f16e80d420b86d2e35506281f1b3dac59b128ed5985e9c32a4f05dcd3d60f8a9"
+    },
+    "AVN-116": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-timeout-recovery2/full_pipeline.jsonl",
+      "sha256": "bcefe482e87e0c36e45d87993aea6e3bda0c27f81f2147109643bbda30a0294b"
+    },
+    "AVN-117": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-118": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-119": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-120": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-161": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-162": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-163": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-164": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-165": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-166": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-167": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-168": {
+      "path": "evaluation/results/acceptance-v2/outcome-final-hardening-3case-run3/full_pipeline.jsonl",
+      "sha256": "92db6be944fc5fc077999d5f18c5093c80ffd540d424aae90606e8c2f7229842"
+    },
+    "AVN-169": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-170": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-171": {
+      "path": "evaluation/results/acceptance-v2/outcome-question-aware-affected16-canonical-avN175-recovery1/full_pipeline.jsonl",
+      "sha256": "859a7278eee5a17af81b8b4195164da13af39c660bda15a5c1c540c46929a1c9"
+    },
+    "AVN-172": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-173": {
+      "path": "evaluation/results/acceptance-v2/outcome-answer-quality-c12-rerun2/full_pipeline.jsonl",
+      "sha256": "0904cc94fa8ed22c1e07f9326a290226b1e1db5920d8a47d4cc2f546575fde8e"
+    },
+    "AVN-174": {
+      "path": "evaluation/results/acceptance-v2/outcome-final-hardening-3case-run3/full_pipeline.jsonl",
+      "sha256": "92db6be944fc5fc077999d5f18c5093c80ffd540d424aae90606e8c2f7229842"
+    },
+    "AVN-175": {
+      "path": "evaluation/results/acceptance-v2/outcome-final-hardening-3case-run3/full_pipeline.jsonl",
+      "sha256": "92db6be944fc5fc077999d5f18c5093c80ffd540d424aae90606e8c2f7229842"
+    }
+  },
+  "rubric_sha256": "d58339311bf1218a39fa9a80c7592e4b2be906ee261374082426af5bd0c79deb",
+  "models": {
+    "judge_a": "cnb/grok-4.5",
+    "judge_b": "vc/qwen3.8-max",
+    "adjudicator": "zc/glm-5.3-flash"
+  },
+  "temperature": 0,
+  "schema": {
+    "relevance": "PASS|FAIL",
+    "faithfulness": "PASS|FAIL",
+    "unsupported_claims": "integer >= 0",
+    "provenance": "PASS|FAIL|NOT_APPLICABLE",
+    "no_evidence_handling": "PASS|FAIL|NOT_APPLICABLE",
+    "short_reason": "one concise evidence-based sentence"
+  },
+  "input_policy": "Only query, captured tool evidence with provenance metadata, final answer, frozen rubric, and output schema; no historical grades or expected answers."
+}

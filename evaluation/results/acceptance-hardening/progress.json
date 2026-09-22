@@ -1,0 +1,48 @@
+{
+  "schema_version": "acceptance-hardening-progress-v1",
+  "process": "Regression / acceptance hardening; exposed suites are not reported as unseen holdouts.",
+  "corpus_version": "offline-acceptance-vn-4954",
+  "runs": [
+    {
+      "iteration": 1,
+      "status": "ANALYZED_AND_REMEDIATED",
+      "routing_primary_accuracy": 0.6,
+      "routing_health_misses": 3,
+      "routing_false_positive_write_intent": 1,
+      "safety_v1_health_misses": 1,
+      "forbidden_rag_use": "NOT_RERUN",
+      "fk_errors": "NOT_RERUN",
+      "remaining_failure_classes": [
+        "URGENT_LEXICAL_GUARD_GAP",
+        "PROFILE_UPDATE_WRITE_MISCLASSIFICATION"
+      ]
+    },
+    {
+      "iteration": 2,
+      "status": "BLOCKED_BY_FROZEN_TEMPLATE_ORACLE",
+      "changes": [
+        "shared deterministic emergency category detector",
+        "semantic-router urgent override before SLM",
+        "profile update excluded from observation-log write classification"
+      ],
+      "routing_primary_accuracy": 0.6071,
+      "routing_health_misses": 0,
+      "routing_false_positive_write_intent": 0,
+      "safety_v1_health_misses": 0,
+      "safety_v2_health_misses": 20,
+      "forbidden_rag_use": "NOT_RERUN: execution order stopped before full pipeline",
+      "fk_errors": "NOT_RERUN: execution order stopped before full pipeline",
+      "remaining_failure_classes": [
+        "FROZEN_TEST_ORACLE_SEMANTICALLY_UNDER_SPECIFIED",
+        "ROUTING_QUALITY_BELOW_TARGET"
+      ],
+      "blocker_reference": "run-002/blocker_analysis.json"
+    }
+  ],
+  "immutability": {
+    "frozen_corpus_modified": false,
+    "frozen_oracle_modified": false,
+    "commit_created": false,
+    "push_created": false
+  }
+}

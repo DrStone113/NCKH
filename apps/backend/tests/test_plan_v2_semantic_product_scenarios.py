@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from services.agent.tools.plan_v2 import (
     PlanRuntimeContext,
+    build_combined_plan,
     build_nutrition_plan,
     build_workout_schedule,
     revise_plan,
@@ -153,3 +154,24 @@ def test_natural_weekly_workout_honors_weekday_count_duration_and_safe_context()
     assert all(item["content"]["e4_presentation"]["exercises"] for item in items)
     assert all(item["content"]["planned_duration_minutes"] <= 45 for item in items)
     assert all("performed_at" not in item["content"] for item in items)
+
+
+def test_one_day_combined_plan_contains_meals_and_a_workout() -> None:
+    draft = asyncio.run(
+        build_combined_plan(
+            period_start="2032-05-03",
+            period_end="2032-05-03",
+            timezone="Asia/Ho_Chi_Minh",
+            goal_override="maintain",
+            duration_minutes=45,
+            equipment=("bodyweight",),
+            _runtime_context=_runtime(workout=True),
+        )
+    )
+
+    assert draft["status"] == "READY"
+    assert draft["plan"]["domain"] == "COMBINED_HEALTH"
+    assert any(item["item_type"] == "MEAL" for item in draft["plan"]["items"])
+    assert any(
+        item["item_type"] == "WORKOUT_SESSION" for item in draft["plan"]["items"]
+    )

@@ -1,0 +1,19 @@
+{
+  "ANSWER_JUDGE_CONFIG_ID": "supplemental-minimax-m2-7-v1",
+  "ANSWER_JUDGE_PROVIDER": "openai_compatible",
+  "ANSWER_JUDGE_MODEL": "MiniMax-M2.7",
+  "ANSWER_JUDGE_TEMPERATURE": 0,
+  "ANSWER_JUDGE_RUBRIC": "Grade one Vietnamese health/nutrition assistant answer strictly from the supplied evidence.\nReturn JSON only with relevance PASS or FAIL, faithfulness PASS or FAIL,\nunsupported_claims nonnegative integer, provenance PASS or FAIL or NOT_APPLICABLE,\nand no_evidence_handling PASS or FAIL or NOT_APPLICABLE. Relevance means directly\nanswering the request. Faithfulness means material factual health/nutrition claims\nare supported by supplied tool/retrieval evidence or deterministic application state.\nUnsupported claims are material factual assertions not supported by that evidence.\nProvenance passes only when attributions correspond to supplied evidence. If adequate\nevidence is unavailable, no-evidence handling passes only when the answer does not\ninvent an authoritative fact. Do not provide explanations, medical advice, or reasoning.\nAlso return short_reason: one concise evidence-based sentence. Do not return\nchain-of-thought, hidden reasoning, or text outside the JSON object.",
+  "ANSWER_JUDGE_RUBRIC_SHA256": "400fc9cfe4d9c66fe1d459586ed1ca2ebf6f44ac3cfac8fbd6a485732ff528b8",
+  "ANSWER_JUDGE_OUTPUT_SCHEMA": {
+    "relevance": "PASS|FAIL",
+    "faithfulness": "PASS|FAIL",
+    "unsupported_claims": "integer >= 0",
+    "provenance": "PASS|FAIL|NOT_APPLICABLE",
+    "no_evidence_handling": "PASS|FAIL|NOT_APPLICABLE",
+    "short_reason": "one concise evidence-based sentence"
+  },
+  "ANSWER_JUDGE_MIXED_MODELS": "YES",
+  "hidden_reasoning_policy": "Discard complete <think> blocks before parsing; never persist raw provider content.",
+  "scope": "Only the 15 previously ungraded frozen flexible-path outcome cases."
+}

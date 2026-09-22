@@ -30,6 +30,16 @@ def test_suggest_dish_basic():
     assert len(result["components"]) >= 1
 
 
+def test_suggest_dish_exposure_counts_break_deterministic_ties():
+    first = suggest_dish(meal_type="dinner", target_kcal=600.0)
+    second = suggest_dish(
+        meal_type="dinner",
+        target_kcal=600.0,
+        exposure_counts={str(first["id"]): 20},
+    )
+    assert second["id"] != first["id"]
+
+
 def test_suggest_dish_query_matching():
     """TC-1.1/TC-1.4: Tìm kiếm theo từ khóa có dấu và không dấu."""
     # Tìm kiếm có dấu

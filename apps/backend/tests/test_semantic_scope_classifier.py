@@ -5,8 +5,15 @@ import asyncio
 import pytest
 
 from services.agent.scope_guard import ScopeCategory, ScopeIntent
-from services.agent.semantic_scope_classifier import SemanticPrototypeScopeClassifier
+from services.agent.semantic_scope_classifier import _PROTOTYPES, SemanticPrototypeScopeClassifier
 from main import _start_scope_classifier_warmup
+
+
+def test_default_semantic_prototypes_cover_mixed_language_personal_daily_plans() -> None:
+    examples = _PROTOTYPES[ScopeIntent.MEAL_PLANNING]
+
+    assert "Hello lên kế hoạch ngày mai cho tôi đi." in examples
+    assert "Can you plan tomorrow for me?" in examples
 
 
 @pytest.mark.asyncio

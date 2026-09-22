@@ -175,6 +175,12 @@ _SUGGEST_DISH_SCHEMA: dict[str, Any] = {
                 "có id không thuộc danh sách này nếu tồn tại candidate khác."
             ),
         },
+        "exposure_counts": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+            "default": {},
+            "description": "So lan dish.id da duoc goi y gan day; chi dung de phat hien exposure, khong bao gio ghi de hard constraint.",
+        },
         "query": {
             "type": "string",
             "default": "",
@@ -659,6 +665,24 @@ def _normalize_recent_ids(
         raise ValueError("INVALID_RECENT_DISH_IDS") from exc
 
 
+def _normalize_exposure_counts(value: Any) -> dict[int, int]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise ValueError("INVALID_EXPOSURE_COUNTS")
+    counts: dict[int, int] = {}
+    for raw_id, raw_count in value.items():
+        try:
+            dish_id = int(raw_id)
+            count = int(raw_count)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("INVALID_EXPOSURE_COUNTS") from exc
+        if dish_id < 0 or count < 0:
+            raise ValueError("INVALID_EXPOSURE_COUNTS")
+        counts[dish_id] = count
+    return counts
+
+
 def _remove_accents(text: str) -> str:
     accents_map = {
         'a': 'áàảãạăắằẳẵặâấầẩẫậ',
@@ -712,6 +736,7 @@ def suggest_dish(
     dietary_restrictions: Sequence[str] | Iterable[str] = (),
     ingredient_exclusions: Sequence[str] | Iterable[str] = (),
     recent_dish_ids: Sequence[int] | Iterable[int] = (),
+    exposure_counts: dict[str, int] | None = None,
     query: str = "",
     latitude: float | None = None,
     longitude: float | None = None,
@@ -768,6 +793,7 @@ def suggest_dish(
         if isinstance(value, str) and value.strip()
     )
     recent_ids = _normalize_recent_ids(recent_dish_ids)
+    exposures = _normalize_exposure_counts(exposure_counts)
 
     clean_query = _remove_accents(query.strip().lower()) if isinstance(query, str) else ""
 
@@ -824,8 +850,14 @@ def suggest_dish(
                 if _get_dish_region(s.record.name) == "National"
                 else 2
             ),
+            # Exposure is a soft penalty after hard filters and region
+            # applicability, but before deterministic tie-breaks. A heavily
+            # repeated dish must lose when another nutritionally valid option
+            # exists.
+            min(5.0, exposures.get(s.record.id, 0) * 0.05),
             abs(s.scale_factor - 1.0),
             abs(s.total_calories - target_kcal_f),
+            exposures.get(s.record.id, 0),
             s.record.id,
         ),
     )

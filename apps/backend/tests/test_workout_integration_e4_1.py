@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from config import settings
+from services.agent.chat_gateway import _merge_user_context
 from services.agent.tools.workout import suggest_workout_facade
 from services.workout_planner.contracts import StateStatus, TrainingExperience
 from services.workout_planner.integration import (
@@ -85,6 +86,45 @@ def test_ready_plan_is_deterministic_and_presentation_matches() -> None:
     assert first.validation["hard_violation_count"] == 0
 
 
+def test_short_safety_reply_keeps_onboarding_profile_and_unblocks_workout() -> None:
+    current = _safe_context()
+    workout_profile = dict(current["workout_profile"])
+    workout_profile.update(
+        {
+            "intake_confirmation_status": "CONFIRMED",
+            "safety_checked_at": "2026-09-19T08:00:00+00:00",
+        }
+    )
+    current["workout_profile"] = workout_profile
+    current["profile_readiness"] = {"scope": "workout"}
+    incoming = {
+        "user_id": current["user_id"],
+        "profile_readiness": {"scope": "general"},
+        "profile_context_domains": ["general"],
+    }
+
+    merged = _merge_user_context(current, incoming, "oke")
+    assert merged["workout_profile"]["training_experience"] == "NOVICE"
+    assert merged["workout_profile"]["available_equipment"] == ["none"]
+
+    merged_profile = dict(merged["workout_profile"])
+    merged_profile["current_pain_status"] = "NO"
+    merged_profile["safety_checked_at"] = datetime.now(timezone.utc).isoformat()
+    merged["workout_profile"] = merged_profile
+    runtime = WorkoutRuntimeContext(
+        "e4-integration-user",
+        "session",
+        merged,
+        None,
+    )
+
+    outcome = _run(WorkoutIntegrationService().build(runtime))
+    assert outcome.status == "READY"
+    assert outcome.profile_field_statuses["training_experience"] == "KNOWN"
+    assert outcome.profile_field_statuses["available_equipment"] == "KNOWN"
+    assert outcome.profile_field_statuses["current_pain_status"] == "KNOWN"
+
+
 def test_presentation_validator_rejects_dosage_tampering() -> None:
     runtime = WorkoutRuntimeContext("e4-integration-user", "session", _safe_context(), None)
     outcome = _run(WorkoutIntegrationService().build(runtime))
@@ -147,34 +187,13 @@ def test_enforced_legacy_facade_never_falls_back_to_generic_algorithm(monkeypatc
     assert "workout_title" not in result
 
 
-def test_workout_integration_recovers_from_user_facts_when_profile_empty() -> None:
+def test_workout_integration_does_not_promote_untyped_user_facts() -> None:
     class MockFactsRepository:
         async def load_modern_results(self, user_id):
             return []
 
         async def load_active_plan_status(self, user_id):
             return None
-
-        async def load_user_facts_profile(self, user_id):
-            return {
-                "training_experience": "NOVICE",
-                "training_location": "home",
-                "available_equipment": ["gym mat"],
-                "available_days_per_week": 3,
-                "preferred_training_days": ["Thứ 2", "Thứ 4", "Thứ 6"],
-                "default_session_duration_minutes": 60,
-                "current_pain_status": "NO",
-                "safety_checked_at": datetime.now(timezone.utc).isoformat(),
-                "intake_confirmation_status": "CONFIRMED",
-                "exercise_safety_profile": {
-                    "health_state": "HEALTHY_GENERAL",
-                    "pregnancy_status": "NOT_APPLICABLE",
-                    "warning_symptoms": [],
-                    "acute_injury": False,
-                    "recent_surgery": False,
-                    "technique_screen_confirmed": False,
-                },
-            }
 
     service = WorkoutIntegrationService()
     service._repository = MockFactsRepository()
@@ -184,8 +203,8 @@ def test_workout_integration_recovers_from_user_facts_when_profile_empty() -> No
         None,
     )
     outcome = _run(service.build(runtime, requested_body_area="legs"))
-    assert outcome.status == "READY"
-    assert outcome.presentation is not None
-    assert outcome.profile_field_statuses["training_experience"] == "KNOWN"
-    assert outcome.profile_field_statuses["available_equipment"] == "KNOWN"
+    assert outcome.status == "CLARIFICATION_REQUIRED"
+    assert outcome.presentation is None
+    assert outcome.profile_field_statuses["training_experience"] == "NOT_LOADED"
+    assert outcome.profile_field_statuses["available_equipment"] == "NOT_LOADED"
 

@@ -26,6 +26,16 @@ class PlanCreationException implements Exception {
   String toString() => message;
 }
 
+class PlanV2ApiException implements Exception {
+  const PlanV2ApiException({required this.operation, required this.code});
+
+  final String operation;
+  final String code;
+
+  @override
+  String toString() => '$operation failed: $code';
+}
+
 /// Service để gọi backend API
 /// Hỗ trợ cả local development và production
 class BackendApiService {
@@ -89,13 +99,30 @@ class BackendApiService {
       return json.decode(utf8.decode(response.bodyBytes))
           as Map<String, dynamic>;
     }
-    throw StateError('$operation failed: HTTP_${response.statusCode}');
+    String code = 'HTTP_${response.statusCode}';
+    try {
+      final decoded = json.decode(utf8.decode(response.bodyBytes));
+      if (decoded is Map) {
+        final detail = decoded['detail'];
+        if (detail is String && detail.isNotEmpty) code = detail;
+        if (detail is Map && detail['code'] != null) {
+          code = detail['code'].toString();
+        }
+      }
+    } catch (_) {
+      // Keep the HTTP status as the stable fallback for malformed proxies.
+    }
+    throw PlanV2ApiException(operation: operation, code: code);
   }
 
-  Future<List<Map<String, dynamic>>> listAuthoritativePlanV2() async {
+  Future<List<Map<String, dynamic>>> listAuthoritativePlanV2(
+      {String? artifactKind}) async {
+    final uri = Uri.parse('$baseUrl/api/plan-v2/plans').replace(
+      queryParameters: artifactKind == null ? null : {'artifact_kind': artifactKind},
+    );
     final response = await _authenticatedRequest(
       (headers) => _client.get(
-        Uri.parse('$baseUrl/api/plan-v2/plans'),
+        uri,
         headers: headers,
       ),
       timeout: const Duration(seconds: 10),
@@ -169,12 +196,141 @@ class BackendApiService {
     return _planV2Body(response, operation: 'PLAN_V2_SAVE');
   }
 
+  Future<Map<String, dynamic>> createAuthoritativePlanPreview({
+    required String domain,
+    required DateTime periodStart,
+    required DateTime periodEnd,
+    required String timezone,
+    required Map<String, dynamic> profile,
+    String? goalOverride,
+    List<String> temporaryPreferences = const [],
+    List<String> temporaryExclusions = const [],
+    int? durationMinutes,
+    int? numberOfSessions,
+    String? trainingLocation,
+    List<String> equipment = const [],
+  }) async {
+    final response = await _authenticatedRequest(
+      (headers) => _client.post(
+        Uri.parse('$baseUrl/api/plan-v2/previews'),
+        headers: headers,
+        body: jsonEncode({
+          'domain': domain,
+          'period_start': periodStart.toIso8601String().substring(0, 10),
+          'period_end': periodEnd.toIso8601String().substring(0, 10),
+          'timezone': timezone,
+          'profile': profile,
+          if (goalOverride != null) 'goal_override': goalOverride,
+          'temporary_preferences': temporaryPreferences,
+          'temporary_exclusions': temporaryExclusions,
+          if (durationMinutes != null) 'duration_minutes': durationMinutes,
+          if (numberOfSessions != null) 'number_of_sessions': numberOfSessions,
+          if (trainingLocation != null) 'training_location': trainingLocation,
+          'equipment': equipment,
+        }),
+      ),
+      timeout: const Duration(seconds: 180),
+    );
+    return _planV2Body(response, operation: 'PLAN_V2_PREVIEW');
+  }
+
+  Future<List<Map<String, dynamic>>> listPlanChangeEvents(String planId) async {
+    final response = await _authenticatedRequest(
+      (headers) => _client.get(
+        Uri.parse('$baseUrl/api/plan-v2/plans/$planId/change-events'),
+        headers: headers,
+      ),
+      timeout: const Duration(seconds: 10),
+    );
+    final body = _planV2Body(response, operation: 'PLAN_V2_CHANGE_EVENTS');
+    final events = body['events'];
+    if (events is! List) return const [];
+    return events.whereType<Map>().map((event) => Map<String, dynamic>.from(event)).toList(growable: false);
+  }
+
+  Future<List<Map<String, dynamic>>> listAuthoritativePlanHistory(
+      String planId) async {
+    final response = await _authenticatedRequest(
+      (headers) => _client.get(
+        Uri.parse('$baseUrl/api/plan-v2/plans/$planId/history'),
+        headers: headers,
+      ),
+      timeout: const Duration(seconds: 10),
+    );
+    final body = _planV2Body(response, operation: 'PLAN_V2_HISTORY');
+    final history = body['history'];
+    if (history is! List) return const [];
+    return history
+        .whereType<Map>()
+        .map((revision) => Map<String, dynamic>.from(revision))
+        .toList(growable: false);
+  }
+
+  Future<Map<String, dynamic>> createAuthoritativePlanRevisionPreview({
+    required String planId,
+    required String baseRevisionId,
+    required int expectedRevisionNumber,
+    required String operation,
+    required String actionId,
+    String? targetItemId,
+    Map<String, dynamic> requestedChange = const {},
+    String reason = 'USER_REQUEST',
+  }) async {
+    final response = await _authenticatedRequest(
+      (headers) => _client.post(
+        Uri.parse('$baseUrl/api/plan-v2/$planId/revisions'),
+        headers: headers,
+        body: jsonEncode({
+          'base_revision_id': baseRevisionId,
+          'expected_revision_number': expectedRevisionNumber,
+          'operation': operation,
+          if (targetItemId != null) 'target_item_id': targetItemId,
+          'requested_change': requestedChange,
+          'reason': reason,
+          'action_id': actionId,
+        }),
+      ),
+      timeout: const Duration(seconds: 15),
+    );
+    return _planV2Body(response, operation: 'PLAN_V2_PATCH_PREVIEW');
+  }
+
+  Future<Map<String, dynamic>> attachStandaloneToCombinedPlan({
+    required String combinedPlanId,
+    required String baseRevisionId,
+    required String combinedContentHash,
+    required String sourcePlanId,
+    required String sourceRevisionId,
+    required String sourceContentHash,
+    required String actionId,
+    required String sourceSurface,
+  }) async {
+    final response = await _authenticatedRequest(
+      (headers) => _client.post(
+        Uri.parse('$baseUrl/api/plan-v2/plans/$combinedPlanId/attachments'),
+        headers: headers,
+        body: jsonEncode({
+          'base_revision_id': baseRevisionId,
+          'combined_content_hash': combinedContentHash,
+          'source_plan_id': sourcePlanId,
+          'source_revision_id': sourceRevisionId,
+          'source_content_hash': sourceContentHash,
+          'action_id': actionId,
+          'source_surface': sourceSurface,
+        }),
+      ),
+      timeout: const Duration(seconds: 15),
+    );
+    return _planV2Body(response, operation: 'PLAN_V2_ATTACH_TRANSFER');
+  }
+
   Future<Map<String, dynamic>> changeAuthoritativePlanV2Lifecycle({
     required String planId,
     required String revisionId,
     required int expectedRevisionNumber,
     required String operation,
     required String actionId,
+    bool replaceConflicts = false,
   }) async {
     final response = await _authenticatedRequest(
       (headers) => _client.post(
@@ -184,6 +340,7 @@ class BackendApiService {
         body: jsonEncode({
           'expected_revision_number': expectedRevisionNumber,
           'action_id': actionId,
+          'replace_conflicts': replaceConflicts,
         }),
       ),
       timeout: const Duration(seconds: 15),
@@ -448,19 +605,22 @@ class BackendApiService {
     double? targetWeight,
     String? notes,
   }) async {
+    final start = DateTime.now();
+    final end = start.add(Duration(days: days - 1));
     final payload = {
-      'user_id': userId,
-      'user_context': userContext,
-      'duration': {'days': days},
-      'target': {
-        if (targetWeight != null) 'target_weight': targetWeight,
-        if (notes != null && notes.isNotEmpty) 'notes': notes,
-      }
+      'domain': 'COMBINED_HEALTH',
+      'period_start': start.toIso8601String().substring(0, 10),
+      'period_end': end.toIso8601String().substring(0, 10),
+      'timezone': 'Asia/Ho_Chi_Minh',
+      'goal_override': notes,
+      'profile': userContext,
+      'temporary_preferences': <String>[],
+      'temporary_exclusions': <String>[],
     };
 
     final response = await _authenticatedRequest(
       (headers) => _client.post(
-        Uri.parse('$baseUrl/plans'),
+        Uri.parse('$baseUrl/api/plan-v2/previews'),
         headers: headers,
         body: jsonEncode(payload),
       ),
@@ -503,7 +663,7 @@ class BackendApiService {
     if (result.status == ActivePlanStatus.readError) {
       throw Exception(result.errorCode ?? 'PLAN_V2_READ_FAILED');
     }
-    return _readLegacyActivePlan(userId, detail: false);
+    return null;
   }
 
   Future<Map<String, dynamic>?> getActivePlanDetail(String userId) async {
@@ -512,9 +672,10 @@ class BackendApiService {
     if (result.status == ActivePlanStatus.readError) {
       throw Exception(result.errorCode ?? 'PLAN_V2_READ_FAILED');
     }
-    return _readLegacyActivePlan(userId, detail: true);
+    return null;
   }
 
+  // ignore: unused_element
   Future<Map<String, dynamic>?> _readLegacyActivePlan(
     String userId, {
     required bool detail,
@@ -545,17 +706,7 @@ class BackendApiService {
     required String itemId,
     required bool completed,
   }) async {
-    final response = await _authenticatedRequest(
-      (headers) => _client.patch(
-        Uri.parse('$baseUrl/plans/items/$itemId'),
-        headers: headers,
-        body: jsonEncode({'completed': completed}),
-      ),
-      timeout: const Duration(seconds: 10),
-    );
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Update plan item failed: ${response.statusCode}');
-    }
+    throw StateError('PLANNED_STATE_IMMUTABLE_USE_ACTUAL_OBSERVATION_LOG');
   }
 
   /// Create a plan check-in (log weight and progress)

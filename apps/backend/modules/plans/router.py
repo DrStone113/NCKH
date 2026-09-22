@@ -22,9 +22,15 @@ from services.agent.planner import PlannerAgent
 from services.agent.tools import dish, tdee, workout
 from services.agent.tools.plan_tools import append_plan_items, create_plan as create_plan_row
 from services.auth import AuthenticatedPrincipal, require_authenticated_principal, require_owner
+from config import settings
 
 
 router = APIRouter(prefix="/plans", tags=["plans"])
+
+
+def _reject_legacy_mutation() -> None:
+    if settings.legacy_plan_read_only:
+        raise HTTPException(status_code=410, detail="LEGACY_PLAN_MUTATION_DISABLED")
 
 
 _PLANNER_ERROR_MESSAGES = {
@@ -74,6 +80,7 @@ async def create_plan(
     db: AsyncSession = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
+    _reject_legacy_mutation()
     require_owner(principal, req.user_id)
     duration_days = req.duration.days
     start_date = date.today()
@@ -201,6 +208,7 @@ async def update_plan_item(
     db: AsyncSession = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
+    _reject_legacy_mutation()
     result = await db.execute(
         text(
             """
@@ -226,6 +234,7 @@ async def create_plan_checkin(
     db: AsyncSession = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(require_authenticated_principal),
 ):
+    _reject_legacy_mutation()
     require_owner(principal, req.user_id)
     result = await db.execute(
         text(

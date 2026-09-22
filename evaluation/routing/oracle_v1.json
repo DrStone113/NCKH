@@ -1,0 +1,2755 @@
+{
+  "schema_version": "routing-oracle-v1",
+  "provenance": "AUTOMATED",
+  "method": "AUTOMATED_SPEC_DERIVED",
+  "human_review_claimed": false,
+  "adjudication": "Deterministic construction rules mapped to the actual SemanticParseResult decision contract.",
+  "cases": {
+    "RH-0001": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [
+          "WORKOUT_SCHEDULE"
+        ],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0002": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [
+          "PROFILE_UPDATE"
+        ],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0003": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0004": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0005": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0006": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0007": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0008": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0009": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0010": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0011": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0012": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0013": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0014": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0015": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0016": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0017": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0018": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0019": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0020": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MEAL_SUGGESTION",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0021": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0022": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0023": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0024": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0025": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0026": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0027": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0028": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0029": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0030": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0031": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0032": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0033": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0034": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0035": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "MENU_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0036": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0037": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0038": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0039": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0040": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0041": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0042": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0043": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0044": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0045": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0046": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0047": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0048": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0049": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0050": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "WORKOUT_SCHEDULE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0051": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0052": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0053": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0054": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0055": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0056": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0057": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0058": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0059": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0060": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0061": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0062": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0063": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0064": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0065": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "COMBINED_PLAN",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0066": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0067": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0068": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0069": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0070": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0071": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0072": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0073": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0074": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0075": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0076": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0077": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_EDIT",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0078": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0079": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0080": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0081": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0082": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0083": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0084": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0085": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0086": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0087": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0088": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0089": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PLAN_LIFECYCLE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "PLAN_LIFECYCLE",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0090": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0091": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0092": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0093": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0094": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0095": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0096": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0097": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0098": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0099": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0100": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0101": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "OBSERVATION_LOG",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": "OBSERVATION_LOG",
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0102": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0103": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0104": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0105": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0106": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0107": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0108": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0109": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0110": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0111": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0112": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0113": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0114": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0115": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0116": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0117": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0118": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0119": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0120": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "HEALTH"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0121": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "HEALTH_QUERY",
+        "secondary_intents": [],
+        "health_context": [
+          "URGENT"
+        ],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0122": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [
+          "COMBINED_PLAN"
+        ],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0123": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0124": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0125": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0126": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0127": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0128": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0129": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0130": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0131": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "PROFILE_UPDATE",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0132": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": true,
+        "ambiguity_status": "AMBIGUOUS",
+        "ambiguity_type": "MISSING_REQUIRED_CONTEXT"
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0133": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": true,
+        "ambiguity_status": "AMBIGUOUS",
+        "ambiguity_type": "MISSING_REQUIRED_CONTEXT"
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0134": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": true,
+        "ambiguity_status": "AMBIGUOUS",
+        "ambiguity_type": "MISSING_REQUIRED_CONTEXT"
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0135": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": true,
+        "ambiguity_status": "AMBIGUOUS",
+        "ambiguity_type": "MISSING_REQUIRED_CONTEXT"
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0136": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": true,
+        "ambiguity_status": "AMBIGUOUS",
+        "ambiguity_type": "MISSING_REQUIRED_CONTEXT"
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0137": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0138": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0139": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    },
+    "RH-0140": {
+      "expected": {
+        "intent_version": "turn-intent-v2",
+        "schema_version": "semantic-parse-v1",
+        "primary_intent": "GENERAL_WELLNESS",
+        "secondary_intents": [],
+        "health_context": [],
+        "negated_actions": [
+          "WRITE"
+        ],
+        "explicit_write_action": null,
+        "clarification_required": false,
+        "ambiguity_status": "NONE",
+        "ambiguity_type": null
+      },
+      "hard_failures": [
+        "UNKNOWN_INTENT",
+        "NEGATED_WRITE_CONFLICT",
+        "HEALTH_SAFETY_CRITICAL_MISS"
+      ]
+    }
+  }
+}

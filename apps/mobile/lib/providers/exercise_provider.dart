@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exercise_model.dart';
 import '../constants/firestore_collections.dart';
 import '../services/exercise_cache_service.dart';
@@ -9,6 +8,7 @@ import '../services/backend_api_service.dart';
 import '../features/plans/plan_display.dart';
 import '../utils/exercise_utils.dart';
 import '../models/app_state_value.dart';
+import '../models/planned_projection.dart';
 
 class ExerciseProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
@@ -16,6 +16,8 @@ class ExerciseProvider with ChangeNotifier {
   final LocalExerciseService _localService = LocalExerciseService();
 
   List<ExerciseModel> _todayExercises = [];
+  // Planned Plan V2 projections are kept outside actual exercise observations.
+  List<PlannedWorkoutProjection> _plannedExercises = [];
   bool _isLoading = false;
   bool _wgerLoaded = false;
   List<ExerciseTemplate>? _exerciseDatabaseCache;
@@ -23,6 +25,8 @@ class ExerciseProvider with ChangeNotifier {
   DateTime? _todayExercisesObservedAt;
 
   List<ExerciseModel> get todayExercises => _todayExercises;
+  List<PlannedWorkoutProjection> get plannedExercises =>
+      List.unmodifiable(_plannedExercises);
   bool get isLoading => _isLoading;
   DataStatus get todayExercisesStatus => _todayExercisesStatus;
   DateTime? get todayExercisesObservedAt => _todayExercisesObservedAt;
@@ -32,36 +36,19 @@ class ExerciseProvider with ChangeNotifier {
     _todayExercises = List.from(exercises);
     notifyListeners();
   }
-  final Set<String> _deletedPlanItemIds = {};
 
-  Future<void> _saveDeletedPlanItemIds(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        'exercise_deleted_plan_items_$userId',
-        _deletedPlanItemIds.toList(),
-      );
-    } catch (_) {}
-  }
-
-  Future<void> _loadDeletedPlanItemIds(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = prefs.getStringList('exercise_deleted_plan_items_$userId');
-      if (list != null) {
-        _deletedPlanItemIds.addAll(list);
-      }
-    } catch (_) {}
-  }
-
-  double get totalCaloriesBurned =>
-      _todayExercises.where((ex) => ex.isCompleted).fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
-  int get totalDuration =>
-      _todayExercises.where((ex) => ex.isCompleted).fold(0, (acc, ex) => acc + ex.duration);
-  double get plannedCaloriesBurned =>
-      _todayExercises.fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
-  int get plannedDuration =>
-      _todayExercises.fold(0, (acc, ex) => acc + ex.duration);
+  double get totalCaloriesBurned => _todayExercises
+      .where((ex) => ex.isCompleted)
+      .fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
+  int get totalDuration => _todayExercises
+      .where((ex) => ex.isCompleted)
+      .fold(0, (acc, ex) => acc + ex.duration);
+  double get plannedCaloriesBurned => _plannedExercises.isNotEmpty
+      ? _plannedExercises.fold(0.0, (acc, ex) => acc + ex.caloriesBurned)
+      : _todayExercises.fold(0.0, (acc, ex) => acc + ex.caloriesBurned);
+  int get plannedDuration => _plannedExercises.isNotEmpty
+      ? _plannedExercises.fold(0, (acc, ex) => acc + ex.duration)
+      : _todayExercises.fold(0, (acc, ex) => acc + ex.duration);
 
   static bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -105,6 +92,27 @@ class ExerciseProvider with ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  /// Log a new actual workout observation without changing the Plan revision.
+  Future<void> logPlannedWorkoutObservation(PlannedWorkoutProjection planned) {
+    final now = DateTime.now();
+    return addExercise(
+      ExerciseModel(
+        id: 'workout_observation_${now.microsecondsSinceEpoch}',
+        userId: planned.userId,
+        name: planned.name,
+        date: now,
+        duration: planned.duration,
+        caloriesBurned: planned.caloriesBurned,
+        type: planned.type,
+        timeOfDay: planned.timeOfDay,
+        isCompleted: true,
+        sourcePlanId: planned.planId,
+        sourceRevisionId: planned.revisionId,
+        sourcePlanItemId: planned.planItemId,
+      ),
+    );
   }
 
   Future<void> loadTodayExercises(String userId) async {
@@ -225,11 +233,14 @@ class ExerciseProvider with ChangeNotifier {
 
   Future<void> _syncExercisesFromBackendPlan(
       String userId, DateTime date) async {
-    await _loadDeletedPlanItemIds(userId);
+    _plannedExercises = [];
     try {
       final read =
           await BackendApiService().readAuthoritativeActivePlanV2('WORKOUT');
-      if (read.status != ActivePlanStatus.activePlanFound || read.plan == null) return;
+      if (read.status != ActivePlanStatus.activePlanFound ||
+          read.plan == null) {
+        return;
+      }
 
       final plan = read.plan!;
       final day = PlanDisplay.dayForDate(plan, date);
@@ -246,9 +257,6 @@ class ExerciseProvider with ChangeNotifier {
             ? PlanDisplay.itemId(item)
             : 'plan_ex_${dateKey}_$idx';
 
-        if (_deletedPlanItemIds.contains(itemId)) continue;
-        if (_todayExercises.any((ex) => ex.id == itemId)) continue;
-
         final name = PlanDisplay.itemTitle(item, nutrition: false);
         final duration = (PlanDisplay.plannedDuration(item) ?? 30).round();
         final content = item['content'];
@@ -256,34 +264,33 @@ class ExerciseProvider with ChangeNotifier {
             (content is Map ? content['calories_burned'] as num? : null) ??
             (item['estimated_calories'] as num?) ??
             (content is Map ? content['estimated_calories'] as num? : null);
-        final double burned =
-            burnedCalNum?.toDouble() ?? (duration * 6.0);
+        final double burned = burnedCalNum?.toDouble() ?? (duration * 6.0);
         final String exType = (item['type'] ??
                 (content is Map ? content['type'] : null) ??
                 'cardio')
             .toString()
             .toLowerCase();
 
-        final isDone =
-            item['is_completed'] == true || item['completed'] == true;
         final timeOfDay = _slotToTimeOfDay(item['slot']);
 
-        final plannedExercise = ExerciseModel(
-          id: itemId,
+        final plannedExercise = PlannedWorkoutProjection(
+          planItemId: itemId,
+          planId: plan['plan_id']?.toString() ?? '',
+          revisionId: plan['revision_id']?.toString() ?? '',
           userId: userId,
           name: name,
           date: date,
           duration: duration,
           caloriesBurned: burned,
           type: exType,
-          isCompleted: isDone,
           timeOfDay: timeOfDay,
         );
-        _todayExercises.add(plannedExercise);
+        _plannedExercises.add(plannedExercise);
         changed = true;
       }
       if (changed) {
-        _cacheService.cacheExercises(userId, date, _todayExercises);
+        // Planned projections are deliberately not written to the actual
+        // observation cache. PlanProvider/Plan screens read them from SQL.
       }
     } catch (e) {
       debugPrint('Plan V2 workout status read failed: $e');
@@ -298,8 +305,6 @@ class ExerciseProvider with ChangeNotifier {
 
     // Optimistic update - remove from cache immediately
     _todayExercises.removeWhere((ex) => ex.id == exerciseId);
-    _deletedPlanItemIds.add(exerciseId);
-    _saveDeletedPlanItemIds(exercise.userId);
     _cacheService.removeExerciseFromCache(
         exercise.userId, exercise.date, exerciseId);
     notifyListeners();
@@ -555,13 +560,8 @@ class ExerciseProvider with ChangeNotifier {
             .doc(exerciseId)
             .set(updated.toMap(), SetOptions(merge: true));
 
-        // Update backend plan item if it belongs to plan
-        try {
-          await BackendApiService().updatePlanItemCompletion(
-            itemId: exerciseId,
-            completed: updated.isCompleted,
-          );
-        } catch (_) {}
+        // A plan item is immutable planned state. The diary write above is
+        // the actual observation; it must never mutate the Plan revision.
 
         debugPrint(
             '✅ Exercise completed status updated: ${updated.isCompleted}');
@@ -645,7 +645,8 @@ class ExerciseProvider with ChangeNotifier {
       final exercises = snapshot.docs
           .map((doc) => ExerciseModel.fromMap(doc.data()))
           .where((exercise) =>
-              !exercise.date.isBefore(startDate) && exercise.date.isBefore(endDate))
+              !exercise.date.isBefore(startDate) &&
+              exercise.date.isBefore(endDate))
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
       return AuthoritativeExerciseHistory.known(exercises, DateTime.now());
@@ -689,7 +690,8 @@ class AuthoritativeExerciseHistory {
   final DataStatus status;
   final DateTime? observedAt;
 
-  const AuthoritativeExerciseHistory._(this.exercises, this.status, this.observedAt);
+  const AuthoritativeExerciseHistory._(
+      this.exercises, this.status, this.observedAt);
 
   factory AuthoritativeExerciseHistory.known(
           List<ExerciseModel> exercises, DateTime observedAt) =>

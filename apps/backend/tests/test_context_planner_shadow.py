@@ -69,6 +69,39 @@ def test_rag_and_tool_gating(query, policy, tool):
         assert "query_rag" not in plan.permitted_tools
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Theo hướng dẫn quốc gia, hạn chế thực phẩm bất lợi cần lưu ý gì?",
+        "RNI về nhu cầu năng lượng và mức hoạt động là gì?",
+        "Lưu ý dinh dưỡng về EPA và DHA",
+        "Thông tin sức khỏe cơ bản về thiếu máu",
+        "health muscle cramps",
+    ],
+)
+def test_reference_questions_use_grounded_rag_without_fixture_specific_matching(query):
+    classification, plan = ContextPlanner().create_plan(query)
+    assert classification.primary_intent == Intent.GENERAL_NUTRITION_KNOWLEDGE
+    assert plan.rag_policy == RagPolicy.REQUIRED
+    assert "query_rag" in plan.permitted_tools
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Đậu đỏ có bao nhiêu đạm và năng lượng?",
+        "dinh dưỡng bí xanh",
+        "Nutrition facts for apples with skin",
+        "food nutrients canned beans",
+    ],
+)
+def test_food_metric_query_shapes_use_the_structured_food_lookup(query):
+    classification, plan = ContextPlanner().create_plan(query)
+    assert classification.primary_intent == Intent.FOOD_NUTRITION_LOOKUP
+    assert "search_food_nutrition" in plan.permitted_tools
+    assert "query_rag" not in plan.permitted_tools
+
+
 def test_write_tools_require_explicit_precise_intent_and_low_level_helpers_never_leak():
     planner = ContextPlanner()
     _, mention = planner.create_plan("Bữa trưa của tôi có cơm")

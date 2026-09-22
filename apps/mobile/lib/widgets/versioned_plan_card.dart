@@ -324,18 +324,20 @@ class _PlanItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMeal = item['item_type']?.toString() == 'MEAL';
+    final itemIsNutrition = nutrition || isMeal;
     final nutritionValues = PlanDisplay.nutrition(item);
     final calories = nutritionValues['total_calories'];
     final protein = nutritionValues['total_protein'];
     final carbs = nutritionValues['total_carbs'];
     final fat = nutritionValues['total_fat'];
     final duration = PlanDisplay.plannedDuration(item);
-    final slot =
-        PlanDisplay.slotLabel(item['slot']?.toString(), nutrition: nutrition);
-    final title = PlanDisplay.itemTitle(item, nutrition: nutrition);
+    final slot = PlanDisplay.slotLabel(item['slot']?.toString(),
+        nutrition: itemIsNutrition);
+    final title = PlanDisplay.itemTitle(item, nutrition: itemIsNutrition);
 
-    final color = nutrition ? AppColors.calories : AppColors.success;
-    final icon = nutrition
+    final color = itemIsNutrition ? AppColors.calories : AppColors.success;
+    final icon = itemIsNutrition
         ? Icons.restaurant_outlined
         : Icons.fitness_center_outlined;
 

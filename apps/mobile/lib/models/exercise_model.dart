@@ -84,6 +84,9 @@ class ExerciseModel {
   final String intensity; // low, medium, high
   final bool isCompleted; // Đã hoàn thành chưa
   final String timeOfDay; // morning, afternoon, evening, night
+  final String? sourcePlanId;
+  final String? sourceRevisionId;
+  final String? sourcePlanItemId;
 
   ExerciseModel({
     required this.id,
@@ -97,6 +100,9 @@ class ExerciseModel {
     this.intensity = 'medium',
     this.isCompleted = false,
     this.timeOfDay = 'morning',
+    this.sourcePlanId,
+    this.sourceRevisionId,
+    this.sourcePlanItemId,
   });
 
   int get wgerId => ExerciseUtils.parseWgerId(exerciseTemplateId);
@@ -114,6 +120,9 @@ class ExerciseModel {
       'intensity': intensity,
       'isCompleted': isCompleted,
       'timeOfDay': timeOfDay,
+      'sourcePlanId': sourcePlanId,
+      'sourceRevisionId': sourceRevisionId,
+      'sourcePlanItemId': sourcePlanItemId,
     };
   }
 
@@ -132,6 +141,9 @@ class ExerciseModel {
       intensity: map['intensity'] ?? 'medium',
       isCompleted: map['isCompleted'] ?? false,
       timeOfDay: map['timeOfDay'] ?? 'morning',
+      sourcePlanId: map['sourcePlanId']?.toString(),
+      sourceRevisionId: map['sourceRevisionId']?.toString(),
+      sourcePlanItemId: map['sourcePlanItemId']?.toString(),
     );
   }
 
@@ -147,6 +159,9 @@ class ExerciseModel {
     String? intensity,
     bool? isCompleted,
     String? timeOfDay,
+    String? sourcePlanId,
+    String? sourceRevisionId,
+    String? sourcePlanItemId,
   }) {
     return ExerciseModel(
       id: id ?? this.id,
@@ -160,6 +175,9 @@ class ExerciseModel {
       intensity: intensity ?? this.intensity,
       isCompleted: isCompleted ?? this.isCompleted,
       timeOfDay: timeOfDay ?? this.timeOfDay,
+      sourcePlanId: sourcePlanId ?? this.sourcePlanId,
+      sourceRevisionId: sourceRevisionId ?? this.sourceRevisionId,
+      sourcePlanItemId: sourcePlanItemId ?? this.sourcePlanItemId,
     );
   }
 

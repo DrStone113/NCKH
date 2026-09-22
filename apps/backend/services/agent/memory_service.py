@@ -1021,9 +1021,9 @@ class MemoryService:
         *,
         max_turns: int = 12,
     ) -> list[ChatTurn]:
-        """Load a small, model-free window for contextual scope resolution.
+        """Load a small visible window for contextual scope classification.
 
-        This intentionally performs no RAG, summary, fact, or classifier read.
+        This loader itself performs no RAG, summary, fact, or classifier read.
         Extra raw rows are requested because tool-heavy exchanges may contain
         several tool records between two user-visible messages.
         """

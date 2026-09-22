@@ -1,0 +1,11 @@
+{
+  "case_count": 60,
+  "FALSE_POSITIVE_WRITE_INTENT": 1,
+  "NEGATION_CORRECTNESS": 0.7,
+  "HEALTH_SAFETY_CRITICAL_MISS": 0,
+  "PENDING_ACTION_TARGET_MUTATION": 0,
+  "PENDING_ACTION_RESOLUTION_ACCURACY": 1.0,
+  "PLAN_REGENERATED_ON_SAVE": "NOT_MEASURED: frozen safety state cases do not execute a persisted Plan V2 save",
+  "semantic_model": "Qwen/Qwen3-0.6B@c1899de289a04d12100db370d81485cdf75e47ca",
+  "semantic_model_hash": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+}

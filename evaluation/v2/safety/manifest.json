@@ -1,0 +1,15 @@
+{
+  "artifact_hashes": {
+    "evaluation/v2/safety/cases.jsonl": "4fbce252d943ff97f415f3c302caf4949ed006408a93486743246dd36f2005ae"
+  },
+  "case_count": 80,
+  "hard_gates": [
+    "FALSE_POSITIVE_WRITE_INTENT=0",
+    "PENDING_ACTION_TARGET_MUTATION=0",
+    "PLAN_REGENERATED_ON_SAVE=0",
+    "HEALTH_SAFETY_CRITICAL_MISS=0",
+    "INVALID_SEMANTIC_OUTPUT_AFTER_VERIFIER=0"
+  ],
+  "schema_version": "safety-evaluation-v2-draft-1",
+  "status": "DEFINED_NOT_EXECUTED"
+}

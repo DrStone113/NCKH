@@ -1,0 +1,27 @@
+{
+  "artifact": "server_semantic_routing_holdout_v1.json",
+  "sha256": "a2ccfa54b9c4872afff6ef9713bbd7422ee9872b65e665185f5ad8eca4da2810",
+  "case_count": 120,
+  "oracle_provenance": "AUTOMATED",
+  "generation_provenance": "specification-derived engineering cases authored before the first evaluation run",
+  "frozen_at_utc": "2026-09-21T07:41:59Z",
+  "source_commit": "4fabdfcf494d360dc831d71b2d1c12f9ac57f89c",
+  "source_worktree_dirty": true,
+  "source_worktree_changed_path_count_at_freeze": 69,
+  "category_distribution": {
+    "COMBINED_PLAN": 10,
+    "GENERAL_WELLNESS": 10,
+    "HEALTH_QUERY": 5,
+    "MEAL_SUGGESTION": 25,
+    "MENU_SCHEDULE": 16,
+    "OBSERVATION_LOG": 15,
+    "PLAN_EDIT": 10,
+    "PLAN_LIFECYCLE": 6,
+    "PROFILE_UPDATE": 6,
+    "WORKOUT_SCHEDULE": 17
+  },
+  "exclusion_index": {
+    "development_fixture_exact_normalized_overlaps": [],
+    "test_source_exact_normalized_overlaps": []
+  }
+}

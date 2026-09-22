@@ -3,7 +3,7 @@ from fastapi import WebSocketDisconnect
 
 import config
 from config import Settings
-from services.agent.chat_gateway import ChatGateway
+from services.agent.chat_gateway import ChatGateway, _merge_user_context
 
 
 class FakeWebSocket:
@@ -35,6 +35,37 @@ class FakeOrchestrator:
 
     async def handleChatMessage(self, session_id, message):
         self.calls.append((session_id, message))
+
+
+def test_short_follow_up_preserves_typed_workout_profile_only_for_continuation():
+    workout_profile = {
+        "training_experience": "NOVICE",
+        "available_equipment": ["gym mat", "dumbbell"],
+        "current_pain_status": "NO",
+    }
+    current = {
+        "profile_readiness": {"scope": "workout"},
+        "profile_context_domains": ["general", "workout", "exercise_safety"],
+        "workout_profile": workout_profile,
+        "training_state": {"workout_profile_present": True},
+    }
+    legacy_general = {
+        "profile_readiness": {"scope": "general"},
+        "profile_context_domains": ["general"],
+        "name": "Synthetic fixture",
+    }
+
+    continued = _merge_user_context(current, legacy_general, "oke")
+    assert continued["workout_profile"] == workout_profile
+    assert continued["training_state"]["workout_profile_present"] is True
+
+    unrelated = _merge_user_context(
+        current,
+        legacy_general,
+        "Please explain a completely different topic for me",
+    )
+    assert "workout_profile" not in unrelated
+    assert "training_state" not in unrelated
 
 
 @pytest.mark.asyncio
@@ -80,6 +111,65 @@ async def test_malformed_json_sends_bad_message_and_socket_stays_open():
     assert ws.sent[0]["type"] == "error"
     assert ws.sent[0]["code"] == "BAD_MESSAGE"
     assert orchestrator.calls == [("session-1", "hi")]
+
+
+@pytest.mark.asyncio
+async def test_stream_events_echo_the_client_turn_id():
+    import asyncio
+
+    class StreamingOrchestrator:
+        gateway = None
+
+        async def handleChatMessage(self, session_id, message, user_context=None):
+            await self.gateway.send_status("working")
+            await self.gateway.send_token("answer")
+            await self.gateway.send_done("answer")
+
+    ws = FakeWebSocket(
+        [{"type": "chat", "message": "hi", "turn_id": "turn-123"}]
+    )
+    orchestrator = StreamingOrchestrator()
+    gateway = ChatGateway(ws, orchestrator, "session-1")
+    orchestrator.gateway = gateway
+
+    await gateway.run()
+    await asyncio.sleep(0.01)
+
+    stream_events = [item for item in ws.sent if item["type"] != "error"]
+    assert [item["type"] for item in stream_events] == ["status", "token", "done"]
+    assert {item["turn_id"] for item in stream_events} == {"turn-123"}
+
+
+@pytest.mark.asyncio
+async def test_provider_error_is_not_overwritten_by_internal_error():
+    import asyncio
+    from services.agent.llm_client import LLMUnavailableError
+
+    class FailingOrchestrator:
+        gateway = None
+
+        async def handleChatMessage(self, session_id, message, user_context=None):
+            await self.gateway.send_error("LLM_TIMEOUT", "retry")
+            raise LLMUnavailableError("stalled", reason_code="STREAM_TIMEOUT")
+
+    ws = FakeWebSocket(
+        [{"type": "chat", "message": "hi", "turn_id": "turn-timeout"}]
+    )
+    orchestrator = FailingOrchestrator()
+    gateway = ChatGateway(ws, orchestrator, "session-1")
+    orchestrator.gateway = gateway
+
+    await gateway.run()
+    await asyncio.sleep(0.01)
+
+    assert ws.sent == [
+        {
+            "type": "error",
+            "code": "LLM_TIMEOUT",
+            "message": "retry",
+            "turn_id": "turn-timeout",
+        }
+    ]
 
 
 @pytest.mark.asyncio

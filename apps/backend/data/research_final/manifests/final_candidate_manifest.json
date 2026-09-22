@@ -1,0 +1,47 @@
+{
+  "build_code_version": "research-final-builder-1",
+  "candidate_file": "apps/backend/data/research_final/manifests/final_candidate_corpus.jsonl",
+  "candidate_file_sha256": "9b3a1e99f4bc68cc463cddecca04f609af4139e0aacfc03ff14ea477330608c8",
+  "corpus_hash": "d780fd061328a8a842d261ac16e96a32c17473c0a15487ee14a8fbaa6bb76c87",
+  "corpus_version": "offline-final-candidate",
+  "created_at": "2026-09-21T16:59:01.722639+00:00",
+  "deduplication": "exact normalized content; retained equivalent provenance on survivor; near-duplicate audit required before embedding",
+  "excluded": {
+    "EXACT_CONTENT_DUPLICATE": 74,
+    "V1_NIN_REUSE_UNCLEAR": 525
+  },
+  "record_count": 4419,
+  "records_by_domain": {
+    "body_metric": 1,
+    "dish": 101,
+    "exercise": 887,
+    "food": 3306,
+    "health": 42,
+    "health_safety": 1,
+    "micronutrient": 28,
+    "nutrition": 44,
+    "physical_activity_guideline": 8,
+    "weight_management": 1
+  },
+  "records_by_license": {
+    "CC-BY-SA 3": 133,
+    "CC-BY-SA 4": 724,
+    "CC0": 20,
+    "CC0-1.0": 3306,
+    "NLM_PUBLIC_DOMAIN_WITH_ATTRIBUTION": 112,
+    "PROJECT_CURATED": 111,
+    "SUMMARY_ONLY_ATTRIBUTED": 6,
+    "US_GOVERNMENT_PUBLIC_DOMAIN_UNLESS_NOTED": 7
+  },
+  "records_by_source": {
+    "CDC_PHYSICAL_ACTIVITY_GUIDANCE": 4,
+    "DGA_2025_2030": 3,
+    "MEDLINEPLUS_DEFINITIONS": 70,
+    "MEDLINEPLUS_HEALTH_TOPICS": 42,
+    "USDA_FDC_FOUNDATION_2026": 363,
+    "V1_FROZEN_RESEARCH": 111,
+    "V2_FROZEN_RESEARCH": 3826
+  },
+  "schema_version": "research-final-candidate-manifest-1",
+  "v1_v2_mutated": false
+}

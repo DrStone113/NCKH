@@ -44,6 +44,16 @@ def test_compact_prompt_removes_most_static_prompt_tokens() -> None:
     assert len(compact) < len(full) * 0.25
 
 
+def test_evidence_contract_is_present_for_full_and_rag_compact_prompts() -> None:
+    tools = _schemas("query_rag")
+    compact = buildSystemPrompt("", [], [], tool_catalog=tools, mode="compact")
+    full = buildSystemPrompt("", [], [], tool_catalog=tools, mode="full")
+
+    for prompt in (compact, full):
+        assert "không tự điền phần còn thiếu bằng kiến thức nhớ sẵn" in prompt
+        assert "gắn đúng với nội dung mà chúng hỗ trợ" in prompt
+
+
 def test_estimated_input_tokens_includes_tool_schemas() -> None:
     limits = limits_for_turn(classify_turn("100g ức gà bao nhiêu protein?"))
     messages = [{"role": "user", "content": "hello"}]

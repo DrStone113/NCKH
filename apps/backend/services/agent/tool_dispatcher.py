@@ -42,6 +42,24 @@ from services.agent.tools.plan_v2 import PLAN_V2_TOOL_NAMES, PlanRuntimeContext
 
 logger = logging.getLogger(__name__)
 
+
+def _json_safe_tool_result_data(value: Any) -> Any:
+    """Persist known structured tool results without lossy string coercion."""
+
+    if value is None or isinstance(value, (str, bool, int, float)):
+        return value
+    if isinstance(value, dict):
+        return {str(key): _json_safe_tool_result_data(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe_tool_result_data(item) for item in value]
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        return _json_safe_tool_result_data(model_dump(mode="json"))
+    to_dict = getattr(value, "to_dict", None)
+    if callable(to_dict):
+        return _json_safe_tool_result_data(to_dict())
+    raise TypeError(f"UNSUPPORTED_TOOL_AUDIT_RESULT_TYPE:{type(value).__name__}")
+
 #: Tools whose results should be diversified across a chat session by feeding
 #: back recently returned ids. ``suggest_dish`` picks deterministically by
 #: ``(|total_calories - target|, id)``; because every dish is scaled to the
@@ -97,6 +115,7 @@ _PUBLIC_TOOL_VALUE_ERRORS = frozenset(
         "INVALID_TARGET_KCAL",
         "INVALID_DIETARY_RESTRICTIONS",
         "INVALID_RECENT_DISH_IDS",
+        "INVALID_EXPOSURE_COUNTS",
         "NO_EXERCISES_FOUND",
         "INVALID_MUSCLE_GROUP",
         "INVALID_DURATION",
@@ -257,6 +276,7 @@ class ToolDispatcher:
         self._pending_calls: dict[str, tuple[str, asyncio.Future[ToolResult]]] = {}
         # session_id -> tool_name -> FIFO of ids already returned this session.
         self._recent_ids: dict[str, dict[str, deque[int]]] = {}
+        self._exposure_counts: dict[str, dict[str, dict[int, int]]] = {}
         # A reconnect creates a new dispatcher even when the logical chat or
         # account is unchanged. Track which session/tool windows have already
         # been hydrated from durable, owner-scoped invocation history so the
@@ -606,6 +626,7 @@ class ToolDispatcher:
             if not future.done():
                 future.set_result(ToolResult(ok=False, error="DISCONNECTED"))
         self._recent_ids.pop(session_id, None)
+        self._exposure_counts.pop(session_id, None)
         self._hydrated_recent_ids = {
             key for key in self._hydrated_recent_ids if key[0] != session_id
         }
@@ -657,6 +678,9 @@ class ToolDispatcher:
         # here keeps the tool signature untouched and preserves idempotency of
         # ``suggest_dish`` itself (same arguments still yield the same dish).
         call.arguments[_RECENT_IDS_ARG] = merged
+        counts = self._exposure_counts.get(session_id, {}).get(call.name)
+        if counts:
+            call.arguments["exposure_counts"] = {str(key): value for key, value in counts.items()}
 
     async def _hydrate_recent_ids(self, session_id: str, tool_name: str) -> None:
         """Load recent ids for the authenticated owner once per connection.
@@ -719,12 +743,14 @@ class ToolDispatcher:
         # SQL returns newest-first; append oldest-first so the deque preserves
         # FIFO meaning and evicts the genuinely oldest exposure next.
         newest_unique: list[int] = []
+        durable_counts: dict[int, int] = {}
         for row in rows:
             raw_id = row[0] if row else None
             try:
                 item_id = int(raw_id)
             except (TypeError, ValueError):
                 continue
+            durable_counts[item_id] = durable_counts.get(item_id, 0) + 1
             if item_id not in newest_unique:
                 newest_unique.append(item_id)
 
@@ -734,6 +760,10 @@ class ToolDispatcher:
         for item_id in reversed(newest_unique):
             if item_id not in window:
                 window.append(item_id)
+        if durable_counts:
+            counts = self._exposure_counts.setdefault(session_id, {}).setdefault(tool_name, {})
+            for item_id, count in durable_counts.items():
+                counts[item_id] = max(counts.get(item_id, 0), count)
 
     def _remember_result_id(
         self, session_id: str, call: ToolCall, result: ToolResult
@@ -757,6 +787,8 @@ class ToolDispatcher:
             # older entry and let the duplicate linger.
             return
         window.append(item_id)
+        counts = self._exposure_counts.setdefault(session_id, {}).setdefault(call.name, {})
+        counts[item_id] = counts.get(item_id, 0) + 1
         self._evict_stale_sessions(session_id)
 
     def _evict_stale_sessions(self, keep_session_id: str) -> None:
@@ -769,6 +801,7 @@ class ToolDispatcher:
         for stale_id in list(self._recent_ids)[:overflow]:
             if stale_id != keep_session_id:
                 self._recent_ids.pop(stale_id, None)
+                self._exposure_counts.pop(stale_id, None)
                 self._hydrated_recent_ids = {
                     key for key in self._hydrated_recent_ids if key[0] != stale_id
                 }
@@ -784,7 +817,7 @@ class ToolDispatcher:
         call: ToolCall,
         descriptor: ToolDescriptor,
     ) -> str | None:
-        from db.db_status import is_db_offline, mark_db_offline
+        from db.db_status import is_connectivity_failure, is_db_offline, mark_db_offline
         if self.db_session is None or is_db_offline():
             return None
         try:
@@ -812,9 +845,12 @@ class ToolDispatcher:
                 timeout=0.5,
             )
             return call.id
-        except Exception:
-            mark_db_offline(60.0)
-            logger.warning("Failed to insert tool invocation audit row (DB unavailable)")
+        except Exception as exc:
+            # Audit latency or a data/constraint defect must not announce a
+            # database outage and reject every subsequent chat session.
+            if is_connectivity_failure(exc):
+                mark_db_offline(60.0)
+            logger.warning("Failed to insert tool invocation audit row: %s", exc)
             return None
 
     async def _finalize_invocation(
@@ -840,7 +876,7 @@ class ToolDispatcher:
                     ),
                     {
                         "correlation_id": invocation_id,
-                        "result": json.dumps(result.data if result.ok else None),
+                        "result": json.dumps(_json_safe_tool_result_data(result.data) if result.ok else None),
                         "ok": result.ok,
                         "error_code": result.error,
                         "duration_ms": int((time.perf_counter() - started) * 1000),
@@ -859,7 +895,7 @@ class ToolDispatcher:
         result: ToolResult,
         started: float,
     ) -> None:
-        from db.db_status import is_db_offline, mark_db_offline
+        from db.db_status import is_connectivity_failure, is_db_offline, mark_db_offline
 
         if self.db_session is None or is_db_offline():
             return
@@ -884,7 +920,7 @@ class ToolDispatcher:
                         "tool_name": call.name,
                         "side": descriptor.side,
                         "arguments": json.dumps(call.arguments),
-                        "result": json.dumps(result.data if result.ok else None),
+                        "result": json.dumps(_json_safe_tool_result_data(result.data) if result.ok else None),
                         "ok": result.ok,
                         "error_code": result.error,
                         "duration_ms": int((time.perf_counter() - started) * 1000),
@@ -892,9 +928,13 @@ class ToolDispatcher:
                 ),
                 timeout=0.5,
             )
-        except Exception:
-            mark_db_offline(60.0)
-            logger.warning("Failed to insert completed read audit row (DB unavailable)")
+        except Exception as exc:
+            # A bounded best-effort audit may time out under load. Preserve
+            # the availability state unless the failure is truly a connection
+            # failure; otherwise the global offline latch blocks all turns.
+            if is_connectivity_failure(exc):
+                mark_db_offline(60.0)
+            logger.warning("Failed to insert completed read audit row: %s", exc)
 
     async def _load_idempotent_result(
         self,

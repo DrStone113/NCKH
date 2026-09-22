@@ -134,6 +134,9 @@ class MealModel {
   final String mealType; // sang, trua, toi, phu
   final List<MealItem> items; // danh sách thành phần
   final bool isCompleted;
+  final String? sourcePlanId;
+  final String? sourceRevisionId;
+  final String? sourcePlanItemId;
 
   MealModel({
     required this.id,
@@ -143,6 +146,9 @@ class MealModel {
     required String mealType,
     this.items = const [],
     this.isCompleted = false,
+    this.sourcePlanId,
+    this.sourceRevisionId,
+    this.sourcePlanItemId,
   }) : mealType = MealTypeUtils.normalize(mealType);
 
   // Tổng macro tính từ items
@@ -160,6 +166,9 @@ class MealModel {
         'mealType': mealType,
         'items': items.map((i) => i.toMap()).toList(),
         'isCompleted': isCompleted,
+        'sourcePlanId': sourcePlanId,
+        'sourceRevisionId': sourceRevisionId,
+        'sourcePlanItemId': sourcePlanItemId,
       };
 
   factory MealModel.fromMap(Map<String, dynamic> map) {
@@ -212,6 +221,9 @@ class MealModel {
       ),
       items: items,
       isCompleted: map['isCompleted'] == true,
+      sourcePlanId: map['sourcePlanId']?.toString(),
+      sourceRevisionId: map['sourceRevisionId']?.toString(),
+      sourcePlanItemId: map['sourcePlanItemId']?.toString(),
     );
   }
 
@@ -219,6 +231,9 @@ class MealModel {
     String? name,
     List<MealItem>? items,
     bool? isCompleted,
+    String? sourcePlanId,
+    String? sourceRevisionId,
+    String? sourcePlanItemId,
   }) =>
       MealModel(
         id: id,
@@ -228,6 +243,9 @@ class MealModel {
         mealType: mealType,
         items: items ?? this.items,
         isCompleted: isCompleted ?? this.isCompleted,
+        sourcePlanId: sourcePlanId ?? this.sourcePlanId,
+        sourceRevisionId: sourceRevisionId ?? this.sourceRevisionId,
+        sourcePlanItemId: sourcePlanItemId ?? this.sourcePlanItemId,
       );
 
   String get mealTypeText => MealTypeUtils.label(mealType);

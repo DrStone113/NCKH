@@ -20,6 +20,10 @@ from services.agent.tool_registry import ToolRegistry
 from services.agent.tools import register_client_tools, register_server_tools
 from services.agent.scope_guard import ScopeGuard, StrictJSONScopeClassifier
 from services.agent.semantic_scope_classifier import SemanticPrototypeScopeClassifier
+from services.agent.semantic_router_service import (
+    RestrictedJSONServerSLMAdapter,
+    SemanticRouterService,
+)
 from services.security_logging import install_access_log_redaction
 from services.backend_optimization import (
     AdaptiveAdmissionController,
@@ -147,7 +151,23 @@ async def lifespan(app: FastAPI):
         metrics=app.state.backend_cost_metrics,
         admission_controller=app.state.chat_admission,
     )
-    app.state.rag_service = RAGService(metrics=app.state.backend_cost_metrics)
+    if settings.acceptance_evaluation_corpus_version:
+        from services.experiment.acceptance_rag_adapter import AcceptanceCorpusRagAdapter
+
+        app.state.rag_service = AcceptanceCorpusRagAdapter(
+            corpus_version=settings.acceptance_evaluation_corpus_version,
+            corpus_hash=settings.acceptance_evaluation_corpus_hash or "",
+            metrics=app.state.backend_cost_metrics,
+        )
+        # The isolated frozen adapter verifies and loads its embedding runtime
+        # lazily.  Warming it before accepting traffic prevents the ordinary
+        # one-second context-loader deadline from cancelling first-turn
+        # evidence capture; this changes neither the frozen corpus nor ranking.
+        await app.state.rag_service.prewarm()
+        app.state.acceptance_corpus_injected_by_harness = True
+    else:
+        app.state.rag_service = RAGService(metrics=app.state.backend_cost_metrics)
+        app.state.acceptance_corpus_injected_by_harness = False
     app.state.registry = ToolRegistry()
     from services.agent.web_search import (
         DuckDuckGoProvider,
@@ -173,6 +193,8 @@ async def lifespan(app: FastAPI):
         allow_model_fallback=settings.llm_cross_model_fallback,
         max_attempts_per_model=settings.llm_attempts_per_model,
         reasoning_effort=settings.llm_reasoning_effort,
+        stream_idle_timeout_s=settings.llm_stream_idle_timeout_seconds,
+        stream_total_timeout_s=settings.llm_stream_total_timeout_seconds,
     )
     app.state.heavy_llm = LLMClient(
         model=settings.heavy_llm_model,
@@ -181,12 +203,24 @@ async def lifespan(app: FastAPI):
         allow_model_fallback=settings.llm_cross_model_fallback,
         max_attempts_per_model=settings.llm_attempts_per_model,
         reasoning_effort=settings.effective_heavy_llm_reasoning_effort,
+        stream_idle_timeout_s=settings.llm_stream_idle_timeout_seconds,
+        stream_total_timeout_s=settings.llm_stream_total_timeout_seconds,
     )
     app.state.scope_guard = None
+    app.state.server_semantic_router = None
+    app.state.server_semantic_router_llm = None
+    app.state.local_qwen_semantic_adapter = None
     scope_warmup_task: asyncio.Task[None] | None = None
     if settings.chat_scope_guard_mode == "strict":
         primary_scope_classifier = None
-        if settings.scope_router_model:
+        # A pinned local Qwen scope SLM is authoritative when configured. Do
+        # not also prewarm/download the legacy sentence-transformer encoder;
+        # it is only an availability fallback for deployments without local
+        # Qwen weights.
+        if (
+            settings.scope_router_model
+            and not settings.server_semantic_router_local_model_path
+        ):
             primary_scope_classifier = SemanticPrototypeScopeClassifier(
                 settings.scope_router_model,
                 device=settings.scope_router_device,
@@ -202,7 +236,19 @@ async def lifespan(app: FastAPI):
             )
             app.state.scope_warmup_task = scope_warmup_task
         scope_classifier = None
-        if settings.scope_classifier_model:
+        if settings.server_semantic_router_local_model_path:
+            from services.agent.local_qwen_semantic_adapter import LocalQwenSemanticAdapter
+
+            app.state.local_qwen_semantic_adapter = LocalQwenSemanticAdapter(
+                settings.server_semantic_router_local_model_path,
+                model_name=settings.server_semantic_router_model or "Qwen/Qwen3-0.6B",
+                expected_model_sha256=(
+                    settings.server_semantic_router_local_model_sha256 or ""
+                ),
+                timeout_seconds=settings.server_semantic_router_timeout_seconds,
+            )
+            scope_classifier = app.state.local_qwen_semantic_adapter
+        elif settings.scope_classifier_model:
             app.state.scope_classifier_llm = LLMClient(
                 model=settings.scope_classifier_model,
                 base_url=settings.openai_base_url,
@@ -211,6 +257,8 @@ async def lifespan(app: FastAPI):
                 allow_model_fallback=False,
                 max_attempts_per_model=settings.llm_attempts_per_model,
                 reasoning_effort=settings.llm_reasoning_effort,
+                stream_idle_timeout_s=settings.llm_stream_idle_timeout_seconds,
+                stream_total_timeout_s=settings.llm_stream_total_timeout_seconds,
             )
             scope_classifier = StrictJSONScopeClassifier(
                 app.state.scope_classifier_llm,
@@ -224,6 +272,61 @@ async def lifespan(app: FastAPI):
             primary_low_confidence=settings.scope_router_low_confidence,
             primary_high_confidence=settings.scope_router_high_confidence,
             primary_timeout_seconds=settings.scope_router_timeout_seconds,
+        )
+        if app.state.local_qwen_semantic_adapter is not None:
+            logger.info(
+                "Loading local scope SLM before readiness - model=%s",
+                app.state.local_qwen_semantic_adapter.model_name,
+            )
+            # Do not advertise a healthy backend until the pinned 0.6B model
+            # has passed checksum verification and its weights are resident.
+            # This moves first-turn latency into start-all's readiness phase.
+            await app.state.local_qwen_semantic_adapter.prewarm()
+            logger.info(
+                "Local scope SLM ready - model=%s",
+                app.state.local_qwen_semantic_adapter.model_name,
+            )
+    if settings.server_semantic_router_mode != "off":
+        server_slm_adapter = None
+        if app.state.local_qwen_semantic_adapter is not None:
+            server_slm_adapter = app.state.local_qwen_semantic_adapter
+        elif settings.server_semantic_router_local_model_path:
+            # LocalQwenSemanticAdapter is the existing narrow Transformers
+            # runtime. It verifies a pinned local artifact and never fetches
+            # a model in a request-serving process.
+            from services.agent.local_qwen_semantic_adapter import LocalQwenSemanticAdapter
+
+            server_slm_adapter = LocalQwenSemanticAdapter(
+                settings.server_semantic_router_local_model_path,
+                model_name=(
+                    settings.server_semantic_router_model or "Qwen/Qwen3-0.6B"
+                ),
+                expected_model_sha256=(
+                    settings.server_semantic_router_local_model_sha256 or ""
+                ),
+                timeout_seconds=settings.server_semantic_router_timeout_seconds,
+            )
+        elif settings.server_semantic_router_model:
+            app.state.server_semantic_router_llm = LLMClient(
+                model=settings.server_semantic_router_model,
+                base_url=settings.openai_base_url,
+                api_key=settings.openai_api_key,
+                request_timeout_s=settings.server_semantic_router_timeout_seconds,
+                allow_model_fallback=False,
+                max_attempts_per_model=settings.llm_attempts_per_model,
+                reasoning_effort="none",
+                stream_idle_timeout_s=settings.llm_stream_idle_timeout_seconds,
+                stream_total_timeout_s=settings.llm_stream_total_timeout_seconds,
+            )
+            server_slm_adapter = RestrictedJSONServerSLMAdapter(
+                app.state.server_semantic_router_llm,
+                model_name=settings.server_semantic_router_model,
+                timeout_seconds=settings.server_semantic_router_timeout_seconds,
+            )
+        app.state.server_semantic_router = SemanticRouterService(
+            mode=settings.server_semantic_router_mode,
+            slm_adapter=server_slm_adapter,
+            slm_confidence_threshold=settings.server_semantic_router_confidence,
         )
     app.state.memory = MemoryService(app.state.db_session, app.state.rag_service)
     app.state.session_store = DbSessionStore(app.state.db_session)
@@ -242,6 +345,7 @@ async def lifespan(app: FastAPI):
         max_steps=settings.max_agent_steps,
         tool_timeout_ms=15000,
         scope_guard=app.state.scope_guard,
+        semantic_router=app.state.server_semantic_router,
         metrics=app.state.backend_cost_metrics,
         memory_semaphore=app.state.background_memory_semaphore,
     )

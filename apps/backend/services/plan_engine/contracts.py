@@ -29,6 +29,27 @@ class PlanDomain(StrEnum):
     COMBINED_HEALTH = "COMBINED_HEALTH"
 
 
+class PlanArtifactKind(StrEnum):
+    """User-facing planned artifact semantics.
+
+    ``PlanDomain`` remains wire-compatible with existing rows.  This enum is
+    the public contract used by chat and Flutter so a single nutrition day is
+    never confused with a multi-day menu or a combined Plan.
+    """
+
+    MENU = "MENU"
+    WORKOUT = "WORKOUT"
+    COMBINED_PLAN = "COMBINED_PLAN"
+
+    @classmethod
+    def for_domain(cls, domain: "PlanDomain") -> "PlanArtifactKind":
+        return {
+            PlanDomain.NUTRITION: cls.MENU,
+            PlanDomain.WORKOUT: cls.WORKOUT,
+            PlanDomain.COMBINED_HEALTH: cls.COMBINED_PLAN,
+        }[domain]
+
+
 class PlanLifecycleStatus(StrEnum):
     DRAFT = "DRAFT"
     PENDING_CONFIRMATION = "PENDING_CONFIRMATION"
@@ -228,6 +249,10 @@ class PlanRevision:
     def revision_content_hash(self) -> str:
         return content_hash(self.content_identity())
 
+    @property
+    def artifact_kind(self) -> PlanArtifactKind:
+        return PlanArtifactKind.for_domain(self.domain)
+
     def content_identity(self) -> dict[str, Any]:
         return {
             "plan_id": self.plan_id,
@@ -357,7 +382,7 @@ def new_revision_id() -> str:
 
 
 __all__ = [
-    "ContextState", "ContextValue", "PLAN_SCHEMA_VERSION", "PlanDomain",
+    "ContextState", "ContextValue", "PLAN_SCHEMA_VERSION", "PlanDomain", "PlanArtifactKind",
     "PlanItem", "PlanItemStatus", "PlanItemType", "PlanLifecycleStatus",
     "PlanPatch", "PlanPatchOperation", "PlanRequest", "PlanRevision",
     "PlanValidationIssue", "PlanValidationResult", "PlanValidationStatus",

@@ -544,57 +544,6 @@ class WorkoutRepository:
         row = result.first()
         return str(row[0]) if row is not None else None
 
-    async def load_user_facts_profile(self, user_id: str) -> dict[str, Any] | None:
-        if self._db is None or not user_id:
-            return None
-        try:
-            result = await self._db.execute(text("""
-                SELECT category, fact, status FROM user_facts
-                WHERE user_id = :user_id AND status = 'confirmed'
-            """), {"user_id": user_id})
-            rows = result.fetchall()
-            if not rows:
-                return None
-            profile: dict[str, Any] = {
-                "intake_confirmation_status": "CONFIRMED",
-                "training_location": "home",
-                "default_session_duration_minutes": 60,
-                "current_pain_status": "NO",
-                "safety_checked_at": datetime.now(timezone.utc).isoformat(),
-                "exercise_safety_profile": {
-                    "health_state": "HEALTHY_GENERAL",
-                    "pregnancy_status": "NOT_APPLICABLE",
-                    "warning_symptoms": [],
-                    "acute_injury": False,
-                    "recent_surgery": False,
-                    "technique_screen_confirmed": False,
-                },
-            }
-            equipment = []
-            for row in rows:
-                mapping = self._mapping(row)
-                fact = str(mapping.get("fact", "")).lower()
-                if "thảm" in fact or "mat" in fact:
-                    equipment.append("gym mat")
-                if "tạ" in fact or "dumbbell" in fact:
-                    equipment.append("dumbbell")
-                if "mới bắt đầu" in fact or "novice" in fact:
-                    profile["training_experience"] = "NOVICE"
-                elif "năm" in fact or "lâu" in fact or "experienced" in fact:
-                    profile["training_experience"] = "EXPERIENCED"
-                if "thứ" in fact:
-                    days = re.findall(r"thứ \d|chủ nhật", fact, re.IGNORECASE)
-                    if days:
-                        profile["preferred_training_days"] = [d.capitalize() for d in days]
-                        profile["available_days_per_week"] = len(days)
-            if equipment:
-                profile["available_equipment"] = equipment
-            elif "available_equipment" not in profile:
-                profile["available_equipment"] = ["none"]
-            return profile
-        except Exception:
-            return None
-
     async def put_preview(self, user_id: str, plan_id: str, presentation: Mapping[str, Any]) -> None:
         db = self._require_db()
         await db.execute(
@@ -842,31 +791,6 @@ class WorkoutIntegrationService:
         user_id = runtime.user_id or context.get("user_id")
         if not isinstance(user_id, str) or not user_id or user_id == "anonymous":
             return IntegrationOutcome("CLARIFICATION_REQUIRED", None, None, None, {}, {}, {}, {"total": round((time.perf_counter() - started) * 1000, 3)}, "AUTHORITATIVE_USER_CONTEXT_REQUIRED")
-        
-        # Fallback to confirmed user_facts if workout_profile is missing or incomplete
-        raw_workout_profile = context.get("workout_profile")
-        if not isinstance(raw_workout_profile, Mapping) or not raw_workout_profile:
-            try:
-                db_profile = await self._repository.load_user_facts_profile(user_id)
-                if db_profile:
-                    context = {**context, "workout_profile": db_profile}
-            except Exception:
-                pass
-        elif isinstance(raw_workout_profile, Mapping) and (
-            not raw_workout_profile.get("available_equipment")
-            or not raw_workout_profile.get("training_experience")
-        ):
-            try:
-                db_profile = await self._repository.load_user_facts_profile(user_id)
-                if db_profile:
-                    merged_wp = {**db_profile, **raw_workout_profile}
-                    for k in ("available_equipment", "training_experience", "preferred_training_days"):
-                        if not raw_workout_profile.get(k) and db_profile.get(k):
-                            merged_wp[k] = db_profile[k]
-                    context = {**context, "workout_profile": merged_wp}
-            except Exception:
-                pass
-
         profile_started = time.perf_counter()
         normalized_goal = normalize_workout_goal(goal_override, context=context)
         adapted = self._profiles.adapt(context, goal_override=normalized_goal)

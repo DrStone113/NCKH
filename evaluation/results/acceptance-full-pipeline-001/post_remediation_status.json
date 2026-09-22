@@ -1,0 +1,81 @@
+{
+  "schema_version": "post-remediation-status-v1",
+  "status": "DEVELOPMENT_REMEDIATION_ONLY_NOT_A_RESCORING",
+  "baseline": {
+    "preserved_manifest": "pre_remediation_baseline_manifest.json",
+    "run_id": "acceptance-full-pipeline-001",
+    "corpus_version": "offline-acceptance-vn-4954",
+    "corpus_hash": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+    "frozen_acceptance_cases": 200,
+    "acceptance_cases_sha256": "f5a539aa055196650b1c948fd797d6839db1620f1e5a4c7625b059d6f591512b"
+  },
+  "implemented_boundaries": {
+    "urgent_health": {
+      "status": "IMPLEMENTED_AND_DEVELOPMENT_TESTED",
+      "location": "services/agent/scope_guard.py",
+      "behavior": "Unicode-normalized deterministic red-flag admission guard short-circuits mixed turns before memory, tools, semantic routing, and main LLM.",
+      "baseline_miss_count": "NOT_RESCORED; exposed safety holdouts were not rerun"
+    },
+    "rag_forbidden": {
+      "status": "IMPLEMENTED_AND_DEVELOPMENT_TESTED",
+      "location": "services/agent/orchestrator.py",
+      "behavior": "RAG_FORBIDDEN removes query_rag and search_medical_knowledge from LLM schemas and rejects either name at dispatch.",
+      "baseline_forbidden_rag_calls": 1,
+      "post_remediation_invocations": "NOT_MEASURED; no frozen or exposed holdout rerun"
+    },
+    "session_persistence": {
+      "status": "CONNECTIVITY_AND_INTEGRITY_SEPARATED_AND_DEVELOPMENT_TESTED",
+      "locations": ["db/db_status.py", "services/agent/chat_gateway.py", "db/session_store.py"],
+      "behavior": "Only connectivity failures set the database-offline state; integrity errors fail the turn instead of allowing an orphan message write."
+    }
+  },
+  "baseline_failure_analysis": {
+    "source": "full_pipeline.jsonl",
+    "failure_count": 7,
+    "classifications": [
+      {
+        "case_ids": ["AVN-089", "AVN-095", "AVN-109"],
+        "class": "ORCHESTRATION_ERROR",
+        "cause": "The local WebSocket runner encountered client-only get_user_profile/get_today_meals calls but has no real Flutter client-tool executor.",
+        "count": 3
+      },
+      {
+        "case_ids": ["AVN-090", "AVN-116"],
+        "class": "APPLICATION_EXCEPTION",
+        "cause": "Run records report INTERNAL_ERROR with blank response. The contemporaneous server log contains 442 chat_messages_session_id_fkey lines, but the retained records do not support causal attribution to either individual case.",
+        "count": 2
+      },
+      {
+        "case_ids": ["AVN-117", "AVN-118"],
+        "class": "TIMEOUT",
+        "cause": "TRANSPORT_OR_APPLICATION_ERROR / TimeoutError. AVN-117 retained a 1,133-character response before runner timeout; AVN-118 retained no response.",
+        "count": 2
+      }
+    ],
+    "session_fk_log_lines": 442,
+    "claim": "Foreign-key integrity defects are distinguished from connectivity failures; no claim is made that all seven errors share one cause."
+  },
+  "development_regression": {
+    "command_scope": [
+      "tests/test_scope_guard.py",
+      "tests/test_orchestrator.py",
+      "tests/test_context_planner_shadow.py",
+      "tests/test_chat_gateway.py",
+      "tests/test_db_status.py"
+    ],
+    "result": "204 passed in 3.21s",
+    "frozen_evaluations_rerun": false
+  },
+  "unseen_confirmation_holdout_inventory": {
+    "available": false,
+    "reason": "The 140-case routing holdout, 120-case server semantic routing holdout, 60-case safety V1, and 80-case safety V2 have already been scored or exposed during qualification. The 251-case routing candidate pool is a construction pool, not an independent confirmation holdout.",
+    "action": "No new case or benchmark was generated."
+  },
+  "immutability": {
+    "corpus_modified": false,
+    "frozen_test_modified": false,
+    "baseline_result_overwritten": false,
+    "commit_created": false,
+    "push_created": false
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "run_status": "COMPLETED_FROZEN",
+  "full_pipeline_cases_completed": 200,
+  "corpus_version": "offline-acceptance-vn-4954",
+  "corpus_sha256": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+  "expected_channel_projection_sha256": "d28e3e308b3b5c98c489a5e00a536ba63ff447bbb01db6188fde6844dd00638e",
+  "grading_rubric_sha256": "87ac24dcf4e123285d81f7d8ebafdc30d03d4bd376aab9b44c7c38870a87a1f9",
+  "production_rag_tables_changed": "NO",
+  "production_runtime_default_changed": "NO",
+  "frozen_oracle_modified": "NO",
+  "corpus_modified": "NO",
+  "remediation_changes_started": "NO",
+  "artifacts": {
+    "full_pipeline.jsonl": "6083a949200128fddbf264f8d3344e074062edc9b38d463110c98755ba2083e3",
+    "run_metadata.json": "177c8ccc7d27c110298ac4032268931774fbeaa96e4ac9222148bdfdd9bfb496",
+    "full_pipeline_runner.log": "1902565e160df1012af2dafc039665b6eaa4a2ed7c0a01ce44b5717d2d56173c",
+    "full_pipeline_runner.err": "25f113528c1b10c4357be117340c59905771da6c09393a389a7602fe9b9f5a9a",
+    "acceptance_server.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "acceptance_server.log.err": "dcb6e24579146751fe0516a6f4de0527de1951a57cb5deb566d518777b386855"
+  }
+}

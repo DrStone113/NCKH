@@ -1,0 +1,8 @@
+{
+  "automated_judge": null,
+  "faithfulness": null,
+  "provenance_correctness": null,
+  "reason": "Current backend configuration has no LLM API key; actual application generation was not called.",
+  "status": "BLOCKED",
+  "unsupported_claim_rate": null
+}

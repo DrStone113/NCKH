@@ -1,0 +1,7 @@
+{
+  "source_id": "USDA_FDC_SR_LEGACY_2018",
+  "path": "apps/backend/data/research_v2/raw/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+  "sha256": "0fe8ae486a2c8eb42cb96413f058deb51863a46c8fb8eeb4b1fb45006dd338ef",
+  "cache_hit": false,
+  "accessed_at": "2026-09-21T16:27:23.264760+00:00"
+}

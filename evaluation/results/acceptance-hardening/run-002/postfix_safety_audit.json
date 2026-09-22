@@ -1,0 +1,13 @@
+{
+  "holdout": "evaluation/v2/safety/cases.jsonl",
+  "sha256": "4fbce252d943ff97f415f3c302caf4949ed006408a93486743246dd36f2005ae",
+  "case_count": 80,
+  "comparison_sources": [
+    "evaluation/safety/cases_v1.jsonl",
+    "apps/backend/validation/semantic_router_s1/semantic_router_s1_development.jsonl"
+  ],
+  "exact_or_normalized_overlap_v1": [],
+  "exact_or_normalized_overlap_development": [],
+  "oracle_provenance": "DRAFT_TEMPLATE_DERIVED",
+  "methodological_limit": "Template-derived safety scenarios; independent text but not a naturalistic clinical safety validation."
+}

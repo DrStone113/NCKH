@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -39,8 +40,48 @@ async def test_application_and_health_questions_reach_main_pipeline(text: str, e
     decision = await ScopeGuard().classify(text)
 
     assert decision.category == expected
+    if expected == ScopeCategory.SAFETY_ESCALATION:
+        assert decision.should_call_main_llm is False
+        assert decision.reply
+    else:
+        assert decision.should_call_main_llm is True
+        assert decision.reply is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Cua bể có bao nhiêu đạm và năng lượng?", ScopeCategory.IN_SCOPE_NUTRITION),
+        ("food nutrients apple yogurt", ScopeCategory.IN_SCOPE_NUTRITION),
+        ("mon Món Cháo sò điệp", ScopeCategory.IN_SCOPE_NUTRITION),
+        ("Hip Thrust tác động cơ nào?", ScopeCategory.IN_SCOPE_FITNESS),
+        ("Cách tập Dumbbell rear delt row", ScopeCategory.IN_SCOPE_FITNESS),
+    ],
+)
+async def test_direct_catalog_lookup_shapes_are_admitted(text: str, expected: ScopeCategory) -> None:
+    decision = await ScopeGuard().classify(text)
+
+    assert decision.category == expected
     assert decision.should_call_main_llm is True
-    assert decision.reply is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Hướng dẫn dùng thuốc kê toa giảm cân",
+        "Phân biệt bệnh hiếm cho tôi",
+        "Chẩn đoán bệnh từ tin nhắn này",
+    ],
+)
+async def test_restricted_medical_actions_stop_before_rag_and_answer_llm(text: str) -> None:
+    decision = await ScopeGuard().classify(text)
+
+    assert decision.category == ScopeCategory.OUT_OF_SCOPE
+    assert decision.should_call_main_llm is False
+    assert "RESTRICTED_MEDICAL_REQUEST" in decision.reason_code
+    assert "bác sĩ" in (decision.reply or "")
 
 
 @pytest.mark.asyncio
@@ -53,6 +94,8 @@ async def test_application_and_health_questions_reach_main_pipeline(text: str, e
         ("Viết thuật toán quicksort bằng Python", "PROGRAMMING_REQUEST"),
         ("Dịch câu này sang tiếng Anh", "TRANSLATION_REQUEST"),
         ("Lên kế hoạch du lịch Đà Nẵng", "TRAVEL_REQUEST"),
+        ("Lên kế hoạch du lịch ngày mai cho tôi", "TRAVEL_REQUEST"),
+        ("Lập kế hoạch kinh doanh tuần tới cho mình", "BUSINESS_REQUEST"),
     ],
 )
 async def test_clear_off_topic_questions_are_blocked(text: str, reason: str) -> None:
@@ -95,6 +138,28 @@ async def test_aggressive_weight_goal_stays_in_scope_with_separate_safety_signal
     assert aggressive.should_call_main_llm is True
     assert gradual.safety == SafetyDisposition.NONE
     assert urgent.safety == SafetyDisposition.URGENT_ESCALATION
+    assert urgent.should_call_main_llm is False
+    assert urgent.reply
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "text",
+    [
+        "TOI KHO THO!!!",
+        "Tôi bị ngất, cần biết tối nay ăn gì",
+        "I cannot breathe after eating",
+        "Tôi bị sưng lưỡi và nghet tho",
+    ],
+)
+async def test_urgent_health_guard_normalizes_and_overrides_mixed_request(text: str) -> None:
+    decision = await ScopeGuard().classify(text)
+
+    assert decision.category == ScopeCategory.SAFETY_ESCALATION
+    assert decision.safety == SafetyDisposition.URGENT_ESCALATION
+    assert decision.should_call_main_llm is False
+    assert decision.allowed_text == ""
+    assert decision.reply
 
 
 @pytest.mark.asyncio
@@ -105,6 +170,55 @@ async def test_code_switched_weight_goal_keeps_weight_management_intent_without_
     assert decision.intent == ScopeIntent.WEIGHT_MANAGEMENT
     assert decision.reason_code == "WEIGHT_GOAL_REQUEST"
     assert decision.should_call_main_llm is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Hello lên kế hoạch ngày mai cho tôi đi",
+        "Giúp mình tạo kế hoạch hôm nay",
+        "Can you plan tomorrow for me?",
+    ],
+)
+async def test_object_light_personal_daily_plan_enters_health_plan_flow(text: str) -> None:
+    decision = await ScopeGuard().classify(text)
+
+    assert decision.category == ScopeCategory.IN_SCOPE_MEAL_PLAN
+    assert decision.intent == ScopeIntent.MEAL_PLANNING
+    assert decision.reason_code == "PERSONAL_HEALTH_PLAN_REQUEST"
+    assert decision.should_call_main_llm is True
+
+
+@pytest.mark.asyncio
+async def test_personal_daily_plan_is_decided_by_slm_scope_gate() -> None:
+    primary = _Classifier(
+        TopicPrediction(
+            ScopeCategory.OUT_OF_SCOPE,
+            0.99,
+            "SEMANTIC_OUT_OF_SCOPE",
+            "encoder-v1",
+            ScopeIntent.OUT_OF_SCOPE,
+        )
+    )
+    judge = _Classifier(
+        TopicPrediction(
+            ScopeCategory.OUT_OF_SCOPE,
+            0.99,
+            "WRONG_JUDGE",
+            "judge-v1",
+            ScopeIntent.OUT_OF_SCOPE,
+        )
+    )
+
+    decision = await ScopeGuard(judge, primary_classifier=primary).classify(
+        "Hello lên kế hoạch ngày mai cho tôi đi"
+    )
+
+    assert decision.category == ScopeCategory.OUT_OF_SCOPE
+    assert decision.reason_code == "WRONG_JUDGE"
+    assert primary.calls == 0
+    assert judge.calls == 1
 
 
 @pytest.mark.asyncio
@@ -152,6 +266,8 @@ async def test_short_continuations_reach_pending_action_pipeline(text: str) -> N
         "gợi ý giúp mình với",
         "nói rõ hơn đi",
         "cho mình xem thêm một lựa chọn",
+        "cả 2",
+        "cả hai",
     ],
 )
 def test_contextual_continuation_grammar_covers_object_light_followups(
@@ -194,6 +310,25 @@ def test_contextual_continuation_requires_an_accepted_health_anchor() -> None:
     assert decision.allowed_text == "gợi ý đi"
 
 
+@pytest.mark.parametrize("reply", ["cả 2", "cả hai"])
+def test_combined_plan_reply_binds_to_previous_plan_question(reply: str) -> None:
+    guard = ScopeGuard()
+    history = [
+        SimpleNamespace(role="user", content="Lên kế hoạch ngày mai cho tôi"),
+        SimpleNamespace(
+            role="assistant",
+            content="Bạn muốn lên kế hoạch ăn uống, tập luyện hay cả hai?",
+        ),
+    ]
+
+    decision = guard.contextualize_continuation(reply, history)
+
+    assert decision is not None
+    assert decision.category == ScopeCategory.IN_SCOPE_MEAL_PLAN
+    assert decision.reason_code == "CONTEXTUAL_CONTINUATION"
+    assert decision.allowed_text == reply
+
+
 def test_contextual_continuation_fails_closed_without_health_anchor() -> None:
     guard = ScopeGuard()
     history = [SimpleNamespace(role="user", content="Viết code Python")]
@@ -222,7 +357,7 @@ class _FailingClassifier:
 
 
 @pytest.mark.asyncio
-async def test_hybrid_router_accepts_high_confidence_weight_intent_without_judge() -> None:
+async def test_slm_scope_gate_is_authoritative_before_the_encoder() -> None:
     primary = _Classifier(
         TopicPrediction(
             ScopeCategory.IN_SCOPE_GENERAL_WELLNESS,
@@ -245,12 +380,11 @@ async def test_hybrid_router_accepts_high_confidence_weight_intent_without_judge
         "Tôi muốn giảm 2 kí trong 2 tháng thôi"
     )
 
-    assert decision.category == ScopeCategory.IN_SCOPE_GENERAL_WELLNESS
-    assert decision.intent == ScopeIntent.WEIGHT_MANAGEMENT
-    assert decision.should_call_main_llm is True
-    assert decision.method == "SMALL_INTENT_CLASSIFIER:encoder-v1"
-    assert primary.calls == 1
-    assert judge.calls == 0
+    assert decision.category == ScopeCategory.OUT_OF_SCOPE
+    assert decision.should_call_main_llm is False
+    assert decision.method == "SLM_SCOPE_GATE:judge-v1"
+    assert primary.calls == 0
+    assert judge.calls == 1
 
 
 @pytest.mark.asyncio
@@ -278,13 +412,13 @@ async def test_hybrid_router_sends_uncertain_prediction_to_json_judge() -> None:
     )
 
     assert decision.category == ScopeCategory.IN_SCOPE_PROFILE_APP
-    assert decision.method == "LLM_SCOPE_JUDGE:judge-v1"
-    assert primary.calls == 1
+    assert decision.method == "SLM_SCOPE_GATE:judge-v1"
+    assert primary.calls == 0
     assert judge.calls == 1
 
 
 @pytest.mark.asyncio
-async def test_hybrid_router_keeps_very_low_confidence_input_ambiguous() -> None:
+async def test_high_confidence_slm_oos_does_not_defer_to_encoder() -> None:
     primary = _Classifier(
         TopicPrediction(
             ScopeCategory.OUT_OF_SCOPE,
@@ -305,10 +439,11 @@ async def test_hybrid_router_keeps_very_low_confidence_input_ambiguous() -> None
     )
     decision = await ScopeGuard(judge, primary_classifier=primary).classify("Cái đó ổn chứ?")
 
-    assert decision.category == ScopeCategory.AMBIGUOUS
+    assert decision.category == ScopeCategory.OUT_OF_SCOPE
     assert decision.should_call_main_llm is False
-    assert decision.reason_code == "LOW_CONFIDENCE_INTENT"
-    assert judge.calls == 0
+    assert decision.reason_code == "SHOULD_NOT_RUN"
+    assert primary.calls == 0
+    assert judge.calls == 1
 
 
 @pytest.mark.asyncio
@@ -336,7 +471,7 @@ async def test_hybrid_router_judges_rule_classifier_disagreement() -> None:
     )
 
     assert decision.category == ScopeCategory.IN_SCOPE_NUTRITION
-    assert decision.method == "LLM_SCOPE_JUDGE:judge-v1"
+    assert decision.method == "SLM_SCOPE_GATE:judge-v1"
     assert decision.should_call_main_llm is True
 
 
@@ -353,7 +488,7 @@ async def test_hybrid_router_falls_back_to_clear_health_rule_when_encoder_is_una
 
 
 @pytest.mark.asyncio
-async def test_hard_safety_and_explicit_oos_rules_bypass_both_models() -> None:
+async def test_only_hard_safety_bypasses_slm_scope_gate() -> None:
     primary = _Classifier(
         TopicPrediction(
             ScopeCategory.IN_SCOPE_NUTRITION,
@@ -378,13 +513,13 @@ async def test_hard_safety_and_explicit_oos_rules_bypass_both_models() -> None:
     coding = await guard.classify("Viết code đăng nhập bằng Flutter")
 
     assert safety.category == ScopeCategory.SAFETY_ESCALATION
-    assert coding.category == ScopeCategory.OUT_OF_SCOPE
+    assert coding.category == ScopeCategory.IN_SCOPE_NUTRITION
     assert primary.calls == 0
-    assert judge.calls == 0
+    assert judge.calls == 1
 
 
 @pytest.mark.asyncio
-async def test_small_classifier_runs_only_for_ambiguous_input() -> None:
+async def test_slm_scope_gate_runs_for_clear_and_ambiguous_input() -> None:
     classifier = _Classifier(
         TopicPrediction(ScopeCategory.IN_SCOPE_PROFILE_APP, 0.91, "APP_SUPPORT", "scope-slm-v1")
     )
@@ -393,22 +528,22 @@ async def test_small_classifier_runs_only_for_ambiguous_input() -> None:
     clear = await guard.classify("Tối nay tôi nên ăn gì?")
     ambiguous = await guard.classify("Hỗ trợ mục tiêu của mình")
 
-    assert clear.category == ScopeCategory.IN_SCOPE_NUTRITION
-    assert classifier.calls == 1
+    assert clear.category == ScopeCategory.IN_SCOPE_PROFILE_APP
+    assert classifier.calls == 2
     assert ambiguous.category == ScopeCategory.IN_SCOPE_PROFILE_APP
-    assert ambiguous.method == "LLM_SCOPE_JUDGE:scope-slm-v1"
+    assert ambiguous.method == "SLM_SCOPE_GATE:scope-slm-v1"
 
 
 @pytest.mark.asyncio
-async def test_clear_off_topic_input_never_calls_small_classifier() -> None:
+async def test_clear_off_topic_input_is_still_decided_by_slm() -> None:
     classifier = _Classifier(
         TopicPrediction(ScopeCategory.IN_SCOPE_NUTRITION, 0.99, "WRONG_OVERRIDE", "scope-slm-v1")
     )
 
     decision = await ScopeGuard(classifier).classify("Viết code Flutter đăng nhập Firebase")
 
-    assert decision.category == ScopeCategory.OUT_OF_SCOPE
-    assert classifier.calls == 0
+    assert decision.category == ScopeCategory.IN_SCOPE_NUTRITION
+    assert classifier.calls == 1
 
 
 @pytest.mark.asyncio
@@ -433,7 +568,7 @@ class _JSONLLM:
 
 
 @pytest.mark.asyncio
-async def test_json_classifier_has_no_tools_history_or_answer_authority() -> None:
+async def test_json_classifier_has_bounded_context_but_no_tools_or_answer_authority() -> None:
     llm = _JSONLLM(
         LLMResponse(
             full_text=(
@@ -444,7 +579,13 @@ async def test_json_classifier_has_no_tools_history_or_answer_authority() -> Non
     )
     classifier = StrictJSONScopeClassifier(llm, model_version="scope-slm-v1")
 
-    prediction = await classifier.classify("Viết quicksort")
+    prediction = await classifier.classify_with_context(
+        "Viết quicksort",
+        recent_history=[
+            SimpleNamespace(role="user", content="Tôi muốn ăn lành mạnh"),
+            SimpleNamespace(role="assistant", content="Bạn muốn ăn món nào?"),
+        ],
+    )
 
     assert prediction.scope == ScopeCategory.OUT_OF_SCOPE
     assert prediction.intent == ScopeIntent.OUT_OF_SCOPE
@@ -454,6 +595,38 @@ async def test_json_classifier_has_no_tools_history_or_answer_authority() -> Non
     assert stream is False
     assert max_tokens == 96
     assert "Viết quicksort" not in messages[0]["content"]
+    payload = json.loads(messages[1]["content"])
+    assert payload["current_text"] == "Viết quicksort"
+    assert payload["recent_context"] == [
+        {"role": "user", "content": "Tôi muốn ăn lành mạnh"},
+        {"role": "assistant", "content": "Bạn muốn ăn món nào?"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_scope_guard_passes_recent_context_to_slm_gate() -> None:
+    class _ContextualClassifier:
+        def __init__(self) -> None:
+            self.history = None
+
+        async def classify_with_context(self, text, *, recent_history):
+            self.history = recent_history
+            return TopicPrediction(
+                ScopeCategory.IN_SCOPE_MEAL_PLAN,
+                0.98,
+                "CONTEXTUAL_BOTH",
+                "scope-slm-v1",
+                ScopeIntent.MEAL_PLANNING,
+            )
+
+    classifier = _ContextualClassifier()
+    history = [SimpleNamespace(role="assistant", content="Ăn, tập hay cả hai?")]
+
+    decision = await ScopeGuard(classifier).classify("cả 2", history)
+
+    assert classifier.history is history
+    assert decision.category == ScopeCategory.IN_SCOPE_MEAL_PLAN
+    assert decision.method == "SLM_SCOPE_GATE:scope-slm-v1"
 
 
 @pytest.mark.asyncio

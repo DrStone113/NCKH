@@ -1,0 +1,31 @@
+{
+  "candidate_case_count": 323,
+  "contamination_audit": {
+    "exact_overlap_case_ids": [],
+    "exact_overlap_count": 0,
+    "normalized_overlap_count": 0,
+    "pass": true,
+    "semantic_near_duplicate_case_ids": [],
+    "semantic_near_duplicate_count": 0
+  },
+  "corpus_hash": "7bc4037a42b59288b6fa8dcc6836b3856057d2f1ba51eadde4994214d6a2952d",
+  "corpus_version": "offline-final-4419",
+  "created_at": "2026-09-21T17:04:52.989568+00:00",
+  "domain_counts": {
+    "body_metric": 2,
+    "dish": 15,
+    "exercise": 42,
+    "food": 54,
+    "health": 15,
+    "health_safety": 3,
+    "micronutrient": 20,
+    "no_evidence": 15,
+    "nutrition": 16,
+    "physical_activity_guideline": 16,
+    "weight_management": 2
+  },
+  "final_case_count": 200,
+  "final_cases_sha256": "aa71ac8b4c916819b4908741926fc1eedec1155adfd24a30afd79fe39d6f06b8",
+  "gold_independent_of_retrieval": true,
+  "schema_version": "final-evaluation-freeze-1"
+}

@@ -1798,8 +1798,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       setState(() => _activePlan = createdPlan);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ Đã tạo kế hoạch $days ngày thành công'),
-          backgroundColor: Colors.green,
+          content: Text('Đã tạo bản xem trước $days ngày. Hãy kiểm tra rồi lưu kế hoạch.'),
+          backgroundColor: Colors.blue,
         ),
       );
       // REST planner trả về chính kế hoạch vừa ghi. Dùng payload đó ngay để

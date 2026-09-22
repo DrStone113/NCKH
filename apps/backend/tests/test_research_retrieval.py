@@ -10,6 +10,10 @@ from services.experiment.config import ExperimentConfig
 from services.experiment.errors import ExperimentError
 from services.experiment.models import RetrievalTrace
 from services.experiment.rag import PostgresFrozenRagProvider, fuse_rankings
+from services.experiment.acceptance_rag_adapter import (
+    _metadata_domains_for_query,
+    _metadata_rank_key,
+)
 
 
 def _row(
@@ -179,3 +183,35 @@ async def test_real_pgvector_retrieval_is_frozen_read_only_and_repeatable() -> N
                 )
     finally:
         await conn.close()
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        ("Theo hướng dẫn Việt Nam, an toàn thực phẩm cần lưu ý gì?", ("VN_NUTRITION_GUIDELINE",)),
+        ("RNI Việt Nam 2026 về chất xơ", ("VN_NUTRIENT_REQUIREMENT",)),
+        ("Vi chất theo hướng dẫn Việt Nam: EPA và DHA", ("VN_MICRONUTRIENT",)),
+        ("Người Việt nên vận động thế nào?", ("VN_PHYSICAL_ACTIVITY",)),
+        ("Giới hạn áp dụng RNI Việt Nam", ("VN_BODY_METRIC",)),
+        ("health Diarrhea", ("GLOBAL_HEALTH",)),
+        ("Dinh dưỡng của chuối", None),
+    ],
+)
+def test_acceptance_metadata_profile_uses_generic_authority_intent(query, expected):
+    assert _metadata_domains_for_query(query) == expected
+
+
+def test_acceptance_metadata_rank_prefers_the_open_ended_title_entity():
+    query = "Theo hướng dẫn Việt Nam, an toàn thực phẩm cần lưu ý gì?"
+    expected = {
+        "chunk_id": "expected",
+        "title": "Khuyến nghị dinh dưỡng Việt Nam 2030: An toàn thực phẩm",
+        "cosine_similarity": 0.42,
+    }
+    distractor = {
+        "chunk_id": "distractor",
+        "title": "Khuyến nghị dinh dưỡng Việt Nam 2030: Nề nếp bữa ăn",
+        "cosine_similarity": 0.91,
+    }
+
+    assert _metadata_rank_key(query, expected) > _metadata_rank_key(query, distractor)

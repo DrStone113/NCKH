@@ -5,12 +5,94 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
+
+_CURRENT_TURN_ID: ContextVar[str | None] = ContextVar(
+    "chat_gateway_turn_id", default=None
+)
+
+
+_CONTEXTUAL_FOLLOW_UPS = frozenset(
+    {
+        "ok",
+        "oke",
+        "okay",
+        "ừ",
+        "uh",
+        "được",
+        "đúng",
+        "không",
+        "ko",
+        "có",
+        "bình thường",
+        "ổn",
+        "không sao",
+        "sẵn sàng",
+        "tiếp tục",
+        "yes",
+        "no",
+    }
+)
+
+
+def _is_contextual_follow_up(message: Any) -> bool:
+    if not isinstance(message, str):
+        return False
+    normalized = " ".join(message.strip().casefold().split())
+    if not normalized or len(normalized.split()) > 8:
+        return False
+    if normalized in _CONTEXTUAL_FOLLOW_UPS:
+        return True
+    return normalized.startswith(
+        ("không ", "ko ", "mình ", "tôi ", "vậy ", "thế ", "còn ")
+    )
+
+
+def _merge_user_context(current: Any, incoming: Any, message: Any) -> Any:
+    """Merge only legacy short follow-ups; scoped snapshots otherwise replace.
+
+    Current mobile clients resolve the conversational domain before sending and
+    therefore include the correct typed profile on a reply such as ``oke``.
+    The narrow merge keeps older clients working without retaining sensitive
+    domain profiles for an unrelated general message.
+    """
+
+    if not isinstance(incoming, dict):
+        return incoming
+    readiness = incoming.get("profile_readiness")
+    if isinstance(readiness, dict):
+        incoming_scope = readiness.get("scope")
+        if (
+            incoming_scope == "general"
+            and isinstance(current, dict)
+            and _is_contextual_follow_up(message)
+        ):
+            merged = {**current, **incoming}
+            for domain_key in (
+                "workout_profile",
+                "training_state",
+                "exercise_history",
+                "exercise_history_status",
+                "exercise_history_loaded",
+                "exercise_history_observed_at",
+                "nutrition_profile",
+                "dietary_restrictions",
+                "nutrition_safety_profile",
+                "daily_nutrition_summary",
+            ):
+                if domain_key not in incoming and domain_key in current:
+                    merged[domain_key] = current[domain_key]
+            return merged
+        return dict(incoming)
+    if isinstance(current, dict):
+        return {**current, **incoming}
+    return incoming
 
 
 class ChatGateway:
@@ -49,9 +131,12 @@ class ChatGateway:
         self.retry_after_ms = retry_after_ms
 
     async def _ensure_session_exists(self) -> bool:
-        from db.db_status import is_db_offline, mark_db_offline
-        if not self.db_session or self._session_ensured or is_db_offline():
+        from db.db_status import is_db_offline, is_connectivity_failure, mark_db_offline
+        if not self.db_session or self._session_ensured:
             return True
+        if is_db_offline():
+            logger.warning("Rejecting chat turn while database availability is unknown")
+            return False
         try:
             import uuid
             uuid.UUID(self.session_id)
@@ -81,10 +166,11 @@ class ChatGateway:
             self._session_ensured = True
             return True
         except Exception as e:
-            mark_db_offline(60.0)
+            if is_connectivity_failure(e):
+                mark_db_offline(60.0)
             logger.error(f"Error ensuring session exists: {e}")
             await self.db_session.rollback()
-            return True
+            return False
 
     async def authenticate(self) -> bool:
         """Require a verified owner before accepting chat or session identity."""
@@ -132,16 +218,21 @@ class ChatGateway:
 
     async def run(self) -> None:
         """Receive client messages and route them to the orchestrator/dispatcher."""
-        queue: asyncio.Queue[tuple[str, str, Any]] = asyncio.Queue(
+        queue: asyncio.Queue[tuple[str, str, Any, str | None]] = asyncio.Queue(
             maxsize=self.queue_size if self.enforce_backpressure else 0
         )
 
         async def _chat_worker() -> None:
             from services.backend_optimization import AdmissionRejected, chat_priority
+            from services.agent.llm_client import (
+                GarbledOutputError,
+                LLMUnavailableError,
+            )
 
             while True:
-                sess_id, message, context = await queue.get()
+                sess_id, message, context, turn_id = await queue.get()
                 outcome = "completed"
+                turn_token = _CURRENT_TURN_ID.set(turn_id)
                 try:
                     priority, urgent = chat_priority(message)
                     if self.admission is None:
@@ -160,6 +251,10 @@ class ChatGateway:
                         "Hệ thống đang bận. Bạn thử lại sau một chút nhé.",
                         retry_after_ms=self.retry_after_ms,
                     )
+                except (LLMUnavailableError, GarbledOutputError):
+                    # The orchestrator already sent the specific, user-safe
+                    # provider error. Do not overwrite it with INTERNAL_ERROR.
+                    outcome = "failed"
                 except Exception:
                     outcome = "failed"
                     logger.exception("Chat turn failed")
@@ -168,6 +263,7 @@ class ChatGateway:
                         "Không thể xử lý yêu cầu lúc này. Bạn thử lại giúp mình nhé.",
                     )
                 finally:
+                    _CURRENT_TURN_ID.reset(turn_token)
                     if self.metrics:
                         self.metrics.increment(f"chat.turn_{outcome}")
                         self.metrics.gauge("chat.connection_queue_depth", queue.qsize())
@@ -196,36 +292,11 @@ class ChatGateway:
                     # Extract dynamic user_context / user_profile if provided by client
                     incoming_context = data.get("user_context") or data.get("user_profile") if isinstance(data, dict) else None
                     if incoming_context is not None:
-                        if isinstance(incoming_context, dict) and isinstance(incoming_context.get("profile_readiness"), dict):
-                            # Mobile sends a freshly read, domain-scoped snapshot.
-                            # When incoming scope is general, preserve existing domain profiles
-                            # (workout_profile, training_state, nutrition_profile, etc.) so that
-                            # short conversational turns or general follow-ups do not wipe out
-                            # established user fitness/nutrition data.
-                            incoming_scope = incoming_context.get("profile_readiness", {}).get("scope")
-                            if incoming_scope == "general" and isinstance(self.user_context, dict):
-                                merged = {**self.user_context, **incoming_context}
-                                for domain_key in (
-                                    "workout_profile",
-                                    "training_state",
-                                    "exercise_history",
-                                    "exercise_history_status",
-                                    "exercise_history_loaded",
-                                    "exercise_history_observed_at",
-                                    "nutrition_profile",
-                                    "dietary_restrictions",
-                                    "nutrition_safety_profile",
-                                    "daily_nutrition_summary",
-                                ):
-                                    if domain_key not in incoming_context and domain_key in self.user_context:
-                                        merged[domain_key] = self.user_context[domain_key]
-                                self.user_context = merged
-                            else:
-                                self.user_context = dict(incoming_context)
-                        elif isinstance(self.user_context, dict) and isinstance(incoming_context, dict):
-                            self.user_context = {**self.user_context, **incoming_context}
-                        else:
-                            self.user_context = incoming_context
+                        self.user_context = _merge_user_context(
+                            self.user_context,
+                            incoming_context,
+                            data.get("message") if isinstance(data, dict) else None,
+                        )
 
                     # Ensure the session exists in the database
                     if not await self._ensure_session_exists():
@@ -246,6 +317,15 @@ class ChatGateway:
                     if not isinstance(message, str) or not message.strip():
                         await self.send_error("BAD_MESSAGE", "message is required.")
                         continue
+                    raw_turn_id = data.get("turn_id")
+                    turn_id = (
+                        raw_turn_id.strip()
+                        if isinstance(raw_turn_id, str) and raw_turn_id.strip()
+                        else None
+                    )
+                    if turn_id is not None and len(turn_id) > 128:
+                        await self.send_error("BAD_MESSAGE", "turn_id is invalid.")
+                        continue
                     
                     if not self.enforce_backpressure and queue.qsize() >= self.queue_size:
                         if self.metrics:
@@ -258,6 +338,7 @@ class ChatGateway:
                                 dict(self.user_context)
                                 if isinstance(self.user_context, dict)
                                 else self.user_context,
+                                turn_id,
                             )
                         )
                     except asyncio.QueueFull:
@@ -350,36 +431,46 @@ class ChatGateway:
                 logger.warning("DB commit failed: %s", exc)
 
     async def send_token(self, content: str) -> None:
-        await self.websocket.send_json({"type": "token", "content": content})
+        await self.websocket.send_json(
+            self._turn_payload({"type": "token", "content": content})
+        )
 
     async def send_status(self, content: str) -> None:
-        await self.websocket.send_json({"type": "status", "content": content})
+        await self.websocket.send_json(
+            self._turn_payload({"type": "status", "content": content})
+        )
 
     async def send_public_trace(self, public_trace: dict[str, Any]) -> None:
         """Send an allowlisted, user-safe trace snapshot to the UI."""
-        await self.websocket.send_json({"type": "public_trace", "trace": public_trace})
+        await self.websocket.send_json(
+            self._turn_payload({"type": "public_trace", "trace": public_trace})
+        )
 
     async def send_debug_trace(self, debug_trace: dict[str, Any]) -> None:
         """Server-gated execution telemetry for authorised developer builds."""
         if not self.debug_trace_enabled:
             return
-        await self.websocket.send_json({"type": "debug_trace", "event": debug_trace})
+        await self.websocket.send_json(
+            self._turn_payload({"type": "debug_trace", "event": debug_trace})
+        )
 
     async def send_action_state(self, action_state: dict[str, Any]) -> None:
         """Normal-channel, human-readable pending/persistence state only."""
-        await self.websocket.send_json({"type": "action_state", "state": action_state})
+        await self.websocket.send_json(
+            self._turn_payload({"type": "action_state", "state": action_state})
+        )
 
     async def send_tool_call(
         self, correlation_id: str, name: str, args: dict[str, Any], timeout_ms: int
     ) -> None:
         await self.websocket.send_json(
-            {
+            self._turn_payload({
                 "type": "tool_call",
                 "correlation_id": correlation_id,
                 "name": name,
                 "arguments": args,
                 "timeout_ms": timeout_ms,
-            }
+            })
         )
 
     async def send_done(
@@ -397,7 +488,7 @@ class ChatGateway:
             payload["structured"] = structured_data
         if public_trace is not None:
             payload["public_trace"] = public_trace
-        await self.websocket.send_json(payload)
+        await self.websocket.send_json(self._turn_payload(payload))
 
     async def send_error(
         self,
@@ -409,7 +500,14 @@ class ChatGateway:
         payload: dict[str, Any] = {"type": "error", "code": code, "message": message}
         if retry_after_ms is not None:
             payload["retry_after_ms"] = retry_after_ms
-        await self.websocket.send_json(payload)
+        await self.websocket.send_json(self._turn_payload(payload))
+
+    @staticmethod
+    def _turn_payload(payload: dict[str, Any]) -> dict[str, Any]:
+        turn_id = _CURRENT_TURN_ID.get()
+        if turn_id:
+            payload["turn_id"] = turn_id
+        return payload
 
 
 __all__ = ["ChatGateway"]

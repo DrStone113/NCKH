@@ -1,9 +1,9 @@
 """Scope firewall for the health assistant.
 
-The guard runs before history, RAG, tool selection and the answer model.  A
-cheap deterministic tier handles clear requests.  Only ambiguous fragments may
-reach an optional small classifier model, whose output is parsed as strict JSON
-and is never shown to the user.
+The guard runs before history, RAG, tool selection and the answer model. Urgent
+safety signals remain deterministic; otherwise the configured restricted SLM
+decides whether each fragment may reach the answer model. Rules and the local
+semantic encoder are availability fallbacks, not the normal scope authority.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import re
 from typing import Any, Protocol
 import unicodedata
 
+from services.agent.turn_intent import is_urgent_health_text
 from services.agent.turn_router import classify_turn
 
 
@@ -142,6 +143,11 @@ class ScopeDecision:
 
     @property
     def category(self) -> ScopeCategory:
+        # A red-flag fragment takes precedence over every co-located request.
+        # In particular, a mixed "help me plan dinner; I am fainting" turn
+        # must never inherit the ordinary nutrition category.
+        if any(fragment.scope == ScopeCategory.SAFETY_ESCALATION for fragment in self.fragments):
+            return ScopeCategory.SAFETY_ESCALATION
         if len(self.fragments) == 1:
             return self.fragments[0].scope
         if any(fragment.is_allowed for fragment in self.fragments):
@@ -210,6 +216,10 @@ _PROGRAMMING_REFUSAL = (
 _MATH_REFUSAL = (
     "Mình tập trung hỗ trợ sức khỏe trong phạm vi ứng dụng nên không hỗ trợ giải toán."
 )
+_RESTRICTED_MEDICAL_REFUSAL = (
+    "Mình không thể chẩn đoán, kê đơn, chọn liều thuốc kê toa hoặc diễn giải xét nghiệm "
+    "thay bác sĩ. Bạn nên trao đổi trực tiếp với bác sĩ hoặc dược sĩ có chuyên môn."
+)
 _CLARIFY_REPLY = (
     "Mình chưa xác định được câu hỏi này liên quan thế nào đến sức khỏe trong ứng dụng. "
     "Bạn nói rõ hơn về dinh dưỡng, kế hoạch ăn, tập luyện, hồ sơ hoặc sức khỏe nhé."
@@ -229,35 +239,96 @@ def _has(text: str, phrases: tuple[str, ...]) -> bool:
 
 
 _SAFETY_CUES = (
-    "dau nguc", "kho tho", "ngat", "sap ngat", "bi ngat", "co giat", "soc phan ve",
-    "qua lieu", "tu lam hai", "tu tu", "chay mau khong cam", "phan ve",
+    # Cardiorespiratory / loss of consciousness / seizure.
+    "dau nguc", "tuc nguc", "kho tho", "nghet tho", "khong tho duoc",
+    "thieu hoi", "shortness of breath", "cannot breathe", "ngat", "sap ngat",
+    "bi ngat", "bat tinh", "mat y thuc", "nga quy", "faint", "co giat",
+    "seizure",
+    # Severe allergy, bleeding, and stroke-like symptoms.
+    "soc phan ve", "phan ve", "sung moi", "sung luoi", "sung hong",
+    "chay mau khong cam", "chay mau nhieu", "xuat huyet", "bleeding heavily",
+    "meo mieng", "yeu liet nua nguoi", "noi lap", "dot quy", "stroke",
+    # Overdose / self-harm. These remain deterministic irrespective of
+    # punctuation, casing, diacritics, or Vietnamese-English code switching.
+    "qua lieu", "overdose", "tu lam hai", "tu tu", "muon chet",
+    "khong muon song", "self harm", "suicide",
+)
+_URGENT_HEALTH_REPLY = (
+    "Các dấu hiệu bạn mô tả có thể cần được đánh giá khẩn cấp. Hãy gọi cấp cứu địa phương "
+    "hoặc đến cơ sở cấp cứu ngay; nếu bạn đang một mình, hãy nhờ người gần đó hỗ trợ. "
+    "Mình không thể chẩn đoán hay tiếp tục xử lý yêu cầu thông thường trong tình huống này."
 )
 _HEALTH_CUES = (
     "benh", "thuoc", "tac dung phu", "tuong tac thuoc", "huyet ap", "tieu duong",
     "mo mau", "gout", "da day", "mang thai", "cho con bu", "chan thuong",
     "dau goi", "dau vai", "dau lung", "suc khoe", "dau bung", "day bung",
-    "buon non", "tieu chay", "tao bon", "nhuc dau", "sot", "beo phi",
+    "buon non", "tieu chay", "tao bon", "nhuc dau", "dau dau", "chong mat",
+    "choang", "hoa mat", "sot", "beo phi", "health", "thong tin suc khoe",
 )
 _NUTRITION_CUES = (
     "an gi", "an mon", "an uong", "da an", "vua an", "moi an", "muon an",
     "nen an", "khong an", "toi an", "minh an", "uong gi", "muon uong",
     "bua an", "bua sang", "bua trua", "bua toi", "mon an", "mon gi", "mon nay",
     "doi mon", "thuc pham", "dinh duong", "calo", "calorie", "kcal", "protein",
-    "chat dam", "carb", "tinh bot", "chat beo", "chat xo", "vitamin", "khoang chat",
+    "chat dam", "dam", "nang luong", "carb", "tinh bot", "chat beo", "chat xo", "vitamin", "khoang chat",
+    "food nutrients", "nutrient profile", "nutrition facts",
     "cong thuc nau", "cach nau", "nguyen lieu", "khau phan", "di ung", "an chay",
     "kieng", "com", "pho", "bun", "chao long", "chao ga", "chao thit", "chao ca",
     "thit", "rau", "trai cay", "trung",
     "nuoc", "sua", "banh", "pizza", "hai san", "ca phe", "nuoc ngot", "ruou bia",
+    # Reference and public-guideline questions often name a recommendation
+    # instead of an individual food.  They are still clearly in the health
+    # assistant's nutrition scope and must not be rejected as ambiguous.
+    "khuyen nghi", "huong dan", "loi khuyen dinh duong", "rni", "nhu cau dinh duong",
+    "vi chat", "an can doi", "an toan thuc pham", "thuc pham bat loi", "uong du nuoc",
+    "ne nep bua an", "duong tu do", "epa", "dha", "nguoi truong thanh", "nguoi cao tuoi",
 )
 _MEAL_PLAN_CUES = (
     "thuc don", "ke hoach an", "ke hoach dinh duong", "ke hoach giam can",
     "ke hoach tang can", "meal plan", "luu ke hoach", "doi ke hoach",
 )
+# A request such as "lên kế hoạch ngày mai cho tôi" is intentionally not
+# treated as a bare ``kế hoạch`` keyword.  It needs the three signals below:
+# a planning action, a near-term time anchor, and a first-person request.  In
+# the health app this is a safe admission to the planning flow; the answer
+# agent must still ask whether the user means meals, workouts, or both before
+# making a draft.  Explicit travel/business requests are rejected earlier.
+_PERSONAL_PLAN_ACTION_RE = re.compile(
+    r"\b(?:lap|len|tao|xay dung|make|create|build|plan)\b"
+)
+_PERSONAL_PLAN_OBJECT_RE = re.compile(r"\b(?:ke hoach|plan)\b")
+_PERSONAL_PLAN_TIME_RE = re.compile(
+    r"\b(?:hom nay|ngay mai|tuan nay|tuan toi|cuoi tuan nay|cuoi tuan toi|"
+    r"today|tomorrow|this week|next week|this weekend|next weekend)\b"
+)
+_PERSONAL_PLAN_OWNER_RE = re.compile(
+    r"\b(?:cho toi|giup toi|cho minh|giup minh|cua toi|cua minh|for me|my)\b"
+)
 _FITNESS_CUES = (
     "tap", "bai tap", "tap luyen", "workout", "exercise", "gym", "di bo", "chay bo", "squat",
     "chong day", "hiep", "rep", "nhom co", "van dong", "phuc hoi", "the luc",
-    "lich tap", "ke hoach tap", "ghi bai tap",
+    "lich tap", "ke hoach tap", "ghi bai tap", "bai tap hom nay", "nhom nao",
+    "cach tap", "tac dong co nao",
 )
+_DIRECT_DISH_LOOKUP_RE = re.compile(r"^mon(?:\s+mon)?\s+\S+")
+
+
+def _is_restricted_medical_action(normalized: str) -> bool:
+    """Keep diagnosis and prescription actions outside RAG and answer LLMs."""
+
+    if _has(normalized, ("chan doan", "ke don", "ke thuoc", "prescribe", "diagnose")):
+        return True
+    if "thuoc ke toa" in normalized and _has(
+        normalized, ("huong dan dung", "huong dan mua", "mua thuoc", "lieu"),
+    ):
+        return True
+    if _has(normalized, ("tu phau thuat", "phan biet benh")):
+        return True
+    if normalized.startswith("doc ") and _has(
+        normalized, ("mri", "x quang", "xet nghiem", "ket qua"),
+    ):
+        return True
+    return False
 _WELLNESS_CUES = (
     "ngu", "giac ngu", "stress", "cang thang", "tam trang", "mood", "met moi",
     "can nang", "tang can", "giam can", "tang co", "giam mo", "mo co the",
@@ -304,10 +375,10 @@ _CONTINUATION_RE = re.compile(
 # recent, already accepted in-scope user turn in the same session.
 _CONTEXTUAL_CONTINUATION_TOKENS = frozenset(
     {
-        "1", "ai", "an", "anh", "ban", "bai", "bo", "cai", "chi", "cho",
+        "1", "2", "ai", "an", "anh", "ban", "bai", "bo", "ca", "cai", "chi", "cho",
         "chon", "co", "con", "dai", "dc", "dec", "di", "do", "doi", "duoc", "em",
         "ghi", "giup", "goi", "hon", "i", "khac", "khong", "kia", "lam", "luon", "lua",
-        "luu", "minh", "mon", "mot", "nao", "nay", "nhe", "nhu", "noi", "nua", "ok",
+        "luu", "minh", "mon", "mot", "hai", "nao", "nay", "nhe", "nhu", "noi", "nua", "ok",
         "okay", "oke", "phan", "phuong", "ro", "sao", "so", "them", "the", "thi", "thoi",
         "thu", "tiep", "tinh", "toi", "tuc", "u", "um", "vang", "vay", "ve", "voi",
         "xem", "y",
@@ -315,7 +386,7 @@ _CONTEXTUAL_CONTINUATION_TOKENS = frozenset(
 )
 _CONTEXTUAL_CONTINUATION_SIGNAL_TOKENS = frozenset(
     {
-        "bai", "cai", "chon", "con", "di", "do", "doi", "ghi", "giup", "goi",
+        "2", "bai", "ca", "cai", "chon", "con", "di", "do", "doi", "ghi", "giup", "goi", "hai",
         "khac", "kia", "lam", "lua", "luu", "mon", "nao", "nay", "noi", "nua", "phan",
         "phuong", "sao", "them", "the", "thu", "tiep", "tinh", "vay", "xem",
     }
@@ -374,6 +445,22 @@ def _is_plain_math(text: str, normalized: str) -> bool:
     )
 
 
+def _is_personal_daily_plan_request(normalized: str) -> bool:
+    """Recognize a bounded, object-light request to plan the user's day.
+
+    This is deliberately a shape check rather than an allowlist for the word
+    ``kế hoạch``: all three signals are required, and callers run explicit
+    off-topic boundaries before invoking it.
+    """
+
+    return bool(
+        _PERSONAL_PLAN_ACTION_RE.search(normalized)
+        and _PERSONAL_PLAN_OBJECT_RE.search(normalized)
+        and _PERSONAL_PLAN_TIME_RE.search(normalized)
+        and _PERSONAL_PLAN_OWNER_RE.search(normalized)
+    )
+
+
 def _smalltalk_reply(normalized: str) -> str:
     if _has(normalized, ("cam on", "thanks", "thank you")):
         return "Không có gì nhé. Khi cần, bạn cứ hỏi mình về sức khỏe hằng ngày."
@@ -389,6 +476,8 @@ def _refusal_for(reason_code: str) -> str:
         return _PROGRAMMING_REFUSAL
     if reason_code == "MATH_REQUEST":
         return _MATH_REFUSAL
+    if reason_code == "RESTRICTED_MEDICAL_REQUEST":
+        return _RESTRICTED_MEDICAL_REFUSAL
     return _GENERAL_REFUSAL
 
 
@@ -399,7 +488,7 @@ def _split_fragments(text: str) -> tuple[str, ...]:
 
 def _safety_disposition(text: str) -> SafetyDisposition:
     normalized = _normalize(text)
-    if _has(normalized, _SAFETY_CUES):
+    if is_urgent_health_text(text) or _has(normalized, _SAFETY_CUES):
         return SafetyDisposition.URGENT_ESCALATION
     match = _TIMED_WEIGHT_LOSS_RE.search(normalized)
     if match is None:
@@ -420,7 +509,7 @@ def _safety_disposition(text: str) -> SafetyDisposition:
 
 
 class StrictJSONScopeClassifier:
-    """Restricted LLM scope judge: no tools, no history, strict JSON only."""
+    """Restricted SLM scope gate: no tools, no history, strict JSON only."""
 
     _KEYS = frozenset({"intent", "scope", "confidence", "reason_code"})
     _REASON_RE = re.compile(r"^[A-Z][A-Z0-9_]{1,63}$")
@@ -431,6 +520,15 @@ class StrictJSONScopeClassifier:
         self.timeout_seconds = timeout_seconds
 
     async def classify(self, text: str) -> TopicPrediction:
+        return await self.classify_with_context(text, recent_history=())
+
+    async def classify_with_context(
+        self,
+        text: str,
+        *,
+        recent_history: Any,
+    ) -> TopicPrediction:
+        context = self._bounded_context(recent_history)
         response = await asyncio.wait_for(
             self.llm.chat(
                 [
@@ -447,11 +545,24 @@ class StrictJSONScopeClassifier:
                             "IN_SCOPE_FITNESS; HEALTH_PROFILE hoặc APP_HEALTH_DATA -> IN_SCOPE_PROFILE_APP; "
                             "SAFETY_ESCALATION -> SAFETY_ESCALATION; OUT_OF_SCOPE -> OUT_OF_SCOPE; "
                             "AMBIGUOUS -> AMBIGUOUS. Lập trình/toán/thời tiết/tin tức và chủ đề khác là "
-                            "OUT_OF_SCOPE. Thiếu ngữ cảnh hoặc xung đột nghĩa là AMBIGUOUS. "
+                            "OUT_OF_SCOPE. Dùng recent_context chỉ để giải nghĩa tham chiếu hoặc câu trả lời nối tiếp. "
+                            "Nếu current_text tự nó yêu cầu tính toán, lập trình, dịch, thời tiết hoặc chủ đề ngoài "
+                            "sức khỏe thì luôn OUT_OF_SCOPE, không được lấy ngữ cảnh sức khỏe cũ để cho qua. "
+                            "Nếu recent_context đủ để hiểu current_text thì phân loại ý hoàn chỉnh theo ngữ cảnh; "
+                            "chỉ dùng AMBIGUOUS khi cả current_text lẫn recent_context vẫn không đủ. "
                             "Tên công nghệ đứng một mình không đủ để kết luận là lập trình."
                         ),
                     },
-                    {"role": "user", "content": json.dumps({"text": text}, ensure_ascii=False)},
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "recent_context": context,
+                                "current_text": text,
+                            },
+                            ensure_ascii=False,
+                        ),
+                    },
                 ],
                 tools=None,
                 stream=False,
@@ -476,6 +587,17 @@ class StrictJSONScopeClassifier:
         if not isinstance(reason_code, str) or not self._REASON_RE.fullmatch(reason_code):
             raise ValueError("INVALID_CLASSIFIER_REASON")
         return TopicPrediction(scope, confidence, reason_code, self.model_version, intent)
+
+    @staticmethod
+    def _bounded_context(recent_history: Any) -> list[dict[str, str]]:
+        turns: list[dict[str, str]] = []
+        for turn in tuple(recent_history or ())[-8:]:
+            role = getattr(turn, "role", None)
+            content = str(getattr(turn, "content", "") or "").strip()
+            if role not in {"user", "assistant"} or not content:
+                continue
+            turns.append({"role": role, "content": content[:500]})
+        return turns
 
 
 class ScopeGuard:
@@ -569,8 +691,24 @@ class ScopeGuard:
             return self._compose((fragment,))
         return None
 
-    async def classify(self, text: str) -> ScopeDecision:
+    @property
+    def uses_contextual_slm(self) -> bool:
+        return self.classifier is not None
+
+    async def classify(
+        self,
+        text: str,
+        recent_history: Any = None,
+    ) -> ScopeDecision:
         decision = self.classify_fast(text)
+        if self.classifier is not None:
+            resolved = await asyncio.gather(
+                *(
+                    self._resolve_slm_first_fragment(fragment, recent_history)
+                    for fragment in decision.fragments
+                )
+            )
+            return self._compose(tuple(resolved))
         if self.primary_classifier is None:
             resolved = await asyncio.gather(
                 *(self._resolve_legacy_fragment(fragment) for fragment in decision.fragments)
@@ -581,6 +719,79 @@ class ScopeGuard:
             *(self._resolve_hybrid_fragment(fragment) for fragment in decision.fragments)
         )
         return self._compose(tuple(resolved))
+
+    async def _resolve_slm_first_fragment(
+        self,
+        rule: ScopeFragment,
+        recent_history: Any,
+    ) -> ScopeFragment:
+        """Let the restricted SLM gate every non-emergency fragment.
+
+        The SLM never receives history, tools, profile data or RAG. If it is
+        unavailable or below the configured confidence threshold, the existing
+        encoder/rule path preserves service availability without widening an
+        ambiguous request.
+        """
+
+        if rule.scope == ScopeCategory.SAFETY_ESCALATION or (
+            rule.reason_code == "RESTRICTED_MEDICAL_REQUEST"
+        ):
+            return rule
+        try:
+            contextual_classifier = getattr(
+                self.classifier,
+                "classify_with_context",
+                None,
+            )
+            if callable(contextual_classifier):
+                prediction = await contextual_classifier(
+                    rule.text,
+                    recent_history=recent_history,
+                )
+            else:
+                prediction = await self.classifier.classify(rule.text)
+            if float(prediction.confidence) >= self.classifier_threshold:
+                return self._prediction_fragment(
+                    prediction,
+                    rule.text,
+                    "SLM_SCOPE_GATE",
+                )
+        except Exception:
+            pass
+
+        fallback = await self._resolve_primary_fallback(rule)
+        return self._copy_with_method(
+            fallback,
+            f"SLM_SCOPE_GATE_FALLBACK:{fallback.method}",
+        )
+
+    async def _resolve_primary_fallback(self, rule: ScopeFragment) -> ScopeFragment:
+        if self.primary_classifier is None:
+            return rule
+        try:
+            prediction = await asyncio.wait_for(
+                self.primary_classifier.classify(rule.text),
+                timeout=self.primary_timeout_seconds,
+            )
+        except Exception:
+            return rule
+        candidate = self._prediction_fragment(
+            prediction,
+            rule.text,
+            "SMALL_INTENT_CLASSIFIER",
+        )
+        if candidate.confidence >= self.primary_high_confidence:
+            return candidate
+        if rule.scope != ScopeCategory.AMBIGUOUS:
+            return rule
+        return ScopeFragment(
+            rule.text,
+            ScopeCategory.AMBIGUOUS,
+            candidate.confidence,
+            candidate.method,
+            "LOW_CONFIDENCE_INTENT",
+            ScopeIntent.AMBIGUOUS,
+        )
 
     async def _resolve_legacy_fragment(self, fragment: ScopeFragment) -> ScopeFragment:
         if fragment.scope != ScopeCategory.AMBIGUOUS:
@@ -593,7 +804,10 @@ class ScopeGuard:
         # statistical classifier.
         if (
             rule.scope in {ScopeCategory.SAFETY_ESCALATION, ScopeCategory.OUT_OF_SCOPE}
-            or rule.reason_code == "CONVERSATION_CONTINUATION"
+            or rule.reason_code in {
+                "CONVERSATION_CONTINUATION",
+                "PERSONAL_HEALTH_PLAN_REQUEST",
+            }
         ):
             return rule
 
@@ -704,7 +918,7 @@ class ScopeGuard:
         if not isinstance(text, str) or not text.strip():
             return ScopeFragment("", ScopeCategory.AMBIGUOUS, 1.0, "RULE", "EMPTY_INPUT")
         normalized = _normalize(text)
-        if _has(normalized, _SAFETY_CUES):
+        if is_urgent_health_text(text) or _has(normalized, _SAFETY_CUES):
             return ScopeFragment(
                 text,
                 ScopeCategory.SAFETY_ESCALATION,
@@ -713,6 +927,15 @@ class ScopeGuard:
                 "URGENT_HEALTH_SAFETY",
                 ScopeIntent.SAFETY_ESCALATION,
                 SafetyDisposition.URGENT_ESCALATION,
+            )
+        if _is_restricted_medical_action(normalized):
+            return ScopeFragment(
+                text,
+                ScopeCategory.OUT_OF_SCOPE,
+                0.99,
+                "RULE",
+                "RESTRICTED_MEDICAL_REQUEST",
+                ScopeIntent.OUT_OF_SCOPE,
             )
 
         has_nutrition = _has(normalized, _NUTRITION_CUES)
@@ -738,6 +961,17 @@ class ScopeGuard:
             return ScopeFragment(text, ScopeCategory.AMBIGUOUS, 0.50, "RULE", "COLLIDING_CONTEXT")
         if _has(normalized, _MEAL_PLAN_CUES):
             return ScopeFragment(text, ScopeCategory.IN_SCOPE_MEAL_PLAN, 0.98, "RULE", "MEAL_PLAN_REQUEST")
+        if _DIRECT_DISH_LOOKUP_RE.search(normalized):
+            return ScopeFragment(text, ScopeCategory.IN_SCOPE_NUTRITION, 0.97, "RULE", "DISH_LOOKUP_REQUEST")
+        if _is_personal_daily_plan_request(normalized):
+            return ScopeFragment(
+                text,
+                ScopeCategory.IN_SCOPE_MEAL_PLAN,
+                0.97,
+                "RULE",
+                "PERSONAL_HEALTH_PLAN_REQUEST",
+                ScopeIntent.MEAL_PLANNING,
+            )
         if has_nutrition:
             return ScopeFragment(text, ScopeCategory.IN_SCOPE_NUTRITION, 0.97, "RULE", "NUTRITION_REQUEST")
         if _has(normalized, _FITNESS_CUES):
@@ -768,6 +1002,11 @@ class ScopeGuard:
 
     @staticmethod
     def _compose(fragments: tuple[ScopeFragment, ...]) -> ScopeDecision:
+        # This is an admission boundary, not a model instruction: no mixed
+        # request, memory lookup, tool, or main-answer LLM may proceed once a
+        # deterministic urgent-health red flag has been found.
+        if any(fragment.safety == SafetyDisposition.URGENT_ESCALATION for fragment in fragments):
+            return ScopeDecision(fragments, "", reply=_URGENT_HEALTH_REPLY)
         allowed = [fragment.text for fragment in fragments if fragment.is_allowed]
         blocked = [fragment for fragment in fragments if fragment.scope == ScopeCategory.OUT_OF_SCOPE]
         ambiguous = [fragment for fragment in fragments if fragment.scope == ScopeCategory.AMBIGUOUS]

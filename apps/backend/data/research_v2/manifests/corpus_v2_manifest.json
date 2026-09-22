@@ -1,0 +1,44 @@
+{
+  "build_code_version": "research-v2-builder-1",
+  "build_duration_seconds": 72.386,
+  "chunking_strategy": "one deterministic structured source record per chunk; no arbitrary character splitting",
+  "corpus_hash": "5c6abe875f1f1c5ea5bbafe2334db1f21849e123b688ac8100bcf6af0f4ad200",
+  "corpus_version": "offline-v2-3891",
+  "created_at": "2026-09-21T16:31:34.181950+00:00",
+  "embedding_dimension": 1024,
+  "embedding_model": "BAAI/bge-m3",
+  "embedding_model_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "hardware": {
+    "device": "cuda:0",
+    "platform": "Windows-10-10.0.26100-SP0",
+    "torch_cuda_available": true
+  },
+  "license_audit": {
+    "excluded_sources_remain_unembedded": [
+      "VIETNAM_FCT_LOCAL",
+      "NIH_ODS_FACT_SHEETS"
+    ],
+    "status": "PASS"
+  },
+  "manifest_hash": "72a70771bca7723183abb531414ed2115a6f2733eb6ce50ab73268e3a5b55539",
+  "normalization_behavior": "L2 normalized via normalize_embeddings=True",
+  "record_count": 3891,
+  "schema_version": "research-corpus-v2-manifest-1",
+  "scientific_identity": {
+    "corpus_hash": "5c6abe875f1f1c5ea5bbafe2334db1f21849e123b688ac8100bcf6af0f4ad200",
+    "corpus_version": "offline-v2-3891",
+    "embedding_dimension": 1024,
+    "embedding_model": "BAAI/bge-m3",
+    "embedding_model_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+    "normalization": "L2 normalized via normalize_embeddings=True",
+    "record_count": 3891,
+    "source_registry_hash": "b411f93c4f2b6e92c3a33298fe033760f9e0caa057e8c11bf7c4746d21af9918"
+  },
+  "sentence_transformers_version": "5.6.1",
+  "source_files": {
+    "apps/backend/data/research_v2/normalized/hhs_physical_activity_guidance.jsonl": "cdf2a3ecce402e4e1a3c544952e05803ae1285cf93c7e3ef383c1a9ea0c2e307",
+    "apps/backend/data/research_v2/normalized/usda_sr_legacy_foods.jsonl": "797edd4d276bfd48c813ca023311b846787595c75cd5befe345bd2b9225d031c",
+    "apps/backend/data/research_v2/normalized/wger_exercises.jsonl": "6938c79af3f75ac58e3890a96c9272ea2e360578ed7f137b9d7891fa005fde6d"
+  },
+  "source_registry_hash": "b411f93c4f2b6e92c3a33298fe033760f9e0caa057e8c11bf7c4746d21af9918"
+}

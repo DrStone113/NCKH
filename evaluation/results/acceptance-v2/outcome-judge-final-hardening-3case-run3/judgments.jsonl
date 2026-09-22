@@ -1,0 +1,3 @@
+{"case_id": "AVN-168", "grade": {"relevance": "FAIL", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "FAIL", "no_evidence_handling": "PASS"}}
+{"case_id": "AVN-174", "grade": {"relevance": "FAIL", "faithfulness": "FAIL", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "NOT_APPLICABLE"}}
+{"case_id": "AVN-175", "grade": {"relevance": "PASS", "faithfulness": "PASS", "unsupported_claims": 0, "provenance": "PASS", "no_evidence_handling": "NOT_APPLICABLE"}}

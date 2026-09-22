@@ -1,0 +1,15 @@
+{
+  "case_count": 200,
+  "cases_sha256": "f5a539aa055196650b1c948fd797d6839db1620f1e5a4c7625b059d6f591512b",
+  "contamination_pass": true,
+  "corpus_hash": "f48b35561f421be720c53a607740ac51a5e8e74b598b081e85588a5eef10777a",
+  "corpus_version": "offline-acceptance-vn-4954",
+  "created_at": "2026-09-21T17:21:24.835998+00:00",
+  "source_precedence": [
+    "VN official normative guidance",
+    "global public-health",
+    "foreign government",
+    "other verified reference"
+  ],
+  "vietnam_context_cases": 120
+}

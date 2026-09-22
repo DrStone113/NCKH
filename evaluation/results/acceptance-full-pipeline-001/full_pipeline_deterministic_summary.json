@@ -1,0 +1,55 @@
+{
+  "FULL_PIPELINE_CASES": 200,
+  "FULL_PIPELINE_CASES_COMPLETED": 200,
+  "FULL_PIPELINE_COMPLETE": true,
+  "EXPECTED_CHANNEL_ACCURACY": 0.58,
+  "EXPECTED_TOOL_CALLED_RATE": 0.5429,
+  "FORBIDDEN_TOOL_CALLS": 1,
+  "RAG_REQUIRED_AND_USED_RATE": 0.0909,
+  "RAG_FORBIDDEN_BUT_USED_COUNT": 1,
+  "NO_EVIDENCE_HANDLING_RATE": 0.96,
+  "FULL_PIPELINE_SUCCESS": 0.58,
+  "semantic_answer_grading": "NOT_MEASURED_PENDING_INDEPENDENT_JUDGE_CONFIGURATION",
+  "by_domain": {
+    "EXERCISE_CATALOG": {
+      "cases": 25,
+      "channel_success": 0.2
+    },
+    "FOREIGN_FOOD": {
+      "cases": 15,
+      "channel_success": 0.7333
+    },
+    "GLOBAL_HEALTH": {
+      "cases": 15,
+      "channel_success": 0.0
+    },
+    "NO_EVIDENCE": {
+      "cases": 25,
+      "channel_success": 0.96
+    },
+    "VN_BODY_METRIC": {
+      "cases": 1,
+      "channel_success": 0.0
+    },
+    "VN_DISH": {
+      "cases": 20,
+      "channel_success": 0.85
+    },
+    "VN_FOOD": {
+      "cases": 60,
+      "channel_success": 0.95
+    },
+    "VN_MICRONUTRIENT": {
+      "cases": 7,
+      "channel_success": 0.1429
+    },
+    "VN_NORMATIVE": {
+      "cases": 30,
+      "channel_success": 0.0333
+    },
+    "VN_PHYSICAL_ACTIVITY": {
+      "cases": 2,
+      "channel_success": 0.0
+    }
+  }
+}

@@ -13,9 +13,12 @@ from services.agent.memory_service import Context
 from services.agent.orchestrator import (
     AgentOrchestrator,
     _detect_safety_pain_response,
+    _enforce_context_plan_tool_policy,
+    _extract_direct_catalog_lookup,
     _ground_suggest_dish_queries,
     _select_relevant_tool_schemas,
 )
+from models.schemas import KnowledgeChunk
 from services.agent.pending_user_action import PendingUserActionStore
 from services.agent.scope_guard import ScopeGuard
 from services.agent.tool_dispatcher import ToolResult
@@ -229,9 +232,64 @@ async def test_scope_guard_answers_smalltalk_without_llm():
 
 
 @pytest.mark.asyncio
+async def test_urgent_health_guard_blocks_memory_tools_and_main_llm():
+    llm = ScriptedLLM([])
+    gateway = FakeGateway()
+    store = FakeStore()
+    orchestrator = AgentOrchestrator(
+        llm,
+        FailingTools(),
+        FailingMemory(),
+        store,
+        FakeDispatcher(),
+        gateway,
+        scope_guard=ScopeGuard(),
+    )
+
+    await orchestrator.handleChatMessage("urgent-boundary", "TOI KHO THO!!!")
+
+    assert llm.calls == 0
+    assert gateway.statuses == []
+    assert gateway.done and gateway.done[0][0]
+    assert [turn[4] for turn in store.turns] == ["scope_guard", "scope_guard"]
+
+
+def test_context_plan_removes_forbidden_rag_tools_before_offer_and_dispatch():
+    from services.agent.context_planner import ContextPlanner
+
+    _, plan = ContextPlanner().create_plan("Hôm nay tôi còn bao nhiêu protein?")
+    schemas = _named_tool_schemas("get_today_meals", "query_rag", "search_medical_knowledge")
+    filtered = _enforce_context_plan_tool_policy(schemas, plan)
+
+    assert [schema["function"]["name"] for schema in filtered] == ["get_today_meals"]
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_rejects_a_tool_not_in_the_offered_catalog():
+    dispatcher = FakeDispatcher()
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM([]), FakeTools(), FakeMemory(), FakeStore(), dispatcher, FakeGateway()
+    )
+
+    results = await orchestrator._dispatch_all(
+        "tool-boundary",
+        [ToolCall("forbidden-rag", "query_rag", {"query": "x"})],
+        {},
+        forbidden_tool_names=frozenset({"query_rag", "search_medical_knowledge"}),
+    )
+
+    assert dispatcher.calls == []
+    assert results[0][1].error == "TOOL_NOT_PERMITTED"
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "text",
-    ["Tối nay ăn gì?", "Tôi muốn giảm 2 kí treong 2 th tôi"],
+    [
+        "Tối nay ăn gì?",
+        "Tôi muốn giảm 2 kí treong 2 th tôi",
+        "Hello lên kế hoạch ngày mai cho tôi đi",
+    ],
 )
 async def test_scope_guard_forwards_application_question_to_existing_pipeline(text: str):
     llm = ScriptedLLM(
@@ -279,6 +337,38 @@ async def test_scope_guard_resolves_ambiguous_ellipse_from_safe_session_context(
     assert gateway.done[0][0] == "Bạn có thể chọn burger gà."
     assert [turn[1] for turn in store.turns] == ["user", "assistant"]
     assert all(turn[4] is None for turn in store.turns)
+
+
+@pytest.mark.asyncio
+async def test_scope_guard_resolves_both_reply_from_previous_plan_context():
+    llm = ScriptedLLM(
+        [LLMResponse(content_stream=_stream(["Mình sẽ lập cả kế hoạch ăn và tập."]))]
+    )
+    memory = ContextualContinuationMemory(
+        history=[
+            ChatTurn(role="user", content="Lên kế hoạch ngày mai cho tôi"),
+            ChatTurn(
+                role="assistant",
+                content="Bạn muốn lên kế hoạch ăn uống, tập luyện hay cả hai?",
+            ),
+        ]
+    )
+    gateway = FakeGateway()
+    orchestrator = AgentOrchestrator(
+        llm,
+        FakeTools(),
+        memory,
+        FakeStore(),
+        FakeDispatcher(),
+        gateway,
+        scope_guard=ScopeGuard(),
+    )
+
+    await orchestrator.handleChatMessage("scope-plan-both", "cả 2")
+
+    assert memory.scope_history_calls == 1
+    assert llm.calls == 1
+    assert gateway.done[0][0] == "Mình sẽ lập cả kế hoạch ăn và tập."
 
 
 @pytest.mark.asyncio
@@ -380,7 +470,7 @@ def test_high_confidence_actions_receive_minimal_tool_sets():
         "search_exercise_catalog", "build_personalized_workout",
         "get_workout_substitutions", "update_workout_profile",
         "get_lifestyle_logs", "log_lifestyle", "set_lifestyle_reminder",
-        "navigate_to_screen", "calculate_tdee", "build_nutrition_plan",
+            "navigate_to_screen", "calculate_tdee", "build_combined_plan", "build_nutrition_plan",
         "build_workout_schedule", "get_plan", "get_active_plan_v2", "revise_plan",
         "save_plan", "set_plan_status", "query_rag", "search_medical_knowledge",
     )
@@ -402,6 +492,9 @@ def test_high_confidence_actions_receive_minimal_tool_sets():
     }
     assert selected("lập kế hoạch giảm cân 7 ngày") == {
         "get_user_profile", "build_nutrition_plan",
+    }
+    assert selected("Hello lên kế hoạch ngày mai cho tôi đi") == {
+        "get_user_profile", "build_combined_plan",
     }
     assert "search_recipe_web" not in selected("tối nay ăn gì")
 
@@ -621,6 +714,21 @@ def test_avoidance_language_never_becomes_a_positive_dish_query():
     )
 
     assert "query" not in call.arguments
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Cua bể có bao nhiêu đạm và năng lượng?", ("search_food_nutrition", "cua be")),
+        ("food nutrients apple yogurt", ("search_food_nutrition", "apple yogurt")),
+        ("mon Món Cháo sò điệp", ("search_dish_catalog", "chao so diep")),
+        ("Cách tập Dumbbell rear delt row", ("search_exercise_catalog", "dumbbell rear delt row")),
+        ("Hip Thrust tác động cơ nào?", ("search_exercise_catalog", "hip thrust")),
+        ("Gợi ý bữa tối giàu đạm", None),
+    ],
+)
+def test_direct_catalog_lookup_extracts_open_ended_entity_intents(text, expected):
+    assert _extract_direct_catalog_lookup(text) == expected
 
 
 @pytest.mark.asyncio
@@ -952,6 +1060,90 @@ def test_successful_tool_result_includes_natural_answer_contract():
     assert "không dùng từ 'catalog'" in guidance
     assert "Tôn trọng lựa chọn của người dùng" in guidance
     assert "không phán xét" in guidance
+
+
+def test_tool_result_serializes_knowledge_chunks_structurally():
+    chunk = KnowledgeChunk(
+        id="chunk-1",
+        category="VN_NUTRITION_GUIDELINE",
+        title="Khuyến nghị",
+        content="Nội dung có nguồn.",
+        metadata={"source_id": "vn:test"},
+        similarity=0.91,
+    )
+
+    serialized = AgentOrchestrator._serialize_result(
+        ToolCall(id="rag", name="query_rag", arguments={}),
+        ToolResult(ok=True, data={"chunks": [chunk]}),
+    )
+
+    payload = json.loads(serialized)
+    assert payload["data"]["chunks"][0]["id"] == "chunk-1"
+    assert payload["data"]["chunks"][0]["similarity"] == 0.91
+
+
+def test_direct_food_catalog_reply_uses_only_structured_values():
+    call = ToolCall(id="food", name="search_food_nutrition", arguments={"query": "chuoi"})
+    reply = AgentOrchestrator._exact_food_or_dish_catalog_reply(
+        [call],
+        [
+            (
+                call,
+                ToolResult(
+                    ok=True,
+                    data=[
+                        {
+                            "source": "foods",
+                            "name": "Chuối",
+                            "energy_kcal": 97,
+                            "protein": 1.5,
+                            "carbohydrates": 22.2,
+                            "fat": 0.2,
+                        }
+                    ],
+                ),
+            )
+        ],
+    )
+
+    assert reply is not None
+    assert "97 kcal" in reply
+    assert "1.5 g đạm" in reply
+
+
+def test_direct_dish_catalog_reply_uses_canonical_portion():
+    call = ToolCall(id="dish", name="search_dish_catalog", arguments={"query": "pho bo"})
+    reply = AgentOrchestrator._exact_food_or_dish_catalog_reply(
+        [call],
+        [
+            (
+                call,
+                ToolResult(
+                    ok=True,
+                    data={
+                        "matched_count": 1,
+                        "results": [
+                            {
+                                "name": "Phở bò",
+                                "nutrition": {
+                                    "energy_kcal": 430,
+                                    "protein_g": 28,
+                                    "carbohydrate_g": 55,
+                                    "fat_g": 11,
+                                },
+                                "serving": {"serving_weight_g": 500},
+                                "ingredient_names": ["Bánh phở", "Thịt bò"],
+                            }
+                        ],
+                    },
+                ),
+            )
+        ],
+    )
+
+    assert reply is not None
+    assert "khẩu phần 500 g" in reply
+    assert "430 kcal" in reply
 
 
 @pytest.mark.asyncio
@@ -1289,6 +1481,78 @@ async def test_llm_unavailable_sends_error_and_does_not_append_assistant_turn():
     assert gateway.errors[0][0] == "LLM_UNAVAILABLE"
     assert "máy chủ AI" not in gateway.errors[0][1]
     assert not any(t[1] == "assistant" for t in store.turns)
+
+
+@pytest.mark.asyncio
+async def test_llm_stream_timeout_sends_specific_retryable_error_code():
+    from services.agent.llm_client import LLMUnavailableError
+
+    class StreamTimeoutLLM:
+        async def chat(self, messages, tools, *args, **kwargs):
+            raise LLMUnavailableError("stalled", reason_code="STREAM_TIMEOUT")
+
+    gateway = FakeGateway()
+    store = FakeStore()
+    orchestrator = AgentOrchestrator(
+        StreamTimeoutLLM(),
+        FakeTools(),
+        FakeMemory(),
+        store,
+        FakeDispatcher(),
+        gateway,
+        max_steps=2,
+    )
+
+    with pytest.raises(LLMUnavailableError):
+        await orchestrator.handleChatMessage("s1", "hi")
+
+    assert gateway.errors[0][0] == "LLM_TIMEOUT"
+    assert not any(turn[1] == "assistant" for turn in store.turns)
+
+
+@pytest.mark.asyncio
+async def test_empty_answer_stream_recovers_without_disconnecting_chat():
+    gateway = FakeGateway()
+    store = FakeStore()
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM(
+            [
+                LLMResponse(content_stream=_stream([]), full_text=""),
+                LLMResponse(content_stream=None, full_text="Mình sẽ lập kế hoạch cho bạn."),
+            ]
+        ),
+        FakeTools(),
+        FakeMemory(),
+        store,
+        FakeDispatcher(),
+        gateway,
+        max_steps=2,
+    )
+
+    await orchestrator.handleChatMessage("s1", "hi")
+
+    assert gateway.errors == []
+    assert gateway.done[0][0] == "Mình sẽ lập kế hoạch cho bạn."
+    assert any(turn[1] == "assistant" for turn in store.turns)
+
+
+@pytest.mark.asyncio
+async def test_empty_answer_stream_uses_visible_app_fallback_when_recovery_is_empty():
+    gateway = FakeGateway()
+    orchestrator = AgentOrchestrator(
+        ScriptedLLM([LLMResponse(content_stream=_stream([]), full_text="")]),
+        FakeTools(),
+        FakeMemory(),
+        FakeStore(),
+        FakeDispatcher(),
+        gateway,
+        max_steps=2,
+    )
+
+    await orchestrator.handleChatMessage("s1", "hi")
+
+    assert gateway.errors == []
+    assert "chưa thể tạo câu trả lời" in gateway.done[0][0]
 
 
 @pytest.mark.asyncio

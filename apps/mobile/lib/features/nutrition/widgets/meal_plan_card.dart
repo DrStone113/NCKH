@@ -5,11 +5,61 @@ import '../../../widgets/meal_summary_card.dart';
 import '../../plans/plan_display.dart';
 
 class DishArtwork extends StatelessWidget {
-  const DishArtwork({super.key, required this.name, this.large = false});
+  const DishArtwork({
+    super.key,
+    required this.name,
+    this.imageUrl,
+    this.large = false,
+  });
   final String name;
+  final String? imageUrl;
   final bool large;
+
+  Widget _placeholder() {
+    final visual = MealPresentation.dishVisual(name);
+    return Container(
+      color: visual.background,
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.all(large ? 24 : 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .65),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            MealPresentation.dishIcon(name),
+            size: large ? 68 : 32,
+            color: AppColors.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final candidate = imageUrl?.trim() ?? '';
+    final parsed = Uri.tryParse(candidate);
+    if (parsed != null && parsed.scheme == 'https') {
+      return Semantics(
+        label: 'Dish reference image',
+        image: true,
+        child: SizedBox(
+          width: large ? double.infinity : 76,
+          height: large ? 210 : 76,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.network(
+              candidate,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _placeholder(),
+              loadingBuilder: (_, child, progress) =>
+                  progress == null ? child : _placeholder(),
+            ),
+          ),
+        ),
+      );
+    }
     final visual = MealPresentation.dishVisual(name);
     return Semantics(
         label: 'Minh họa món ăn',
@@ -41,6 +91,9 @@ class CatalogDishCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = dish['name']?.toString() ?? 'Món ăn';
+    final provenance = dish['provenance'];
+    final imageUrl = dish['image_url']?.toString() ??
+        (provenance is Map ? provenance['source_image_url']?.toString() : null);
     final nutrition = <String, dynamic>{
       for (final key in ['calories', 'protein', 'carbs', 'fat'])
         if (dish['estimated_$key'] is num) 'total_$key': dish['estimated_$key']
@@ -53,7 +106,7 @@ class CatalogDishCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(children: [
-                    DishArtwork(name: name),
+                    DishArtwork(name: name, imageUrl: imageUrl),
                     const SizedBox(width: 14),
                     Expanded(
                         child: Column(
@@ -86,6 +139,7 @@ class CatalogDishCard extends StatelessWidget {
                                         name: name,
                                         nutrition: nutrition,
                                         content: dish,
+                                        imageUrl: imageUrl,
                                         status:
                                             'Món trong danh mục · chưa ghi nhận'))),
                             child: const Text('Xem'))),
@@ -108,6 +162,7 @@ class MealPlanCard extends StatelessWidget {
     final values = PlanDisplay.nutrition(item);
     final name = PlanDisplay.itemTitle(item, nutrition: true);
     final content = PlanDisplay.itemContent(item);
+    final imageUrl = item['image_url']?.toString();
     final grams = content['serving_grams'];
     return Padding(
         padding: const EdgeInsets.only(bottom: 12),
@@ -116,7 +171,7 @@ class MealPlanCard extends StatelessWidget {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                DishArtwork(name: name),
+                DishArtwork(name: name, imageUrl: imageUrl),
                 const SizedBox(width: 14),
                 Expanded(
                     child: Column(
@@ -336,6 +391,7 @@ Future<void> showPlannedMealDetail(
             name: PlanDisplay.itemTitle(item, nutrition: true),
             nutrition: PlanDisplay.nutrition(item),
             content: PlanDisplay.itemContent(item),
+            imageUrl: item['image_url']?.toString(),
           )),
     );
 
@@ -345,10 +401,12 @@ class MealDetailContent extends StatelessWidget {
       required this.name,
       required this.nutrition,
       required this.content,
+      this.imageUrl,
       this.status = 'Dự kiến · chưa ghi nhận',
       this.footer});
   final String name, status;
   final Map<String, dynamic> nutrition, content;
+  final String? imageUrl;
   final Widget? footer;
   @override
   Widget build(BuildContext context) {
@@ -357,7 +415,7 @@ class MealDetailContent extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          DishArtwork(name: name, large: true),
+          DishArtwork(name: name, imageUrl: imageUrl, large: true),
           const SizedBox(height: 24),
           Text(name,
               style: const TextStyle(

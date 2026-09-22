@@ -46,6 +46,8 @@ class AIChatProvider extends ChangeNotifier {
   String? pendingDraftFor(String userId) =>
       _draftOwner == userId ? _unsentDraft : null;
   Timer? _timeoutTimer;
+  Timer? _deadlineTimer;
+  String? _activeTurnId;
   late final StreamingTypewriter _responseTypewriter;
   Map<String, dynamic>? _pendingDoneData;
   String _deferredResponseText = '';
@@ -122,6 +124,17 @@ class AIChatProvider extends ChangeNotifier {
   bool get canRetry => _lastMessageText != null && _lastUser != null;
   String? get currentSessionId => _sessionId;
 
+  @visibleForTesting
+  static bool acceptsTurnEvent(String? activeTurnId, String? eventTurnId) {
+    return eventTurnId == null || eventTurnId == activeTurnId;
+  }
+
+  @visibleForTesting
+  static bool hasUsableDonePayload(Map<String, dynamic> data) {
+    final fullResponse = data['full_response']?.toString() ?? '';
+    return fullResponse.trim().isNotEmpty || data['structured'] is Map;
+  }
+
   /// Set provider references for saving actions
   void setProviders({
     ExerciseProvider? exerciseProvider,
@@ -190,6 +203,7 @@ class AIChatProvider extends ChangeNotifier {
   void startNewSession() {
     disconnect();
     _sessionId = _uuid.v4();
+    _activeProfileScope = ProfileContextScope.general;
     _messages.clear();
     _errorMessage = null;
     _isStreaming = false;
@@ -210,6 +224,7 @@ class AIChatProvider extends ChangeNotifier {
       String sessionId, List<Map<String, dynamic>> rawMessages) {
     disconnect();
     _sessionId = sessionId;
+    _activeProfileScope = ProfileContextScope.general;
     _messages.clear();
     _errorMessage = null;
     _isStreaming = false;
@@ -445,9 +460,15 @@ class AIChatProvider extends ChangeNotifier {
     _unsentDraft = text;
     _draftOwner = user.id;
     try {
-      final currentProfile = await checkProfileBeforeSend(text, user);
+      final profileScope = _scopeForMessage(text);
+      final currentProfile = await checkProfileBeforeSend(
+        text,
+        user,
+        scope: profileScope,
+      );
       if (currentProfile == null) return false;
       user = currentProfile;
+      _activeProfileScope = profileScope;
 
       // Lưu context để có thể retry
       _lastMessageText = text;
@@ -484,6 +505,8 @@ class AIChatProvider extends ChangeNotifier {
       ));
 
       // 2. Tạo streaming message placeholder — status: thinking
+      final semanticTurnId = _uuid.v4();
+      _activeTurnId = semanticTurnId;
       _responseTypewriter.clear();
       _pendingDoneData = null;
       _deferredResponseText = '';
@@ -501,14 +524,19 @@ class AIChatProvider extends ChangeNotifier {
       ));
       notifyListeners();
 
-      // Bắt đầu timeout 30 giây
+      // Public trace/status do not satisfy this first-answer deadline.
       _timeoutTimer?.cancel();
-      _timeoutTimer = Timer(AIChatbotConfig.streamTimeout, () {
+      _timeoutTimer = Timer(AIChatbotConfig.firstResponseTimeout, () {
         debugPrint('⏰ [AIChatProvider] Stream timeout');
         _onError('TIMEOUT', 'Phản hồi quá lâu');
       });
 
       // 3. Gửi ChatRequest JSON qua WebSocket kèm user_context phong phú
+      _deadlineTimer?.cancel();
+      _deadlineTimer = Timer(AIChatbotConfig.streamTimeout, () {
+        _onError('TIMEOUT', 'Phản hồi quá lâu');
+      });
+
       final canonicalNutrition = user.canonicalNutrition;
       final dailyNutritionSummary =
           _nutritionProvider?.canonicalDailySummary(canonicalNutrition);
@@ -516,8 +544,6 @@ class AIChatProvider extends ChangeNotifier {
         ...canonicalNutrition.formulaIds,
         ...?dailyNutritionSummary?.formulaIds,
       }.toList(growable: false);
-      final profileScope = _scopeForMessage(text);
-      _activeProfileScope = profileScope;
       final Map<String, dynamic> userContext = {
         'user_id': user.id,
         'name': user.name,
@@ -748,7 +774,6 @@ class AIChatProvider extends ChangeNotifier {
         'message': text,
         'user_context': userContext,
       };
-      final semanticTurnId = _uuid.v4();
       request['turn_id'] = semanticTurnId;
       if (_latitude != null && _longitude != null) {
         request['latitude'] = _latitude;
@@ -782,7 +807,10 @@ class AIChatProvider extends ChangeNotifier {
   /// Supplemental gaps travel with the scoped context so the bot can ask only
   /// what it needs. They never become assumed negative safety answers.
   Future<UserModel?> checkProfileBeforeSend(
-      String text, UserModel supplied) async {
+    String text,
+    UserModel supplied, {
+    ProfileContextScope? scope,
+  }) async {
     _checkingProfile = true;
     _profileIssue = null;
     _profileReadiness = null;
@@ -807,7 +835,7 @@ class AIChatProvider extends ChangeNotifier {
       }
       _profileReadiness = ProfileReadiness.assess(
         current,
-        scope: ProfileReadiness.scopeForMessage(text),
+        scope: scope ?? _scopeForMessage(text),
       );
       if (!_profileReadiness!.canSend) {
         _profileIssue =
@@ -829,6 +857,12 @@ class AIChatProvider extends ChangeNotifier {
     try {
       final data = jsonDecode(raw as String) as Map<String, dynamic>;
       final type = data['type'] as String?;
+      final eventTurnId = data['turn_id']?.toString();
+      if (!acceptsTurnEvent(_activeTurnId, eventTurnId)) {
+        debugPrint(
+            'Ignoring stale chat event for turn $eventTurnId; active=$_activeTurnId');
+        return;
+      }
 
       debugPrint('📦 [AIChatProvider] Message type: $type');
 
@@ -865,6 +899,7 @@ class AIChatProvider extends ChangeNotifier {
               data['message'] as String? ?? 'Lỗi không xác định');
           break;
         case 'tool_call':
+          _resetTimeoutTimer();
           _handleToolCall(data);
           break;
         default:
@@ -872,6 +907,9 @@ class AIChatProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Parse error: $e');
+      if (_isStreaming) {
+        _onError('BAD_RESPONSE', 'Phản hồi từ server không hợp lệ');
+      }
     }
   }
 
@@ -2143,7 +2181,7 @@ class AIChatProvider extends ChangeNotifier {
 
   void _resetTimeoutTimer() {
     _timeoutTimer?.cancel();
-    _timeoutTimer = Timer(AIChatbotConfig.streamTimeout, () {
+    _timeoutTimer = Timer(AIChatbotConfig.streamIdleTimeout, () {
       debugPrint('⏰ [AIChatProvider] Stream timeout');
       _onError('TIMEOUT', 'Phản hồi quá lâu');
     });
@@ -2151,8 +2189,8 @@ class AIChatProvider extends ChangeNotifier {
 
   /// Đưa token câu trả lời vào hàng đợi typewriter thích ứng.
   void _onTokenReceived(String token) {
-    _resetTimeoutTimer();
     if (_streamingMessageId == null || token.isEmpty) return;
+    _resetTimeoutTimer();
 
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
@@ -2178,7 +2216,6 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   void _onPublicTraceReceived(dynamic rawTrace) {
-    _resetTimeoutTimer();
     if (_streamingMessageId == null || rawTrace is! Map) return;
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
@@ -2196,7 +2233,6 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   void _onDebugTraceReceived(dynamic rawEvent) {
-    _resetTimeoutTimer();
     if (_streamingMessageId == null || rawEvent is! Map) return;
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
@@ -2210,9 +2246,7 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   /// Status trung gian chỉ là heartbeat; UI dùng public trace an toàn.
-  void _onStatusReceived() {
-    _resetTimeoutTimer();
-  }
+  void _onStatusReceived() {}
 
   /// Lấy text hiển thị khi đang stream — ẩn tất cả data block tags và SUGGESTIONS
   static String getDisplayText(String text, bool isStreaming) {
@@ -2236,6 +2270,14 @@ class AIChatProvider extends ChangeNotifier {
   void _onStreamDone(Map<String, dynamic> data) {
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
+    _deadlineTimer?.cancel();
+    _deadlineTimer = null;
+    _activeTurnId = null;
+
+    if (!hasUsableDonePayload(data)) {
+      _onError('EMPTY_RESPONSE', 'Server không trả về nội dung');
+      return;
+    }
 
     _pendingDoneData = Map<String, dynamic>.from(data);
     _reconcileTypewriterWithFullResponse(data);
@@ -2330,6 +2372,7 @@ class AIChatProvider extends ChangeNotifier {
 
     _isStreaming = false;
     _streamingMessageId = null;
+    _activeTurnId = null;
     notifyListeners();
   }
 
@@ -2338,6 +2381,8 @@ class AIChatProvider extends ChangeNotifier {
     disconnect(); // Ensure channel is completely cleaned up and nullified
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
+    _deadlineTimer?.cancel();
+    _deadlineTimer = null;
 
     debugPrint('❌ [AIChatProvider] Error: $code - $message');
 
@@ -2347,12 +2392,16 @@ class AIChatProvider extends ChangeNotifier {
       if (idx != -1 && _messages[idx].text.isEmpty) {
         _messages.removeAt(idx);
       } else if (idx != -1) {
-        _messages[idx] = _messages[idx].copyWith(isStreaming: false);
+        _messages[idx] = _messages[idx].copyWith(
+          isStreaming: false,
+          status: MessageStatus.error,
+        );
       }
     }
 
     _isStreaming = false;
     _streamingMessageId = null;
+    _activeTurnId = null;
 
     switch (code) {
       case 'LLM_UNAVAILABLE':
@@ -2364,7 +2413,13 @@ class AIChatProvider extends ChangeNotifier {
             'Dịch vụ AI đã hết hạn mức. Vui lòng liên hệ quản trị viên.';
         break;
       case 'TIMEOUT':
+      case 'LLM_TIMEOUT':
         _errorMessage = 'Phản hồi quá lâu. Vui lòng thử lại.';
+        break;
+      case 'EMPTY_RESPONSE':
+      case 'BAD_RESPONSE':
+        _errorMessage =
+            'Chưa nhận được câu trả lời hoàn chỉnh. Nhấn để thử lại.';
         break;
       case 'CONNECTION_ERROR':
         _errorMessage = 'Không thể kết nối đến server. Kiểm tra kết nối mạng.';
@@ -2380,20 +2435,11 @@ class AIChatProvider extends ChangeNotifier {
   }
 
   ProfileContextScope _scopeForMessage(String message) {
-    final direct = ProfileReadiness.scopeForMessage(message);
-    if (direct != ProfileContextScope.general) {
-      return direct;
-    }
-    if (_activeProfileScope != ProfileContextScope.general) {
-      return _activeProfileScope;
-    }
-    for (final m in _messages.reversed.take(6)) {
-      final prevScope = ProfileReadiness.scopeForMessage(m.text);
-      if (prevScope != ProfileContextScope.general) {
-        return prevScope;
-      }
-    }
-    return ProfileContextScope.general;
+    return ProfileReadiness.scopeForConversation(
+      message,
+      activeScope: _activeProfileScope,
+      recentMessages: _messages.reversed.map((message) => message.text),
+    );
   }
 
   /// Ngắt kết nối WebSocket và hủy tất cả subscriptions
@@ -2404,6 +2450,9 @@ class AIChatProvider extends ChangeNotifier {
     _channel = null;
     _timeoutTimer?.cancel();
     _timeoutTimer = null;
+    _deadlineTimer?.cancel();
+    _deadlineTimer = null;
+    _activeTurnId = null;
     _responseTypewriter.clear();
     _pendingDoneData = null;
     _deferredResponseText = '';

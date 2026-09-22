@@ -10,6 +10,7 @@ import '../models/app_state_value.dart';
 import '../models/canonical_nutrition.dart';
 import '../services/meal_diary_store.dart';
 import '../features/plans/plan_display.dart';
+import '../models/planned_projection.dart';
 
 class NutritionProvider with ChangeNotifier {
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
@@ -21,6 +22,9 @@ class NutritionProvider with ChangeNotifier {
 
   List<MealModel> _todayMeals = [];
   List<MealModel> _allMeals = [];
+  // Planned Plan V2 projections are never inserted into the actual diary
+  // collections above and are never written through MealDiaryStore.
+  List<PlannedMealProjection> _plannedMeals = [];
   DateTime _selectedDate = DateTime.now();
   bool _allMealsLoaded = false;
   bool _isLoading = false;
@@ -29,6 +33,8 @@ class NutritionProvider with ChangeNotifier {
   ActivePlanStatus _activePlanReadStatus = ActivePlanStatus.readError;
 
   List<MealModel> get todayMeals => _todayMeals;
+  List<PlannedMealProjection> get plannedMeals =>
+      List.unmodifiable(_plannedMeals);
   DateTime get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
   DataStatus get todayMealsStatus => _todayMealsStatus;
@@ -49,37 +55,19 @@ class NutritionProvider with ChangeNotifier {
   List<FoodItem> get vietnameseFoods =>
       _vietnameseFoods.isNotEmpty ? _vietnameseFoods : vietnameseFoodDatabase;
 
-  final Set<String> _deletedPlanItemIds = {};
-
-  Future<void> _saveDeletedPlanItemIds(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        'nutrition_deleted_plan_items_$userId',
-        _deletedPlanItemIds.toList(),
-      );
-    } catch (_) {}
-  }
-
-  Future<void> _loadDeletedPlanItemIds(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = prefs.getStringList('nutrition_deleted_plan_items_$userId');
-      if (list != null) {
-        _deletedPlanItemIds.addAll(list);
-      }
-    } catch (_) {}
-  }
-
   /// Tổng calo & macro của các bữa ăn ĐÃ ĂN (isCompleted == true)
-  double get consumedCalories =>
-      _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.calories);
-  double get consumedProtein =>
-      _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.protein);
-  double get consumedCarbs =>
-      _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.carbs);
-  double get consumedFat =>
-      _todayMeals.where((m) => m.isCompleted).fold(0.0, (acc, m) => acc + m.fat);
+  double get consumedCalories => _todayMeals
+      .where((m) => m.isCompleted)
+      .fold(0.0, (acc, m) => acc + m.calories);
+  double get consumedProtein => _todayMeals
+      .where((m) => m.isCompleted)
+      .fold(0.0, (acc, m) => acc + m.protein);
+  double get consumedCarbs => _todayMeals
+      .where((m) => m.isCompleted)
+      .fold(0.0, (acc, m) => acc + m.carbs);
+  double get consumedFat => _todayMeals
+      .where((m) => m.isCompleted)
+      .fold(0.0, (acc, m) => acc + m.fat);
 
   DailyNutritionSummary canonicalDailySummary(
       CanonicalNutritionState canonical) {
@@ -111,14 +99,18 @@ class NutritionProvider with ChangeNotifier {
   }
 
   /// Tổng calo & macro dự kiến trong kế hoạch / thực đơn cả ngày (bất kể đã ăn hay chưa)
-  double get plannedCalories =>
-      _todayMeals.fold(0.0, (acc, m) => acc + m.calories);
-  double get plannedProtein =>
-      _todayMeals.fold(0.0, (acc, m) => acc + m.protein);
-  double get plannedCarbs =>
-      _todayMeals.fold(0.0, (acc, m) => acc + m.carbs);
-  double get plannedFat =>
-      _todayMeals.fold(0.0, (acc, m) => acc + m.fat);
+  double get plannedCalories => _plannedMeals.isNotEmpty
+      ? _plannedMeals.fold(0.0, (acc, m) => acc + m.calories)
+      : _todayMeals.fold(0.0, (acc, m) => acc + m.calories);
+  double get plannedProtein => _plannedMeals.isNotEmpty
+      ? _plannedMeals.fold(0.0, (acc, m) => acc + m.protein)
+      : _todayMeals.fold(0.0, (acc, m) => acc + m.protein);
+  double get plannedCarbs => _plannedMeals.isNotEmpty
+      ? _plannedMeals.fold(0.0, (acc, m) => acc + m.carbs)
+      : _todayMeals.fold(0.0, (acc, m) => acc + m.carbs);
+  double get plannedFat => _plannedMeals.isNotEmpty
+      ? _plannedMeals.fold(0.0, (acc, m) => acc + m.fat)
+      : _todayMeals.fold(0.0, (acc, m) => acc + m.fat);
 
   /// Giữ totalCalories làm alias cho plannedCalories
   double get totalCalories => plannedCalories;
@@ -265,10 +257,6 @@ class NutritionProvider with ChangeNotifier {
       for (final old in pendingToRemove) {
         await _mealStore.delete(old.id);
       }
-      for (final old in pendingToRemove) {
-        _deletedPlanItemIds.add(old.id);
-        await _saveDeletedPlanItemIds(old.userId);
-      }
       _todayMealsStatus = DataStatus.known;
       _todayMealsObservedAt = DateTime.now();
       debugPrint('✅ Meal saved to Firestore: ${meal.id}');
@@ -295,18 +283,53 @@ class NutritionProvider with ChangeNotifier {
     }
   }
 
+  /// Log a new actual observation from a read-only planned projection.
+  /// This never mutates or deletes the Plan V2 revision.
+  Future<WriteResult<MealModel>> logPlannedMealObservation(
+    PlannedMealProjection planned,
+  ) {
+    final now = DateTime.now();
+    final observation = MealModel(
+      id: 'meal_observation_${now.microsecondsSinceEpoch}',
+      userId: planned.userId,
+      name: planned.name,
+      date: now,
+      mealType: planned.mealType,
+      isCompleted: true,
+      sourcePlanId: planned.planId,
+      sourceRevisionId: planned.revisionId,
+      sourcePlanItemId: planned.planItemId,
+      items: [
+        MealItem(
+          id: 'meal_observation_item_${now.microsecondsSinceEpoch}',
+          foodId: '',
+          name: planned.name,
+          weightGrams: 0,
+          calories: planned.calories,
+          protein: planned.protein,
+          carbs: planned.carbs,
+          fat: planned.fat,
+        ),
+      ],
+    );
+    return addMeal(observation, replacePendingSlot: false);
+  }
+
   Future<void> replaceMeal(String oldMealId, MealModel newMeal) async {
     await deleteMeal(oldMealId);
     await addMeal(newMeal, replacePendingSlot: false);
   }
 
   Future<void> _syncMealsFromBackendPlan(String userId, DateTime date) async {
-    await _loadDeletedPlanItemIds(userId);
+    _plannedMeals = [];
     try {
       final read =
           await BackendApiService().readAuthoritativeActivePlanV2('NUTRITION');
       _activePlanReadStatus = read.status;
-      if (read.status != ActivePlanStatus.activePlanFound || read.plan == null) return;
+      if (read.status != ActivePlanStatus.activePlanFound ||
+          read.plan == null) {
+        return;
+      }
 
       final plan = read.plan!;
       final day = PlanDisplay.dayForDate(plan, date);
@@ -319,9 +342,6 @@ class NutritionProvider with ChangeNotifier {
         final itemId = PlanDisplay.itemId(item).isNotEmpty
             ? PlanDisplay.itemId(item)
             : 'plan_meal_${item['slot'] ?? 'meal'}_$dateKey';
-
-        if (_deletedPlanItemIds.contains(itemId)) continue;
-        if (_allMeals.any((m) => m.id == itemId)) continue;
 
         final dishName = PlanDisplay.itemTitle(item, nutrition: true);
         final slot = item['slot']?.toString();
@@ -367,18 +387,20 @@ class NutritionProvider with ChangeNotifier {
           ];
         }
 
-        final isDone =
-            item['is_completed'] == true || item['completed'] == true;
-        final plannedMeal = MealModel(
-          id: itemId,
+        final plannedMeal = PlannedMealProjection(
+          planItemId: itemId,
+          planId: plan['plan_id']?.toString() ?? '',
+          revisionId: plan['revision_id']?.toString() ?? '',
           userId: userId,
           name: dishName,
           date: date,
           mealType: MealTypeUtils.normalize(slot, fallback: 'sang'),
-          items: mealItems,
-          isCompleted: isDone,
+          calories: cals,
+          protein: prot,
+          carbs: carbs,
+          fat: fat,
         );
-        _allMeals.add(plannedMeal);
+        _plannedMeals.add(plannedMeal);
       }
     } catch (e) {
       _activePlanReadStatus = ActivePlanStatus.readError;
@@ -469,8 +491,6 @@ class NutritionProvider with ChangeNotifier {
     // Optimistic update - remove from cache immediately
     _allMeals.removeAt(mealIdx);
     _todayMeals.removeWhere((m) => m.id == mealId);
-    _deletedPlanItemIds.add(mealId);
-    _saveDeletedPlanItemIds(meal.userId);
     _cacheService.removeMealFromCache(meal.userId, meal.date, mealId);
     notifyListeners();
 
@@ -1278,13 +1298,8 @@ class NutritionProvider with ChangeNotifier {
           } catch (_) {}
         }
 
-        // Update backend plan item if it belongs to plan
-        try {
-          await BackendApiService().updatePlanItemCompletion(
-            itemId: mealId,
-            completed: updated.isCompleted,
-          );
-        } catch (_) {}
+        // A plan item is immutable planned state. The diary write above is
+        // the actual observation; it must never mutate the Plan revision.
 
         debugPrint('✅ Meal completed status updated: ${updated.isCompleted}');
       }

@@ -505,25 +505,52 @@ class PlanEngine:
     def build_combined_container(
         self, context: PlanContext, request: PlanRequest, child_revisions: tuple[PlanRevision, ...]
     ) -> PlanRevision:
-        """Create a reference-only health-plan container, never mixed maths."""
+        """Create one canonical combined revision from domain components.
+
+        Older callers still pass child revisions, but the returned revision now
+        owns the actual meal/workout item snapshots.  The child references are
+        retained only as provenance, never as a second mutable source.
+        """
 
         if request.domain is not PlanDomain.COMBINED_HEALTH:
             raise ValueError("PLAN_DOMAIN_MISMATCH")
         if not child_revisions or any(item.domain is PlanDomain.COMBINED_HEALTH for item in child_revisions):
             return self._clarification_revision(context, request, "COMBINED_CHILD_PLAN_MISSING")
+        items = tuple(item for child in child_revisions for item in child.items)
+        if not items:
+            return self._clarification_revision(context, request, "COMBINED_ITEMS_MISSING")
+        policy_versions = {
+            key: value
+            for child in child_revisions
+            for key, value in child.policy_versions.items()
+        }
+        catalog_versions = {
+            key: value
+            for child in child_revisions
+            for key, value in child.catalog_versions.items()
+        }
         revision = PlanRevision(
             plan_id=new_plan_id(), domain=PlanDomain.COMBINED_HEALTH, revision_id=new_revision_id(), revision_number=1,
             parent_revision_id=None, owner_user_id=context.owner_user_id, request=request,
             lifecycle_status=PlanLifecycleStatus.DRAFT, validation=PlanValidationResult(PlanValidationStatus.READY),
-            policy_versions={}, catalog_versions={}, goal_snapshot={"goal": request.goal_override}, constraint_snapshot={}, items=(),
-            summary={"child_plan_count": len(child_revisions), "planned_not_consumed_or_completed": True},
-            explanation_metadata={"reason_codes": ["COMBINED_PLAN_REFERENCE_ONLY"]},
+            policy_versions=policy_versions, catalog_versions=catalog_versions,
+            goal_snapshot={"goal": request.goal_override},
+            constraint_snapshot={"domains": [child.domain.value for child in child_revisions]},
+            items=items,
+            summary={
+                "child_plan_count": len(child_revisions),
+                "meal_item_count": sum(item.item_type is PlanItemType.MEAL for item in items),
+                "workout_item_count": sum(item.item_type is PlanItemType.WORKOUT_SESSION for item in items),
+                "planned_not_consumed_or_completed": True,
+            },
+            explanation_metadata={"reason_codes": ["COMBINED_PLAN_CANONICAL_ITEMS"]},
             provenance={
-                "generator": "P1_COMBINED_CONTAINER",
+                "generator": "P2_COMBINED_PLAN_ORCHESTRATOR",
                 "child_revisions": [
                     {"domain": child.domain.value, "plan_id": child.plan_id, "revision_id": child.revision_id, "content_hash": child.revision_content_hash}
                     for child in child_revisions
                 ],
+                "canonical_item_owner": "COMBINED_REVISION",
                 "no_cross_domain_energy_compensation": True,
             },
         )
@@ -544,10 +571,29 @@ class PlanEngine:
             raise ValueError("PLAN_NOT_REVISIONABLE")
         items = list(current.items)
         index = next((i for i, item in enumerate(items) if item.plan_item_id == patch.target_item_id), None)
-        if patch.operation is PlanPatchOperation.REMOVE_ITEM:
+        request = current.request
+        goal_snapshot = current.goal_snapshot
+        constraint_snapshot = current.constraint_snapshot
+        if patch.operation is PlanPatchOperation.ADD_ITEM:
+            added = _patch_item_from_payload(patch.requested_change.get("item"))
+            if any(item.plan_item_id == added.plan_item_id for item in items):
+                raise ValueError("PLAN_ITEM_ID_CONFLICT")
+            if not (current.request.period_start <= added.scheduled_date <= current.request.period_end):
+                raise ValueError("INVALID_PLAN_PATCH")
+            items.append(added)
+        elif patch.operation is PlanPatchOperation.REMOVE_ITEM:
             if index is None:
                 raise ValueError("PLAN_ITEM_NOT_FOUND")
             items[index] = replace(items[index], status=PlanItemStatus.CANCELLED)
+        elif patch.operation is PlanPatchOperation.REPLACE_ITEM:
+            if index is None:
+                raise ValueError("PLAN_ITEM_NOT_FOUND")
+            replacement = _patch_item_from_payload(
+                patch.requested_change.get("item"), expected_item_id=items[index].plan_item_id
+            )
+            if not (current.request.period_start <= replacement.scheduled_date <= current.request.period_end):
+                raise ValueError("INVALID_PLAN_PATCH")
+            items[index] = replacement
         elif patch.operation is PlanPatchOperation.CHANGE_TIME:
             if index is None or not isinstance(patch.requested_change.get("schedule_slot"), str):
                 raise ValueError("INVALID_PLAN_PATCH")
@@ -566,6 +612,31 @@ class PlanEngine:
                 raise ValueError("INVALID_PLAN_PATCH")
             content = {**items[index].content, "planned_duration_minutes": patch.requested_change["duration_minutes"]}
             items[index] = replace(items[index], content=content)
+        elif patch.operation is PlanPatchOperation.CHANGE_GOAL:
+            goal = patch.requested_change.get("goal_override")
+            if goal is not None and (not isinstance(goal, str) or not goal.strip()):
+                raise ValueError("INVALID_PLAN_PATCH")
+            request = replace(current.request, goal_override=goal.strip() if isinstance(goal, str) else None)
+            goal_snapshot = {**current.goal_snapshot, "user_requested_goal": request.goal_override}
+        elif patch.operation is PlanPatchOperation.CHANGE_CONSTRAINT:
+            def _strings(name: str, fallback: tuple[str, ...]) -> tuple[str, ...]:
+                value = patch.requested_change.get(name, fallback)
+                if not isinstance(value, (list, tuple)) or not all(isinstance(item, str) and item.strip() for item in value):
+                    raise ValueError("INVALID_PLAN_PATCH")
+                return tuple(dict.fromkeys(item.strip() for item in value))
+
+            request = replace(
+                current.request,
+                schedule_constraints=_strings("schedule_constraints", current.request.schedule_constraints),
+                temporary_preferences=_strings("temporary_preferences", current.request.temporary_preferences),
+                temporary_exclusions=_strings("temporary_exclusions", current.request.temporary_exclusions),
+            )
+            constraint_snapshot = {
+                **current.constraint_snapshot,
+                "schedule_constraints": list(request.schedule_constraints),
+                "temporary_preferences": list(request.temporary_preferences),
+                "temporary_exclusions": list(request.temporary_exclusions),
+            }
         else:
             # Replacing an item must be supplied by a domain resolver/UI using
             # canonical refs; plain prose never becomes an executable item.
@@ -574,6 +645,7 @@ class PlanEngine:
             current,
             revision_id=new_revision_id(), revision_number=current.revision_number + 1,
             parent_revision_id=current.revision_id, lifecycle_status=PlanLifecycleStatus.DRAFT,
+            request=request, goal_snapshot=goal_snapshot, constraint_snapshot=constraint_snapshot,
             items=tuple(items),
             provenance={**current.provenance, "patch": {"operation": patch.operation.value, "reason": patch.reason, "source": patch.request_source}},
         )
@@ -613,6 +685,40 @@ class PlanEngine:
         revision = replace(revision, validation=PlanValidationResult(status, revision.validation.issues))
         self.repository.put(revision)
         return revision
+
+
+def _patch_item_from_payload(value: Any, *, expected_item_id: str | None = None) -> PlanItem:
+    """Accept only a fully typed, canonical PlanItem supplied by a domain UI.
+
+    The application service never turns arbitrary assistant prose into a plan
+    item.  Replacement keeps the logical item identity stable.
+    """
+    if not isinstance(value, dict):
+        raise ValueError("INVALID_PLAN_PATCH")
+    item_id = expected_item_id or value.get("plan_item_id")
+    try:
+        scheduled_date = date.fromisoformat(str(value["scheduled_date"]))
+        item_type = PlanItemType(str(value["item_type"]))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("INVALID_PLAN_PATCH") from exc
+    if not isinstance(item_id, str) or not item_id.strip():
+        raise ValueError("INVALID_PLAN_PATCH")
+    slot = value.get("schedule_slot")
+    canonical_refs = value.get("canonical_refs")
+    if not isinstance(slot, str) or not slot.strip() or not isinstance(canonical_refs, dict) or not canonical_refs:
+        raise ValueError("INVALID_PLAN_PATCH")
+    status = value.get("status", PlanItemStatus.PLANNED.value)
+    try:
+        return PlanItem(
+            plan_item_id=item_id.strip(), scheduled_date=scheduled_date,
+            schedule_slot=slot.strip(), item_type=item_type,
+            canonical_refs=dict(canonical_refs), status=PlanItemStatus(str(status)),
+            reason_codes=tuple(str(code) for code in value.get("reason_codes", ()) if str(code).strip()),
+            policy_provenance=tuple(str(code) for code in value.get("policy_provenance", ()) if str(code).strip()),
+            content=dict(value.get("content") or {}),
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError("INVALID_PLAN_PATCH") from exc
 
 
 def _stateful_value(value: Any, source: str) -> ContextValue:

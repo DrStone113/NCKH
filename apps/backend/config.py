@@ -25,11 +25,34 @@ class Settings(BaseSettings):
     scope_router_high_confidence: float = Field(default=0.85, ge=0, le=1)
     scope_router_temperature: float = Field(default=0.06, gt=0, le=1)
     scope_router_full_confidence_similarity: float = Field(default=0.50, gt=0, le=1)
-    # Uncertain/disagreeing fragments alone may reach this restricted JSON-only
-    # judge. It has no tools/history/RAG and never falls back to the answer LLM.
-    scope_classifier_model: Optional[str] = "wen/qwen3.8-flash"
+    # Remote compatibility fallback only. When the pinned local Qwen 0.6B path
+    # is configured below, that local runtime is the authoritative scope SLM.
+    scope_classifier_model: Optional[str] = None
     scope_classifier_timeout_seconds: float = Field(default=2.5, gt=0, le=10)
     scope_classifier_confidence: float = Field(default=0.85, ge=0, le=1)
+    # Product semantic parsing is server-owned and shadow by default.  ScopeGuard
+    # remains the deterministic safety/scope firewall regardless of this mode.
+    server_semantic_router_mode: Literal["off", "shadow", "enforced"] = "shadow"
+    # No default model is intentional: an approved artifact with recorded
+    # provenance is required before server SLM inference can be enabled.
+    server_semantic_router_model: Optional[str] = None
+    # When both values are supplied, reuse the existing local Transformers
+    # adapter. The server never downloads model files while serving requests.
+    server_semantic_router_local_model_path: Optional[str] = None
+    server_semantic_router_local_model_sha256: Optional[str] = None
+    # Local CPU inference is intentionally bounded but can exceed network-judge
+    # timeouts during qualification; production rollout may tighten this later.
+    server_semantic_router_timeout_seconds: float = Field(default=45.0, gt=0, le=180)
+    server_semantic_router_confidence: float = Field(default=0.85, ge=0, le=1)
+    # Qualification-only dependency injection.  Both fields are empty by
+    # default, so normal startup continues to use production RAG tables.
+    acceptance_evaluation_corpus_version: Optional[str] = None
+    acceptance_evaluation_corpus_hash: Optional[str] = None
+    # This is deliberately more restrictive than developer debug tracing.  It
+    # permits a complete, JSON-safe tool evidence record only in the isolated
+    # development acceptance server that supplies a frozen corpus identity.
+    # Normal client traces must never include tool payloads.
+    acceptance_evaluation_trace_capture: bool = False
     development_context_trace: bool = False
     # D3.0 supports observation only. Literal validation intentionally rejects
     # an "enforced" value so configuration cannot activate D3.1 behavior.
@@ -60,8 +83,10 @@ class Settings(BaseSettings):
     # into git history.
     openai_api_key: str = ""
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
-    llm_model: str = "wen/qwen3.8-flash"
-    heavy_llm_model: str = "mn/MiniMax-M2.7"
+    # Provider-managed combo. Both application tiers use the same combo name;
+    # Vilao owns the underlying priority/model routing.
+    llm_model: str = "chatbot"
+    heavy_llm_model: str = "chatbot"
     # Optional OpenAI-compatible reasoning control. Local Qwen 3 deployments
     # should use ``none`` so the response budget is not consumed by hidden
     # thinking before user-visible text or a tool call is emitted.
@@ -73,6 +98,10 @@ class Settings(BaseSettings):
     llm_cost_optimization_mode: Literal["off", "optimized"] = "optimized"
     llm_cross_model_fallback: bool = False
     llm_attempts_per_model: int = Field(default=1, ge=1, le=2)
+    # A provider can return HTTP 200 and then keep an SSE response alive with
+    # empty events. These deadlines are based on meaningful model output.
+    llm_stream_idle_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    llm_stream_total_timeout_seconds: float = Field(default=120.0, gt=0, le=300)
     llm_chitchat_max_output_tokens: int = Field(default=160, ge=32, le=512)
     llm_simple_max_output_tokens: int = Field(default=512, ge=64, le=2048)
     llm_complex_max_output_tokens: int = Field(default=1200, ge=128, le=4096)
@@ -135,6 +164,8 @@ class Settings(BaseSettings):
     summary_min_new_turns: int = Field(default=12, ge=2, le=100)
     max_agent_steps: int = 3
     tool_timeout_ms: int = 5000
+    # Legacy /plans is an authenticated read-only archive after Plan V2 cutover.
+    legacy_plan_read_only: bool = True
 
     # Always load the backend's .env regardless of current working directory.
     # ``parents[0]`` is the backend package root (where .env lives); using
@@ -167,6 +198,17 @@ class Settings(BaseSettings):
         # Staging has data closer to production, so an authenticated developer
         # or admin principal is required even when the server opted in.
         return environment == "staging" and developer_authenticated
+
+    @property
+    def acceptance_evaluation_trace_enabled(self) -> bool:
+        """Whether the isolated frozen-corpus harness may retain tool evidence."""
+
+        return bool(
+            self.acceptance_evaluation_trace_capture
+            and self.app_environment.strip().lower() in {"development", "test"}
+            and self.acceptance_evaluation_corpus_version
+            and self.acceptance_evaluation_corpus_hash
+        )
 
     @property
     def context_planner_shadow_enabled(self) -> bool:

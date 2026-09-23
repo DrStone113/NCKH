@@ -45,6 +45,26 @@ def test_reconnect_and_owner_conversation_isolation() -> None:
     assert claimed.action is action
 
 
+def test_numeric_catalog_id_binds_exact_pending_dish_without_accepting_boolean() -> None:
+    store = PendingUserActionStore()
+    suggestion = {
+        "id": 42,
+        "name": "Cơm gà",
+        "components": [{"name": "Gà", "serving_grams": 150}],
+    }
+    action = store.create_dish_log_action(
+        "session-a", owner_user_id="user-a", suggestion=suggestion,
+        suggestion_arguments={"meal_type": "dinner"},
+    )
+    assert action is not None
+    assert action.target_id == action.tool_arguments["catalog_dish_id"] == "42"
+    assert action.tool_arguments["components"] == suggestion["components"]
+    assert store.create_dish_log_action(
+        "session-a", owner_user_id="user-a", suggestion={**suggestion, "id": True},
+        suggestion_arguments={"meal_type": "dinner"},
+    ) is None
+
+
 def test_ambiguous_superseded_and_expired_actions_are_never_claimed() -> None:
     store = PendingUserActionStore()
     old = _action(store)

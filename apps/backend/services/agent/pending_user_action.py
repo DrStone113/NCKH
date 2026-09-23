@@ -138,6 +138,8 @@ class PendingUserActionStore:
         dish_id = suggestion.get("id")
         dish_name = suggestion.get("name")
         components = suggestion.get("components")
+        if type(dish_id) is int and dish_id > 0:
+            dish_id = str(dish_id)
         if (
             not isinstance(dish_id, str)
             or not dish_id.strip()

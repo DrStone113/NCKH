@@ -1738,21 +1738,25 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                     )),
                 ...planActions.map((a) => Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: ActionChip(
-                        avatar:
-                            Text(a.$1, style: const TextStyle(fontSize: 13)),
-                        label: Text(a.$2,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600)),
-                        backgroundColor:
-                            AppColors.primary.withValues(alpha: 0.08),
-                        side: BorderSide(
-                            color: AppColors.primary.withValues(alpha: 0.35)),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        onPressed: () => _createPlanFromQuickAction(a.$3),
+                      child: Semantics(
+                        label: 'n3-plan-quick-${a.$3}',
+                        button: true,
+                        child: ActionChip(
+                          avatar:
+                              Text(a.$1, style: const TextStyle(fontSize: 13)),
+                          label: Text(a.$2,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600)),
+                          backgroundColor:
+                              AppColors.primary.withValues(alpha: 0.08),
+                          side: BorderSide(
+                              color: AppColors.primary.withValues(alpha: 0.35)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18)),
+                          onPressed: () => _createPlanFromQuickAction(a.$3),
+                        ),
                       ),
                     )),
               ],

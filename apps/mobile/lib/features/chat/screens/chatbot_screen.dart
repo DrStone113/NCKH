@@ -108,7 +108,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         restored = await aiChatProvider.restoreLatestSession(
           loadSessions: () => _backendApi.getChatSessions(userId: userId),
           loadMessages: _backendApi.getSessionMessages,
-        );
+        ).timeout(const Duration(seconds: 15));
       } catch (error) {
         debugPrint('Không thể tự khôi phục phiên chat gần nhất: $error');
       }
@@ -263,6 +263,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
             tooltip: 'Tạo cuộc trò chuyện mới',
             onPressed: () {
               aiChatProvider.startNewSession();
+              setState(() => _restoringSession = false);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Đã tạo cuộc trò chuyện mới'),

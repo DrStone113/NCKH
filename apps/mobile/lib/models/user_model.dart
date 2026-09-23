@@ -100,6 +100,24 @@ class UserModel {
     };
   }
 
+  /// Confirmed account context used by Plan V2 previews. Keep the structured
+  /// intake intact: the workout builder cannot infer it from basic body data.
+  Map<String, dynamic> toPlanRequestContext() => {
+        'age': age,
+        'gender': gender,
+        'equation_sex': equationSex,
+        'nutrition_safety_profile': nutritionSafetyProfile.toJson(),
+        'height': height,
+        'weight': weight,
+        'activity_level': activityLevel,
+        'health_goal': healthGoal,
+        if (effectiveNutritionProfile != null)
+          'nutrition_profile': effectiveNutritionProfile!.toJson(),
+        if (effectiveWorkoutProfile != null)
+          'workout_profile': effectiveWorkoutProfile!.toJson(),
+        if (healthProfile != null) 'health_profile': healthProfile!.toJson(),
+      };
+
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: map['id'] ?? '',

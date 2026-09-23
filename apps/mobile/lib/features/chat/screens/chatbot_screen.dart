@@ -1782,16 +1782,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     try {
       final createdPlan = await _backendApi.createLongTermPlan(
         userId: user.id,
-        userContext: {
-          'age': user.age,
-          'gender': user.gender,
-          'equation_sex': user.equationSex,
-          'nutrition_safety_profile': user.nutritionSafetyProfile.toJson(),
-          'height': user.height,
-          'weight': user.weight,
-          'activity_level': user.activityLevel,
-          'health_goal': user.healthGoal,
-        },
+        userContext: user.toPlanRequestContext(),
         days: days,
       );
       if (!mounted) return;

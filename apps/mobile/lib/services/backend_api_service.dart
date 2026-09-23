@@ -607,6 +607,10 @@ class BackendApiService {
   }) async {
     final start = DateTime.now();
     final end = start.add(Duration(days: days - 1));
+    final workoutProfile = userContext['workout_profile'];
+    final workout = workoutProfile is Map<String, dynamic>
+        ? workoutProfile
+        : const <String, dynamic>{};
     final payload = {
       'domain': 'COMBINED_HEALTH',
       'period_start': start.toIso8601String().substring(0, 10),
@@ -614,6 +618,14 @@ class BackendApiService {
       'timezone': 'Asia/Ho_Chi_Minh',
       'goal_override': notes,
       'profile': userContext,
+      if (workout['available_days_per_week'] is int)
+        'number_of_sessions': workout['available_days_per_week'],
+      if (workout['default_session_duration_minutes'] is int)
+        'duration_minutes': workout['default_session_duration_minutes'],
+      if (workout['training_location'] is String)
+        'training_location': workout['training_location'],
+      if (workout['available_equipment'] is List)
+        'equipment': workout['available_equipment'],
       'temporary_preferences': <String>[],
       'temporary_exclusions': <String>[],
     };

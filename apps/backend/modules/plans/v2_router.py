@@ -222,13 +222,13 @@ async def create_plan_preview(
         "period_end": body.period_end.isoformat(),
         "timezone": body.timezone,
         "goal_override": body.goal_override,
-        "schedule_constraints": body.schedule_constraints,
         "temporary_preferences": body.temporary_preferences,
         "temporary_exclusions": body.temporary_exclusions,
         "_runtime_context": runtime,
     }
+    nutrition_common = {**common, "schedule_constraints": body.schedule_constraints}
     if body.domain == "NUTRITION":
-        output = await plan_v2.build_nutrition_plan(**common)
+        output = await plan_v2.build_nutrition_plan(**nutrition_common)
         if output.get("status") != "READY":
             return {"status": output.get("status"), "plan": output.get("presentation"), "validation": output.get("validation")}
         revision = PlanRevision.from_dict(output["plan"])
@@ -244,7 +244,7 @@ async def create_plan_preview(
             return {"status": output.get("status"), "plan": output.get("presentation"), "validation": output.get("validation")}
         revision = PlanRevision.from_dict(output["plan"])
     else:
-        nutrition = await plan_v2.build_nutrition_plan(**common)
+        nutrition = await plan_v2.build_nutrition_plan(**nutrition_common)
         workout = await plan_v2.build_workout_schedule(
             **common,
             duration_minutes=body.duration_minutes,

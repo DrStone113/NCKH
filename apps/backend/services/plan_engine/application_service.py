@@ -17,7 +17,7 @@ from db.database import AsyncSessionLocal
 
 from .contracts import PlanLifecycleStatus, PlanPatch, PlanRevision
 from .engine import MemoryPlanRepository, PlanContextResolver, PlanEngine
-from .persistence import PlanAuthorizationError, PlanPersistenceError, PlanSqlRepository
+from .persistence import PlanAuthorizationError, PlanSqlRepository
 
 
 class PlanApplicationService:
@@ -60,7 +60,7 @@ class PlanApplicationService:
     ) -> PlanRevision:
         preview = await self.repository.get_preview(owner_user_id, plan_id, revision_id)
         if preview is None:
-            raise PlanPersistenceError("PLAN_PREVIEW_NOT_FOUND")
+            raise PlanAuthorizationError("PLAN_NOT_FOUND")
         return await self.repository.save_exact_revision(
             owner_user_id=owner_user_id,
             revision=preview,

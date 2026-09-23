@@ -241,8 +241,8 @@ def _has(text: str, phrases: tuple[str, ...]) -> bool:
 _SAFETY_CUES = (
     # Cardiorespiratory / loss of consciousness / seizure.
     "dau nguc", "tuc nguc", "kho tho", "nghet tho", "khong tho duoc",
-    "thieu hoi", "shortness of breath", "cannot breathe", "ngat", "sap ngat",
-    "bi ngat", "bat tinh", "mat y thuc", "nga quy", "faint", "co giat",
+    "thieu hoi", "shortness of breath", "cannot breathe",
+    "bat tinh", "mat y thuc", "nga quy", "faint", "co giat",
     "seizure",
     # Severe allergy, bleeding, and stroke-like symptoms.
     "soc phan ve", "phan ve", "sung moi", "sung luoi", "sung hong",

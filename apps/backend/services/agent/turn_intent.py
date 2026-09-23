@@ -102,7 +102,13 @@ def is_urgent_health_text(text: str) -> bool:
     if "tự tử" in raw:
         return True
     normalized = normalize_turn_text(text)
-    if any(_unnegated_phrase(normalized, phrase) for phrase in _URGENT_SIMPLE_CUES):
+    # Accent folding makes "ngặt"/"ngắt" indistinguishable from "ngất"/"ngạt".
+    fainting_cue = bool(re.search(r"(?<!\w)(?:ngất|ngạt|ngat)(?!\w)", raw))
+    if any(
+        _unnegated_phrase(normalized, phrase)
+        for phrase in _URGENT_SIMPLE_CUES
+        if phrase != "ngat"
+    ) or (fainting_cue and _unnegated_phrase(normalized, "ngat")):
         return True
     allergic_skin = _has(normalized, ("noi man", "phat ban", "may day", "hives", "rash"))
     allergic_compromise = any(

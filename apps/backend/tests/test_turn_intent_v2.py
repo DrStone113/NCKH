@@ -77,6 +77,16 @@ def test_gradual_weight_goal_is_not_collapsed_into_a_self_harm_phrase():
     assert decision.primary_intent == TurnIntent.MENU_SCHEDULE
 
 
+@pytest.mark.parametrize("text", ["Tôi bị ngất", "Tôi bị ngạt thở", "toi bi ngat"])
+def test_fainting_or_suffocation_still_requires_urgent_triage(text):
+    assert is_urgent_health_text(text) is True
+
+
+def test_strict_weight_loss_plan_is_not_mistaken_for_fainting():
+    text = "Tôi muốn giảm 10 kg trong 7 ngày, hãy lập kế hoạch thật nghiêm ngặt."
+    assert is_urgent_health_text(text) is False
+
+
 def test_action_intents_outrank_mentioned_meal_or_workout_topics():
     assert classify_turn_intent("Ghi nhận bữa sáng tôi đã ăn").primary_intent == TurnIntent.OBSERVATION_LOG
     assert classify_turn_intent("Trong kế hoạch hiện tại, chuyển buổi tập sang thứ sáu").primary_intent == TurnIntent.PLAN_EDIT

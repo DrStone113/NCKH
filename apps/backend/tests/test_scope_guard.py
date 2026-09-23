@@ -143,6 +143,15 @@ async def test_aggressive_weight_goal_stays_in_scope_with_separate_safety_signal
 
 
 @pytest.mark.asyncio
+async def test_strict_weight_loss_plan_is_not_emergency_triage() -> None:
+    decision = await ScopeGuard().classify(
+        "Tôi muốn giảm 10 kg trong 7 ngày, hãy lập kế hoạch thật nghiêm ngặt."
+    )
+    assert decision.safety == SafetyDisposition.POTENTIALLY_UNSAFE_WEIGHT_GOAL
+    assert decision.should_call_main_llm is True
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "text",
     [

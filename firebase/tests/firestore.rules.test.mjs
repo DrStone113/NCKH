@@ -41,7 +41,7 @@ before(async () => {
     // firebase emulators:exec loads firebase/firestore.rules from firebase.json.
     // Do not upload the same rules a second time through the emulator admin
     // endpoint; that endpoint is not stable across all emulator releases.
-    firestore: { host: '127.0.0.1', port: 8080 },
+    firestore: {},
   });
   // Node 26 can negotiate the first local HTTP/2 stream unreliably even
   // though Firebase tooling officially supports Node 20/22/24. Warm the

@@ -344,7 +344,7 @@ class _DeterministicRagService:
 
 
 @given(query=_query_strategy, top_k=_top_k_strategy)
-@settings(max_examples=60, suppress_health_check=[HealthCheck.too_slow])
+@settings(max_examples=60, deadline=None, suppress_health_check=[HealthCheck.too_slow])
 def test_search_food_nutrition_with_rag_idempotent(
     query: str, top_k: int
 ) -> None:

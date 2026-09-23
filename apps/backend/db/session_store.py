@@ -146,60 +146,48 @@ class DbSessionStore:
         # Never allow a caller to turn the legacy column back into a
         # chain-of-thought store. Public trace has its own JSONB column.
         thoughts = ""
-        # Always record in memory cache so conversation history works in standalone mode
-        session_store.append_turn(
-            session_id,
-            role,
-            content,
-            tool_call_id,
-            tool_name,
-            thoughts,
-            structured_data,
-            public_trace,
-        )
         msg_id = str(uuid4())
-        if self.db_session is None:
-            return msg_id
-        from db.db_status import is_connectivity_failure, mark_db_offline
-        try:
-            await self.db_session.execute(
-                text(
-                    """
-                    INSERT INTO chat_messages (
-                        id, session_id, role, content, tool_call_id, tool_name,
-                        thoughts, structured_data, public_trace
-                    ) VALUES (
-                        :id, :session_id, :role, :content, :tool_call_id, :tool_name,
-                        :thoughts, CAST(:structured_data AS JSONB), CAST(:public_trace AS JSONB)
-                    )
-                    """
-                ),
-                {
-                    "id": msg_id,
-                    "session_id": session_id,
-                    "role": role,
-                    "content": content,
-                    "tool_call_id": tool_call_id,
-                    "tool_name": tool_name,
-                    "thoughts": thoughts,
-                    "structured_data": (
-                        json.dumps(structured_data, ensure_ascii=False)
-                        if structured_data is not None
-                        else None
+        if self.db_session is not None:
+            from db.db_status import is_connectivity_failure, mark_db_offline
+            try:
+                await self.db_session.execute(
+                    text(
+                        """
+                        INSERT INTO chat_messages (
+                            id, session_id, role, content, tool_call_id, tool_name,
+                            thoughts, structured_data, public_trace
+                        ) VALUES (
+                            :id, :session_id, :role, :content, :tool_call_id, :tool_name,
+                            :thoughts, CAST(:structured_data AS JSONB), CAST(:public_trace AS JSONB)
+                        )
+                        """
                     ),
-                    "public_trace": (
-                        json.dumps(public_trace, ensure_ascii=False)
-                        if public_trace is not None
-                        else None
-                    ),
-                },
-            )
-        except Exception as e:
-            if is_connectivity_failure(e):
-                mark_db_offline(60.0)
-            import logging
-
-            logging.getLogger(__name__).warning(
-                "Database unavailable in DbSessionStore.appendTurn: %s", e
-            )
+                    {
+                        "id": msg_id,
+                        "session_id": session_id,
+                        "role": role,
+                        "content": content,
+                        "tool_call_id": tool_call_id,
+                        "tool_name": tool_name,
+                        "thoughts": thoughts,
+                        "structured_data": (
+                            json.dumps(structured_data, ensure_ascii=False)
+                            if structured_data is not None
+                            else None
+                        ),
+                        "public_trace": (
+                            json.dumps(public_trace, ensure_ascii=False)
+                            if public_trace is not None
+                            else None
+                        ),
+                    },
+                )
+            except Exception as exc:
+                if is_connectivity_failure(exc):
+                    mark_db_offline(60.0)
+                raise
+        session_store.append_turn(
+            session_id, role, content, tool_call_id, tool_name, thoughts,
+            structured_data, public_trace,
+        )
         return msg_id

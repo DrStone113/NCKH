@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from db.session_store import DbSessionStore, SessionStore
+from db.session_store import DbSessionStore, SessionStore, session_store
 
 
 @dataclass
@@ -80,3 +80,14 @@ async def test_db_session_store_persists_structured_card_payload():
 
     assert json.loads(db.rows[0]["structured_data"]) == structured
     assert store.db_session is db
+
+
+@pytest.mark.asyncio
+async def test_db_insert_failure_cannot_report_a_saved_chat_turn():
+    class FailingDb:
+        async def execute(self, statement, params):
+            raise RuntimeError("database rejected insert")
+
+    with pytest.raises(RuntimeError, match="database rejected insert"):
+        await DbSessionStore(FailingDb()).appendTurn("unsaved-chat", "assistant", "answer")
+    assert session_store.get_history("unsaved-chat") == []

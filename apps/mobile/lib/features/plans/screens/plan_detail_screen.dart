@@ -13,13 +13,15 @@ import '../../../theme/app_theme.dart';
 import '../../../widgets/versioned_plan_card.dart';
 import '../../../services/backend_api_service.dart';
 
-/// Read-only detail for the exact immutable Plan V2 revision referenced by a
-/// structured chat card or the plan library.
+/// Detail for the exact immutable Plan V2 revision referenced by a chat card
+/// or the plan library. Edits create a new preview, never mutate this revision.
 class PlanDetailScreen extends StatefulWidget {
   final Map<String, dynamic> plan;
   final DateTime? initialDate;
+  final BackendApiService? api;
 
-  const PlanDetailScreen({super.key, required this.plan, this.initialDate});
+  const PlanDetailScreen(
+      {super.key, required this.plan, this.initialDate, this.api});
 
   @override
   State<PlanDetailScreen> createState() => _PlanDetailScreenState();
@@ -27,7 +29,7 @@ class PlanDetailScreen extends StatefulWidget {
 
 class _PlanDetailScreenState extends State<PlanDetailScreen> {
   int _selectedDayIndex = -1; // -1 means "Tất cả"
-  final BackendApiService _api = BackendApiService();
+  late final BackendApiService _api = widget.api ?? BackendApiService();
   late Map<String, dynamic> _plan;
   bool _mutating = false;
   List<Map<String, dynamic>> _history = const [];
@@ -53,10 +55,8 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     if (planId.isEmpty || revisionId.isEmpty) return;
     try {
       final read = await _api.readAuthoritativePlanV2(
-        planId: planId,
-        revisionId: revisionId,
-      );
-      if (read != null && mounted) {
+          planId: planId, revisionId: revisionId);
+      if (read != null && mounted && _plan['revision_id'] == revisionId) {
         setState(() => _plan = read);
         _updateSharedPlan(read);
       }
@@ -80,7 +80,11 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
   List<String> _availableActions(String lifecycle) {
     final targets = _plan['valid_lifecycle_targets'];
     if (targets is List) {
-      return targets.whereType<String>().toList(growable: false);
+      return [
+        if (lifecycle == 'DRAFT' || lifecycle == 'PENDING_CONFIRMATION')
+          'SAVE',
+        ...targets.whereType<String>(),
+      ];
     }
     return switch (lifecycle) {
       'DRAFT' || 'PENDING_CONFIRMATION' => const ['SAVE'],
@@ -91,7 +95,8 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     };
   }
 
-  Future<void> _runAction(String action, {bool replaceConflicts = false}) async {
+  Future<void> _runAction(String action,
+      {bool replaceConflicts = false}) async {
     final planId = _plan['plan_id']?.toString() ?? '';
     final revisionId = _plan['revision_id']?.toString() ?? '';
     final revisionNumber =
@@ -174,6 +179,197 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     }
   }
 
+  Future<void> _replaceMeal() async {
+    final planId = _plan['plan_id']?.toString() ?? '';
+    final revisionId = _plan['revision_id']?.toString() ?? '';
+    final revisionNumber =
+        int.tryParse(_plan['revision_number']?.toString() ?? '');
+    if (_mutating ||
+        planId.isEmpty ||
+        revisionId.isEmpty ||
+        revisionNumber == null) return;
+
+    final meals = <Map<String, dynamic>>[];
+    for (final day in PlanDisplay.days(_plan)) {
+      for (final item in PlanDisplay.items(day)) {
+        if (item['item_type'] != 'MEAL' || item['status'] != 'PLANNED')
+          continue;
+        final id = item['plan_item_id'];
+        if (id is! String || id.trim().isEmpty) continue;
+        meals.add({
+          ...item,
+          'scheduled_date': day['date'],
+          'schedule_slot': item['slot']
+        });
+      }
+    }
+
+    bool usableSource(Map<String, dynamic> item) {
+      final refs = item['canonical_refs'];
+      final nutrition = item['nutrition'];
+      final foods = refs is Map ? refs['food_ids'] : null;
+      return refs is Map &&
+          refs['dish_id'] is String &&
+          (refs['dish_id'] as String).isNotEmpty &&
+          foods is List &&
+          foods.isNotEmpty &&
+          foods.every((food) => food is String && food.isNotEmpty) &&
+          item['dish_name'] is String &&
+          (item['dish_name'] as String).trim().isNotEmpty &&
+          item['ingredients'] is List &&
+          nutrition is Map &&
+          const ['total_calories', 'total_protein', 'total_carbs', 'total_fat']
+              .every((key) => nutrition[key] is num);
+    }
+
+    final sources = meals.where(usableSource).toList();
+    if (meals.isEmpty) return;
+    String label(Map<String, dynamic> item) =>
+        '${item['scheduled_date']} · ${PlanDisplay.slotLabel(item['schedule_slot']?.toString(), nutrition: true)} · ${PlanDisplay.itemTitle(item, nutrition: true)}';
+    var target = meals.first;
+    Map<String, dynamic>? source;
+    final selection =
+        await showDialog<(Map<String, dynamic>, Map<String, dynamic>)>(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, update) {
+        final alternatives = sources
+            .where((item) =>
+                item['plan_item_id'] != target['plan_item_id'] &&
+                (item['canonical_refs'] as Map)['dish_id'] !=
+                    (target['canonical_refs'] is Map
+                        ? (target['canonical_refs'] as Map)['dish_id']
+                        : null))
+            .toList();
+        return AlertDialog(
+          title: const Text('Thay món trong kế hoạch'),
+          content: SingleChildScrollView(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<Map<String, dynamic>>(
+                key: const ValueKey('plan-edit-target'),
+                initialValue: target,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Bữa cần thay'),
+                items: [
+                  for (final item in meals)
+                    DropdownMenuItem(
+                        value: item,
+                        child:
+                            Text(label(item), overflow: TextOverflow.ellipsis))
+                ],
+                onChanged: (item) => update(() {
+                  target = item!;
+                  source = null;
+                }),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<Map<String, dynamic>>(
+                key: ValueKey('plan-edit-source-${target['plan_item_id']}'),
+                initialValue: source,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                    labelText: 'Thay bằng món đã có trong kế hoạch'),
+                items: [
+                  for (final item in alternatives)
+                    DropdownMenuItem(
+                        value: item,
+                        child:
+                            Text(label(item), overflow: TextOverflow.ellipsis))
+                ],
+                onChanged: (item) => update(() => source = item),
+              ),
+              if (alternatives.isEmpty)
+                const Text('Không có món khác đủ dữ liệu để thay thế.'),
+            ],
+          )),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng')),
+            FilledButton(
+              key: const ValueKey('plan-edit-preview'),
+              onPressed: source == null
+                  ? null
+                  : () => Navigator.pop(context, (target, source!)),
+              child: const Text('Tạo bản xem trước'),
+            ),
+          ],
+        );
+      }),
+    );
+    if (selection == null || !mounted) return;
+    final (selected, replacement) = selection;
+    final nutrition = replacement['nutrition'] as Map;
+    final item = {
+      'plan_item_id': selected['plan_item_id'],
+      'scheduled_date': selected['scheduled_date'],
+      'schedule_slot': selected['schedule_slot'],
+      'item_type': 'MEAL',
+      'canonical_refs': replacement['canonical_refs'],
+      'content': {
+        'dish_name': replacement['dish_name'],
+        'components': replacement['ingredients'],
+        if (replacement['serving_grams'] != null)
+          'serving_grams': replacement['serving_grams'],
+        for (final key in const [
+          'total_calories',
+          'total_protein',
+          'total_carbs',
+          'total_fat'
+        ])
+          key: nutrition[key],
+      },
+    };
+    setState(() => _mutating = true);
+    try {
+      final result = await _api.createAuthoritativePlanRevisionPreview(
+        planId: planId,
+        baseRevisionId: revisionId,
+        expectedRevisionNumber: revisionNumber,
+        operation: 'REPLACE_ITEM',
+        targetItemId: selected['plan_item_id'] as String,
+        requestedChange: {'item': item},
+        actionId:
+            'plan-ui-replace-$revisionId-${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final preview = result['plan'];
+      if (result['status'] != 'PREVIEW_READY' ||
+          preview is! Map ||
+          preview['plan_id'] != planId ||
+          preview['parent_revision_id'] != revisionId ||
+          preview['revision_id'] == revisionId ||
+          (preview['revision_content_hash']?.toString() ?? '').isEmpty ||
+          preview['validation'] is! Map ||
+          (preview['validation'] as Map)['status'] != 'READY') {
+        throw StateError('PLAN_PREVIEW_INVALID');
+      }
+      if (!mounted) return;
+      final updated = Map<String, dynamic>.from(preview);
+      setState(() => _plan = updated);
+      _updateSharedPlan(updated);
+      unawaited(_loadHistory());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Bản xem trước đã sẵn sàng. Chọn Lưu để xác nhận.')),
+      );
+    } on PlanV2ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể thay món: ${error.code}')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể thay món: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _mutating = false);
+    }
+  }
+
   void _updateSharedPlan(
     Map<String, dynamic> plan, {
     bool refreshAll = false,
@@ -235,6 +431,25 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                     _nutritionDays(allDays)
                   else
                     VersionedPlanCard(plan: displayedPlan, showHeader: false),
+                  if (PlanDisplay.isNutrition(_plan) &&
+                      lifecycle == 'SAVED' &&
+                      allDays
+                              .expand(PlanDisplay.items)
+                              .where((item) =>
+                                  item['item_type'] == 'MEAL' &&
+                                  item['status'] == 'PLANNED' &&
+                                  (item['plan_item_id']?.toString() ?? '')
+                                      .isNotEmpty)
+                              .length >
+                          1) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const ValueKey('plan-edit-replace-meal'),
+                      onPressed: _mutating ? null : _replaceMeal,
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Thay món'),
+                    ),
+                  ],
                   if (_availableActions(lifecycle).isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _LifecycleActions(
@@ -466,7 +681,11 @@ class _PlanHistory extends StatelessWidget {
             ),
             if ((revision['created_at']?.toString() ?? '').isNotEmpty)
               Text(
-                revision['created_at'].toString().replaceFirst('T', ' ').split('.').first,
+                revision['created_at']
+                    .toString()
+                    .replaceFirst('T', ' ')
+                    .split('.')
+                    .first,
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
             const SizedBox(height: 8),

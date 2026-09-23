@@ -533,6 +533,11 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null || _activePlan == null) return;
 
+    if (_activePlan!['plan_id'] != null && _activePlan!['revision_id'] != null) {
+      _openVersionedPlan(_activePlan!);
+      return;
+    }
+
     showPlanDetailBottomSheet(
       context,
       userId: user.id,
@@ -587,8 +592,10 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Kế hoạch hiện tại: ${plan['duration_days']} ngày • '
-                    '${formatActivePlanGoal(plan['goal'])}',
+                    plan['revision_id'] != null
+                        ? 'Bản xem trước kế hoạch ${plan['period_start']} - ${plan['period_end']}'
+                        : 'Kế hoạch hiện tại: ${plan['duration_days']} ngày • '
+                            '${formatActivePlanGoal(plan['goal'])}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -1787,15 +1794,20 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         days: days,
       );
       if (!mounted) return;
-      setState(() => _activePlan = createdPlan);
+      final presentation = createdPlan['presentation'];
+      if (createdPlan['status'] != 'READY' || presentation is! Map ||
+          createdPlan['preview_persistence_status'] != 'PERSISTED') {
+        throw StateError('PLAN_PREVIEW_NOT_SAVEABLE');
+      }
+      setState(() => _activePlan = Map<String, dynamic>.from(presentation));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Đã tạo bản xem trước $days ngày. Hãy kiểm tra rồi lưu kế hoạch.'),
           backgroundColor: Colors.blue,
         ),
       );
-      // REST planner trả về chính kế hoạch vừa ghi. Dùng payload đó ngay để
-      // tránh đọc nhầm kho Plan V2 độc lập và làm card vừa tạo biến mất.
+      // Show the exact persisted preview; saving still requires the user's
+      // explicit action in PlanDetailScreen.
     } on PlanCreationException catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -16,6 +16,7 @@ import config
 
 
 _FIREBASE_CLOCK_SKEW_SECONDS = 60
+_FIREBASE_JWK_ATTEMPTS = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +54,22 @@ def _roles(payload: dict[str, Any]) -> frozenset[str]:
     return frozenset(roles)
 
 
+def _firebase_signing_key(project_id: str, token: str) -> Any:
+    """Fetch the rotating Firebase signing key with one bounded transient retry."""
+
+    client = _firebase_jwk_client(project_id)
+    error: Exception | None = None
+    for attempt in range(_FIREBASE_JWK_ATTEMPTS):
+        try:
+            return client.get_signing_key_from_jwt(token).key
+        except (jwt.PyJWTError, OSError, ValueError) as exc:
+            error = exc
+            if attempt + 1 < _FIREBASE_JWK_ATTEMPTS:
+                time.sleep(0.1)
+    assert error is not None
+    raise error
+
+
 def decode_identity_token(token: str) -> AuthenticatedPrincipal:
     """Verify a Firebase token, with local HS256 tokens limited to dev/test."""
 
@@ -65,7 +82,7 @@ def decode_identity_token(token: str) -> AuthenticatedPrincipal:
             project_id = config.settings.firebase_project_id.strip()
             if not project_id:
                 raise AuthenticationError("FIREBASE_PROJECT_ID_NOT_CONFIGURED")
-            signing_key = _firebase_jwk_client(project_id).get_signing_key_from_jwt(token).key
+            signing_key = _firebase_signing_key(project_id, token)
             payload = jwt.decode(
                 token,
                 signing_key,

@@ -142,3 +142,21 @@ def test_firebase_rs256_allows_small_clock_skew(
     )
 
     assert auth.decode_identity_token(token).user_id == "firebase-owner"
+
+
+def test_firebase_jwk_lookup_retries_a_transient_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    attempts = 0
+
+    class Client:
+        def get_signing_key_from_jwt(self, _token):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise OSError("temporary network failure")
+            return SimpleNamespace(key="key")
+
+    monkeypatch.setattr(auth, "_firebase_jwk_client", lambda _project: Client())
+    assert auth._firebase_signing_key("project", "token") == "key"
+    assert attempts == 2

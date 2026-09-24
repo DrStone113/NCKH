@@ -127,7 +127,7 @@ def test_firebase_rs256_allows_small_clock_skew(
         {
             "sub": "firebase-owner", "aud": project_id,
             "iss": f"https://securetoken.google.com/{project_id}",
-            "iat": now, "auth_time": now + 30, "exp": now + 3600,
+            "iat": now + 30, "auth_time": now + 30, "exp": now + 3600,
         },
         private_key, algorithm="RS256", headers={"kid": "test-key"},
     )

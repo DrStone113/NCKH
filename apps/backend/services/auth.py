@@ -89,6 +89,7 @@ def decode_identity_token(token: str) -> AuthenticatedPrincipal:
                 algorithms=["RS256"],
                 audience=project_id,
                 issuer=f"https://securetoken.google.com/{project_id}",
+                leeway=_FIREBASE_CLOCK_SKEW_SECONDS,
                 options={
                     "require": ["exp", "iat", "auth_time", "sub", "aud", "iss"]
                 },

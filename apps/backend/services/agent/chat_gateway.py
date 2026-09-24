@@ -187,7 +187,8 @@ class ChatGateway:
             return False
         try:
             principal = await authenticate_token(token)
-        except AuthenticationError:
+        except AuthenticationError as exc:
+            logger.warning("Rejected chat WebSocket authentication reason=%s", exc)
             await self.websocket.close(code=4401)
             return False
         self.user_id = principal.user_id
@@ -255,9 +256,13 @@ class ChatGateway:
                     # The orchestrator already sent the specific, user-safe
                     # provider error. Do not overwrite it with INTERNAL_ERROR.
                     outcome = "failed"
-                except Exception:
+                except Exception as exc:
                     outcome = "failed"
-                    logger.exception("Chat turn failed")
+                    logger.exception(
+                        "Chat turn failed stage=orchestrator exception_type=%s session=%s",
+                        type(exc).__name__,
+                        sess_id,
+                    )
                     await self.send_error(
                         "INTERNAL_ERROR",
                         "Không thể xử lý yêu cầu lúc này. Bạn thử lại giúp mình nhé.",

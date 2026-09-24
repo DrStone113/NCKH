@@ -41,9 +41,15 @@ class AuthWrapper extends StatelessWidget {
           if (userProvider.needsAccountHealthIntake) {
             return const WorkoutAccountIntakeScreen();
           }
-          return const HomeScreen();
+          return Semantics(
+            label: 'auth-signed-in',
+            child: const HomeScreen(),
+          );
         }
-        return const AuthScreen();
+        return Semantics(
+          label: 'auth-signed-out',
+          child: const AuthScreen(),
+        );
       },
     );
   }

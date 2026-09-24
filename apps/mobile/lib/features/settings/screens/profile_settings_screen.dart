@@ -329,11 +329,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                ProfileStepHeader(
+                                Semantics(
+                                  label: 'profile-step-${_step + 1}',
+                                  child: ProfileStepHeader(
                                     step: _step + 1,
                                     total: widget.isAccountSetup ? 6 : 4,
                                     title: titles[_step],
-                                    subtitle: subtitles[_step]),
+                                    subtitle: subtitles[_step],
+                                  ),
+                                ),
                                 Visibility(
                                     visible: _step == 0,
                                     maintainState: true,

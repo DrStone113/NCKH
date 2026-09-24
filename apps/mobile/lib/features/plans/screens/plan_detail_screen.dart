@@ -654,8 +654,10 @@ class _ExactRevisionReference extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final planId = plan['plan_id']?.toString() ?? 'unknown';
+    final revisionId = plan['revision_id']?.toString() ?? 'unknown';
     return Semantics(
-      label: 'Bản kế hoạch chính thức',
+      label: 'plan-revision-$planId-$revisionId',
       child: Container(
         key: const ValueKey('plan-v2-authoritative-reference'),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),

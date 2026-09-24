@@ -151,3 +151,45 @@ Sanitized real-auth stability checks on `sp/qwen3.8-fast`: authenticated new tur
 Plan preview gate: daily workout safety was refreshed through the normal product form and authenticated owner readback confirmed today’s `safety_checked_at`. Two independent fresh-chat seven-day previews returned `READY`, exposed exact revision identities, opened the matching revision detail, exposed `Lưu`, and wrote no meal or activity record. `PLAN_PREVIEW=2/2`.
 
 This is a stabilization gate, not a final campaign: `E2E_DEFINED=12; E2E_EXECUTED=0; E2E_PASS=0; E2E_FAIL=0; E2E_BLOCKED=0; E2E_NOT_EXECUTED=12`. A and B were reset after the gate. No final E2E result is claimed by this section.
+
+## Final Real-Auth 12-Scenario Campaign (2026-09-24)
+
+FINAL_E2E_PRODUCT_SHA=`10329db23b6afc4201eb9ef28921dd0fcdeffb25`; E2E_SPEC_COMMIT=`9b7ddb754561a83e097799d2ca9ae1a4c54b5aa1`; generation route=`sp/qwen3.8-fast`; auth=`real Firebase Email/Password`; auth bypass=`NO`. Both users started from verified clean owner inventories. The initial lightweight smoke returned `INTERNAL_ERROR`; the one permitted fresh-token retry completed with a nonempty response. All twelve existing cases were then attempted in the prescribed order, with owner-scoped cleanup at campaign close.
+
+| Scenario | AUTH | WORKFLOW_COMPLETE | ASSERTION | CLEANUP | RESULT | Root cause |
+|---|---|---|---|---|---|---|
+| E2E-01 | PASS | FAIL | FAIL | PASS | FAIL | Authoritative answer persisted but app reload restored another historical session rather than the just-completed dinner turn. |
+| E2E-02 | PASS | FAIL | FAIL | PASS | FAIL | Catalog first turn timed out/disconnected before the negation turn could submit; no meal row was created. |
+| E2E-03 | PASS | FAIL | FAIL | PASS | FAIL | Pending action and client `log_meal` dispatch occurred, but authoritative meal write/readback did not persist a diary row. |
+| E2E-04 | PASS | FAIL | FAIL | PASS | FAIL | Exact preview/save/hash API path passed, but complete UI confirmation/readback sequence did not finish in this pass. |
+| E2E-05 | PASS | FAIL | FAIL | PASS | FAIL | Corrected REST retry path began, but B could not create independent Plan while current-day workout safety was unconfirmed. |
+| E2E-06 | PASS | FAIL | FAIL | PASS | FAIL | Exact revision identity was read, but browser detail flow failed at authenticated login/state check before edit assertions. |
+| E2E-07 | PASS | FAIL | FAIL | PASS | FAIL | Exact revision opened but lifecycle transition/reload checks did not complete. |
+| E2E-08 | PASS | PASS | PASS | PASS | PASS | Urgent health answer was delivered through real UI; no business-row write appeared in owner readback. |
+| E2E-09 | PASS | FAIL | FAIL | PASS | FAIL | Unsafe goal turn was submitted but did not reach final response and Plan Library postcondition. |
+| E2E-10 | PASS | FAIL | FAIL | PASS | FAIL | Profile runner failed before authenticated chat follow-up; profile workflow and semantic-grounding assertion did not complete. |
+| E2E-11 | PASS | FAIL | FAIL | PASS | FAIL | Real logout opened but confirmation dialog did not provide a usable browser confirmation control before timeout; login-again/cross-owner sequence did not complete. |
+| E2E-12 | PASS | FAIL | FAIL | PASS | FAIL | Medication evidence-limit prompt submitted but did not finish to final answer/retrieval assertion. |
+
+FIRST_PASS_EXECUTED=12; FIRST_PASS_PASS=1; FIRST_PASS_FAIL=11; FIRST_PASS_BLOCKED=0. The one permitted generic product-fix cycle normalized confirmed meal components for the strict client tool schema at `10329db`; the final rerun above is the headline run. E2E_DEFINED=12; E2E_EXECUTED=12; E2E_PASS=1; E2E_FAIL=11; E2E_BLOCKED=0; E2E_NOT_EXECUTED=0. Owner cleanup was verified after campaign artifacts were removed.
+
+## First Complete Diagnostic Campaign (2026-09-24)
+
+Campaign source was `ee094f88b64bcee43ee9d0f0e6a80e4909c5409c`; E2E-05 used the corrected REST specification at `9b7ddb754561a83e097799d2ca9ae1a4c54b5aa1`; real Firebase Email/Password authentication and `sp/qwen3.8-fast` were used. All twelve existing cases were attempted once in order. A/B cleanup ran afterward and owner inventories were clean. The rows below are the complete first-pass diagnostic record; no row is promoted from an API-only or partial UI subcheck.
+
+| Scenario | AUTH | WORKFLOW_COMPLETE | ASSERTION | CLEANUP | RESULT | Root cause |
+|---|---|---|---|---|---|---|
+| E2E-01 | PASS | FAIL | FAIL | PASS | FAIL | Authoritative assistant readback completed, but reload restored an older conversation rather than the just-completed dinner turn. |
+| E2E-02 | PASS | FAIL | FAIL | PASS | FAIL | Catalog first turn timed out/disconnected before the required negation turn could be submitted; no meal was written. |
+| E2E-03 | PASS | FAIL | FAIL | PASS | FAIL | Pending action and confirmation were reached, but `log_meal` rejected canonical component provenance fields as unexpected, so no meal persisted and repeat could not prove idempotent write. |
+| E2E-04 | PASS | FAIL | FAIL | PASS | FAIL | Exact preview/save/hash API subcheck passed, but the required final UI confirmation/readback workflow was not completed in the campaign sequence. |
+| E2E-05 | PASS | FAIL | FAIL | PASS | FAIL | REST retry oracle was corrected, but B could not create its independent Plan without current-day workout safety confirmation. |
+| E2E-06 | PASS | PASS | PASS | PASS | PASS | Exact saved revision opened in UI; typed meal replacement created/saved a new revision; original hash stayed immutable; history/change event was readable; owner cleanup passed. |
+| E2E-07 | PASS | FAIL | FAIL | PASS | FAIL | Lifecycle browser flow stopped after opening the exact revision; activate/reload/pause assertions did not complete. |
+| E2E-08 | PASS | FAIL | FAIL | PASS | FAIL | Urgent response path was attempted, but required authoritative before/after no-write readback was not completed in the same workflow. |
+| E2E-09 | PASS | FAIL | FAIL | PASS | FAIL | Unsafe-goal turn was submitted but did not complete to a final response/Plan Library postcondition before transport timeout. |
+| E2E-10 | PASS | FAIL | FAIL | PASS | FAIL | Profile runner stopped at authenticated home transition; profile update and follow-up recommendation did not execute in this pass. |
+| E2E-11 | PASS | FAIL | FAIL | PASS | FAIL | Real logout control opened, but confirmation dialog did not expose a usable confirmation node before timeout; login-again assertion did not execute. |
+| E2E-12 | PASS | FAIL | FAIL | PASS | FAIL | Evidence-limit medication prompt was submitted but did not complete to a final answer or authoritative retrieval/no-write assertion. |
+
+FIRST_PASS_EXECUTED=12; FIRST_PASS_PASS=1; FIRST_PASS_FAIL=11; FIRST_PASS_BLOCKED=0. Failure classification: E2E-01/03 are generic product defects; E2E-02/09/12 include provider/transport timeout behavior; E2E-04/05/07/08/10/11 include workflow/harness or missing final assertion evidence. No product fix was applied during this first diagnostic pass. The requested single fix-cycle decision remains separate from this evidence record.

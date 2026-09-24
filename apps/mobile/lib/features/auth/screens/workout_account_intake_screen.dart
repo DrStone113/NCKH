@@ -78,6 +78,10 @@ class _WorkoutAccountIntakeScreenState
   bool get _needsWorkoutQuestions =>
       _requiresWorkout && !_hasCompletedWorkoutIntake;
 
+  static bool _safetyIsCurrent(DateTime? checkedAt) =>
+      checkedAt != null &&
+      DateUtils.isSameDay(checkedAt.toLocal(), DateTime.now());
+
   bool get _showsNutritionFirst =>
       _primarySupport == 'NUTRITION' ||
       _primarySupport == 'BOTH' ||
@@ -97,7 +101,8 @@ class _WorkoutAccountIntakeScreenState
     final health = user?.healthProfile;
     _primarySupport = widget.initialSupport ?? health?.primarySupport;
     _hasCompletedWorkoutIntake =
-        profile?.hasCompletedCurrentAccountIntake ?? false;
+        (profile?.hasCompletedCurrentAccountIntake ?? false) &&
+            _safetyIsCurrent(profile?.safetyCheckedAt);
     _gender = user?.gender ?? 'not_provided';
     _allergyAndAvoidanceController = TextEditingController(
       text: nutrition?.allergyAndAvoidanceNote ?? '',

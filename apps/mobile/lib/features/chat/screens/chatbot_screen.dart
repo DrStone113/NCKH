@@ -31,6 +31,7 @@ import '../chat_debug_transcript.dart';
 import '../../plans/screens/plan_detail_screen.dart';
 import '../../plans/screens/plan_list_screen.dart';
 import '../../settings/screens/profile_settings_screen.dart';
+import '../../auth/screens/workout_account_intake_screen.dart';
 import '../chat_presentation.dart';
 import '../chat_tail_follower.dart';
 
@@ -1802,8 +1803,35 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       );
       if (!mounted) return;
       final presentation = createdPlan['presentation'];
-      if (createdPlan['status'] != 'READY' ||
-          presentation is! Map ||
+      if (createdPlan['status'] != 'READY') {
+        final components = createdPlan['components'];
+        final workout = components is Map ? components['workout'] : null;
+        final validation = workout is Map ? workout['validation'] : null;
+        final issues = validation is Map ? validation['issues'] : null;
+        final needsSafetyRefresh = issues is List &&
+            issues.any(
+              (issue) =>
+                  issue is Map &&
+                  issue['code']?.toString() ==
+                      'EXERCISE_SAFETY_CONTEXT_REQUIRED',
+            );
+        if (needsSafetyRefresh) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              key: const Key('plan-safety-refresh-required'),
+              content: const Text(
+                  'Cần xác nhận lại an toàn tập luyện hôm nay trước khi lập kế hoạch.'),
+              action: SnackBarAction(
+                label: 'Xác nhận ngay',
+                onPressed: _refreshWorkoutSafetyForPlan,
+              ),
+            ),
+          );
+          return;
+        }
+        throw StateError('PLAN_PREVIEW_NOT_SAVEABLE');
+      }
+      if (presentation is! Map ||
           createdPlan['preview_persistence_status'] != 'PERSISTED') {
         throw StateError('PLAN_PREVIEW_NOT_SAVEABLE');
       }
@@ -1846,6 +1874,15 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         ),
       ),
     );
+  }
+
+  void _refreshWorkoutSafetyForPlan() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (routeContext) => WorkoutAccountIntakeScreen(
+        initialSupport: 'BOTH',
+        onSaved: () => Navigator.of(routeContext).pop(),
+      ),
+    ));
   }
 
   Widget _buildContextStat(

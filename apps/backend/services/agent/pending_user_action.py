@@ -229,7 +229,7 @@ class PendingUserActionStore:
 
         key = (session_id, owner_user_id or "anonymous")
         with self._lock:
-            candidate = self._dish_candidates.get(key)
+            candidate = self._dish_candidates.pop(key, None)
             if candidate is None:
                 return None
             suggestion, arguments, expires_at = candidate

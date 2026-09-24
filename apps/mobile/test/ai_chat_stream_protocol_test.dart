@@ -45,4 +45,10 @@ void main() {
     expect(provider.lastClientActionName, isNull);
     expect(provider.lastClientActionSucceeded, isNull);
   });
+
+  test('chat meal request id is a stable persistence key', () {
+    expect(chatMealDocumentId('dish-log-action-1', 'random-a'), 'chat_dish-log-action-1');
+    expect(chatMealDocumentId('dish-log-action-1', 'random-b'), 'chat_dish-log-action-1');
+    expect(chatMealDocumentId(null, 'manual-id'), 'manual-id');
+  });
 }

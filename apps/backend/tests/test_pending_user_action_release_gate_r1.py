@@ -90,6 +90,7 @@ def test_resolved_candidate_requires_explicit_owner_session_promotion() -> None:
 
     action = store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a")
     assert action is not None
+    assert store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a") is None
     store.put(action)
     assert store.claim_confirmation("session-a", "user-a", "không lưu").status == "REJECTED"
 

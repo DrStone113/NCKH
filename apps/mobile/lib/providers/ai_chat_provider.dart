@@ -38,6 +38,12 @@ enum ChatTransportState {
   error,
 }
 
+String chatMealDocumentId(String? requestId, String fallbackId) {
+  final normalized = requestId?.trim();
+  if (normalized == null || normalized.isEmpty) return fallbackId;
+  return 'chat_${normalized.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_')}';
+}
+
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
@@ -64,7 +70,6 @@ class AIChatProvider extends ChangeNotifier {
   Timer? _deadlineTimer;
   String? _activeTurnId;
   late final StreamingTypewriter _responseTypewriter;
-  Map<String, dynamic>? _pendingDoneData;
   String _deferredResponseText = '';
   final _uuid = const Uuid();
   String? _sessionId;
@@ -451,7 +456,7 @@ class AIChatProvider extends ChangeNotifier {
               closeCode == 4401
                   ? 'Phiên xác thực không hợp lệ'
                   : 'Kết nối bị ngắt',
-              );
+            );
           } else if (_sessionId != null) {
             // A normal close after a terminal turn must not strand the
             // composer. Reconnect with fresh auth before the next send.
@@ -553,7 +558,6 @@ class AIChatProvider extends ChangeNotifier {
       final semanticTurnId = _uuid.v4();
       _activeTurnId = semanticTurnId;
       _responseTypewriter.clear();
-      _pendingDoneData = null;
       _deferredResponseText = '';
       final streamingId = _uuid.v4();
       _streamingMessageId = streamingId;
@@ -1528,8 +1532,12 @@ class AIChatProvider extends ChangeNotifier {
         WriteResult<MealModel> mealWrite =
             const WriteResult.rejected('MEAL_SERVICE_UNAVAILABLE');
         if (_nutritionProvider != null && _lastUser != null) {
+          final stableMealId = chatMealDocumentId(
+            args['request_id']?.toString(),
+            _uuid.v4(),
+          );
           final meal = MealModel(
-            id: _uuid.v4(),
+            id: stableMealId,
             userId: _lastUser!.id,
             name: dishName,
             date: DateTime.now(),
@@ -2477,7 +2485,6 @@ class AIChatProvider extends ChangeNotifier {
     _deadlineTimer = null;
     _activeTurnId = null;
     _responseTypewriter.clear();
-    _pendingDoneData = null;
     _deferredResponseText = '';
     if (_transportState != ChatTransportState.error) {
       _transportState = ChatTransportState.disconnected;

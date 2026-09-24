@@ -1415,33 +1415,47 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Đăng xuất'),
         content: const Text('Bạn có chắc muốn đăng xuất?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Hủy'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              await Provider.of<UserProvider>(context, listen: false).signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const AuthWrapper()),
-                  (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Đăng xuất'),
+          Semantics(
+            label: 'account-logout-confirm',
+            button: true,
+            child: ElevatedButton(
+              key: const ValueKey('account-logout-confirm'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              child: const Text('Đăng xuất'),
+            ),
           ),
         ],
       ),
     );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await Provider.of<UserProvider>(context, listen: false).signOut();
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
+          (route) => false,
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Chưa thể đăng xuất. Vui lòng thử lại.')),
+        );
+      }
+    }
   }
 }

@@ -20,9 +20,18 @@ class UserProvider with ChangeNotifier {
   DataStatus _profileStatus = DataStatus.notLoaded;
   DateTime? _profileReadAt;
   StreamSubscription<User?>? _authSubscription;
+  String? _firebaseUserId;
+  int _sessionGeneration = 0;
+  bool _profileLoading = false;
 
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
+  bool get isFirebaseAuthenticated => _firebaseUserId != null;
+  bool get isProfileLoading => _profileLoading;
+  bool get hasProfileError =>
+      isFirebaseAuthenticated &&
+      !_profileLoading &&
+      _profileStatus == DataStatus.error;
   bool get isInitialized => _isInitialized;
   DataStatus get profileStatus => _profileStatus;
   DateTime? get profileReadAt => _profileReadAt;
@@ -48,7 +57,7 @@ class UserProvider with ChangeNotifier {
   /// Keep application identity aligned with Firebase, including expiry/signout.
   void _watchSession() {
     try {
-      _authSubscription = FirebaseAuth.instance.idTokenChanges().listen(
+      _authSubscription = FirebaseAuth.instance.authStateChanges().listen(
         _applyFirebaseSession,
         onError: (Object error, StackTrace stackTrace) {
           debugPrint('Session observer failed: $error');
@@ -66,12 +75,22 @@ class UserProvider with ChangeNotifier {
       _clearFirebaseSession();
       return;
     }
+    final generation = ++_sessionGeneration;
+    _firebaseUserId = firebaseUser.uid;
+    _profileLoading = true;
+    _profileStatus = DataStatus.notLoaded;
+    _isInitialized = true;
+    notifyListeners();
     try {
       debugPrint('Restoring Firebase session for: ${firebaseUser.email}');
-      await _syncFirebaseUser(firebaseUser);
+      await _syncFirebaseUser(firebaseUser, generation: generation);
+      if (!_isCurrentFirebaseSession(firebaseUser.uid, generation)) return;
+      _profileLoading = false;
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
+      if (!_isCurrentFirebaseSession(firebaseUser.uid, generation)) return;
+      _profileLoading = false;
       _profileStatus = DataStatus.error;
       _isInitialized = true;
       debugPrint('Session restore failed: $e');
@@ -79,7 +98,15 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> retryProfileBootstrap() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) await _applyFirebaseSession(user);
+  }
+
   void _clearFirebaseSession({DataStatus status = DataStatus.notLoaded}) {
+    _sessionGeneration++;
+    _firebaseUserId = null;
+    _profileLoading = false;
     _currentUser = null;
     _profileStatus = status;
     _profileReadAt = null;
@@ -144,10 +171,7 @@ class UserProvider with ChangeNotifier {
       );
 
       await FirestoreReferences.users(firestore).doc(user.id).set(user);
-      _currentUser = user;
-      _profileStatus = DataStatus.known;
-      _profileReadAt = DateTime.now();
-      notifyListeners();
+      // The auth stream owns projection into application session state.
     } catch (e) {
       rethrow;
     }
@@ -157,14 +181,10 @@ class UserProvider with ChangeNotifier {
     try {
       if (_authSubscription == null && !_planV2E2EDemo) _watchSession();
       final auth = FirebaseAuth.instance;
-      UserCredential credential = await auth.signInWithEmailAndPassword(
+      await auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
-
-      if (credential.user != null) {
-        await _syncFirebaseUser(credential.user!);
-      }
     } catch (e) {
       rethrow;
     }
@@ -180,11 +200,7 @@ class UserProvider with ChangeNotifier {
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
 
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithPopup(googleProvider);
-        if (userCredential.user != null) {
-          await _syncFirebaseUser(userCredential.user!);
-        }
+        await FirebaseAuth.instance.signInWithPopup(googleProvider);
       } else {
         // Native Android / iOS Firebase Google Sign In
         final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -198,12 +214,7 @@ class UserProvider with ChangeNotifier {
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-        if (userCredential.user != null) {
-          await _syncFirebaseUser(userCredential.user!);
-        }
+        await FirebaseAuth.instance.signInWithCredential(credential);
       }
     } catch (e) {
       debugPrint('❌ Firebase Google Sign in error: $e');
@@ -211,7 +222,10 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _syncFirebaseUser(User user) async {
+  bool _isCurrentFirebaseSession(String uid, int generation) =>
+      _firebaseUserId == uid && _sessionGeneration == generation;
+
+  Future<void> _syncFirebaseUser(User user, {int? generation}) async {
     final firestore = FirebaseFirestore.instance;
     final userDoc =
         await FirestoreReferences.users(firestore).doc(user.uid).get();
@@ -227,6 +241,10 @@ class UserProvider with ChangeNotifier {
       );
       await FirestoreReferences.users(firestore).doc(user.uid).set(syncedUser);
     }
+    if (generation != null &&
+        !_isCurrentFirebaseSession(user.uid, generation)) {
+      return;
+    }
     _currentUser = syncedUser;
     _profileStatus = DataStatus.known;
     _profileReadAt = DateTime.now();
@@ -234,13 +252,8 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (_) {}
-    _currentUser = null;
-    _profileStatus = DataStatus.notLoaded;
-    _profileReadAt = null;
-    notifyListeners();
+    await FirebaseAuth.instance.signOut();
+    _clearFirebaseSession();
   }
 
   Future<void> updateProfile(UserModel updatedUser) async {

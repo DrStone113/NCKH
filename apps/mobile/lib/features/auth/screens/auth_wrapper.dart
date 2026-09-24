@@ -28,6 +28,41 @@ class AuthWrapper extends StatelessWidget {
             ),
           );
         }
+        if (userProvider.isFirebaseAuthenticated &&
+            userProvider.isProfileLoading) {
+          return Semantics(
+            label: 'auth-profile-loading',
+            child: const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+        if (userProvider.hasProfileError) {
+          return Semantics(
+            label: 'auth-profile-error',
+            child: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Chưa thể tải hồ sơ tài khoản.'),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      key: const ValueKey('auth-profile-retry'),
+                      onPressed: userProvider.retryProfileBootstrap,
+                      child: const Text('Thử lại'),
+                    ),
+                    TextButton(
+                      key: const ValueKey('auth-profile-sign-out'),
+                      onPressed: userProvider.signOut,
+                      child: const Text('Đăng xuất'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
         if (userProvider.isAuthenticated) {
           if (userProvider.needsBasicProfileIntake) {
             return ProfileSettingsScreen(

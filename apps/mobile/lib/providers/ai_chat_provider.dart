@@ -44,6 +44,8 @@ class AIChatProvider extends ChangeNotifier {
   final List<AIChatMessage> _messages = [];
   bool _isStreaming = false;
   ChatTransportState _transportState = ChatTransportState.disconnected;
+  String _lastStreamEvent = 'none';
+  String _lastStage = 'disconnected';
   String? _lastClientActionName;
   bool? _lastClientActionSucceeded;
   String? _streamingMessageId;
@@ -124,6 +126,8 @@ class AIChatProvider extends ChangeNotifier {
   ChatTransportState get transportState => _transportState;
   String? get lastClientActionName => _lastClientActionName;
   bool? get lastClientActionSucceeded => _lastClientActionSucceeded;
+  String get lastStreamEvent => _lastStreamEvent;
+  String get lastStage => _lastStage;
   String? get errorMessage => _errorMessage;
   ProfileReadiness? get profileReadiness => _profileReadiness;
   String? get profileIssue {
@@ -369,6 +373,7 @@ class AIChatProvider extends ChangeNotifier {
     _sessionId = sessionId;
     disconnect();
     _transportState = ChatTransportState.authenticating;
+    _lastStage = 'authenticating';
     notifyListeners();
 
     try {
@@ -390,6 +395,7 @@ class AIChatProvider extends ChangeNotifier {
         return;
       }
       _transportState = ChatTransportState.connecting;
+      _lastStage = 'connecting';
       notifyListeners();
       debugPrint('🔌 [AIChatProvider] Connecting authenticated chat...');
       final channel = WebSocketChannel.connect(
@@ -410,12 +416,15 @@ class AIChatProvider extends ChangeNotifier {
 
       debugPrint('✅ [AIChatProvider] Connected successfully');
       _transportState = ChatTransportState.connected;
+      _lastStage = 'connected';
       notifyListeners();
 
       _subscription = _channel!.stream.listen(
         _handleMessage,
         onError: (error) {
           debugPrint('❌ [AIChatProvider] Stream error: $error');
+          debugPrint(
+              'CLIENT_WS_CLOSE_CODE=NONE CLIENT_WS_CLOSE_REASON=stream_error CLIENT_WS_READY_STATE=unknown CLIENT_LAST_EVENT=$_lastStreamEvent CLIENT_LAST_STAGE=$_lastStage');
           disconnect(); // Clear resources and set _channel = null
           _onError('CONNECTION_ERROR', error.toString());
         },
@@ -423,6 +432,8 @@ class AIChatProvider extends ChangeNotifier {
           debugPrint('🔌 [AIChatProvider] Connection closed');
           final wasStreaming = _isStreaming;
           final closeCode = channel.closeCode;
+          debugPrint(
+              'CLIENT_WS_CLOSE_CODE=$closeCode CLIENT_WS_CLOSE_REASON=stream_done CLIENT_WS_READY_STATE=closed CLIENT_LAST_EVENT=$_lastStreamEvent CLIENT_LAST_STAGE=$_lastStage');
           disconnect(); // Clear resources and set _channel = null
           if (wasStreaming) {
             _onError(
@@ -891,6 +902,8 @@ class AIChatProvider extends ChangeNotifier {
 
       switch (type) {
         case 'token':
+          _lastStreamEvent = 'token';
+          _lastStage = 'streaming';
           _onTokenReceived(data['content'] as String? ?? '');
           break;
         case 'thought':
@@ -914,14 +927,20 @@ class AIChatProvider extends ChangeNotifier {
           _onStatusReceived();
           break;
         case 'done':
+          _lastStreamEvent = 'done';
+          _lastStage = 'completed';
           debugPrint('✅ [AIChatProvider] Stream done');
           _onStreamDone(data);
           break;
         case 'error':
+          _lastStreamEvent = 'error';
+          _lastStage = 'error';
           _onError(data['code'] as String? ?? 'ERROR',
               data['message'] as String? ?? 'Lỗi không xác định');
           break;
         case 'tool_call':
+          _lastStreamEvent = 'tool_call';
+          _lastStage = 'client_action';
           _resetTimeoutTimer();
           _handleToolCall(data);
           break;

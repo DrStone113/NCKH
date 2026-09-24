@@ -219,6 +219,8 @@ class ChatGateway:
 
     async def run(self) -> None:
         """Receive client messages and route them to the orchestrator/dispatcher."""
+        last_backend_stage = "connected"
+        last_stream_event = "none"
         queue: asyncio.Queue[tuple[str, str, Any, str | None]] = asyncio.Queue(
             maxsize=self.queue_size if self.enforce_backpressure else 0
         )
@@ -285,6 +287,7 @@ class ChatGateway:
 
                 msg_type = data.get("type") if isinstance(data, dict) else None
                 if msg_type in ("chat", "chat_message"):
+                    last_backend_stage = "message_received"
                     # Extract session_id from JSON payload if present and valid
                     session_id_from_data = data.get("session_id") if isinstance(data, dict) else None
                     # The verified connection principal is authoritative. A
@@ -336,6 +339,7 @@ class ChatGateway:
                         if self.metrics:
                             self.metrics.increment("chat.queue_would_reject")
                     try:
+                        last_backend_stage = "turn_enqueued"
                         queue.put_nowait(
                             (
                                 self.session_id,
@@ -359,6 +363,7 @@ class ChatGateway:
                         self.metrics.increment("chat.message_enqueued")
                         self.metrics.gauge("chat.connection_queue_depth", queue.qsize())
                 elif msg_type == "tool_result":
+                    last_stream_event = "tool_result"
                     correlation_id = data.get("correlation_id")
                     if not isinstance(correlation_id, str) or not correlation_id:
                         await self.send_error("BAD_MESSAGE", "tool_result.correlation_id is required.")
@@ -411,8 +416,16 @@ class ChatGateway:
                     )
                 else:
                     await self.send_error("BAD_MESSAGE", "Unsupported message type.")
-        except WebSocketDisconnect:
-            logger.info(f"WebSocket disconnected for session {self.session_id}")
+        except WebSocketDisconnect as exc:
+            logger.info(
+                "WebSocket disconnected session=%s server_ws_close_code=%s "
+                "server_terminal_reason=client_disconnect last_backend_stage=%s "
+                "last_stream_event=%s",
+                self.session_id,
+                getattr(exc, "code", None),
+                last_backend_stage,
+                last_stream_event,
+            )
         finally:
             # Let an already dequeued, synchronous/fast turn commit its result
             # before cancellation. Long-running provider/tool work is still

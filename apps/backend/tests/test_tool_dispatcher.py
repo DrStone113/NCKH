@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -91,8 +92,17 @@ class _FakeDbSession:
     async def execute(self, statement: Any, params: Any = None):
         sql = str(statement)
         if "INSERT INTO tool_invocations" in sql:
-            self.invocations.append(
-                {
+            existing = next(
+                (
+                    item
+                    for item in self.invocations
+                    if item["session_id"] == params["session_id"]
+                    and item["correlation_id"] == params["correlation_id"]
+                ),
+                None,
+            )
+            if existing is None:
+                existing = {
                     "session_id": params["session_id"],
                     "correlation_id": params["correlation_id"],
                     "tool_name": params["tool_name"],
@@ -101,7 +111,11 @@ class _FakeDbSession:
                     "ok": None,
                     "error_code": None,
                 }
-            )
+                self.invocations.append(existing)
+            if "ON CONFLICT" in sql:
+                existing["result"] = params.get("result")
+                existing["ok"] = params.get("ok")
+                existing["error_code"] = params.get("error_code")
             return _FakeResult()
         if "SELECT result, ok, error_code" in sql:
             request_id = params["request_id"]
@@ -118,7 +132,10 @@ class _FakeDbSession:
             return _FakeResult()
         if "UPDATE tool_invocations" in sql:
             for item in self.invocations:
-                if item["correlation_id"] == params["correlation_id"]:
+                if (
+                    item["session_id"] == params["session_id"]
+                    and item["correlation_id"] == params["correlation_id"]
+                ):
                     item["result"] = params["result"]
                     item["ok"] = params["ok"]
                     item["error_code"] = params["error_code"]
@@ -178,6 +195,28 @@ def _client_descriptor(idempotent: bool = True) -> ToolDescriptor:
         side="client",
         idempotent=idempotent,
     )
+
+
+@pytest.mark.asyncio
+async def test_tool_invocation_duplicate_correlation_updates_single_row():
+    db = _FakeDbSession()
+    dispatcher = ToolDispatcher(_registry_with(_client_descriptor(idempotent=False)), db_session=db)
+    call = ToolCall(id="corr-1", name="log_meal", arguments={"request_id": "request-1"})
+    descriptor = _client_descriptor(idempotent=False)
+    started = time.perf_counter()
+
+    invocation = await dispatcher._insert_invocation("session-1", call, descriptor)
+    await dispatcher._insert_completed_invocation(
+        "session-1", call, descriptor, ToolResult(ok=True, data={"id": "meal-1"}), started
+    )
+    await dispatcher._insert_completed_invocation(
+        "session-1", call, descriptor, ToolResult(ok=True, data={"id": "meal-1"}), started
+    )
+
+    assert invocation == "corr-1"
+    assert len(db.invocations) == 1
+    assert db.invocations[0]["ok"] is True
+    assert '"id": "meal-1"' in db.invocations[0]["result"]
 
 
 @pytest.mark.asyncio

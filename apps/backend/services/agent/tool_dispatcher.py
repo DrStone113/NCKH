@@ -448,11 +448,11 @@ class ToolDispatcher:
                 request_id = call.arguments.get("request_id")
                 if not isinstance(request_id, str) or not request_id:
                     result = ToolResult(ok=False, error="INVALID_ARGS")
-                    await self._finalize_invocation(invocation_id, result, started)
+                    await self._finalize_invocation(session_id, invocation_id, result, started)
                     return result
                 cached = await self._load_idempotent_result(session_id, descriptor.name, request_id)
                 if cached is not None:
-                    await self._finalize_invocation(invocation_id, cached, started)
+                    await self._finalize_invocation(session_id, invocation_id, cached, started)
                     return cached
 
             result: ToolResult
@@ -516,7 +516,7 @@ class ToolDispatcher:
                     session_id, call, descriptor, result, started
                 )
             else:
-                await self._finalize_invocation(invocation_id, result, started)
+                await self._finalize_invocation(session_id, invocation_id, result, started)
                 if result.ok and cache_owner and self.snapshot_cache is not None:
                     await self.snapshot_cache.invalidate(
                         owner=cache_owner, session_id=session_id
@@ -832,6 +832,7 @@ class ToolDispatcher:
                             :session_id, :correlation_id, :tool_name, :side, CAST(:arguments AS JSONB),
                             NULL, NULL, NULL, NULL
                         )
+                        ON CONFLICT (session_id, correlation_id) DO NOTHING
                         """
                     ),
                     {
@@ -855,6 +856,7 @@ class ToolDispatcher:
 
     async def _finalize_invocation(
         self,
+        session_id: str,
         invocation_id: str | None,
         result: ToolResult,
         started: float,
@@ -871,11 +873,13 @@ class ToolDispatcher:
                             ok = :ok,
                             error_code = :error_code,
                             duration_ms = :duration_ms
-                        WHERE correlation_id = :correlation_id
+                        WHERE session_id = :session_id
+                          AND correlation_id = :correlation_id
                         """
                     ),
                     {
                         "correlation_id": invocation_id,
+                        "session_id": session_id,
                         "result": json.dumps(_json_safe_tool_result_data(result.data) if result.ok else None),
                         "ok": result.ok,
                         "error_code": result.error,
@@ -912,6 +916,11 @@ class ToolDispatcher:
                             CAST(:arguments AS JSONB), CAST(:result AS JSONB),
                             :ok, :error_code, :duration_ms
                         )
+                        ON CONFLICT (session_id, correlation_id) DO UPDATE
+                        SET result = EXCLUDED.result,
+                            ok = EXCLUDED.ok,
+                            error_code = EXCLUDED.error_code,
+                            duration_ms = EXCLUDED.duration_ms
                         """
                     ),
                     {

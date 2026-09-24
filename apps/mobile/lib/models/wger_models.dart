@@ -442,6 +442,13 @@ class ActionItem {
 
       final action = ActionItem.fromJson(raw);
       if (action.kind == 'food') {
+        final isCanonicalDish = action.details['catalog_dish_id'] != null ||
+            action.details['recommendation_event_id'] != null ||
+            action.details['components'] is List;
+        if (isCanonicalDish) {
+          result.add(action);
+          continue;
+        }
         final cleanName = action.name.toLowerCase().trim();
         String? matchedRecipeKey;
         for (final key in compoundRecipes.keys) {

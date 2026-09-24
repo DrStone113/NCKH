@@ -221,11 +221,13 @@ class ChatGateway:
         """Receive client messages and route them to the orchestrator/dispatcher."""
         last_backend_stage = "connected"
         last_stream_event = "none"
+        worker_turn_id: str | None = None
         queue: asyncio.Queue[tuple[str, str, Any, str | None]] = asyncio.Queue(
             maxsize=self.queue_size if self.enforce_backpressure else 0
         )
 
         async def _chat_worker() -> None:
+            nonlocal last_backend_stage, worker_turn_id
             from services.backend_optimization import AdmissionRejected, chat_priority
             from services.agent.llm_client import (
                 GarbledOutputError,
@@ -234,6 +236,7 @@ class ChatGateway:
 
             while True:
                 sess_id, message, context, turn_id = await queue.get()
+                worker_turn_id = turn_id
                 outcome = "completed"
                 turn_token = _CURRENT_TURN_ID.set(turn_id)
                 try:
@@ -280,12 +283,21 @@ class ChatGateway:
                         self.metrics.increment(f"chat.turn_{outcome}")
                         self.metrics.gauge("chat.connection_queue_depth", queue.qsize())
                     queue.task_done()
+                    worker_turn_id = None
 
         worker = asyncio.create_task(_chat_worker())
+        receiver: asyncio.Task | None = None
         try:
             while True:
+                receiver = asyncio.create_task(self.websocket.receive_json())
+                await asyncio.wait(
+                    (receiver, worker), return_when=asyncio.FIRST_COMPLETED
+                )
+                if worker.done():
+                    worker.result()
+                    raise RuntimeError("Chat worker terminated unexpectedly")
                 try:
-                    data = await self.websocket.receive_json()
+                    data = receiver.result()
                 except ValueError:
                     await self.send_error("BAD_MESSAGE", "Message must be valid JSON.")
                     continue
@@ -338,6 +350,9 @@ class ChatGateway:
                     )
                     if turn_id is not None and len(turn_id) > 128:
                         await self.send_error("BAD_MESSAGE", "turn_id is invalid.")
+                        continue
+                    if worker.done():
+                        # Session validation may have yielded while the worker failed.
                         continue
                     
                     if not self.enforce_backpressure and queue.qsize() >= self.queue_size:
@@ -431,14 +446,39 @@ class ChatGateway:
                 last_backend_stage,
                 last_stream_event,
             )
+        except Exception:
+            logger.exception(
+                "Chat gateway failed session=%s server_ws_close_code=1011 "
+                "server_terminal_reason=internal_error last_backend_stage=%s "
+                "last_stream_event=%s",
+                self.session_id,
+                last_backend_stage,
+                last_stream_event,
+            )
+            turn_token = _CURRENT_TURN_ID.set(worker_turn_id)
+            try:
+                with contextlib.suppress(Exception):
+                    await self.send_error(
+                        "INTERNAL_ERROR",
+                        "Không thể xử lý yêu cầu lúc này. Bạn thử lại giúp mình nhé.",
+                    )
+                with contextlib.suppress(Exception):
+                    await self.websocket.close(code=1011)
+            finally:
+                _CURRENT_TURN_ID.reset(turn_token)
         finally:
             # Let an already dequeued, synchronous/fast turn commit its result
             # before cancellation. Long-running provider/tool work is still
             # cancelled immediately on the following loop tick.
-            await asyncio.sleep(0)
-            worker.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await worker
+            try:
+                await asyncio.sleep(0)
+            finally:
+                tasks = [worker]
+                if receiver is not None:
+                    tasks.append(receiver)
+                for task in tasks:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _handle_chat(self, session_id: str, message: str, context: Any) -> None:
         try:

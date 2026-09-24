@@ -2011,7 +2011,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
   Widget _buildInputArea() {
     final aiChatProvider = Provider.of<AIChatProvider>(context);
     final composerEnabled = !_restoringSession &&
-        aiChatProvider.transportState == ChatTransportState.connected &&
+        (aiChatProvider.transportState == ChatTransportState.connected ||
+            aiChatProvider.transportState == ChatTransportState.error) &&
         !aiChatProvider.isStreaming &&
         !aiChatProvider.isCheckingProfile &&
         !_sending;

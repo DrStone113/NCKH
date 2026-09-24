@@ -112,5 +112,9 @@ void main() {
     chat.setTestingTransportState(ChatTransportState.connected);
     await tester.pump();
     expect(tester.widget<TextField>(find.byType(TextField)).enabled, isTrue);
+
+    chat.setTestingTransportState(ChatTransportState.error);
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isTrue);
   });
 }

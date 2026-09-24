@@ -1,9 +1,12 @@
+import asyncio
+
 import pytest
 from fastapi import WebSocketDisconnect
 
 import config
 from config import Settings
 from services.agent.chat_gateway import ChatGateway, _merge_user_context
+from services.agent.llm_client import LLMUnavailableError
 
 
 class FakeWebSocket:
@@ -35,6 +38,158 @@ class FakeOrchestrator:
 
     async def handleChatMessage(self, session_id, message):
         self.calls.append((session_id, message))
+
+
+class BlockingWebSocket(FakeWebSocket):
+    def __init__(self, messages=None):
+        super().__init__()
+        self.incoming = asyncio.Queue()
+        for message in messages or []:
+            self.incoming.put_nowait(message)
+        self.receive_tasks = []
+        self.receive_pending = asyncio.Event()
+
+    async def receive_json(self):
+        self.receive_tasks.append(asyncio.current_task())
+        if self.incoming.empty():
+            self.receive_pending.set()
+        item = await self.incoming.get()
+        if isinstance(item, BaseException):
+            raise item
+        return item
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("pending_receive", [True, False])
+@pytest.mark.parametrize("send_fails", [True, False])
+async def test_worker_cleanup_failure_closes_socket_and_cleans_tasks(
+    monkeypatch, caplog, pending_receive, send_fails
+):
+    ws = BlockingWebSocket(
+        [{"type": "chat", "message": "hi", "turn_id": "turn-failed"}]
+    )
+    worker_tasks = []
+    enqueued = []
+
+    class FailingMetrics:
+        def increment(self, name):
+            if name == "chat.message_enqueued":
+                enqueued.append(name)
+            if name == "chat.turn_completed":
+                if not pending_receive:
+                    ws.incoming.put_nowait({"type": "chat", "message": "too late"})
+                raise RuntimeError("private metrics failure")
+
+        def gauge(self, name, value):
+            pass
+
+    gateway = ChatGateway(ws, FakeOrchestrator(), "session-1", metrics=FailingMetrics())
+
+    async def handle_chat(*args):
+        worker_tasks.append(asyncio.current_task())
+        await ws.receive_pending.wait()
+
+    monkeypatch.setattr(gateway, "_handle_chat", handle_chat)
+    if send_fails:
+        async def failed_send(data):
+            raise RuntimeError("socket send failed")
+
+        monkeypatch.setattr(ws, "send_json", failed_send)
+
+    await asyncio.wait_for(gateway.run(), timeout=1)
+
+    assert ws.closed == 1011
+    assert enqueued == ["chat.message_enqueued"]
+    assert len(worker_tasks) == 1
+    assert worker_tasks[0].done()
+    assert all(task.done() for task in ws.receive_tasks)
+    assert ws.receive_tasks[-1].cancelled() is pending_receive
+    assert "last_backend_stage=orchestrator_completed" in caplog.text
+    if send_fails:
+        assert ws.sent == []
+    else:
+        assert len(ws.sent) == 1
+        assert ws.sent[0]["type"] == "error"
+        assert ws.sent[0]["code"] == "INTERNAL_ERROR"
+        assert ws.sent[0]["turn_id"] == "turn-failed"
+        assert "private metrics failure" not in ws.sent[0]["message"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("exit_kind", ["disconnect", "receive_error", "cancel", "worker_cancel"])
+async def test_gateway_exit_cleans_pending_worker_and_receive(monkeypatch, exit_kind):
+    ws = BlockingWebSocket([{"type": "chat", "message": "hi"}])
+    gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
+    started = asyncio.Event()
+    cleaned = asyncio.Event()
+    worker_tasks = []
+
+    async def handle_chat(*args):
+        worker_tasks.append(asyncio.current_task())
+        started.set()
+        try:
+            await asyncio.Future()
+        finally:
+            cleaned.set()
+
+    monkeypatch.setattr(gateway, "_handle_chat", handle_chat)
+    run = asyncio.create_task(gateway.run())
+    try:
+        await asyncio.wait_for(started.wait(), timeout=1)
+        await asyncio.wait_for(ws.receive_pending.wait(), timeout=1)
+        if exit_kind == "cancel":
+            run.cancel()
+        elif exit_kind == "worker_cancel":
+            worker_tasks[0].cancel()
+        elif exit_kind == "disconnect":
+            ws.incoming.put_nowait(WebSocketDisconnect(code=1000))
+        else:
+            ws.incoming.put_nowait(RuntimeError("receive failed"))
+
+        if exit_kind in ("cancel", "worker_cancel"):
+            with pytest.raises(asyncio.CancelledError):
+                await asyncio.wait_for(run, timeout=1)
+        else:
+            await asyncio.wait_for(run, timeout=1)
+
+        assert cleaned.is_set()
+        assert worker_tasks[0].cancelled()
+        assert all(task.done() for task in ws.receive_tasks)
+        assert ws.closed == (1011 if exit_kind == "receive_error" else None)
+    finally:
+        run.cancel()
+        await asyncio.gather(run, return_exceptions=True)
+
+
+@pytest.mark.asyncio
+async def test_receiver_delivers_tool_result_while_worker_waits(monkeypatch):
+    ws = BlockingWebSocket(
+        [{"type": "chat", "message": "hi", "turn_id": "turn-tool"}]
+    )
+    gateway = ChatGateway(ws, FakeOrchestrator(), "session-1")
+    result = asyncio.get_running_loop().create_future()
+
+    class Dispatcher:
+        def on_tool_result(self, correlation_id, data):
+            assert correlation_id == "tool-123"
+            result.set_result(data)
+
+    gateway.tool_dispatcher = Dispatcher()
+    payload = {"type": "tool_result", "correlation_id": "tool-123", "result": "ok"}
+
+    async def handle_chat(*args):
+        await gateway.send_tool_call("tool-123", "log_meal", {}, 1000)
+        ws.incoming.put_nowait(payload)
+        assert await result == payload
+        await gateway.send_done("saved")
+        ws.incoming.put_nowait(WebSocketDisconnect(code=1000))
+
+    monkeypatch.setattr(gateway, "_handle_chat", handle_chat)
+    await asyncio.wait_for(gateway.run(), timeout=1)
+
+    assert [item["type"] for item in ws.sent] == ["tool_call", "done"]
+    assert {item["turn_id"] for item in ws.sent} == {"turn-tool"}
+    assert all(task.done() for task in ws.receive_tasks)
 
 
 def test_short_follow_up_preserves_typed_workout_profile_only_for_continuation():
@@ -141,9 +296,10 @@ async def test_stream_events_echo_the_client_turn_id():
 
 
 @pytest.mark.asyncio
-async def test_provider_error_is_not_overwritten_by_internal_error():
+async def test_provider_error_is_not_overwritten_by_internal_error(caplog):
     import asyncio
-    from services.agent.llm_client import LLMUnavailableError
+
+    caplog.set_level("INFO", logger="services.agent.chat_gateway")
 
     class FailingOrchestrator:
         gateway = None
@@ -170,6 +326,7 @@ async def test_provider_error_is_not_overwritten_by_internal_error():
             "turn_id": "turn-timeout",
         }
     ]
+    assert "last_backend_stage=provider_error" in caplog.text
 
 
 @pytest.mark.asyncio

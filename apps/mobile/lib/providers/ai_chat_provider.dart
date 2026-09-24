@@ -530,7 +530,8 @@ class AIChatProvider extends ChangeNotifier {
       _lastTodayMeals = todayMeals;
       _lastTodayExercises = todayExercises;
 
-      if (_channel == null) {
+      if (_channel == null ||
+          _transportState != ChatTransportState.connected) {
         debugPrint('🔌 [AIChatProvider] No connection, connecting...');
         await connect(_sessionId ?? _uuid.v4());
         if (_channel == null) return false;

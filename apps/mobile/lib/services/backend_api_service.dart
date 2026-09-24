@@ -118,7 +118,8 @@ class BackendApiService {
   Future<List<Map<String, dynamic>>> listAuthoritativePlanV2(
       {String? artifactKind}) async {
     final uri = Uri.parse('$baseUrl/api/plan-v2/plans').replace(
-      queryParameters: artifactKind == null ? null : {'artifact_kind': artifactKind},
+      queryParameters:
+          artifactKind == null ? null : {'artifact_kind': artifactKind},
     );
     final response = await _authenticatedRequest(
       (headers) => _client.get(
@@ -245,7 +246,10 @@ class BackendApiService {
     final body = _planV2Body(response, operation: 'PLAN_V2_CHANGE_EVENTS');
     final events = body['events'];
     if (events is! List) return const [];
-    return events.whereType<Map>().map((event) => Map<String, dynamic>.from(event)).toList(growable: false);
+    return events
+        .whereType<Map>()
+        .map((event) => Map<String, dynamic>.from(event))
+        .toList(growable: false);
   }
 
   Future<List<Map<String, dynamic>>> listAuthoritativePlanHistory(
@@ -604,6 +608,8 @@ class BackendApiService {
     required int days,
     double? targetWeight,
     String? notes,
+    List<String> temporaryPreferences = const [],
+    List<String> temporaryExclusions = const [],
   }) async {
     final start = DateTime.now();
     final end = start.add(Duration(days: days - 1));
@@ -616,7 +622,7 @@ class BackendApiService {
       'period_start': start.toIso8601String().substring(0, 10),
       'period_end': end.toIso8601String().substring(0, 10),
       'timezone': 'Asia/Ho_Chi_Minh',
-      'goal_override': notes,
+      if (notes?.trim().isNotEmpty == true) 'goal_override': notes!.trim(),
       'profile': userContext,
       if (workout['available_days_per_week'] is int)
         'number_of_sessions': workout['available_days_per_week'],
@@ -626,8 +632,8 @@ class BackendApiService {
         'training_location': workout['training_location'],
       if (workout['available_equipment'] is List)
         'equipment': workout['available_equipment'],
-      'temporary_preferences': <String>[],
-      'temporary_exclusions': <String>[],
+      'temporary_preferences': temporaryPreferences,
+      'temporary_exclusions': temporaryExclusions,
     };
 
     final response = await _authenticatedRequest(

@@ -1771,7 +1771,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                               color: AppColors.primary.withValues(alpha: 0.35)),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18)),
-                          onPressed: () => _createPlanFromQuickAction(a.$3),
+                          onPressed: () => _showPlanBrief(a.$3),
                         ),
                       ),
                     )),
@@ -1783,7 +1783,95 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     );
   }
 
-  Future<void> _createPlanFromQuickAction(int days) async {
+  Future<void> _showPlanBrief(int days) async {
+    final preferenceController = TextEditingController();
+    final exclusionController = TextEditingController();
+    final goalController = TextEditingController();
+    final brief = await showModalBottomSheet<
+        ({String? goal, List<String> preferences, List<String> exclusions})>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.viewInsetsOf(sheetContext).bottom + 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tùy chỉnh kế hoạch $days ngày',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            const Text(
+                'Kế hoạch sẽ dùng hồ sơ và kiểm tra an toàn hiện tại. Bạn có thể thêm ưu tiên có kiểm soát trước khi tạo bản nháp.',
+                style: TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 16),
+            TextField(
+                key: const ValueKey('plan-brief-preferences'),
+                controller: preferenceController,
+                decoration: const InputDecoration(
+                    labelText: 'Ưu tiên (ví dụ: món nhanh, nhiều rau)')),
+            const SizedBox(height: 10),
+            TextField(
+                key: const ValueKey('plan-brief-exclusions'),
+                controller: exclusionController,
+                decoration: const InputDecoration(
+                    labelText: 'Tránh tạm thời (ví dụ: thịt bò, đồ cay)')),
+            const SizedBox(height: 10),
+            TextField(
+                key: const ValueKey('plan-brief-goal'),
+                controller: goalController,
+                decoration: const InputDecoration(
+                    labelText: 'Ghi chú mục tiêu/lịch (không bắt buộc)')),
+            const SizedBox(height: 16),
+            Row(children: [
+              Expanded(
+                  child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      child: const Text('Hủy'))),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: FilledButton(
+                      key: const ValueKey('plan-brief-create'),
+                      onPressed: () {
+                        List<String> parse(String text) => text
+                            .split(',')
+                            .map((item) => item.trim())
+                            .where((item) => item.isNotEmpty)
+                            .take(20)
+                            .toList();
+                        Navigator.pop(sheetContext, (
+                          goal: goalController.text.trim().isEmpty
+                              ? null
+                              : goalController.text.trim(),
+                          preferences: parse(preferenceController.text),
+                          exclusions: parse(exclusionController.text)
+                        ));
+                      },
+                      child: const Text('Tạo bản nháp'))),
+            ]),
+          ],
+        ),
+      ),
+    );
+    preferenceController.dispose();
+    exclusionController.dispose();
+    goalController.dispose();
+    if (brief == null) return;
+    await _createPlanFromQuickAction(
+      days,
+      notes: brief.goal,
+      temporaryPreferences: brief.preferences,
+      temporaryExclusions: brief.exclusions,
+    );
+  }
+
+  Future<void> _createPlanFromQuickAction(
+    int days, {
+    String? notes,
+    List<String> temporaryPreferences = const [],
+    List<String> temporaryExclusions = const [],
+  }) async {
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null) return;
 
@@ -1812,6 +1900,9 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         userId: user.id,
         userContext: user.toPlanRequestContext(),
         days: days,
+        notes: notes,
+        temporaryPreferences: temporaryPreferences,
+        temporaryExclusions: temporaryExclusions,
       );
       if (!mounted) return;
       final presentation = createdPlan['presentation'];
@@ -1848,7 +1939,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Đã tạo bản xem trước $days ngày. Hãy kiểm tra rồi lưu kế hoạch.'),
+              'Đã tạo bản xem trước $days ngày dựa trên hồ sơ và tùy chỉnh của bạn. Hãy kiểm tra rồi lưu kế hoạch.'),
           backgroundColor: Colors.blue,
         ),
       );
@@ -2059,7 +2150,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                     textField: true,
                     enabled: composerEnabled,
                     child: TextField(
-                      key: ValueKey('n3-chat-input-${isStreaming ? 'busy' : 'ready'}'),
+                      key: ValueKey(
+                          'n3-chat-input-${isStreaming ? 'busy' : 'ready'}'),
                       controller: _textController,
                       enabled: composerEnabled,
                       decoration: InputDecoration(

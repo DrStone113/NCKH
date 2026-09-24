@@ -656,6 +656,10 @@ class _ExactRevisionReference extends StatelessWidget {
   Widget build(BuildContext context) {
     final planId = plan['plan_id']?.toString() ?? 'unknown';
     final revisionId = plan['revision_id']?.toString() ?? 'unknown';
+    final lifecycle = plan['lifecycle_status']?.toString() ?? 'DRAFT';
+    final message = lifecycle == 'DRAFT' || lifecycle == 'PENDING_CONFIRMATION'
+        ? 'Đây là bản xem trước. Hãy kiểm tra và lưu để ghi nhận kế hoạch chính thức.'
+        : 'Nội dung này được đồng bộ từ kế hoạch đã lưu.';
     return Semantics(
       label: 'plan-revision-$planId-$revisionId',
       child: Container(
@@ -665,7 +669,7 @@ class _ExactRevisionReference extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        child: const Text('Nội dung này được đồng bộ từ kế hoạch chính thức.'),
+        child: Text(message),
       ),
     );
   }

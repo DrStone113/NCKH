@@ -115,3 +115,19 @@ The execution campaign stopped under the two-attempt/one-harness-fix budget. `FI
 | E2E-12 | NOT_EXECUTED | Normal RAG evidence absence and development trace were not executed; the research oracle alone cannot prove normal-chat `NO_RESULTS`. |
 
 Bounded results: E2E_DEFINED=12; PASS=0; FAIL=0; INCOMPLETE=11; NOT_EXECUTED=1; BLOCKED=0. Product defects found/fixed in this campaign: Plan preview confirmation routing, numeric catalog dish IDs for pending actions, typed meal edits in combined Plans, DRAFT preview SAVE visibility, and chat persistence fail-closed behavior. Harness/scenario limitations: Canvas dropdown/stream determinism, REST-vs-WebSocket mismatch in E2E-05, and unavailable normal-chat RAG trace for E2E-12. No synthetic responses, auth bypass, direct Firestore scenario seeding, judge work, or report rewriting occurred.
+
+## Pre-E2E Stabilization Gate (2026-09-24)
+
+The stabilized product candidate is `f80329f69e90fd40202133d242a21dde08b2729a`. It is **not** a `FINAL_E2E_PRODUCT_SHA` because the acceptance gate below failed before a clean 12-case campaign began. Generic stabilization fixes included stable auth/profile/Plan control semantics, chat progress heartbeat timeout reset, Plan revision change-event visibility, and an explicit re-confirmation route when daily workout safety is stale. Real Firebase auth, both profiles, UID-allowlisted reset, and authenticated Qwen smoke passed; the smoke session was removed before the gate closed. Baseline readback: A `weight=70`, `activityLevel=moderate`; B `weight=68`, `activityLevel=moderate`; no listed owner test records for either UID.
+
+Regression at this candidate: backend 1410 passed/0 failed/10 skipped; Flutter 227 passed/0 failed; Flutter analyze passed; isolated Firestore Rules 10 passed/0 failed; Flutter Web build passed. The model route is `sp/qwen3.8-fast`.
+
+Pre-E2E gates: PROFILE_FLOW=PASS (production Settings UI write/readback/reopen path); CHAT_NEW_TURN=PASS (authenticated smoke); CHAT_SECOND_TURN=FAIL; CHAT_RESTORE=PASS (focused regression); PLAN_PREVIEW=FAIL; PLAN_REVISION_OPEN=PASS; PLAN_CONFIRM_SAVE=PASS; PLAN_LIBRARY_REFRESH=PASS; RELOAD=PASS for persisted Plan lifecycle; LOGOUT_LOGIN=PASS only at focused UI/auth state level; OWNER_ISOLATION=PASS for backend two-owner denial; RESET=PASS; QWEN_SMOKE=PASS.
+
+The gate must not advance to the final all-12 run because:
+
+1. E2E-03 has no authoritative pending-action confirmation UI. The visible meal-card save path directly persists a client meal model, while the YAML requires the backend pending-action confirmation/idempotency route. This is a product-path contract gap, not an automation limitation.
+2. E2E-05 requires WebSocket disconnect/reconnect and `ALREADY_EXECUTED` confirmation semantics, but Plan V2 quick preview/save is an authenticated REST flow whose idempotency returns the same saved revision/hash. The WebSocket requirement and expected response do not correspond to this product path.
+3. The combined Plan quick action correctly refused a stale daily workout-safety snapshot after reset. The new recovery route is available, but the final campaign was not started while the two contract gaps above remain unresolved.
+
+PRE_E2E_STABILIZATION=FAIL. No final campaign metrics, `FINAL_E2E_PRODUCT_SHA`, or `E2E_EVIDENCE_COMMIT` claiming completion exist. The next E2E phase must resolve or explicitly revise these two existing acceptance contracts before one clean campaign can truthfully run.

@@ -15,6 +15,9 @@ from jwt import PyJWKClient
 import config
 
 
+_FIREBASE_CLOCK_SKEW_SECONDS = 60
+
+
 @dataclass(frozen=True, slots=True)
 class AuthenticatedPrincipal:
     user_id: str
@@ -95,7 +98,10 @@ def decode_identity_token(token: str) -> AuthenticatedPrincipal:
         raise AuthenticationError("INVALID_ID_TOKEN_SUBJECT")
     if algorithm == "RS256":
         auth_time = payload.get("auth_time")
-        if not isinstance(auth_time, (int, float)) or auth_time > time.time():
+        if (
+            not isinstance(auth_time, (int, float))
+            or auth_time > time.time() + _FIREBASE_CLOCK_SKEW_SECONDS
+        ):
             raise AuthenticationError("INVALID_ID_TOKEN_AUTH_TIME")
     return AuthenticatedPrincipal(user_id.strip(), _roles(payload))
 

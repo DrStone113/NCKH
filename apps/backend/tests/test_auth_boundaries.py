@@ -113,3 +113,32 @@ def test_firebase_rs256_rejects_future_authentication_time(
 
     with pytest.raises(auth.AuthenticationError, match="INVALID_ID_TOKEN_AUTH_TIME"):
         auth.decode_identity_token(token)
+
+
+def test_firebase_rs256_allows_small_clock_skew(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from cryptography.hazmat.primitives.asymmetric import rsa as cryptography
+
+    private_key = cryptography.generate_private_key(public_exponent=65537, key_size=2048)
+    project_id = "firebase-project-test"
+    now = int(time.time())
+    token = jwt.encode(
+        {
+            "sub": "firebase-owner", "aud": project_id,
+            "iss": f"https://securetoken.google.com/{project_id}",
+            "iat": now, "auth_time": now + 30, "exp": now + 3600,
+        },
+        private_key, algorithm="RS256", headers={"kid": "test-key"},
+    )
+    monkeypatch.setattr(
+        config, "settings", Settings(app_environment="production", firebase_project_id=project_id)
+    )
+    monkeypatch.setattr(
+        auth, "_firebase_jwk_client",
+        lambda _project: SimpleNamespace(
+            get_signing_key_from_jwt=lambda _token: SimpleNamespace(key=private_key.public_key())
+        ),
+    )
+
+    assert auth.decode_identity_token(token).user_id == "firebase-owner"

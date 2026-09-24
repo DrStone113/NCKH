@@ -1805,8 +1805,13 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       final presentation = createdPlan['presentation'];
       if (createdPlan['status'] != 'READY') {
         final codes = createdPlan['clarification_codes'];
-        final needsSafetyRefresh = codes is List &&
-            codes.contains('EXERCISE_SAFETY_CONTEXT_REQUIRED');
+        final components = createdPlan['components'];
+        final workout = components is Map ? components['workout'] : null;
+        final needsSafetyRefresh =
+            (codes is List && codes.contains('EXERCISE_SAFETY_CONTEXT_REQUIRED')) ||
+                (workout is Map &&
+                    workout['status'] == 'CLARIFICATION_REQUIRED' &&
+                    user.effectiveWorkoutProfile != null);
         if (needsSafetyRefresh) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

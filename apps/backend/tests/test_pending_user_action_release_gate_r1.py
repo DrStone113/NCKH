@@ -50,7 +50,11 @@ def test_numeric_catalog_id_binds_exact_pending_dish_without_accepting_boolean()
     suggestion = {
         "id": 42,
         "name": "Cơm gà",
-        "components": [{"name": "Gà", "serving_grams": 150}],
+        "components": [{
+            "name": "Gà", "serving_grams": 150, "calories": 200,
+            "protein": 30, "carbs": 0, "fat": 5,
+            "food_id": "VN_FCT_001", "source_id": "VIETNAM_FCT",
+        }],
     }
     action = store.create_dish_log_action(
         "session-a", owner_user_id="user-a", suggestion=suggestion,
@@ -58,7 +62,10 @@ def test_numeric_catalog_id_binds_exact_pending_dish_without_accepting_boolean()
     )
     assert action is not None
     assert action.target_id == action.tool_arguments["catalog_dish_id"] == "42"
-    assert action.tool_arguments["components"] == suggestion["components"]
+    assert action.tool_arguments["components"] == [{
+        "name": "Gà", "serving_grams": 150, "calories": 200,
+        "protein": 30, "carbs": 0, "fat": 5,
+    }]
     assert store.create_dish_log_action(
         "session-a", owner_user_id="user-a", suggestion={**suggestion, "id": True},
         suggestion_arguments={"meal_type": "dinner"},

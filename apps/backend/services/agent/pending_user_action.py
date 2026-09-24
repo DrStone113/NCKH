@@ -152,7 +152,14 @@ class PendingUserActionStore:
         meal_type = arguments.get("meal_type")
         if meal_type not in {"breakfast", "lunch", "dinner", "snack"}:
             return None
-        copied_components = [dict(component) for component in components if isinstance(component, dict)]
+        allowed_component_keys = {
+            "name", "serving_grams", "calories", "protein", "carbs", "fat",
+        }
+        copied_components = [
+            {key: value for key, value in component.items() if key in allowed_component_keys}
+            for component in components
+            if isinstance(component, dict)
+        ]
         if not copied_components:
             return None
         serving_grams = sum(

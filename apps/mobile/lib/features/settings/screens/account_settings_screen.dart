@@ -41,13 +41,17 @@ class AccountSettingsScreen extends StatelessWidget {
                 onPressed: () => Navigator.pop(dialogContext, false),
                 child: const Text('Hủy'),
               ),
-              FilledButton(
-                key: const ValueKey('account-logout-confirm'),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.error,
+              Semantics(
+                label: 'account-logout-confirm',
+                button: true,
+                child: FilledButton(
+                  key: const ValueKey('account-logout-confirm'),
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                  ),
+                  child: const Text('Đăng xuất'),
                 ),
-                child: const Text('Đăng xuất'),
               ),
             ],
           ),

@@ -105,3 +105,5 @@ async def test_session_list_is_scoped_to_the_requested_user() -> None:
     assert db.params == {"user_id": "user-1", "limit": 20}
     assert "s.user_id = :user_id" in db.sql
     assert "OR s.user_id = 'anonymous'" not in db.sql
+    assert "MAX(m.created_at)" in db.sql
+    assert "ORDER BY last_message_at DESC NULLS LAST, s.id DESC" in db.sql

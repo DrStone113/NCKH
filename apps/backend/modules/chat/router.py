@@ -33,6 +33,11 @@ async def list_chat_sessions(
             s.created_at,
             s.last_active,
             (
+                SELECT MAX(m.created_at)
+                FROM chat_messages m
+                WHERE m.session_id = s.id
+            ) AS last_message_at,
+            (
                 SELECT m.content 
                 FROM chat_messages m 
                 WHERE m.session_id = s.id AND m.role = 'user' 
@@ -41,7 +46,7 @@ async def list_chat_sessions(
             ) AS title
         FROM chat_sessions s
         WHERE s.user_id = :user_id
-        ORDER BY s.last_active DESC
+        ORDER BY last_message_at DESC NULLS LAST, s.id DESC
         LIMIT :limit
         """
     )
@@ -58,6 +63,7 @@ async def list_chat_sessions(
             "user_id": r.user_id,
             "created_at": r.created_at.isoformat() if r.created_at else None,
             "last_active": r.last_active.isoformat() if r.last_active else None,
+            "last_message_at": r.last_message_at.isoformat() if r.last_message_at else None,
             "title": title,
         })
     return sessions

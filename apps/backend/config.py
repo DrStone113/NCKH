@@ -77,16 +77,28 @@ class Settings(BaseSettings):
     # Optional append-only D3.0.1 natural-shadow artifact. Collection is active
     # only together with shadow mode; None performs no filesystem writes.
     context_planner_natural_collection_path: Optional[str] = None
-    openai_base_url: str = "https://api.vilao.ai/v1"
+    openai_base_url: str = Field(
+        default="https://api.vilao.ai/v1",
+        validation_alias=AliasChoices("OPENAI_BASE_URL", "CODECRAFT_BASE_URL"),
+    )
     # Secrets have no in-code default: they must come from ``.env`` (which is
     # gitignored) or the process environment. Hardcoding a key here leaks it
     # into git history.
-    openai_api_key: str = ""
+    openai_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("OPENAI_API_KEY", "CODECRAFT_API_KEY"),
+    )
     database_url: str = "postgresql+asyncpg://health:secret@localhost:5432/health_db"
     # Provider-managed combo. Both application tiers use the same combo name;
     # Vilao owns the underlying priority/model routing.
-    llm_model: str = "chatbot"
-    heavy_llm_model: str = "chatbot"
+    llm_model: str = Field(
+        default="chatbot",
+        validation_alias=AliasChoices("LLM_MODEL", "CODECRAFT_MODEL"),
+    )
+    heavy_llm_model: str = Field(
+        default="chatbot",
+        validation_alias=AliasChoices("HEAVY_LLM_MODEL", "CODECRAFT_MODEL"),
+    )
     # Optional OpenAI-compatible reasoning control. Local Qwen 3 deployments
     # should use ``none`` so the response budget is not consumed by hidden
     # thinking before user-visible text or a tool call is emitted.

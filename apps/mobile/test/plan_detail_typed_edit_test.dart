@@ -182,4 +182,16 @@ void main() {
     expect(find.byKey(const ValueKey('plan-lifecycle-save')), findsNothing);
     expect(find.textContaining('PLAN_REVISION_CONFLICT'), findsOneWidget);
   });
+
+  testWidgets('combined saved Plan offers typed meal replacement',
+      (tester) async {
+    final api = FakePlanApi();
+    final combined = {...api.original, 'domain': 'COMBINED_HEALTH'};
+    await tester.pumpWidget(
+      MaterialApp(home: PlanDetailScreen(plan: combined, api: api)),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('plan-edit-replace-meal')));
+    expect(find.text('Thay món'), findsOneWidget);
+  });
 }

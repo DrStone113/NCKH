@@ -431,8 +431,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                     _nutritionDays(allDays)
                   else
                     VersionedPlanCard(plan: displayedPlan, showHeader: false),
-                  if (PlanDisplay.isNutrition(_plan) &&
-                      lifecycle == 'SAVED' &&
+                  if (lifecycle == 'SAVED' &&
                       allDays
                               .expand(PlanDisplay.items)
                               .where((item) =>

@@ -28,11 +28,22 @@ import '../utils/streaming_typewriter.dart';
 const bool _developerTraceBuild =
     bool.fromEnvironment('CHAT_DEBUG_TRACE', defaultValue: kDebugMode);
 
+enum ChatTransportState {
+  disconnected,
+  authenticating,
+  connecting,
+  connected,
+  streaming,
+  completed,
+  error,
+}
+
 class AIChatProvider extends ChangeNotifier {
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
   final List<AIChatMessage> _messages = [];
   bool _isStreaming = false;
+  ChatTransportState _transportState = ChatTransportState.disconnected;
   String? _streamingMessageId;
   String? _errorMessage;
   ProfileReadiness? _profileReadiness;
@@ -108,6 +119,7 @@ class AIChatProvider extends ChangeNotifier {
 
   List<AIChatMessage> get messages => List.unmodifiable(_messages);
   bool get isStreaming => _isStreaming;
+  ChatTransportState get transportState => _transportState;
   String? get errorMessage => _errorMessage;
   ProfileReadiness? get profileReadiness => _profileReadiness;
   String? get profileIssue {
@@ -352,6 +364,8 @@ class AIChatProvider extends ChangeNotifier {
   Future<void> connect(String sessionId) async {
     _sessionId = sessionId;
     disconnect();
+    _transportState = ChatTransportState.authenticating;
+    notifyListeners();
 
     try {
       String? firebaseToken;
@@ -371,6 +385,8 @@ class AIChatProvider extends ChangeNotifier {
         _onError('AUTHENTICATION_REQUIRED', 'Firebase user is unavailable');
         return;
       }
+      _transportState = ChatTransportState.connecting;
+      notifyListeners();
       debugPrint('🔌 [AIChatProvider] Connecting authenticated chat...');
       final channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),
@@ -389,6 +405,8 @@ class AIChatProvider extends ChangeNotifier {
       );
 
       debugPrint('✅ [AIChatProvider] Connected successfully');
+      _transportState = ChatTransportState.connected;
+      notifyListeners();
 
       _subscription = _channel!.stream.listen(
         _handleMessage,
@@ -513,6 +531,7 @@ class AIChatProvider extends ChangeNotifier {
       final streamingId = _uuid.v4();
       _streamingMessageId = streamingId;
       _isStreaming = true;
+      _transportState = ChatTransportState.streaming;
       _errorMessage = null;
       _messages.add(AIChatMessage(
         id: streamingId,
@@ -2334,6 +2353,7 @@ class AIChatProvider extends ChangeNotifier {
   void _applyStreamDone(Map<String, dynamic> data) {
     _responseTypewriter.clear();
     _deferredResponseText = '';
+    _transportState = ChatTransportState.completed;
 
     final fullResponse = data['full_response'] as String? ?? '';
     final structuredData = data['structured'] as Map<String, dynamic>?;
@@ -2404,6 +2424,7 @@ class AIChatProvider extends ChangeNotifier {
     }
 
     _isStreaming = false;
+    _transportState = ChatTransportState.error;
     _streamingMessageId = null;
     _activeTurnId = null;
 
@@ -2460,6 +2481,9 @@ class AIChatProvider extends ChangeNotifier {
     _responseTypewriter.clear();
     _pendingDoneData = null;
     _deferredResponseText = '';
+    if (_transportState != ChatTransportState.error) {
+      _transportState = ChatTransportState.disconnected;
+    }
   }
 
   @override

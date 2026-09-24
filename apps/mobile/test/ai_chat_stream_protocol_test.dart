@@ -35,4 +35,8 @@ void main() {
     expect(AIChatProvider.acceptsTurnEvent('turn-1', 'turn-1'), isTrue);
     expect(AIChatProvider.acceptsTurnEvent('turn-2', 'turn-1'), isFalse);
   });
+
+  test('chat transport begins disconnected', () {
+    expect(AIChatProvider().transportState, ChatTransportState.disconnected);
+  });
 }

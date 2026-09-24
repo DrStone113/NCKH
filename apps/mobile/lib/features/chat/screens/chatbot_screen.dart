@@ -2007,7 +2007,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         _sending;
 
     return Semantics(
-      label: isStreaming ? 'n3-chat-state-busy' : 'n3-chat-state-ready',
+      label: 'n3-chat-state-${aiChatProvider.transportState.name}',
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
         decoration: BoxDecoration(

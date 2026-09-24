@@ -1807,11 +1807,11 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         final codes = createdPlan['clarification_codes'];
         final components = createdPlan['components'];
         final workout = components is Map ? components['workout'] : null;
-        final needsSafetyRefresh =
-            (codes is List && codes.contains('EXERCISE_SAFETY_CONTEXT_REQUIRED')) ||
-                (workout is Map &&
-                    workout['status'] == 'CLARIFICATION_REQUIRED' &&
-                    user.effectiveWorkoutProfile != null);
+        final needsSafetyRefresh = (codes is List &&
+                codes.contains('EXERCISE_SAFETY_CONTEXT_REQUIRED')) ||
+            (workout is Map &&
+                workout['status'] == 'CLARIFICATION_REQUIRED' &&
+                user.effectiveWorkoutProfile != null);
         if (needsSafetyRefresh) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -2004,7 +2004,11 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         _sending;
 
     return Semantics(
-      label: 'n3-chat-state-${aiChatProvider.transportState.name}',
+      label: [
+        'n3-chat-state-${aiChatProvider.transportState.name}',
+        if (aiChatProvider.lastClientActionName != null)
+          'n3-client-action-${aiChatProvider.lastClientActionName}-${aiChatProvider.lastClientActionSucceeded == true ? 'succeeded' : aiChatProvider.lastClientActionSucceeded == false ? 'failed' : 'running'}',
+      ].join('\n'),
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
         decoration: BoxDecoration(

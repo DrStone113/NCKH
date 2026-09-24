@@ -39,4 +39,10 @@ void main() {
   test('chat transport begins disconnected', () {
     expect(AIChatProvider().transportState, ChatTransportState.disconnected);
   });
+
+  test('client action state begins empty', () {
+    final provider = AIChatProvider();
+    expect(provider.lastClientActionName, isNull);
+    expect(provider.lastClientActionSucceeded, isNull);
+  });
 }

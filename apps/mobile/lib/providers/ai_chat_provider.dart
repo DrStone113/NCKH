@@ -44,6 +44,8 @@ class AIChatProvider extends ChangeNotifier {
   final List<AIChatMessage> _messages = [];
   bool _isStreaming = false;
   ChatTransportState _transportState = ChatTransportState.disconnected;
+  String? _lastClientActionName;
+  bool? _lastClientActionSucceeded;
   String? _streamingMessageId;
   String? _errorMessage;
   ProfileReadiness? _profileReadiness;
@@ -120,6 +122,8 @@ class AIChatProvider extends ChangeNotifier {
   List<AIChatMessage> get messages => List.unmodifiable(_messages);
   bool get isStreaming => _isStreaming;
   ChatTransportState get transportState => _transportState;
+  String? get lastClientActionName => _lastClientActionName;
+  bool? get lastClientActionSucceeded => _lastClientActionSucceeded;
   String? get errorMessage => _errorMessage;
   ProfileReadiness? get profileReadiness => _profileReadiness;
   String? get profileIssue {
@@ -991,6 +995,10 @@ class AIChatProvider extends ChangeNotifier {
       debugPrint('❌ [AIChatProvider] Invalid tool_call format');
       return;
     }
+
+    _lastClientActionName = name;
+    _lastClientActionSucceeded = null;
+    notifyListeners();
 
     // Client action RPC is transport-only. Do not log its implementation name
     // or arguments into Flutter diagnostics / user-visible trace surfaces.
@@ -2021,9 +2029,12 @@ class AIChatProvider extends ChangeNotifier {
     try {
       debugPrint('📡 [AIChatProvider] Sending tool_result for $name: ok=$isOk');
       _channel?.sink.add(jsonEncode(response));
+      _lastClientActionSucceeded = isOk;
     } catch (e) {
       debugPrint('❌ [AIChatProvider] Send tool_result error: $e');
+      _lastClientActionSucceeded = false;
     }
+    notifyListeners();
   }
 
   // ------------------------------------------------------------------ //

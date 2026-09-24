@@ -72,6 +72,28 @@ def test_numeric_catalog_id_binds_exact_pending_dish_without_accepting_boolean()
     ) is None
 
 
+def test_resolved_candidate_requires_explicit_owner_session_promotion() -> None:
+    store = PendingUserActionStore()
+    suggestion = {
+        "id": 42,
+        "name": "Cơm gà",
+        "components": [{"name": "Gà", "serving_grams": 150, "calories": 200, "protein": 30, "carbs": 0, "fat": 5}],
+    }
+
+    assert store.remember_dish_candidate(
+        "session-a", owner_user_id="user-a", suggestion=suggestion,
+        suggestion_arguments={"meal_type": "dinner"},
+    )
+    assert store.claim_confirmation("session-a", "user-a", "có").status == "NO_MATCH"
+    assert store.create_dish_log_action_from_candidate("session-b", owner_user_id="user-a") is None
+    assert store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-b") is None
+
+    action = store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a")
+    assert action is not None
+    store.put(action)
+    assert store.claim_confirmation("session-a", "user-a", "không lưu").status == "REJECTED"
+
+
 def test_ambiguous_superseded_and_expired_actions_are_never_claimed() -> None:
     store = PendingUserActionStore()
     old = _action(store)

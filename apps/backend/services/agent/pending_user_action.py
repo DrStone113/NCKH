@@ -95,6 +95,9 @@ class PendingUserActionStore:
         self._terminal_retention = timedelta(minutes=terminal_retention_minutes)
         self._actions: dict[str, PendingUserAction] = {}
         self._by_session: dict[str, list[str]] = {}
+        self._dish_candidates: dict[
+            tuple[str, str], tuple[dict[str, Any], dict[str, Any], datetime]
+        ] = {}
         self._lock = threading.Lock()
 
     def create_action(
@@ -187,6 +190,58 @@ class PendingUserActionStore:
             action_id=action_id,
         )
         return action
+
+    def remember_dish_candidate(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: str,
+        suggestion: dict[str, Any],
+        suggestion_arguments: Any,
+    ) -> bool:
+        """Cache a trusted catalog candidate for a later explicit write request."""
+
+        action = self.create_dish_log_action(
+            session_id,
+            owner_user_id=owner_user_id,
+            suggestion=suggestion,
+            suggestion_arguments=suggestion_arguments,
+        )
+        if action is None:
+            return False
+        key = (session_id, owner_user_id or "anonymous")
+        with self._lock:
+            self._dish_candidates[key] = (
+                {
+                    "id": action.target_id,
+                    "name": action.display_name,
+                    "components": action.tool_arguments["components"],
+                },
+                {"meal_type": action.tool_arguments["meal_type"]},
+                datetime.now(timezone.utc) + self._ttl,
+            )
+        return True
+
+    def create_dish_log_action_from_candidate(
+        self, session_id: str, *, owner_user_id: str
+    ) -> PendingUserAction | None:
+        """Promote only the latest non-expired owner/session candidate."""
+
+        key = (session_id, owner_user_id or "anonymous")
+        with self._lock:
+            candidate = self._dish_candidates.get(key)
+            if candidate is None:
+                return None
+            suggestion, arguments, expires_at = candidate
+            if expires_at <= datetime.now(timezone.utc):
+                self._dish_candidates.pop(key, None)
+                return None
+        return self.create_dish_log_action(
+            session_id,
+            owner_user_id=owner_user_id,
+            suggestion=suggestion,
+            suggestion_arguments=arguments,
+        )
 
     def create_plan_save_action(
         self,

@@ -87,6 +87,23 @@ def test_strict_weight_loss_plan_is_not_mistaken_for_fainting():
     assert is_urgent_health_text(text) is False
 
 
+@pytest.mark.parametrize("text", [
+    "Ghi bữa tối này vào nhật ký",
+    "Lưu món này vào bữa tối",
+    "Tôi vừa ăn phở bò",
+])
+def test_explicit_meal_write_intent_is_resolved_without_a_keyword_fixture(text):
+    decision = classify_turn_intent(text)
+    assert decision.explicit_write_action == "OBSERVATION_LOG"
+    assert "WRITE" not in decision.negated_actions
+
+
+@pytest.mark.parametrize("text", ["Nếu tôi ăn phở", "Tôi định ăn nhưng chưa ăn", "Đừng ghi món này"])
+def test_hypothetical_or_negated_meal_text_does_not_authorize_write(text):
+    decision = classify_turn_intent(text)
+    assert decision.explicit_write_action is None or "WRITE" in decision.negated_actions
+
+
 def test_action_intents_outrank_mentioned_meal_or_workout_topics():
     assert classify_turn_intent("Ghi nhận bữa sáng tôi đã ăn").primary_intent == TurnIntent.OBSERVATION_LOG
     assert classify_turn_intent("Trong kế hoạch hiện tại, chuyển buổi tập sang thứ sáu").primary_intent == TurnIntent.PLAN_EDIT

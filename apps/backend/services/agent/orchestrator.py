@@ -1004,6 +1004,7 @@ class AgentOrchestrator:
         )
         trace.capture_initial_context(user_context)
         original_user_text = user_text
+        typed_write_intent = classify_turn_intent(user_text)
         scope_reply_suffix: str | None = None
         user_history_marker: str | None = None
         try:
@@ -1052,6 +1053,50 @@ class AgentOrchestrator:
                     trace.finish(outcome=f"PENDING_ACTION_{pending_resolution.status}")
                 self._schedule_memory_update(session_id)
                 return
+
+            if (
+                typed_write_intent.explicit_write_action == "OBSERVATION_LOG"
+                and "WRITE" not in typed_write_intent.negated_actions
+                and not typed_write_intent.clarification_required
+            ):
+                candidate = self.pending_actions.create_dish_log_action_from_candidate(
+                    session_id,
+                    owner_user_id=self._owner_user_id(gateway, user_context),
+                )
+                if candidate is not None:
+                    self.pending_actions.put(candidate)
+                    await self._append_turn(session_id, "user", original_user_text)
+                    text = self._add_confirmation_invitation("", candidate.display_name)
+                    await self._append_turn(session_id, "assistant", text)
+                    await self._record_debug(
+                        gateway,
+                        debug_trace,
+                        "action",
+                        "pending_user_action",
+                        "PENDING_ACTION_CREATED",
+                        payload={
+                            "action_id": candidate.action_id,
+                            "action_type": candidate.action_type,
+                            "target_id": candidate.target_id,
+                        },
+                        correlation_id=candidate.action_id,
+                        result="PENDING_CONFIRMATION",
+                    )
+                    if gateway is not None and hasattr(gateway, "send_token"):
+                        await gateway.send_token(text)
+                    if gateway is not None and hasattr(gateway, "send_action_state"):
+                        await gateway.send_action_state({
+                            "status": "PENDING_CONFIRMATION",
+                            "label": "Chờ bạn xác nhận món này đã được ăn trước khi ghi nhật ký.",
+                        })
+                    await self._send_done(
+                        gateway,
+                        text,
+                        structured_data=None,
+                        public_trace=public_trace,
+                    )
+                    trace.finish(outcome="PENDING_ACTION_CREATED")
+                    return
 
             if self.scope_guard is not None:
                 recent_scope_history = None
@@ -2359,7 +2404,7 @@ class AgentOrchestrator:
                             suggestion=result.data,
                             arguments=call.arguments,
                         )
-                        pending_dish_action = self.pending_actions.create_dish_log_action(
+                        self.pending_actions.remember_dish_candidate(
                             session_id,
                             owner_user_id=self._owner_user_id(gateway, user_context),
                             suggestion=result.data,
@@ -2615,6 +2660,31 @@ class AgentOrchestrator:
                 trace.finish(outcome="COMPLETED_GROUNDING_FALLBACK")
                 self._schedule_memory_update(session_id)
                 return
+
+            if (
+                typed_write_intent.explicit_write_action == "OBSERVATION_LOG"
+                and "WRITE" not in typed_write_intent.negated_actions
+                and not typed_write_intent.clarification_required
+            ):
+                candidate = self.pending_actions.create_dish_log_action_from_candidate(
+                    session_id,
+                    owner_user_id=self._owner_user_id(gateway, user_context),
+                )
+                if candidate is not None:
+                    self.pending_actions.put(candidate)
+                    await self._append_turn(session_id, "user", original_user_text)
+                    text = self._add_confirmation_invitation(candidate.display_name)
+                    await self._append_turn(session_id, "assistant", text)
+                    if gateway is not None and hasattr(gateway, "send_token"):
+                        await gateway.send_token(text)
+                    if gateway is not None and hasattr(gateway, "send_action_state"):
+                        await gateway.send_action_state({
+                            "status": "PENDING_CONFIRMATION",
+                            "label": "Chờ bạn xác nhận món này đã được ăn trước khi ghi nhật ký.",
+                        })
+                    await self._send_done(gateway, text, public_trace)
+                    trace.finish(outcome="PENDING_ACTION_CREATED")
+                    return
             # Loop exhausted — make one last tool-free pass so the user still
             # gets a real answer.
             await self._final_answer_fallback(

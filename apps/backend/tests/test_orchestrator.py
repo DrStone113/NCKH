@@ -236,6 +236,7 @@ async def test_urgent_health_guard_blocks_memory_tools_and_main_llm():
     llm = ScriptedLLM([])
     gateway = FakeGateway()
     store = FakeStore()
+    pending_actions = PendingUserActionStore()
     orchestrator = AgentOrchestrator(
         llm,
         FailingTools(),
@@ -1333,6 +1334,7 @@ async def test_confirmation_executes_the_exact_pending_dish_without_a_new_llm_ch
     gateway = FakeGateway(debug_trace_enabled=True)
     store = FakeStore()
     dispatcher = DishThenLogDispatcher()
+    pending_actions = PendingUserActionStore()
     llm = ScriptedLLM([
         LLMResponse(
             tool_calls=[
@@ -1356,12 +1358,17 @@ async def test_confirmation_executes_the_exact_pending_dish_without_a_new_llm_ch
         dispatcher,
         gateway,
         max_steps=3,
-        pending_actions=PendingUserActionStore(),
+        pending_actions=pending_actions,
     )
 
     await orchestrator.handleChatMessage("s-pending", "gợi ý bữa tối")
-    assert "Bạn có xác nhận đã ăn **Cơm gà A**" in gateway.done[0][0]
+    assert "Bạn có xác nhận" not in gateway.done[0][0]
     assert llm.calls == 2
+    assert pending_actions._dish_candidates
+
+    await orchestrator.handleChatMessage("s-pending", "ghi bữa tối này vào nhật ký")
+    assert "Bạn có xác nhận đã ăn **Cơm gà A**" in gateway.done[-1][0]
+    assert llm.calls == 2, "write candidate promotion must not ask the LLM again"
 
     await orchestrator.handleChatMessage("s-pending", "có")
 

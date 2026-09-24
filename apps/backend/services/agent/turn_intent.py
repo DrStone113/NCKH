@@ -152,7 +152,16 @@ def classify_turn_intent(text: str) -> TurnIntentDecision:
     create_word = _has(normalized, ("lap", "len", "tao", "xay dung", "create", "build", "make"))
     edit_word = _has(normalized, ("sua", "doi", "thay", "them", "bo", "xoa", "chuyen", "giam", "move", "replace", "edit"))
     lifecycle_word = _has(normalized, ("luu", "lưu", "kich hoat", "active", "tam dung", "huy", "cancel"))
-    log_word = _has(normalized, ("ghi", "ghi lai", "ghi nhan", "nhat ky", "log", "record", "da an", "da tap"))
+    meal_write_phrase = bool(
+        re.search(r"\b(?:ghi|luu)\b.*\b(?:bua|mon|meal)\b", normalized)
+        or re.search(r"\b(?:bua|mon|meal)\b.*\b(?:ghi|luu)\b", normalized)
+        or re.search(r"\b(?:toi|minh)\s+(?:vua\s+)?an\b", normalized)
+    )
+    hypothetical_meal = _has(normalized, ("neu", "gia su", "du dinh", "dinh an"))
+    log_word = (
+        _has(normalized, ("ghi", "ghi lai", "ghi nhan", "nhat ky", "log", "record", "da an", "da tap"))
+        or meal_write_phrase
+    ) and not hypothetical_meal
     profile_field = _has(normalized, (
         "can nang", "chieu cao", "muc van dong", "muc tieu", "che do an",
         "di ung", "gio ngu", "so buoi tap", "ho so", "profile", "weight",

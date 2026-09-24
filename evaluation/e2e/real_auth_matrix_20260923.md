@@ -94,3 +94,24 @@ Product HEAD `cffc5a19df1ae22a8bb17651aaa050aa02916246` has **not** been frozen 
 - E2E-01 and E2E-08 remain `INCOMPLETE`: a UI reload happened during an unfinished model turn in one attempt. The client closed the WebSocket and the backend retained a user turn without an assistant response, so no restoration or no-write PASS is inferred. E2E-09's earlier unsafe-goal response and empty Plan Library check remain only partial evidence. E2E-06 now has an accessible typed meal replacement UI and widget regression, but the actual revision workflow was not executed.
 
 CURRENT_CHECKPOINT: E2E_DEFINED=12; E2E_EXECUTED=0 (all YAML steps); E2E_PASS=0; E2E_FAIL=0; E2E_BLOCKED=0; E2E_INCOMPLETE=9; E2E_NOT_EXECUTED=3. INCOMPLETE=E2E-01,E2E-02,E2E-03,E2E-04,E2E-05,E2E-07,E2E-08,E2E-09,E2E-11. NOT_EXECUTED=E2E-06,E2E-10,E2E-12. The historical table above predates these attempts and has not been retroactively turned into PASS. There is no final clean 12-case run or `E2E_EVIDENCE_COMMIT` claiming completion. No report or answer-quality evaluation was touched.
+
+## Bounded campaign stop (2026-09-24)
+
+The execution campaign stopped under the two-attempt/one-harness-fix budget. `FINAL_E2E_PRODUCT_SHA` is intentionally unset: no clean single-snapshot 12-case run completed. At stop, owner-authenticated readback verified A at `weight=70`, `activityLevel=moderate`, B at `weight=68`, `activityLevel=moderate`; both profiles exist. The exact UID-allowlisted reset dry-run found zero Firestore scenario records and zero SQL owner rows for both principals. `BASELINE_CLEAN=YES`.
+
+| Scenario | Result | Bounded-campaign reason |
+|---|---|---|
+| E2E-01 | INCOMPLETE | Dinner recommendation browser turn exceeded the client first-answer deadline; WebSocket closed before assistant persistence/reload grounding. |
+| E2E-02 | INCOMPLETE | Catalog pending invitation was reached, but the second negation turn did not complete before the same browser-stream timeout. |
+| E2E-03 | INCOMPLETE | Numeric catalog-ID fix enabled a real pending invitation; explicit confirmation, one-row readback, and retry were not completed within budget. |
+| E2E-04 | INCOMPLETE | Seven-day preview and explicit UI save/readback worked; the full assertion set, including active-plan contract and final clean-run evidence, was not completed. |
+| E2E-05 | INCOMPLETE | SCENARIO_PATH_MISSING: YAML requires WebSocket reconnect and `ALREADY_EXECUTED`, but this product path is REST preview/save and exposes hash-idempotent success instead. |
+| E2E-06 | INCOMPLETE | Typed UI replacement preview/save/history/change-event workflow ran, but no final single-snapshot clean-run qualification was performed. |
+| E2E-07 | INCOMPLETE | Activate/reload/pause/reload persisted state was exercised; final clean-run and complete active-domain evidence were not completed. |
+| E2E-08 | INCOMPLETE | Urgent UI response was observed, but a reload occurred while the provider turn was unfinished, so no complete persisted no-write assertion. |
+| E2E-09 | INCOMPLETE | Unsafe-goal refusal and empty Plan Library/no-write checks were observed, but full final-run trace/readback evidence was not completed. |
+| E2E-10 | INCOMPLETE | Settings UI profile update and owner readback succeeded, then restoration succeeded; recommendation stage did not complete. ROOT_CAUSE=RECOMMENDATION_STAGE_TIMEOUT. |
+| E2E-11 | INCOMPLETE | Bidirectional owner-scoped API denial and segregated Library cards were exercised; required real logout/login trace was not completed. |
+| E2E-12 | NOT_EXECUTED | Normal RAG evidence absence and development trace were not executed; the research oracle alone cannot prove normal-chat `NO_RESULTS`. |
+
+Bounded results: E2E_DEFINED=12; PASS=0; FAIL=0; INCOMPLETE=11; NOT_EXECUTED=1; BLOCKED=0. Product defects found/fixed in this campaign: Plan preview confirmation routing, numeric catalog dish IDs for pending actions, typed meal edits in combined Plans, DRAFT preview SAVE visibility, and chat persistence fail-closed behavior. Harness/scenario limitations: Canvas dropdown/stream determinism, REST-vs-WebSocket mismatch in E2E-05, and unavailable normal-chat RAG trace for E2E-12. No synthetic responses, auth bypass, direct Firestore scenario seeding, judge work, or report rewriting occurred.

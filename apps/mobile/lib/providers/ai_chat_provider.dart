@@ -2217,6 +2217,7 @@ class AIChatProvider extends ChangeNotifier {
 
   void _onPublicTraceReceived(dynamic rawTrace) {
     if (_streamingMessageId == null || rawTrace is! Map) return;
+    _resetTimeoutTimer();
     final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
     if (idx == -1) return;
     final trace = PublicReasoningTrace.fromJson(
@@ -2245,8 +2246,11 @@ class AIChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Status trung gian chỉ là heartbeat; UI dùng public trace an toàn.
-  void _onStatusReceived() {}
+  /// Authenticated server progress keeps a long tool/model turn interactive
+  /// until its bounded total deadline, even before the first visible token.
+  void _onStatusReceived() {
+    if (_isStreaming) _resetTimeoutTimer();
+  }
 
   /// Lấy text hiển thị khi đang stream — ẩn tất cả data block tags và SUGGESTIONS
   static String getDisplayText(String text, bool isStreaming) {

@@ -105,10 +105,12 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     var restored = aiChatProvider.messages.isNotEmpty;
     if (!restored && userId != null && userId.isNotEmpty) {
       try {
-        restored = await aiChatProvider.restoreLatestSession(
-          loadSessions: () => _backendApi.getChatSessions(userId: userId),
-          loadMessages: _backendApi.getSessionMessages,
-        ).timeout(const Duration(seconds: 15));
+        restored = await aiChatProvider
+            .restoreLatestSession(
+              loadSessions: () => _backendApi.getChatSessions(userId: userId),
+              loadMessages: _backendApi.getSessionMessages,
+            )
+            .timeout(const Duration(seconds: 15));
       } catch (error) {
         debugPrint('Không thể tự khôi phục phiên chat gần nhất: $error');
       }
@@ -533,7 +535,8 @@ class _ChatbotScreenState extends State<ChatbotScreen>
     final user = Provider.of<UserProvider>(context, listen: false).currentUser;
     if (user == null || _activePlan == null) return;
 
-    if (_activePlan!['plan_id'] != null && _activePlan!['revision_id'] != null) {
+    if (_activePlan!['plan_id'] != null &&
+        _activePlan!['revision_id'] != null) {
       _openVersionedPlan(_activePlan!);
       return;
     }
@@ -1799,14 +1802,16 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       );
       if (!mounted) return;
       final presentation = createdPlan['presentation'];
-      if (createdPlan['status'] != 'READY' || presentation is! Map ||
+      if (createdPlan['status'] != 'READY' ||
+          presentation is! Map ||
           createdPlan['preview_persistence_status'] != 'PERSISTED') {
         throw StateError('PLAN_PREVIEW_NOT_SAVEABLE');
       }
       setState(() => _activePlan = Map<String, dynamic>.from(presentation));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đã tạo bản xem trước $days ngày. Hãy kiểm tra rồi lưu kế hoạch.'),
+          content: Text(
+              'Đã tạo bản xem trước $days ngày. Hãy kiểm tra rồi lưu kế hoạch.'),
           backgroundColor: Colors.blue,
         ),
       );
@@ -1964,100 +1969,104 @@ class _ChatbotScreenState extends State<ChatbotScreen>
         aiChatProvider.isCheckingProfile ||
         _sending;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.05),
-            width: 1,
+    return Semantics(
+      label: isStreaming ? 'n3-chat-state-busy' : 'n3-chat-state-ready',
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: Border(
+            top: BorderSide(
+              color: Colors.black.withValues(alpha: 0.05),
+              width: 1,
+            ),
           ),
+          boxShadow: AppShadows.subtle,
         ),
-        boxShadow: AppShadows.subtle,
-      ),
-      child: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    width: 1,
+        child: SafeArea(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      width: 1,
+                    ),
                   ),
+                  child: Semantics(
+                    label: 'n3-chat-input',
+                    textField: true,
+                    child: TextField(
+                      controller: _textController,
+                      enabled: !isStreaming,
+                      decoration: InputDecoration(
+                        hintText: _restoringSession
+                            ? 'Đang khôi phục cuộc trò chuyện...'
+                            : isStreaming
+                                ? 'AI đang suy nghĩ và phản hồi...'
+                                : 'Nhập câu hỏi hoặc yêu cầu tư vấn...',
+                        hintStyle: const TextStyle(
+                          color: AppColors.textHint,
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                      ),
+                      maxLines: 4,
+                      minLines: 1,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: isStreaming ? null : (_) => _handleSubmit(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  gradient: isStreaming ? null : AppColors.primaryGradient,
+                  color: isStreaming ? const Color(0xFFE2E8F0) : null,
+                  shape: BoxShape.circle,
+                  boxShadow: isStreaming
+                      ? null
+                      : [
+                          BoxShadow(
+                            color:
+                                const Color(0xFF0F172A).withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: Semantics(
-                  label: 'n3-chat-input',
-                  textField: true,
-                  child: TextField(
-                    controller: _textController,
-                    enabled: !isStreaming,
-                    decoration: InputDecoration(
-                      hintText: _restoringSession
-                          ? 'Đang khôi phục cuộc trò chuyện...'
-                          : isStreaming
-                              ? 'AI đang suy nghĩ và phản hồi...'
-                              : 'Nhập câu hỏi hoặc yêu cầu tư vấn...',
-                      hintStyle: const TextStyle(
-                        color: AppColors.textHint,
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
-                      ),
+                  label: 'n3-chat-send',
+                  button: true,
+                  child: IconButton(
+                    icon: Icon(
+                      isStreaming
+                          ? Icons.more_horiz_rounded
+                          : Icons.arrow_upward_rounded,
+                      color:
+                          isStreaming ? AppColors.textSecondary : Colors.white,
+                      size: 22,
                     ),
-                    maxLines: 4,
-                    minLines: 1,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: isStreaming ? null : (_) => _handleSubmit(),
+                    onPressed: isStreaming ? null : _handleSubmit,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                gradient: isStreaming ? null : AppColors.primaryGradient,
-                color: isStreaming ? const Color(0xFFE2E8F0) : null,
-                shape: BoxShape.circle,
-                boxShadow: isStreaming
-                    ? null
-                    : [
-                        BoxShadow(
-                          color:
-                              const Color(0xFF0F172A).withValues(alpha: 0.25),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-              ),
-              child: Semantics(
-                label: 'n3-chat-send',
-                button: true,
-                child: IconButton(
-                  icon: Icon(
-                    isStreaming
-                        ? Icons.more_horiz_rounded
-                        : Icons.arrow_upward_rounded,
-                    color: isStreaming ? AppColors.textSecondary : Colors.white,
-                    size: 22,
-                  ),
-                  onPressed: isStreaming ? null : _handleSubmit,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

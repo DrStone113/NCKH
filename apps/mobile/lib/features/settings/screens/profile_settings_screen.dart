@@ -583,7 +583,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                                 .map(
                                                   (entry) => DropdownMenuItem(
                                                     value: entry.key,
-                                                    child: Text(entry.value),
+                                                    child: Semantics(
+                                                      label:
+                                                          'profile-activity-${entry.key}',
+                                                      button: true,
+                                                      child: Text(entry.value),
+                                                    ),
                                                   ),
                                                 )
                                                 .toList(),
@@ -730,7 +735,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                 key: const Key('profile-save-error'),
                                 style:
                                     const TextStyle(color: AppColors.error))),
-                      FilledButton(
+                      Semantics(
+                        label: 'profile-save-step-$_step',
+                        button: true,
+                        child: FilledButton(
                           key: const Key('profile-save'),
                           onPressed: _isSaving ? null : _next,
                           style: FilledButton.styleFrom(
@@ -742,7 +750,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                   ? 'Hoàn tất'
                                   : widget.isAccountSetup && _step == 2
                                       ? 'Lưu và tiếp tục'
-                                      : 'Tiếp tục')),
+                                      : 'Tiếp tục'),
+                        ),
+                      ),
                       if (_step > 0)
                         TextButton(
                             onPressed: _isSaving ? null : _back,

@@ -30,4 +30,9 @@ void main() {
       isTrue,
     );
   });
+
+  test('progress heartbeat is accepted for an active turn only', () {
+    expect(AIChatProvider.acceptsTurnEvent('turn-1', 'turn-1'), isTrue);
+    expect(AIChatProvider.acceptsTurnEvent('turn-2', 'turn-1'), isFalse);
+  });
 }

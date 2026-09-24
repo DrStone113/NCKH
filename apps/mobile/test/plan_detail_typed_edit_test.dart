@@ -76,6 +76,18 @@ class FakePlanApi implements BackendApiService {
       ];
 
   @override
+  Future<List<Map<String, dynamic>>> listPlanChangeEvents(String planId) async =>
+      savedRevision == null
+          ? const []
+          : [
+              {
+                'id': 'event-1',
+                'event_type': 'REPLACE_ITEM',
+                'created_at': '2026-09-23T10:00:00Z',
+              }
+            ];
+
+  @override
   Future<Map<String, dynamic>> createAuthoritativePlanRevisionPreview({
     required String planId,
     required String baseRevisionId,
@@ -160,6 +172,8 @@ void main() {
     expect(api.savedHash, 'hash-preview');
     expect(find.text('Lịch sử chỉnh sửa'), findsOneWidget);
     expect(find.textContaining('Bản 2'), findsOneWidget);
+    expect(find.text('Thay đổi gần đây'), findsOneWidget);
+    expect(find.textContaining('REPLACE_ITEM'), findsOneWidget);
   });
 
   testWidgets('failed preview keeps saved revision and does not offer save',

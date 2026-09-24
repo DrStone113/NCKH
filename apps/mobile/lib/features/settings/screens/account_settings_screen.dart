@@ -42,6 +42,7 @@ class AccountSettingsScreen extends StatelessWidget {
                 child: const Text('Hủy'),
               ),
               FilledButton(
+                key: const ValueKey('account-logout-confirm'),
                 onPressed: () => Navigator.pop(dialogContext, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.error,
@@ -218,14 +219,20 @@ class AccountSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 22),
                   _SettingsSection(
                     children: [
-                      _SettingsTile(
-                        icon: Icons.logout,
-                        color: AppColors.error,
-                        title: 'Đăng xuất',
-                        subtitle: 'Kết thúc phiên đăng nhập trên thiết bị này',
-                        titleColor: AppColors.error,
-                        showChevron: false,
-                        onTap: () => _showLogoutDialog(context),
+                      Semantics(
+                        label: 'account-logout',
+                        button: true,
+                        child: _SettingsTile(
+                          key: const ValueKey('account-logout'),
+                          icon: Icons.logout,
+                          color: AppColors.error,
+                          title: 'Đăng xuất',
+                          subtitle:
+                              'Kết thúc phiên đăng nhập trên thiết bị này',
+                          titleColor: AppColors.error,
+                          showChevron: false,
+                          onTap: () => _showLogoutDialog(context),
+                        ),
                       ),
                     ],
                   ),
@@ -461,6 +468,7 @@ class _SettingsSection extends StatelessWidget {
 
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
+    super.key,
     required this.icon,
     required this.color,
     required this.title,

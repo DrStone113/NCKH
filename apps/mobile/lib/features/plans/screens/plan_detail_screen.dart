@@ -33,6 +33,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
   late Map<String, dynamic> _plan;
   bool _mutating = false;
   List<Map<String, dynamic>> _history = const [];
+  List<Map<String, dynamic>> _changeEvents = const [];
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     }
     _refreshExactRevision();
     _loadHistory();
+    _loadChangeEvents();
   }
 
   Future<void> _refreshExactRevision() async {
@@ -77,12 +79,22 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
     }
   }
 
+  Future<void> _loadChangeEvents() async {
+    final planId = _plan['plan_id']?.toString() ?? '';
+    if (planId.isEmpty) return;
+    try {
+      final events = await _api.listPlanChangeEvents(planId);
+      if (mounted) setState(() => _changeEvents = events);
+    } catch (_) {
+      // Change events supplement the authoritative revision content.
+    }
+  }
+
   List<String> _availableActions(String lifecycle) {
     final targets = _plan['valid_lifecycle_targets'];
     if (targets is List) {
       return [
-        if (lifecycle == 'DRAFT' || lifecycle == 'PENDING_CONFIRMATION')
-          'SAVE',
+        if (lifecycle == 'DRAFT' || lifecycle == 'PENDING_CONFIRMATION') 'SAVE',
         ...targets.whereType<String>(),
       ];
     }
@@ -132,7 +144,8 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
       final updated = Map<String, dynamic>.from(readBack);
       setState(() => _plan = updated);
       _updateSharedPlan(updated, refreshAll: true);
-      unawaited(_loadHistory());
+      await _loadHistory();
+      await _loadChangeEvents();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đã cập nhật kế hoạch từ máy chủ.')),
       );
@@ -463,7 +476,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                     const _ConfirmationNotice(),
                   ],
                   const SizedBox(height: 16),
-                  _PlanHistory(history: _history),
+                  _PlanHistory(history: _history, changeEvents: _changeEvents),
                 ],
               ),
             ),
@@ -658,8 +671,9 @@ class _ExactRevisionReference extends StatelessWidget {
 
 class _PlanHistory extends StatelessWidget {
   final List<Map<String, dynamic>> history;
+  final List<Map<String, dynamic>> changeEvents;
 
-  const _PlanHistory({required this.history});
+  const _PlanHistory({required this.history, required this.changeEvents});
 
   @override
   Widget build(BuildContext context) {
@@ -688,6 +702,20 @@ class _PlanHistory extends StatelessWidget {
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
             const SizedBox(height: 8),
+          ],
+          if (changeEvents.isNotEmpty) ...[
+            const Divider(),
+            const Text('Thay đổi gần đây',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            for (final event in changeEvents.take(6))
+              Semantics(
+                label: 'plan-change-event-${event['event_type'] ?? 'unknown'}',
+                child: Text(
+                  '${event['event_type'] ?? 'CHANGE'} · ${event['created_at'] ?? ''}',
+                  key: ValueKey(
+                      'plan-change-event-${event['id'] ?? event['created_at']}'),
+                ),
+              ),
           ],
         ],
       ),

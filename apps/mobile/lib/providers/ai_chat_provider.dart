@@ -82,7 +82,9 @@ class AIChatProvider extends ChangeNotifier {
     _responseTypewriter = StreamingTypewriter(
       interval: typewriterInterval,
       onChunk: _appendTypewriterChunk,
-      onIdle: _completePendingStream,
+      // Terminal `done` now finalizes immediately; animation idle has no
+      // authority over conversation state.
+      onIdle: () {},
     );
     initLocation();
   }
@@ -143,6 +145,12 @@ class AIChatProvider extends ChangeNotifier {
   bool get isCheckingProfile => _checkingProfile;
   bool get canRetry => _lastMessageText != null && _lastUser != null;
   String? get currentSessionId => _sessionId;
+
+  @visibleForTesting
+  void setTestingTransportState(ChatTransportState state) {
+    _transportState = state;
+    notifyListeners();
+  }
 
   @visibleForTesting
   static bool acceptsTurnEvent(String? activeTurnId, String? eventTurnId) {
@@ -443,7 +451,11 @@ class AIChatProvider extends ChangeNotifier {
               closeCode == 4401
                   ? 'Phiên xác thực không hợp lệ'
                   : 'Kết nối bị ngắt',
-            );
+              );
+          } else if (_sessionId != null) {
+            // A normal close after a terminal turn must not strand the
+            // composer. Reconnect with fresh auth before the next send.
+            unawaited(connect(_sessionId!));
           }
         },
       );
@@ -2332,58 +2344,17 @@ class AIChatProvider extends ChangeNotifier {
       return;
     }
 
-    _pendingDoneData = Map<String, dynamic>.from(data);
-    _reconcileTypewriterWithFullResponse(data);
-    _completePendingStream();
-  }
-
-  void _reconcileTypewriterWithFullResponse(Map<String, dynamic> data) {
-    final fullResponse = data['full_response'] as String? ?? '';
-    if (fullResponse.isEmpty || _streamingMessageId == null) return;
-
-    final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
-    if (idx == -1) return;
-
-    final visibleText = _messages[idx].text;
-    final receivedText =
-        visibleText + _responseTypewriter.pendingText + _deferredResponseText;
-    if (receivedText == fullResponse) return;
-
-    if (fullResponse.startsWith(visibleText)) {
-      _replacePendingResponse(fullResponse.substring(visibleText.length));
-      return;
-    }
-
-    // Phục hồi an toàn nếu full_response khác với các delta đã nhận.
-    _messages[idx] = _messages[idx].copyWith(
-      text: '',
-      status: MessageStatus.streaming,
-    );
-    _replacePendingResponse(fullResponse);
-    notifyListeners();
-  }
-
-  void _replacePendingResponse(String text) {
-    _responseTypewriter.clear();
-    _deferredResponseText = '';
-    _responseTypewriter.replacePending(text);
-  }
-
-  void _completePendingStream() {
-    final data = _pendingDoneData;
-    if (data == null ||
-        _responseTypewriter.hasPending ||
-        _deferredResponseText.isNotEmpty) {
-      return;
-    }
-    _pendingDoneData = null;
-    _applyStreamDone(data);
+    // Server `done` is authoritative terminal state. Cosmetic typewriter
+    // backlog must never keep the conversation locked after completion.
+    _applyStreamDone(Map<String, dynamic>.from(data));
   }
 
   void _applyStreamDone(Map<String, dynamic> data) {
     _responseTypewriter.clear();
     _deferredResponseText = '';
-    _transportState = ChatTransportState.completed;
+    // `done` is terminal for the turn, not for the reusable socket. Keep the
+    // connected transport state so the composer can accept the next turn.
+    _transportState = ChatTransportState.connected;
 
     final fullResponse = data['full_response'] as String? ?? '';
     final structuredData = data['structured'] as Map<String, dynamic>?;
@@ -2410,10 +2381,7 @@ class AIChatProvider extends ChangeNotifier {
       final idx = _messages.indexWhere((m) => m.id == _streamingMessageId);
       if (idx != -1) {
         _messages[idx] = _messages[idx].copyWith(
-          // Text đã được typewriter dựng đủ; full_response chỉ là fallback.
-          text: _messages[idx].text.isNotEmpty
-              ? _messages[idx].text
-              : fullResponse,
+          text: fullResponse.isNotEmpty ? fullResponse : _messages[idx].text,
           isStreaming: false,
           status: MessageStatus.done,
           structuredResponse: structuredResponse,

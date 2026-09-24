@@ -237,6 +237,7 @@ class ChatGateway:
                 outcome = "completed"
                 turn_token = _CURRENT_TURN_ID.set(turn_id)
                 try:
+                    last_backend_stage = "orchestrator_started"
                     priority, urgent = chat_priority(message)
                     if self.admission is None:
                         await self._handle_chat(sess_id, message, context)
@@ -245,7 +246,9 @@ class ChatGateway:
                             priority=priority, urgent=urgent
                         ):
                             await self._handle_chat(sess_id, message, context)
+                    last_backend_stage = "orchestrator_completed"
                 except AdmissionRejected:
+                    last_backend_stage = "admission_rejected"
                     outcome = "busy"
                     if self.metrics:
                         self.metrics.increment("chat.server_busy")
@@ -255,10 +258,12 @@ class ChatGateway:
                         retry_after_ms=self.retry_after_ms,
                     )
                 except (LLMUnavailableError, GarbledOutputError):
+                    last_backend_stage = "provider_error"
                     # The orchestrator already sent the specific, user-safe
                     # provider error. Do not overwrite it with INTERNAL_ERROR.
                     outcome = "failed"
                 except Exception as exc:
+                    last_backend_stage = f"exception:{type(exc).__name__}"
                     outcome = "failed"
                     logger.exception(
                         "Chat turn failed stage=orchestrator exception_type=%s session=%s",

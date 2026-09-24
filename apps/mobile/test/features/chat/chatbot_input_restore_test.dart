@@ -27,6 +27,11 @@ class PendingRestoreChatProvider extends AIChatProvider {
     restoreStarted.complete();
     return finishRestore.future;
   }
+
+  @override
+  Future<void> connect(String sessionId) async {
+    setTestingTransportState(ChatTransportState.connected);
+  }
 }
 
 void main() {
@@ -71,5 +76,41 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     chat.finishRestore.complete(false);
+  });
+
+  testWidgets('composer predicate follows connected idle and streaming states',
+      (tester) async {
+    final chat = PendingRestoreChatProvider();
+    final user = UserProvider()..setDemoUser();
+    addTearDown(chat.dispose);
+    addTearDown(user.dispose);
+    chat.setTestingTransportState(ChatTransportState.connected);
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AIChatProvider>.value(value: chat),
+        ChangeNotifierProvider<UserProvider>.value(value: user),
+        ChangeNotifierProvider(create: (_) => ExerciseProvider()),
+        ChangeNotifierProvider(create: (_) => NutritionProvider()),
+        ChangeNotifierProvider(create: (_) => LifestyleProvider()),
+        ChangeNotifierProvider(create: (_) => HealthProvider()),
+      ],
+      child: const MaterialApp(home: ChatbotScreen(showBackButton: false)),
+    ));
+    await tester.pump();
+
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
+    chat.finishRestore.complete(false);
+    await tester.pump();
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isTrue);
+
+    chat.setTestingTransportState(ChatTransportState.streaming);
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isFalse);
+
+    chat.setTestingTransportState(ChatTransportState.connected);
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).enabled, isTrue);
   });
 }

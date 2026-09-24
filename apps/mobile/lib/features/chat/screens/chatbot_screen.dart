@@ -94,6 +94,12 @@ class _ChatbotScreenState extends State<ChatbotScreen>
       aiChatProvider.addListener(_onMessagesChanged);
       await _restoreLatestSession(aiChatProvider, userId);
       if (!mounted) return;
+      final sessionId = aiChatProvider.currentSessionId;
+      if (sessionId != null &&
+          aiChatProvider.transportState == ChatTransportState.disconnected) {
+        await aiChatProvider.connect(sessionId);
+      }
+      if (!mounted) return;
       _loadActivePlan();
       _scrollToBottom();
     });
@@ -264,8 +270,14 @@ class _ChatbotScreenState extends State<ChatbotScreen>
           IconButton(
             icon: const Icon(Icons.add_comment_outlined),
             tooltip: 'Tạo cuộc trò chuyện mới',
-            onPressed: () {
+            onPressed: () async {
               aiChatProvider.startNewSession();
+              setState(() => _restoringSession = true);
+              final sessionId = aiChatProvider.currentSessionId;
+              if (sessionId != null) {
+                await aiChatProvider.connect(sessionId);
+              }
+              if (!mounted) return;
               setState(() => _restoringSession = false);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -1998,14 +2010,20 @@ class _ChatbotScreenState extends State<ChatbotScreen>
 
   Widget _buildInputArea() {
     final aiChatProvider = Provider.of<AIChatProvider>(context);
-    final isStreaming = _restoringSession ||
-        aiChatProvider.isStreaming ||
-        aiChatProvider.isCheckingProfile ||
-        _sending;
+    final composerEnabled = !_restoringSession &&
+        aiChatProvider.transportState == ChatTransportState.connected &&
+        !aiChatProvider.isStreaming &&
+        !aiChatProvider.isCheckingProfile &&
+        !_sending;
+    final isStreaming = !composerEnabled;
 
     return Semantics(
+      enabled: composerEnabled,
       label: [
         'n3-chat-state-${aiChatProvider.transportState.name}',
+        'n3-chat-composer-${isStreaming ? 'busy' : 'ready'}',
+        if (isStreaming)
+          'n3-chat-busy-reason-${_restoringSession ? 'restore' : aiChatProvider.isStreaming ? 'streaming' : aiChatProvider.isCheckingProfile ? 'profile' : _sending ? 'screen-send' : 'unknown'}',
         if (aiChatProvider.lastClientActionName != null)
           'n3-client-action-${aiChatProvider.lastClientActionName}-${aiChatProvider.lastClientActionSucceeded == true ? 'succeeded' : aiChatProvider.lastClientActionSucceeded == false ? 'failed' : 'running'}',
       ].join('\n'),
@@ -2038,9 +2056,11 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                   child: Semantics(
                     label: 'n3-chat-input',
                     textField: true,
+                    enabled: composerEnabled,
                     child: TextField(
+                      key: ValueKey('n3-chat-input-${isStreaming ? 'busy' : 'ready'}'),
                       controller: _textController,
-                      enabled: !isStreaming,
+                      enabled: composerEnabled,
                       decoration: InputDecoration(
                         hintText: _restoringSession
                             ? 'Đang khôi phục cuộc trò chuyện...'
@@ -2090,6 +2110,7 @@ class _ChatbotScreenState extends State<ChatbotScreen>
                 child: Semantics(
                   label: 'n3-chat-send',
                   button: true,
+                  enabled: composerEnabled,
                   child: IconButton(
                     icon: Icon(
                       isStreaming

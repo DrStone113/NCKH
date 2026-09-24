@@ -80,13 +80,20 @@ scenarios:
   steps:
   - Sign in
   - Generate and preview a Plan
-  - Disconnect WebSocket before confirmation
-  - Reconnect and confirm
-  - Repeat confirmation from a second tab
+  - Save the exact preview through the Plan revision detail
+  - Recreate the authenticated application session before retrying the REST save request
+  - Repeat the same exact save from a second independent browser session using the same action identity
+  - Reload Plan Library and open the exact revision
   assertions:
   - Only one revision is persisted
-  - Second confirmation returns already-executed semantics
+  - Retry returns the same committed revision identity and content hash
   - Exact target hash remains unchanged
+  - Persisted state remains readable after reconnect
+  notes: >-
+    The original scenario assumed WebSocket/ALREADY_EXECUTED semantics that
+    are not part of the final Plan V2 REST contract. This scenario preserves
+    the intended reconnect/retry idempotency invariant with the exact REST
+    save action identity.
   status: DEFINED_NOT_EXECUTED
 - scenario_id: E2E-06
   name: plan_edit_creates_revision

@@ -1175,16 +1175,21 @@ class _WorkoutAccountIntakeScreenState
                           color: AppColors.textSecondary, height: 1.4))),
             const SizedBox(height: 8),
             for (final entry in choices.entries)
-              ProfileOptionCard<T>(
-                  value: entry.key,
-                  selected: value == entry.key,
-                  title: entry.value,
-                  icon: icon,
-                  onSelected: _saving ? null : onChanged),
+              Semantics(
+                label: 'health-intake-${entry.key.toString().toLowerCase()}',
+                button: true,
+                child: ProfileOptionCard<T>(
+                    value: entry.key,
+                    selected: value == entry.key,
+                    title: entry.value,
+                    icon: icon,
+                    onSelected: _saving ? null : onChanged),
+              ),
           ]));
 
   Widget _equipmentChip(String id, String label) => FilterChip(
-        label: Text(label),
+        label:
+            Semantics(label: 'health-intake-equipment-$id', child: Text(label)),
         selected: _equipment.contains(id),
         onSelected: _saving
             ? null

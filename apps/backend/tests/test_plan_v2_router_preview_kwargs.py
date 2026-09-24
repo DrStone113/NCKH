@@ -65,3 +65,28 @@ async def test_missing_owned_preview_is_not_disclosed_as_a_conflict():
             action_id="foreign-save",
         )
     repository.save_exact_revision.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_combined_preview_exposes_component_clarification_codes(monkeypatch):
+    async def nutrition(**kwargs):
+        return {"status": "READY", "plan": {}}
+
+    async def workout(**kwargs):
+        return {
+            "status": "CLARIFICATION_REQUIRED",
+            "validation": {"issues": [{"code": "EXERCISE_SAFETY_CONTEXT_REQUIRED"}]},
+        }
+
+    monkeypatch.setattr(v2_router.plan_v2, "build_nutrition_plan", nutrition)
+    monkeypatch.setattr(v2_router.plan_v2, "build_workout_schedule", workout)
+    body = v2_router.DraftRequest(
+        domain="COMBINED_HEALTH", period_start=date(2026, 9, 23),
+        period_end=date(2026, 9, 29), timezone="Asia/Ho_Chi_Minh",
+    )
+
+    result = await v2_router.create_plan_preview(
+        body, principal=AuthenticatedPrincipal(user_id="owner"),
+    )
+
+    assert result["clarification_codes"] == ["EXERCISE_SAFETY_CONTEXT_REQUIRED"]

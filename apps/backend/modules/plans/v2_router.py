@@ -253,9 +253,17 @@ async def create_plan_preview(
             equipment=body.equipment,
         )
         if nutrition.get("status") != "READY" or workout.get("status") != "READY":
+            components = {"menu": nutrition, "workout": workout}
+            clarification_codes = [
+                issue.get("code")
+                for component in components.values()
+                for issue in component.get("validation", {}).get("issues", [])
+                if isinstance(issue, dict) and isinstance(issue.get("code"), str)
+            ]
             return {
                 "status": "CLARIFICATION_REQUIRED",
-                "components": {"menu": nutrition, "workout": workout},
+                "components": components,
+                "clarification_codes": clarification_codes,
             }
         context = plan_v2._context(runtime)
         combined_request = plan_v2._request(

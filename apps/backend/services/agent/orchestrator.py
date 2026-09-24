@@ -1054,6 +1054,40 @@ class AgentOrchestrator:
                 self._schedule_memory_update(session_id)
                 return
 
+            owner_user_id = self._owner_user_id(gateway, user_context)
+            candidate_present = self.pending_actions.has_dish_candidate(
+                session_id, owner_user_id=owner_user_id
+            )
+            candidate_semantic = None
+            if candidate_present and self.semantic_router is not None:
+                try:
+                    candidate_semantic = await self.semantic_router.parse(user_text)
+                    await self._record_semantic_result(
+                        candidate_semantic, gateway, debug_trace, "CANDIDATE_ACTION"
+                    )
+                except Exception as exc:
+                    logger.warning("Candidate semantic parse unavailable: %s", exc)
+
+            if (
+                candidate_present
+                and candidate_semantic is not None
+                and candidate_semantic.verifier_status == "VALID"
+                and "WRITE" in candidate_semantic.decision.negated_actions
+                and self.pending_actions.discard_dish_candidate(
+                    session_id, owner_user_id=owner_user_id
+                )
+            ):
+                text = "Được, mình chỉ hiển thị gợi ý và không ghi bữa này vào nhật ký."
+                await self._append_turn(session_id, "user", original_user_text)
+                await self._append_turn(session_id, "assistant", text)
+                if gateway is not None and hasattr(gateway, "send_token"):
+                    await gateway.send_token(text)
+                if gateway is not None and hasattr(gateway, "send_action_state"):
+                    await gateway.send_action_state({"status": "CANCELLED", "label": "Không ghi bữa ăn."})
+                await self._send_done(gateway, text, structured_data=None, public_trace=public_trace)
+                trace.finish(outcome="CANDIDATE_CANCELLED")
+                return
+
             if (
                 typed_write_intent.explicit_write_action == "OBSERVATION_LOG"
                 and "WRITE" not in typed_write_intent.negated_actions

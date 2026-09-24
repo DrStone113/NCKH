@@ -49,7 +49,11 @@ def is_explicit_confirmation(text: str) -> bool:
 
 
 def is_explicit_rejection(text: str) -> bool:
-    return " ".join(text.strip().lower().split()) in _NEGATIVE
+    normalized = " ".join(text.strip().lower().replace(",", " ").replace(".", " ").split())
+    return normalized in _NEGATIVE or any(
+        phrase in normalized
+        for phrase in ("đừng lưu", "không lưu", "thôi không", "chỉ xem")
+    )
 
 
 @dataclass(slots=True)
@@ -242,6 +246,17 @@ class PendingUserActionStore:
             suggestion=suggestion,
             suggestion_arguments=arguments,
         )
+
+    def has_dish_candidate(self, session_id: str, *, owner_user_id: str) -> bool:
+        key = (session_id, owner_user_id or "anonymous")
+        with self._lock:
+            candidate = self._dish_candidates.get(key)
+            return candidate is not None and candidate[2] > datetime.now(timezone.utc)
+
+    def discard_dish_candidate(self, session_id: str, *, owner_user_id: str) -> bool:
+        key = (session_id, owner_user_id or "anonymous")
+        with self._lock:
+            return self._dish_candidates.pop(key, None) is not None
 
     def create_plan_save_action(
         self,

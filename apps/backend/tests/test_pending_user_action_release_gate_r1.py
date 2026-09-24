@@ -10,7 +10,9 @@ import pytest
 from services.agent.llm_client import ToolCall
 from services.agent.memory_service import Context
 from services.agent.orchestrator import AgentOrchestrator
-from services.agent.pending_user_action import PendingUserActionStore
+from services.agent.pending_user_action import PendingUserActionStore, is_explicit_rejection
+from services.agent.semantic_router_service import SemanticRouterMode, SemanticRouterService
+from services.agent.turn_intent import INTENT_VERSION, TurnIntent, TurnIntentDecision
 from services.agent.tool_dispatcher import ToolResult
 
 
@@ -93,6 +95,49 @@ def test_resolved_candidate_requires_explicit_owner_session_promotion() -> None:
     assert store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a") is None
     store.put(action)
     assert store.claim_confirmation("session-a", "user-a", "không lưu").status == "REJECTED"
+
+
+def test_contextual_rejection_discards_unpromoted_candidate() -> None:
+    store = PendingUserActionStore()
+    assert store.remember_dish_candidate(
+        "session-a", owner_user_id="user-a",
+        suggestion={"id": "dish-a", "name": "Cơm", "components": [{"name": "Cơm", "serving_grams": 100}]},
+        suggestion_arguments={"meal_type": "dinner"},
+    )
+    assert store.discard_dish_candidate("session-a", owner_user_id="user-a")
+    assert store.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a") is None
+
+
+class _CancelSlm:
+    model_name = "test-slm"
+
+    async def parse(self, text, *, candidates):
+        return TurnIntentDecision(
+            INTENT_VERSION, TurnIntent.MEAL_SUGGESTION, (), (), ("WRITE",),
+            None, False, 0.99, ("CANCEL_WRITE",), "TEST_SLM"
+        )
+
+
+@pytest.mark.asyncio
+async def test_slm_verified_candidate_cancellation_returns_no_write_without_llm():
+    pending = PendingUserActionStore()
+    assert pending.remember_dish_candidate(
+        "session-a", owner_user_id="user-a",
+        suggestion={"id": "dish-a", "name": "Cơm", "components": [{"name": "Cơm", "serving_grams": 100}]},
+        suggestion_arguments={"meal_type": "dinner"},
+    )
+    gateway = _Gateway("user-a")
+    orchestrator = AgentOrchestrator(
+        _UnusedLlm(), _Tools(), _Memory(), _SessionStore(), _RejectDispatcher(), gateway,
+        pending_actions=pending,
+        semantic_router=SemanticRouterService(mode=SemanticRouterMode.ENFORCED, slm_adapter=_CancelSlm()),
+    )
+
+    await orchestrator.handleChatMessage("session-a", "đừng lưu, tôi chỉ xem")
+
+    assert gateway.done == ["Được, mình chỉ hiển thị gợi ý và không ghi bữa này vào nhật ký."]
+    assert gateway.action_states[-1]["status"] == "CANCELLED"
+    assert pending.create_dish_log_action_from_candidate("session-a", owner_user_id="user-a") is None
 
 
 def test_ambiguous_superseded_and_expired_actions_are_never_claimed() -> None:
